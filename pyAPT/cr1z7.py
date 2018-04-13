@@ -1,4 +1,4 @@
-from __future__ import absolute_import, division
+from __future__ import absolute_import, division, print_function
 from .controller import Controller
 
 class CR1Z7(Controller):
@@ -36,3 +36,18 @@ class CR1Z7(Controller):
 
     self.linear_range = (-180,180)
 
+
+##  def request_home_params(self):
+##    # retrieve homing parameters from
+##    # controller, using the method of the super class
+##    #params = super(Controller, self).request_home_params()
+##    params = list(Controller.request_home_params(self))
+##    # because these parameters do not work for the CR1/Z7,
+##    # we try to adjust them
+##    print("patching home params for CR1Z7..")
+##    #params[1] = 1
+##    params[1] = 2
+##    #params[2] = 4
+##    params[2] = 1
+##    return tuple(params)
+##
