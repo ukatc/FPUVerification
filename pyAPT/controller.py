@@ -1,7 +1,7 @@
 """
 Simple class which encapsulate an APT controller
 """
-from __future__ import absolute_import, division
+from __future__ import absolute_import, division, print_function
 import pylibftdi
 import time
 import struct as st
@@ -141,6 +141,7 @@ class Controller(object):
       if found:
         return m
       else:
+        print("Warning: extra message received with ID", m.messageID)
         self.message_queue.append(m)
 
   def _position_in_range(self, absolute_pos_mm):
@@ -260,6 +261,7 @@ class Controller(object):
     """
 
     if velocity:
+      # this should cap for the minimum velocity, too
       velocity = min(velocity, self.max_velocity)
       curparams[-2] = int(velocity * self.velocity_scale)
 
@@ -537,7 +539,9 @@ class Controller(object):
     Per documentation:
       If using the USB port, this message called "server alive" must be sent
       by the server to the controller at least once a second or the controller
-      will stop responding after ~50 commands
+      will stop responding after ~50 commands.
+      Chris Miller at UKATC tells that this is needed only
+      if the server is receiving notifications.
     """
     msg = Message(message.MGMSG_MOT_ACK_DCSTATUSUPDATE)
     self._send_message(msg)

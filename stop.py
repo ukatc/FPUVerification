@@ -17,12 +17,8 @@ def home(serial):
 #  with pyAPT.MTS50(serial_number=serial) as con:
 #  with pyAPT.NR360S(serial_number=serial) as con:
   with pyAPT.CR1Z7(serial_number=serial) as con:
-    print('\tIdentifying controller')
-    con.identify()
-    print('\tHoming parameters:', con.request_home_params())
-    print('\tHoming stage...', end=' ')
-    con.home(velocity = 10)
-    print('homed')
+    con.stop(immediate=True, wait=True)
+    print('stopped')
 
 if __name__ == '__main__':
   import sys
