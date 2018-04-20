@@ -30,3 +30,14 @@ class MTS50(Controller):
 
     self.linear_range = (0,50)
 
+  def request_home_params(self):
+    # retrieve homing parameters from
+    # controller, using the method of the super class
+    params = list(Controller.request_home_params(self))
+    # because these parameters do not work for the MTS50,
+    # we try to adjust them
+    print("setting home params for MTS50..")
+    params[0] = 1
+    params[1] = 2
+    params[2] = 1
+    return tuple(params)

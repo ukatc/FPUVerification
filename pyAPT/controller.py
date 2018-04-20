@@ -141,7 +141,7 @@ class Controller(object):
       if found:
         return m
       else:
-        print("Warning: extra message received with ID", m.messageID)
+        print("Warning: extra message received with ID", m.messageID, "data = ", m.data)
         self.message_queue.append(m)
 
   def _position_in_range(self, absolute_pos_mm):

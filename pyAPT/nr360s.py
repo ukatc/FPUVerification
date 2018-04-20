@@ -19,7 +19,7 @@ class NR360S(Controller):
     # as they agree with the real limits of the stage better than
     # what the website or the user manual states
     self.max_velocity = 50.0 # degree/sec
-    self.max_acceleration = 80.0 # degree/sec^2 
+    self.max_acceleration = 25.0 # degree/sec^2 
 
     # from the manual
     # These values are only valid for a trinamics controller such as
@@ -39,5 +39,18 @@ class NR360S(Controller):
     self.velocity_scale = 4030885.0
     self.acceleration_scale = 826.0
 
-    self.linear_range = (-180,180)
+    self.linear_range = (0,360)
+
+
+  def request_home_params(self):
+    # retrieve homing parameters from
+    # controller, using the method of the super class
+    params = list(Controller.request_home_params(self))
+    # because these parameters do not work for the NR60S,
+    # we try to adjust them
+    print("setting home params for NR360S..")
+    params[0] = 1
+    params[1] = 2
+    params[2] = 1
+    return tuple(params)
 
