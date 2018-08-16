@@ -22,7 +22,6 @@ def info(serial):
     for idx,ainfo in enumerate(info):
       print('\t%12s: %s'%(labels[idx], bytes(ainfo)))
 
-
 if __name__ == '__main__':
   import sys
   sys.exit(info())

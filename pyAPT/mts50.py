@@ -30,14 +30,25 @@ class MTS50(Controller):
 
     self.linear_range = (0,50)
 
+    self.checkmodel()
+
+  def checkmodel(self):
+    # this is a check function which should make
+    # sure that we actually have the right piece
+    # of hardware
+    modelinfo = self.modelinfo
+    assert(modelinfo.model == "TDC001")
+    assert(modelinfo.hwtype == 16)
 
 
-  def request_home_params(self, negative_direction=True, lswitch=None, velocity=2):
+
+
+  def request_home_params(self, negative_direction=True, lswitch=None, velocity=2, offset=0, channel=1):
     # retrieve homing parameters from
     # controller, using the method of the super class
-    channel_id, homing_direction, _lswitch, homing_velocity, offset_distance = Controller.request_home_params(self)
+    (channel_id, homing_direction, _lswitch, homing_velocity,
+     offset_distance) = Controller.request_home_params(self, channel=channel)
     
-    print("setting home params for MTS50..")
     if negative_direction:
       homing_direction=2
       lswitch = 1
@@ -50,7 +61,7 @@ class MTS50(Controller):
       _lswitch = lswitch
 
     if velocity != None:
-      homing_velocity = velocity
+      homing_velocity = int(velocity * self.velocity_scale)
       
     return (channel_id, homing_direction, _lswitch, homing_velocity, offset_distance)
   

@@ -14,12 +14,11 @@ from runner import runner_serial
 
 @runner_serial
 def home(serial):
-  with pyAPT.MTS50(serial_number=serial) as con:
+#  with pyAPT.MTS50(serial_number=serial) as con:
 #  with pyAPT.NR360S(serial_number=serial) as con:
-#  with pyAPT.CR1Z7(serial_number=serial) as con:
-    print('\tHoming stage...', end=' ')
-    con.home(velocity = 10)
-    print('OK')
+  with pyAPT.CR1Z7(serial_number=serial) as con:
+    con.stop(immediate=True, wait=True)
+    print('stopped')
 
 if __name__ == '__main__':
   import sys

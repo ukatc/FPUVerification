@@ -11,6 +11,13 @@ import sys
 import struct as st
 from collections import namedtuple
 
+def strhex(ret):
+  rlen = len(ret)
+  _bytes = st.unpack("<%dB" % rlen, ret)
+  
+  return 'hex [' + ", ".join([("%02X" % b) for b in _bytes]) + " ]"
+
+
 _Message = namedtuple(
   '_Message',
   ['messageID', 'param1', 'param2', 'dest', 'src', 'data'])
@@ -124,8 +131,8 @@ class Message(_Message):
                       self.dest,
                       self.src)
     if verbose:
-      print(bytes(self),'=',[hex(ord(x)) for x in ret])
-
+      print("coded: ", strhex(ret))
+      
     return ret
 
   def __eq__(self, other):

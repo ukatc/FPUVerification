@@ -4,7 +4,9 @@ Simple class which encapsulate an APT controller
 from __future__ import absolute_import, division, print_function
 import pylibftdi
 import time
+import sys
 import struct as st
+import collections
 
 from .message import Message
 from . import message
@@ -13,6 +15,16 @@ class OutOfRangeError(Exception):
   def __init__(self, requested, allowed):
     val = '%f requested, but allowed range is %.2f..%.2f'%(requested, allowed[0], allowed[1])
     super(OutOfRangeError, self).__init__(val)
+
+DeviceInfo = collections.namedtuple("DeviceInfo",
+                                    ["serialnumber",
+                                     "model",
+                                     "hwtype",
+                                     "firmware_version",
+                                     "notes",
+                                     "hardware_version",
+                                     "mod_state",
+                                     "num_channels"])
 
 class Controller(object):
   def __init__(self, serial_number=None, label=None):
@@ -53,6 +65,7 @@ class Controller(object):
     self.label = label
     self._device = dev
 
+    self.unit = "mm"
     # some conservative limits
     # velocity is in mm/s
     # acceleration is in mm^2/s
@@ -67,6 +80,7 @@ class Controller(object):
     self.position_scale = None
     self.velocity_scale = None
     self.acceleration_scale = None
+    self.provides_status = True
 
     # defines the linear, i.e. distance, range of the controller
     # unit is in mm
@@ -79,7 +93,19 @@ class Controller(object):
     # if we performed a move, and are waiting for move completed message,
     # any other message received in the mean time are place in the queue.
     self.message_queue = []
+    # retrieve the model information
+    self.modelinfo = self.info()
 
+    # perform self-check whether model information matches.
+    # this is intended to be sub-classed
+    self.checkmodel()
+
+
+  # this is intended to be sub-classed, to protect
+  # the hardware from invalid limits and commands
+  def checkmodel(self):
+    pass
+      
   def __enter__(self):
     return self
 
@@ -96,14 +122,17 @@ class Controller(object):
       # XXX we might want a timeout here, or this will block forever
       self._device.close()
 
-  def _send_message(self, m):
+  def _send_message(self, m, verbose=False):
     """
     m should be an instance of Message, or has a pack() method which returns
     bytes to be sent to the controller
     """
+    if verbose:
+      print("sending:", message.strhex(m.pack()))
+      
     self._device.write(m.pack())
 
-  def _read(self, length, block=True):
+  def _read(self, length, block=True, verbose=False):
     """
     If block is True, then we will return only when have have length number of
     bytes. Otherwise we will perform a read, then immediately return with
@@ -121,6 +150,9 @@ class Controller(object):
 
       time.sleep(0.001)
 
+    if verbose:
+      print("received:", message.strhex(data))
+            
     return data
 
   def _read_message(self):
@@ -133,15 +165,23 @@ class Controller(object):
       return Message._make(msglist)
     return msg
 
-  def _wait_message(self, expected_messageID):
+  def _wait_message(self, expected_messageID, verbose=False):
+    if verbose:
+      print("waiting for message ID 0x%0x..." % expected_messageID, end="")
+    sys.stdout.flush()
     found = False
     while not found:
       m = self._read_message()
       found = m.messageID == expected_messageID
       if found:
+        if verbose:
+          print("ok")
         return m
       else:
-        print("Warning: extra message received with ID", m.messageID, "data = ", m.data)
+        print("Warning: extra message received with ID", m.messageID,
+              "param1 = ", m.param1,
+              "param2 = ", m.param2,
+              "data = ", m.data)
         self.message_queue.append(m)
 
   def _position_in_range(self, absolute_pos_mm):
@@ -194,8 +234,8 @@ class Controller(object):
   # the following method can be overriden by child classes which
   # evaluate optional parameters like speed and direction and set
   # defaults, if needed.
-  def request_home_params(self, **args):
-    reqmsg = Message(message.MGMSG_MOT_REQ_HOMEPARAMS)
+  def request_home_params(self, channel=1, **args):
+    reqmsg = Message(message.MGMSG_MOT_REQ_HOMEPARAMS, param1=channel)
     self._send_message(reqmsg)
 
     getmsg = self._wait_message(message.MGMSG_MOT_GET_HOMEPARAMS)
@@ -219,7 +259,9 @@ class Controller(object):
       resumemsg = Message(message.MGMSG_MOT_RESUME_ENDOFMOVEMSGS)
       self._send_message(resumemsg)
 
-  def home(self, wait=True, velocity=None, offset=0, **extra_params):
+  def home(self, wait=True, velocity=None, offset=0, channel=1,
+           return_status=False,
+           **extra_params):
     """
     When velocity is not None, homing parameters will be set so homing velocity
     will be as given, in mm per second.
@@ -250,7 +292,15 @@ class Controller(object):
     # the called method evaluates directional parameters, if given.
     # Passing the velocity allows to set a suitable default by
     # child classes.
-    channel_id, homing_direction, lswitch, homing_velocity, offset_distance = self.request_home_params(velocity=velocity, **extra_params)
+    # make sure we never exceed the limits of our stage
+    offset = max(0, min(offset, self.linear_range[1]))
+
+    if velocity != None:
+      # this should cap for the minimum velocity, too
+      velocity = max(0, min(velocity, self.max_velocity))
+    
+    (channel_id, homing_direction, lswitch, homing_velocity,
+     offset_distance) = self.request_home_params(velocity=velocity, offset=offset, channel=channel, **extra_params)
 
 
     """
@@ -261,35 +311,32 @@ class Controller(object):
     i: 4 bytes for homing velocity
     i: 4 bytes for offset distance
     """
-
-    # make sure we never exceed the limits of our stage
-
-    offset = min(offset, self.linear_range[1])
-    offset = max(offset, 0)
-    offset_distance = offset * self.position_scale
+    assert((channel >= 0) and (channel <= 0xff))
     
-    if velocity:
-      # this should cap for the minimum velocity, too
-      velocity = min(velocity, self.max_velocity)
+    if (homing_velocity == 0) and (velocity != None):
       homing_velocity = int(velocity * self.velocity_scale)
 
 
-    newparams= st.pack( '<HHHii', channel_id, homing_direction, lswitch, homing_velocity, offset_distance)
+    #print("velocity check:", homing_velocity / self.velocity_scale)
+    newparams= st.pack( '<HHHii', channel_id, homing_direction, lswitch,
+                        homing_velocity, offset_distance)
 
     homeparamsmsg = Message(message.MGMSG_MOT_SET_HOMEPARAMS, data=newparams)
-    self._send_message(homeparamsmsg)
+    msgbytes = st.unpack("<BBBBBBBBBBBBBB", newparams)
+    self._send_message(homeparamsmsg, verbose=False)
 
     if wait:
       self.resume_end_of_move_messages()
     else:
       self.suspend_end_of_move_messages()
 
-    homemsg = Message(message.MGMSG_MOT_MOVE_HOME)
-    self._send_message(homemsg)
+    homemsg = Message(message.MGMSG_MOT_MOVE_HOME, param1=channel)
+    self._send_message(homemsg, verbose=False)
 
     if wait:
       self._wait_message(message.MGMSG_MOT_MOVE_HOMED)
-      return self.status()
+      if return_status and self.provides_status:
+        return self.status()
 
   def position(self, channel=1, raw=False):
     reqmsg = Message(message.MGMSG_MOT_REQ_POSCOUNTER, param1=channel)
@@ -503,7 +550,10 @@ class Controller(object):
 
     fwver = '%d.%d.%d'%(fwvermajor,fwverinterim, fwverminor)
 
-    return (sn,model,hwtype,fwver,notes,hwver,modstate,numchan)
+    # we need to get rid of the Null bytes
+    strp = lambda s : s.strip(chr(0))
+
+    return DeviceInfo(sn, strp(model),hwtype, strp(fwver), strp(notes),hwver,modstate,numchan)
 
   def stop(self, channel=1, immediate=False, wait=True):
     """

@@ -21,10 +21,11 @@ def main(args):
     dist = float(args[2])
 
   try:
-    with pyAPT.MTS50(serial_number=serial) as con:
+    with pyAPT.NR360S(serial_number=serial) as con:
+      print('Found APT controller S/N',serial)
       print('\tMoving stage by %.2fmm...'%(dist), end=' ')
       con.move(dist)
-      print('OK')
+      print('moved')
       print('\tNew position: %.2f %s'%(con.position(), con.unit))
       return 0
   except pylibftdi.FtdiError as ex:

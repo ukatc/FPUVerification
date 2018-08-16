@@ -28,8 +28,10 @@ def main(args):
   if controllers:
     for con in controllers:
       print('Found %s %s S/N: %s'%con)
-      with pyAPT.MTS50(serial_number=con[2]) as con:
-        print('\tPosition (%s) = %.2f [enc:%d]'%(con.unit, con.position(), con.position(raw=True)))
+      with pyAPT.NR360S(serial_number=con[2]) as con:
+        print('\tPosition (%s) = %.2f [enc:%d]'%(con.unit,
+                                                 con.position(),
+                                                 con.position(raw=True)))
 
       return 0
   else:

@@ -32,7 +32,7 @@ class NR360S(Controller):
     # min rotation velocity: 22 arcsec / s 
     # Gear ratio: 66 : 1 rounds/deg, 5.4546 degree / turn
     # to move 1 deg:  
-    enccnt = 75091.0  /  0.99997 # microstep per degree (from 5.4546 degree / turn)
+    enccnt =  75093.33333333333 / ((360.0 - 0.0036)/ 360.0)# microstep per degree (from 5.4546 degree / turn)
 
     # these equations are taken from the APT protocol manual
     self.position_scale = enccnt  #the number of enccounts per deg
@@ -40,12 +40,27 @@ class NR360S(Controller):
     self.acceleration_scale = 826.0
 
     self.linear_range = (0,360)
+    self.unit = "Degrees"
+    # this controller does not respond to status requests
+    self.provided_status = False
+
+    self.checkmodel()
 
 
-  def request_home_params(self, anti_clockwise=True, lswitch=None, velocity=10):
+  def checkmodel(self):
+    # this is a check function which should make
+    # sure that we actually have the right piece
+    # of hardware
+    modelinfo = self.modelinfo
+    assert(modelinfo.model == "SCC201")
+    assert(modelinfo.hwtype == 16)
+
+
+  def request_home_params(self, anti_clockwise=True, lswitch=None, velocity=5.0, offset=None, channel=1):
     # retrieve homing parameters from
     # controller, using the method of the super class
-    channel_id, homing_direction, _lswitch, homing_velocity, offset_distance = Controller.request_home_params(self)
+    (channel_id, homing_direction, _lswitch, homing_velocity,
+     offset_distance) = Controller.request_home_params(self, channel=channel)
     # because these parameters do not work for the MTS50,
     # we try to adjust them
     print("setting home params for NR360s..")
@@ -62,6 +77,12 @@ class NR360S(Controller):
       _lswitch = lswitch
       
     if velocity != None:
-      homing_velocity = velocity
+      print("setting speed %f with scale = %f" % (velocity, self.velocity_scale))
+      homing_velocity = int(velocity * self.velocity_scale)
+      
+            
+
+    # ignore offset
+    offset_distance = int(0.5 * self.position_scale)
       
     return (channel_id, homing_direction, _lswitch, homing_velocity, offset_distance)
