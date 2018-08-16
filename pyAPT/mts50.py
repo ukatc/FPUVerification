@@ -30,14 +30,27 @@ class MTS50(Controller):
 
     self.linear_range = (0,50)
 
-  def request_home_params(self):
+
+
+  def request_home_params(self, negative_direction=True, lswitch=None, velocity=2):
     # retrieve homing parameters from
     # controller, using the method of the super class
-    params = list(Controller.request_home_params(self))
-    # because these parameters do not work for the MTS50,
-    # we try to adjust them
+    channel_id, homing_direction, _lswitch, homing_velocity, offset_distance = Controller.request_home_params(self)
+    
     print("setting home params for MTS50..")
-    params[0] = 1
-    params[1] = 2
-    params[2] = 1
-    return tuple(params)
+    if negative_direction:
+      homing_direction=2
+      lswitch = 1
+    else:
+      homing_direction=1
+      lswitch=4
+
+    # override lswitch setting if set
+    if lswitch != None:
+      _lswitch = lswitch
+
+    if velocity != None:
+      homing_velocity = velocity
+      
+    return (channel_id, homing_direction, _lswitch, homing_velocity, offset_distance)
+  

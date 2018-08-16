@@ -191,7 +191,10 @@ class Controller(object):
     resetmsg = Message(message.MGMSG_MOT_SET_PZSTAGEPARAMDEFAULTS)
     self._send_message(resetmsg)
 
-  def request_home_params(self):
+  # the following method can be overriden by child classes which
+  # evaluate optional parameters like speed and direction and set
+  # defaults, if needed.
+  def request_home_params(self, **args):
     reqmsg = Message(message.MGMSG_MOT_REQ_HOMEPARAMS)
     self._send_message(reqmsg)
 
@@ -216,7 +219,7 @@ class Controller(object):
       resumemsg = Message(message.MGMSG_MOT_RESUME_ENDOFMOVEMSGS)
       self._send_message(resumemsg)
 
-  def home(self, wait=True, velocity=None, offset=0):
+  def home(self, wait=True, velocity=None, offset=0, **extra_params):
     """
     When velocity is not None, homing parameters will be set so homing velocity
     will be as given, in mm per second.
@@ -243,13 +246,12 @@ class Controller(object):
     # documented, we get the current parameters, assuming they are correct,
     # and then modify only the velocity and offset component, then send it 
     # back to the controller.
-    curparams = list(self.request_home_params())
 
-    # make sure we never exceed the limits of our stage
+    # the called method evaluates directional parameters, if given.
+    # Passing the velocity allows to set a suitable default by
+    # child classes.
+    channel_id, homing_direction, lswitch, homing_velocity, offset_distance = self.request_home_params(velocity=velocity, **extra_params)
 
-    offset = min(offset, self.linear_range[1])
-    offset = max(offset, 0)
-    offset_apt = offset * self.position_scale
 
     """
     <: little endian
@@ -260,14 +262,19 @@ class Controller(object):
     i: 4 bytes for offset distance
     """
 
+    # make sure we never exceed the limits of our stage
+
+    offset = min(offset, self.linear_range[1])
+    offset = max(offset, 0)
+    offset_distance = offset * self.position_scale
+    
     if velocity:
       # this should cap for the minimum velocity, too
       velocity = min(velocity, self.max_velocity)
-      curparams[-2] = int(velocity * self.velocity_scale)
+      homing_velocity = int(velocity * self.velocity_scale)
 
-    curparams[-1] = offset_apt
 
-    newparams= st.pack( '<HHHii',*curparams)
+    newparams= st.pack( '<HHHii', channel_id, homing_direction, lswitch, homing_velocity, offset_distance)
 
     homeparamsmsg = Message(message.MGMSG_MOT_SET_HOMEPARAMS, data=newparams)
     self._send_message(homeparamsmsg)
