@@ -10,6 +10,7 @@ import collections
 
 from .message import Message
 from . import message
+from warnings import warn
 
 class OutOfRangeError(Exception):
   def __init__(self, requested, allowed):
@@ -178,10 +179,19 @@ class Controller(object):
           print("ok")
         return m
       else:
-        print("Warning: extra message received with ID", m.messageID,
-              "param1 = ", m.param1,
-              "param2 = ", m.param2,
-              "data = ", m.data)
+        if verbose:
+          print("Warning: extra message received with ID", m.messageID,
+                "param1 = ", m.param1,
+                "param2 = ", m.param2,
+                "data = ", m.data)
+        else:
+          warn("extra message received with ID %i,"
+               " param1=%i, param2= %i, data = %r" % (
+                 m.messageID,
+                 m.param1,
+                 m.param2,
+                 m.data))
+          
         self.message_queue.append(m)
 
   def _position_in_range(self, absolute_pos_mm):
@@ -411,7 +421,7 @@ class Controller(object):
     else:
       return None
 
-  def move(self, dist_mm, channel=1, wait=True):
+  def move_old(self, dist_mm, channel=1, wait=True):
     """
     Tells the stage to move from its current position the specified
     distance, in mm
@@ -436,6 +446,52 @@ class Controller(object):
     # just implemented MGMSG_MOT_MOVE_RELATIVE.
     return self.goto(newpos, channel=channel, wait=wait)
 
+
+  def move(self, dist_mm, channel=1, wait=True):
+    """
+    Tells the stage to move from its current position the specified
+    distance, in mm
+
+    This is checked by getting the current position, then
+    computing a new absolute position using dist_mm.
+    """
+    curpos = self.position()
+    newpos_mm = curpos + dist_mm
+
+    if self.soft_limits and not self._position_in_range(newpos_mm):
+      raise OutOfRangeError(abs_pos_mm, self.linear_range)
+
+    dist_apt = int(dist_mm * self.position_scale)
+
+    """
+    <: little endian
+    H: 2 bytes for channel id
+    i: 4 bytes for absolute position
+    """
+    params = st.pack( '<Hi', channel, dist_apt)
+
+    if wait:
+      self.resume_end_of_move_messages()
+    else:
+      self.suspend_end_of_move_messages()
+
+    movemsg = Message(message.MGMSG_MOT_MOVE_RELATIVE,data=params)
+    self._send_message(movemsg)
+
+    if wait:
+      msg = self._wait_message(message.MGMSG_MOT_MOVE_COMPLETED)
+      sts = ControllerStatus(self, msg.datastring)
+      # I find sometimes that after the move completed message there is still
+      # some jittering. This aims to wait out the jittering so we are
+      # stationary when we return
+      while sts.velocity_apt:
+        time.sleep(0.01)
+        sts = self.status()
+      return sts
+    else:
+      return None
+
+  
   def set_soft_limits(self, soft_limits):
     """
     Sets whether range limits are observed in software.
