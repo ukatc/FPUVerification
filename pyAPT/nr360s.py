@@ -56,29 +56,35 @@ class NR360S(Controller):
     assert(modelinfo.hwtype == 16)
 
 
-  def request_home_params(self, anti_clockwise=True, lswitch=None, velocity=5.0, offset=None, channel=1):
+  def request_home_params(self, clockwise=None, lswitch=None, velocity=5.0, offset=None, channel=1):
     # retrieve homing parameters from
     # controller, using the method of the super class
     (channel_id, homing_direction, _lswitch, homing_velocity,
      offset_distance) = Controller.request_home_params(self, channel=channel)
     # because these parameters do not work for the MTS50,
     # we try to adjust them
-    print("setting home params for NR360s..")
+    print("setting home params for NR360s, clockwise=%r .." % clockwise)
 
-    if anti_clockwise:
-      homing_direction=2
-      lswitch = 1
+    if velocity != None:
+      print("setting speed %f with scale = %f" % (velocity, self.velocity_scale))
+      homing_velocity = int(velocity * self.velocity_scale)
+
+    assert(homing_velocity != 0)
+      
+    homing_direction=2
+    lswitch=1
+    
+    if clockwise:
+      print("homing clockwise")
+      homing_velocity = abs(homing_velocity)        
     else:
-      homing_direction=1
-      lswitch=4
+      print("homing anti-clockwise")
+      homing_velocity = - abs(homing_velocity)
 
     # override lswitch setting if set
     if lswitch != None:
       _lswitch = lswitch
       
-    if velocity != None:
-      print("setting speed %f with scale = %f" % (velocity, self.velocity_scale))
-      homing_velocity = int(velocity * self.velocity_scale)
       
             
 
