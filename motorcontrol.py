@@ -3,7 +3,7 @@
 from __future__ import absolute_import,  print_function
 import sys
 
-from os import path
+from os import path, environ
 from ast import literal_eval
 import argparse
 
@@ -41,22 +41,34 @@ stop  [-T devicetype] serialnumber [--fast  ]    - stop motor (with '-p': in pro
 """
 
 # this variable lists driver classes
+from pyAPT.controller import Controller # the generic diver class
+
 from pyAPT.lts300 import LTS300
 from pyAPT.mts50 import MTS50
-from pyAPT.nr360s import NRS360S
+from pyAPT.nr360s import NR360S
 from pyAPT.prm1 import PRM1
 from pyAPT.cr1z7 import CR1Z7
 
-driverlist = [LTS300, MTS50, NRS360S, PRM1, CR1Z7]
+driverlist = [LTS300, MTS50, NR360S, PRM1, CR1Z7]
 
-driver_map = { (str(d), d) for d in driverlist }
-print("drivermap=", drivermap)
+driver_map = dict([(d.__name__, d) for d in driverlist ])
 
 def parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
+
+    parser.add_argument('command', type=str, nargs='?',
+                        default="info",
+                        help='command')
     
-    parser.add_argument('-T', '--devicetype', type=string, dest="devicetype",
-                        default = os.env.get("THORLABS_DEFAULT_DEVICE", "MTS50"),
+    parser.add_argument('serialnum', metavar='S', type=int, nargs='?',
+                        default=None,
+                        help='serial number of device')
+
+    parser.add_argument('distance', metavar='N', type=float, nargs='?',
+                        help='new position or movement distance')
+
+    parser.add_argument('-T', '--devicetype', type=str, dest="devicetype",
+                        default = environ.get("THORLABS_DEFAULT_DEVICE", "MTS50"),
                         help="""Type of device driver which will be loaded. The default is
                         set by the environment variable THORLABS_DEFAULT_DEVICE.
                         To avoid setting the type each time the programm is called,
@@ -79,15 +91,18 @@ def parse_args():
 
 
 def get_devicetypes():
-    homedir = path.expanduser(os.env.get("HOME", "~"))
-    print("user homedir=",homedir)
+    homedir = path.expanduser(environ.get("HOME", "~"))
     try:
-        rcpath = path.join(homedir, ".motorcontrolrc")
-        typedict = literal_eval(os.open(rcpath).readlines())
-    except OSerror, e:
-        print("warning: using default device type configuration")
+        rcpath = path.join(homedir, ".thorlabs_motorcontrolrc")
+        cfg = "".join(open(rcpath).readlines())
+        typedict = literal_eval(cfg)
+    except IOError, e:
+        print("warning: configuration file %r not found,  using default device type configuration" % rcpath)
+        typedict = { 83822910 : 'MTS50',
+                     40873952 : 'NR360S' }	
+
         
-    print("typedict:", repr(typedict))
+    #print("typedict:", repr(typedict))
     return typedict
 
     
@@ -95,40 +110,50 @@ def get_devicetypes():
 def main():
     args = parse_args()
    
-    if (len(args) < 4) or (
-            (len(args) < 5) and (args[2] not in ["moveabs", "moverel"])) :
+    command = args.command
+    serialnum = args.serialnum
+    dist = args.distance
+
+    if command=="help":
         print(__doc__)
         return 1
-
-    command = args[2]
-    try:
-        serial = args[3]
-    except IndexError:
-        serial = None
       
-    if len(args) > 4:
-        dist = float(args[3])
 
-        if serial == None:
-            driver = Controller()
-        else:
-            dtypes = get_devicetypes()
-            device_name = dtypes[serial]
-            driver = driver_map[device_name](serial_number=serial)
+    if serialnum == None:
+        driver = Controller()
+    else:
+        dtypes = get_devicetypes()
+        device_name = dtypes[serialnum]
+        driver = driver_map[device_name](serial_number=serialnum)
 
     if command == "moverel":
+
+        if dist is None:
+            print("Error: distance parameter is missing! Exiting without move.")
+            return 1
+
       
         try:
             with driver as con:
-                print('Found APT controller S/N',serial)
+                print('Found APT controller S/N',serialnum)
                 print('\tMoving stage by %.3f %s ...'%(dist, con.unit), end=' ')
                 con.move(dist)
                 print('moved')
                 print('\tNew position: %.3f %s'%(con.position(), con.unit))
                 return 0
         except FtdiError as ex:
-            print('\tCould not find APT controller S/N of',serial)
+            print('\tCould not find APT controller S/N of',serialnum)
             return 1
+    elif command == "info":
+          with driver as con:
+              info = con.info()
+              print('\tController info:')
+              labels=['S/N','Model','Type','Firmware Ver', 'Notes', 'H/W Ver',
+                      'Mod State', 'Channels']
+
+    for idx,ainfo in enumerate(info):
+      print('\t%12s: %s'%(labels[idx], bytes(ainfo)))
+
         
     return 0
 
