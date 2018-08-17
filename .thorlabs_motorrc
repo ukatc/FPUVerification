@@ -1,2 +1,5 @@
- 83822910 : 'MTS50'
-40873952 : 'NR360S' 
+# this file defines driver types for Thorlabs stages.
+# It is a list of their serial numbers, followeed
+# by the driver name.
+{ 83822910 : 'MTS50',
+  40873952 : 'NR360S' }	
