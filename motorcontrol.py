@@ -27,6 +27,8 @@ info                   [serialnumber]            - print list of available seria
 
 status [-T devicetype] serialnumber              - retrieve and print status of device
 
+get_velparams [-T devicetype] serialnumber       - retrieve and print velocity parameters
+
 home [-T devicetype] [-s speed] [-d direction={cw,acw}] [-l switch selection] serialnumber
                                                  - home device
                                                    (may require correct limit switch settings)
@@ -83,8 +85,12 @@ def parse_args():
                         help='set speed in device units per seconds')
     
     parser.add_argument('-d', '--home-direction', dest='home_direction', 
-                        default="to_zero",
+                        default=None,
                         help='direction of homing operation. Might not be applicable for a given stage.')
+
+    parser.add_argument('-m', '--monitor_completion', dest='monitor_completion', 
+                        default=False, action="store_true",
+                        help='print info on command execution until it is completed.')
 
     
     args = parser.parse_args()
@@ -166,6 +172,73 @@ def exec_get_position(driver, serialnum):
                                                 con.position(raw=True)))
     return 0
 
+def exec_get_status(driver, serialnum):
+    with driver as con:
+        status = con.status()
+        print('\tController status:')
+        print('\t\tPosition: %.3fmm (%d cnt)'%(status.position, status.position_apt))
+        print('\t\tVelocity: %.3fmm'%(status.velocity))
+        print('\t\tStatus:',status.flag_strings())
+
+
+def exec_get_velparams(driver, serialnum):
+    with driver as con:
+        min_vel, acc, max_vel = con.velocity_parameters()
+        raw_min_vel, raw_acc, raw_max_vel = con.velocity_parameters(raw=True)
+        print('\tController velocity parameters:')
+        print('\t\tMin. Velocity: %.2fmm/s (%d)'%(min_vel, raw_min_vel))
+        print('\t\tAcceleration: %.2fmm/s/s (%d)'%(acc, raw_acc))
+        print('\t\tMax. Velocity: %.2fmm/s (%d)'%(max_vel, raw_max_vel))
+
+def exec_moveabs(driver, serialnum, newposition, wait=True):
+    try:
+        with driver as con:
+            print('Found APT controller S/N',serialnum)
+            print('\tMoving stage to %.2f %s...'%(newposition, con.unit))
+            st=time.time()
+            con.goto(newposition, wait=wait)
+            if not wait:
+                stat = con.status()
+                while stat.moving:
+                    out = '        pos %3.2f %s vel %3.2f %s/s'%(stat.position, con.unit,
+                                                                 stat.velocity, con.unit)
+                    sys.stdout.write(out)
+                    time.sleep(0.01)
+                    stat=con.status()
+                    l = len(out)
+                    sys.stdout.write('\b'*l)
+                    sys.stdout.write(' '*l)
+                    sys.stdout.write('\b'*l)
+    
+            print('\tMove completed in %.2fs'%(time.time()-st))
+            print('\tNew position: %.2f %s'%(con.position(), con.unit))
+            if not wait:
+                print('\tStatus:',con.status())
+            return 0
+        
+    except FtdiError as ex:
+        print('\tCould not find APT controller S/N of',serial)
+        return 1
+
+def exec_home(driver, serialnum, home_direction=None):
+    kwargs = {}
+    if home_direction == "to_zero":
+        kwargs["to_zero"]=True
+    elif home_direction == "clockwise":
+        kwargs["clockwise"]=True
+    elif home_direction == "anticlockwise":
+        kwargs["clockwise"]=False
+    elif home_direction == "to_positive":
+        kwargs["to_zero"]=False
+        
+    with driver as con:
+        print('\tHoming stage...', end=' ')
+        sys.stdout.flush()
+        con.home(**kwargs)
+        
+    print('OK')
+
+    
 def main():
     args = parse_args()
    
@@ -188,12 +261,23 @@ def main():
     
     elif command == "get_position":
         return exec_get_position(driver, serialnum)
+    
+    elif command == "get_status":
+        return exec_get_status(driver, serialnum)
+        
+    elif command == "get_velparams":
+        return exec_get_velparams(driver, serialnum)
         
     elif command == "moverel":
         return exec_moverel(driver, serialnum, dist)
     
-                
-
+    elif command == "moveabs":
+        return exec_moveabs(driver, serialnum, dist, wait=not args.monitor_completion)
+    
+    elif command == "home":
+        return exec_home(driver, serialnum, home_direction=args.home_direction)
+    else:
+        raise ValueError("command not recognized")
 
         
     return 0
