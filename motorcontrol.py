@@ -44,9 +44,9 @@ home [-T devtype] [-v velocity] [-d direction={cw,acw}] [-l switch] serialnum
 moverel [-T devtype]  serialnum  distance  - move relative to current pos, (floating point number 
                                              in device units).
                                                
-moveabs [-T devtype]  serialnum  pos       - move absolute to pos. May not work with NR360 stage.
+moveabs [-T devtype]  [-m] serialnum  pos  - move absolute to pos. May not work with NR360 stage.
 
-stop  [-T devtype] serialnum [--fast  ]    - stop motor (with '--fast': in unprofiled mode)
+stop  [-T devtype] serialnum [--fast] [--nowait] - stop motor (with '--fast': in unprofiled mode)
 
 reset  [-T devtype] serialnum              - reset controller to eprom defaults. This is untested
                                              and might have unintended consequences.
@@ -74,11 +74,11 @@ def parse_args():
                         default="info",
                         help='command')
     
-    parser.add_argument('serialnum', metavar='S', type=int, nargs='?',
+    parser.add_argument('serialnum', metavar='SERIALNUM', type=int, nargs='?',
                         default=None,
                         help='serial number of device')
 
-    parser.add_argument('distance', metavar='N', type=float, nargs='?',
+    parser.add_argument('distance', metavar='PAR', type=float, nargs='?',
                         help='new position or movement distance')
 
     parser.add_argument('-T', '--devicetype', type=str, dest="devicetype",
@@ -108,13 +108,17 @@ def parse_args():
     
     parser.add_argument('-l', '--limitswitch', dest='limitswitch', 
                         default=None,
-                        help="Limit switch flag. See protocol documentation for more info."
-                             " Might not work as described.")
+                        help="Limit switch flag. See protocol documentation of home"
+                        " commmand for more info. Might not work as described.")
 
     parser.add_argument('-m', '--monitor_completion', dest='monitor_completion', 
                         default=False, action="store_true",
-                        help='print progress info until command is completed'
+                        help='print progress info until moveabs command is completed'
                         ' (does *not* work with NR360 stage).')
+
+    parser.add_argument('-n', '--nowait', dest='nowait', 
+                        default=False, action="store_true",
+                        help='do not wait for stop command to complete.')
 
     parser.add_argument('-f', '--fast', dest='immediate_stop', 
                         default=False, action="store_true",
@@ -154,11 +158,8 @@ def print_device_info(driver):
 
 def list_device_info():
     # no serial number given, we retrieve a list of all devices
-    print("getting low-level driver")
     drv = LibFTDI_Driver()
-    print("getting device list")
     controllers = drv.list_devices()
-    print ("device list = ", repr(controllers))
 
     if controllers:
         for vendor, devicetype, serialnumber in controllers:
@@ -168,6 +169,13 @@ def list_device_info():
     else:
         print("no Thorlabs / FTDI controllers found")
         return 1
+
+def exec_identify(driver, serialnum, wait_for_enter=True):
+    with driver as con:
+        print('\tIdentifying controller')
+        con.identify()
+        raw_input('\n>>>>Press enter to continue')
+
     
 def exec_moverel(driver, serialnum, dist):
     if dist is None:
@@ -216,17 +224,19 @@ def exec_get_velparams(driver, serialnum):
         raw_min_vel, raw_acc, raw_max_vel = con.velocity_parameters(raw=True)
         print('\tController velocity parameters:')
         print('\t\tMin. Velocity: %.2fmm/s (%d)'%(min_vel, raw_min_vel))
-        print('\t\tAcceleration: %.2fmm/s/s (%d)'%(acc, raw_acc))
         print('\t\tMax. Velocity: %.2fmm/s (%d)'%(max_vel, raw_max_vel))
+        print('\t\tAcceleration: %.2fmm/s/s (%d)'%(acc, raw_acc))
 
-def exec_moveabs(driver, serialnum, newposition, wait=True):
+def exec_moveabs(driver, serialnum, newposition, wait=True, monitor=False):
     try:
+        if monitor:
+            wait=False
         with driver as con:
             print('Found APT controller S/N',serialnum)
             print('\tMoving stage to %.2f %s...'%(newposition, con.unit))
             st=time.time()
             con.goto(newposition, wait=wait)
-            if not wait:
+            if monitor:
                 stat = con.status()
                 while stat.moving:
                     out = '        pos %3.2f %s vel %3.2f %s/s'%(stat.position, con.unit,
@@ -241,7 +251,7 @@ def exec_moveabs(driver, serialnum, newposition, wait=True):
     
             print('\tMove completed in %.2fs'%(time.time()-st))
             print('\tNew position: %.2f %s'%(con.position(), con.unit))
-            if not wait:
+            if monitor:
                 print('\tStatus:',con.status())
             return 0
         
@@ -276,17 +286,17 @@ def exec_home(driver, serialnum, home_direction=None,
     return 0
 
 
-def exec_stop(driver, serialnum, immediate=False):
+def exec_stop(driver, serialnum, immediate=False, wait=True):
     if immediate:
         mode = "immediate stop"
     else:
         mode = "profiled stop"
 
     try:
-        print("stopping serial number %s (%s) ..." % mode, end="")
+        print("stopping serial number %s (%s) ..." % (serialnum, mode), end="")
         sys.stdout.flush()
-        with driver(serial_number=serial) as con:
-            con.stop(immediate=True, wait=True)
+        with driver as con:
+            con.stop(immediate=True, wait=wait)
             print('STOPPED')
             
     except FtdiError as ex:
@@ -300,13 +310,13 @@ def exec_set_velparams(driver, serialnum, max_velocity=None, max_acceleration=No
     assert(max_acceleration != None)
     with driver as con:
         unit = con.unit
-        print('\tSetting new velocity parameters', acc, max_vel)
-        con.set_velocity_parameters(float(acc), float(max_vel))
+        print('\tSetting new velocity parameters', max_acceleration, max_velocity)
+        con.set_velocity_parameters(float(max_acceleration), float(max_velocity))
         min_vel, acc, max_vel = con.velocity_parameters()
         print('\tNew velocity parameters:')
         print('\t\tMin. Velocity: %.2f %s'%(min_vel, unit))
-        print('\t\tAcceleration: %.2f %s'%(acc, unit))
         print('\t\tMax. Velocity: %.2f %s'%(max_vel, unit))
+        print('\t\tAcceleration: %.2f %s'%(acc, unit))
 
 
 def exec_reset(driver, serialnum):
@@ -338,6 +348,9 @@ def main():
 
         return list_device_info()
     
+    elif command == "identify":
+        return exec_identify(driver, serialnum, wait_for_enter=True)
+    
     elif command == "getpos":
         return exec_get_position(driver, serialnum)
     
@@ -355,10 +368,11 @@ def main():
         return exec_moverel(driver, serialnum, dist)
     
     elif command == "moveabs":
-        return exec_moveabs(driver, serialnum, dist, wait=not args.monitor_completion)
+        return exec_moveabs(driver, serialnum, dist, monitor=args.monitor_completion)
     
     elif command == "stop":
-        return exec_stop(driver, serialnum, immediate=args.immediate_stop)
+        return exec_stop(driver, serialnum, immediate=args.immediate_stop,
+                         wait=(not args.nowait) )
     
     elif command == "home":
         return exec_home(driver, serialnum,
