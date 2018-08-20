@@ -158,7 +158,14 @@ def auto_detect_driverclass(serialnum):
         device_name = dtypes[serialnum]
         driverclass = driver_map[device_name](serial_number=serialnum)
         return driverclass
-    
+
+def exec_get_position(driver, serialnum):
+    with driver as con:
+        print('\tPosition (%s) = %.2f [enc:%d]'%(con.unit,
+                                                 con.position(),
+                                                con.position(raw=True)))
+    return 0
+
 def main():
     args = parse_args()
    
@@ -172,14 +179,19 @@ def main():
       
     driver = auto_detect_driverclass(serialnum)
     
-    if command == "moverel":
-        return exec_moverel(driver, serialnum, dist)
-    elif command == "info":
+    if command == "info":
 
         if serialnum != None:
             return print_device_info(driver)
 
         return list_device_info()
+    
+    elif command == "get_position":
+        return exec_get_position(driver, serialnum)
+        
+    elif command == "moverel":
+        return exec_moverel(driver, serialnum, dist)
+    
                 
 
 
