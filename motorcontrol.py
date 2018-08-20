@@ -15,33 +15,42 @@ from pylibftdi import FtdiError
 from pylibftdi import Driver as LibFTDI_Driver
 
 
-"""Thorlabs motor control, re-written in Python. 
+__help__ = """Thorlabs motor control, re-written in Python. 
 To automatically use a certain device type with a specific
 serial number, edit ${HOME}/.motorcontrolrc.
 
 Commands:
 
-info                   [serialnumber]            - print list of available serial devices
-                                                   and movement units. if serialnumber is given,
-                                                   this is restricted to the device with that number.
+info   [serialnum]                         - print list of available serial devices
+                                             and movement units. if serialnum is given,
+                                             this is restricted to the device with that number.
 
-status [-T devicetype] serialnumber              - retrieve and print status of device
+status [-T devtype] serialnum              - retrieve and print status of device (does not work with NR360)
 
-get_velparams [-T devicetype] serialnumber       - retrieve and print velocity parameters
+identify [-T devtype]  serialnum           - identify device by flashing LED
 
-home [-T devicetype] [-s speed] [-d direction={cw,acw}] [-l switch selection] serialnumber
-                                                 - home device
-                                                   (may require correct limit switch settings)
+getpos [-T devtype]  serialnum            - get position, in device units
 
-identify [-T devicetype]  serialnumber           - identify device by flashing LED
+getvelparams [-T devtype] serialnum       - retrieve and print velocity parameters
 
-getpos [-T devicetype]  serialnumber             - get position 
+setvelparams [-T devtype] serialnum [-v velocity] [-a accel]  - set velocity parameters
 
-moveabs [-T devicetype]  serialnumber  pos       - move absolute to pos
+home [-T devtype] [-v velocity] [-d direction={cw,acw}] [-l switch] serialnum
+                                           - home device
+                                             (depending on the weirdness of the particulatr controller, 
+                                              may require specific limit switch settings or even negative
+                                              velocity).
 
-moverel [-T devicetype]  serialnumber  distance  - move relative to current pos
+moverel [-T devtype]  serialnum  distance  - move relative to current pos, (floating point number 
+                                             in device units).
                                                
-stop  [-T devicetype] serialnumber [--fast  ]    - stop motor (with '-p': in profiled mode)
+moveabs [-T devtype]  serialnum  pos       - move absolute to pos. May not work with NR360 stage.
+
+stop  [-T devtype] serialnum [--fast  ]    - stop motor (with '--fast': in unprofiled mode)
+
+reset  [-T devtype] serialnum              - reset controller to eprom defaults. This is untested
+                                             and might have unintended consequences.
+
 """
 
 # this variable lists driver classes
@@ -58,7 +67,8 @@ driverlist = [LTS300, MTS50, NR360S, PRM1, CR1Z7]
 driver_map = dict([(d.__name__, d) for d in driverlist ])
 
 def parse_args():
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(description=__help__,
+                                     formatter_class=argparse.RawDescriptionHelpFormatter)
 
     parser.add_argument('command', type=str, nargs='?',
                         default="info",
@@ -73,24 +83,43 @@ def parse_args():
 
     parser.add_argument('-T', '--devicetype', type=str, dest="devicetype",
                         default = environ.get("THORLABS_DEFAULT_DEVICE", "MTS50"),
-                        help="""Type of device driver which will be loaded. The default is
-                        set by the environment variable THORLABS_DEFAULT_DEVICE.
+                        help="""Type of device driver which will be loaded. The default 
+                        can be set by the environment variable THORLABS_DEFAULT_DEVICE.
                         To avoid setting the type each time the programm is called,
                         add the serial number / device mapping to the file
-                        ${HOME}/.motorcontrolrc
+                        ${HOME}/.motorcontrolrc .
                         """)
     
-    parser.add_argument('-s', '--speed', dest='speed',  type=int,
+    parser.add_argument('-v', '--velocity', dest='velocity',  type=float,
                         default=10,
-                        help='set speed in device units per seconds')
+                        help='set velocity, in device units per seconds')
+    
+    parser.add_argument('-a', '--acceleration', dest='acceleration',  type=float,
+                        default=5,
+                        help='set acceleration in device units per seconds^2')
     
     parser.add_argument('-d', '--home-direction', dest='home_direction', 
                         default=None,
-                        help='direction of homing operation. Might not be applicable for a given stage.')
+                        help="""Direction of homing operation. Might not be applicable
+                        for a given stage. Direction can be, e.g., 'to_zero',
+                        'clockwise', 'anticlockwise', 'to_positive' - depends on driver.
+                        Note: If it doesn't work, try to set the velocity"
+                        to a negative value.""")
+    
+    parser.add_argument('-l', '--limitswitch', dest='limitswitch', 
+                        default=None,
+                        help="Limit switch flag. See protocol documentation for more info."
+                             " Might not work as described.")
 
     parser.add_argument('-m', '--monitor_completion', dest='monitor_completion', 
                         default=False, action="store_true",
-                        help='print info on command execution until it is completed.')
+                        help='print progress info until command is completed'
+                        ' (does *not* work with NR360 stage).')
+
+    parser.add_argument('-f', '--fast', dest='immediate_stop', 
+                        default=False, action="store_true",
+                        help="When stopping, stop device abruptly, without"
+                        " slowing down before (aka unprofiled stop).")
 
     
     args = parser.parse_args()
@@ -155,7 +184,7 @@ def exec_moverel(driver, serialnum, dist):
             print('\tNew position: %.3f %s'%(con.position(), con.unit))
             return 0
     except FtdiError as ex:
-        print('\tCould not find APT controller S/N of',serialnum)
+        print('\tCould not find APT controller S/N of', serialnum)
         return 1
 
 def auto_detect_driverclass(serialnum):
@@ -220,7 +249,8 @@ def exec_moveabs(driver, serialnum, newposition, wait=True):
         print('\tCould not find APT controller S/N of',serial)
         return 1
 
-def exec_home(driver, serialnum, home_direction=None):
+def exec_home(driver, serialnum, home_direction=None,
+              limitswitch=None, velocity=None):
     kwargs = {}
     if home_direction == "to_zero":
         kwargs["to_zero"]=True
@@ -230,6 +260,12 @@ def exec_home(driver, serialnum, home_direction=None):
         kwargs["clockwise"]=False
     elif home_direction == "to_positive":
         kwargs["to_zero"]=False
+
+    if limitswitch != None:
+        kwargs["lswitch"] = limitswitch
+
+    if velocity != None:
+        kwargs["velocity"] = velocity
         
     with driver as con:
         print('\tHoming stage...', end=' ')
@@ -237,7 +273,50 @@ def exec_home(driver, serialnum, home_direction=None):
         con.home(**kwargs)
         
     print('OK')
+    return 0
 
+
+def exec_stop(driver, serialnum, immediate=False):
+    if immediate:
+        mode = "immediate stop"
+    else:
+        mode = "profiled stop"
+
+    try:
+        print("stopping serial number %s (%s) ..." % mode, end="")
+        sys.stdout.flush()
+        with driver(serial_number=serial) as con:
+            con.stop(immediate=True, wait=True)
+            print('STOPPED')
+            
+    except FtdiError as ex:
+        print('\terror stopping device %s (%s)' % (serialnum, ex))
+        return 1
+    return 0
+
+
+def exec_set_velparams(driver, serialnum, max_velocity=None, max_acceleration=None):
+    assert(max_velocity != None)
+    assert(max_acceleration != None)
+    with driver as con:
+        unit = con.unit
+        print('\tSetting new velocity parameters', acc, max_vel)
+        con.set_velocity_parameters(float(acc), float(max_vel))
+        min_vel, acc, max_vel = con.velocity_parameters()
+        print('\tNew velocity parameters:')
+        print('\t\tMin. Velocity: %.2f %s'%(min_vel, unit))
+        print('\t\tAcceleration: %.2f %s'%(acc, unit))
+        print('\t\tMax. Velocity: %.2f %s'%(max_vel, unit))
+
+
+def exec_reset(driver, serialnum):
+    with driver as con:
+        print('\tResetting controller parameters to EEPROM defaults')
+        con.reset_parameters()
+    return 0
+
+
+    
     
 def main():
     args = parse_args()
@@ -247,7 +326,7 @@ def main():
     dist = args.distance
 
     if command=="help":
-        print(__doc__)
+        print(__help__)
         return 1
       
     driver = auto_detect_driverclass(serialnum)
@@ -259,14 +338,18 @@ def main():
 
         return list_device_info()
     
-    elif command == "get_position":
+    elif command == "getpos":
         return exec_get_position(driver, serialnum)
     
-    elif command == "get_status":
+    elif command == "status":
         return exec_get_status(driver, serialnum)
         
-    elif command == "get_velparams":
+    elif command == "getvelparams":
         return exec_get_velparams(driver, serialnum)
+        
+    elif command == "setvelparams":
+        return exec_set_velparams(driver, serialnum, max_velocity=args.velocity,
+                                  max_acceleration=args.acceleration)
         
     elif command == "moverel":
         return exec_moverel(driver, serialnum, dist)
@@ -274,8 +357,16 @@ def main():
     elif command == "moveabs":
         return exec_moveabs(driver, serialnum, dist, wait=not args.monitor_completion)
     
+    elif command == "stop":
+        return exec_stop(driver, serialnum, immediate=args.immediate_stop)
+    
     elif command == "home":
-        return exec_home(driver, serialnum, home_direction=args.home_direction)
+        return exec_home(driver, serialnum,
+                         home_direction=args.home_direction,
+                         velocity=args.velocity)
+    
+    elif command == "reset":
+        return exec_reset(driver, serialnum)
     else:
         raise ValueError("command not recognized")
 
