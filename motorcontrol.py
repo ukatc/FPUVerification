@@ -12,6 +12,7 @@ import time
 #import pylibftdi
 import pyAPT
 from pylibftdi import FtdiError
+from pylibftdi import Driver as LibFTDI_Driver
 
 
 """Thorlabs motor control, re-written in Python. 
@@ -21,7 +22,8 @@ serial number, edit ${HOME}/.motorcontrolrc.
 Commands:
 
 info                   [serialnumber]            - print list of available serial devices
-                                                   and movement units
+                                                   and movement units. if serialnumber is given,
+                                                   this is restricted to the device with that number.
 
 status [-T devicetype] serialnumber              - retrieve and print status of device
 
@@ -105,6 +107,15 @@ def get_devicetypes():
     #print("typedict:", repr(typedict))
     return typedict
 
+def print_device_info(driver):
+    with driver as con:
+        info = con.info()
+        print('\tController info:')
+        labels=['S/N','Model','Type','Firmware Ver', 'Notes', 'H/W Ver',
+                'Mod State', 'Channels']
+
+        for idx,ainfo in enumerate(info):
+            print('\t%12s: %s'%(labels[idx], bytes(ainfo)))
     
 
 def main():
@@ -118,10 +129,8 @@ def main():
         print(__doc__)
         return 1
       
-
-    if serialnum == None:
-        driver = Controller()
-    else:
+    # FIXME: put the driver detection into a module function
+    if serialnum != None:
         dtypes = get_devicetypes()
         device_name = dtypes[serialnum]
         driver = driver_map[device_name](serial_number=serialnum)
@@ -145,14 +154,28 @@ def main():
             print('\tCould not find APT controller S/N of',serialnum)
             return 1
     elif command == "info":
-          with driver as con:
-              info = con.info()
-              print('\tController info:')
-              labels=['S/N','Model','Type','Firmware Ver', 'Notes', 'H/W Ver',
-                      'Mod State', 'Channels']
 
-    for idx,ainfo in enumerate(info):
-      print('\t%12s: %s'%(labels[idx], bytes(ainfo)))
+        if serialnum != None:
+            print_device_info(driver)
+            return 0
+
+        # no serial number given, we retrieve a list of all devices
+        print("getting low-level driver")
+        drv = LibFTDI_Driver()
+        print("getting device list")
+        controllers = drv.list_devices()
+        print ("device list = ", repr(controllers))
+
+        if controllers:
+            for vendor, devicetype, serialnumber in controllers:
+                print('Found %s %s S/N: %s'% (vendor, devicetype, serialnumber))
+                driver = pyAPT.Controller(serial_number=serialnumber)
+                print_device_info(driver)
+        else:
+            print("no Thorlabs / FTDI controllers found")
+            return 1
+                
+
 
         
     return 0
