@@ -116,8 +116,49 @@ def print_device_info(driver):
 
         for idx,ainfo in enumerate(info):
             print('\t%12s: %s'%(labels[idx], bytes(ainfo)))
-    
 
+def list_device_info():
+    # no serial number given, we retrieve a list of all devices
+    print("getting low-level driver")
+    drv = LibFTDI_Driver()
+    print("getting device list")
+    controllers = drv.list_devices()
+    print ("device list = ", repr(controllers))
+
+    if controllers:
+        for vendor, devicetype, serialnumber in controllers:
+            print('Found %s %s S/N: %s'% (vendor, devicetype, serialnumber))
+            driver = pyAPT.Controller(serial_number=serialnumber)
+            print_device_info(driver)
+    else:
+        print("no Thorlabs / FTDI controllers found")
+        return 1
+    
+def exec_moverel(driver, serialnum, dist):
+    if dist is None:
+        print("Error: distance parameter is missing! Exiting without move.")
+        return 1
+
+  
+    try:
+        with driver as con:
+            print('Found APT controller S/N',serialnum)
+            print('\tMoving stage by %.3f %s ...'%(dist, con.unit), end=' ')
+            con.move(dist)
+            print('moved')
+            print('\tNew position: %.3f %s'%(con.position(), con.unit))
+            return 0
+    except FtdiError as ex:
+        print('\tCould not find APT controller S/N of',serialnum)
+        return 1
+
+def auto_detect_driverclass(serialnum):
+    if serialnum != None:
+        dtypes = get_devicetypes()
+        device_name = dtypes[serialnum]
+        driverclass = driver_map[device_name](serial_number=serialnum)
+        return driverclass
+    
 def main():
     args = parse_args()
    
@@ -129,51 +170,16 @@ def main():
         print(__doc__)
         return 1
       
-    # FIXME: put the driver detection into a module function
-    if serialnum != None:
-        dtypes = get_devicetypes()
-        device_name = dtypes[serialnum]
-        driver = driver_map[device_name](serial_number=serialnum)
-
+    driver = auto_detect_driverclass(serialnum)
+    
     if command == "moverel":
-
-        if dist is None:
-            print("Error: distance parameter is missing! Exiting without move.")
-            return 1
-
-      
-        try:
-            with driver as con:
-                print('Found APT controller S/N',serialnum)
-                print('\tMoving stage by %.3f %s ...'%(dist, con.unit), end=' ')
-                con.move(dist)
-                print('moved')
-                print('\tNew position: %.3f %s'%(con.position(), con.unit))
-                return 0
-        except FtdiError as ex:
-            print('\tCould not find APT controller S/N of',serialnum)
-            return 1
+        return exec_moverel(driver, serialnum, dist)
     elif command == "info":
 
         if serialnum != None:
-            print_device_info(driver)
-            return 0
+            return print_device_info(driver)
 
-        # no serial number given, we retrieve a list of all devices
-        print("getting low-level driver")
-        drv = LibFTDI_Driver()
-        print("getting device list")
-        controllers = drv.list_devices()
-        print ("device list = ", repr(controllers))
-
-        if controllers:
-            for vendor, devicetype, serialnumber in controllers:
-                print('Found %s %s S/N: %s'% (vendor, devicetype, serialnumber))
-                driver = pyAPT.Controller(serial_number=serialnumber)
-                print_device_info(driver)
-        else:
-            print("no Thorlabs / FTDI controllers found")
-            return 1
+        return list_device_info()
                 
 
 
