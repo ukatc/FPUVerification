@@ -1,0 +1,96 @@
+GigECamera Software Readme
+==========================
+
+Current Version: 0.1
+Last updated: 03/09/2018
+Author: Alan O'Brien
+
+Introduction
+============
+
+
+This software should be considered in a PROTOTYPE state, it was released to speed up on specific test and to gain more knowledge about the how the software and cameras interact. Currently this software connects with only one Camera 169.254.187.121 and does no setup using the last settings uploaded to the camera.
+
+If you are developing software using this module please check https://forge.roe.ac.uk/svn/MoonsLibrary/trunk/FPU_Verification for the latest version.
+
+
+TO DO
+=====
+Required
+--------
+1) Add support for changing exposure time.
+
+Additional
+----------
+In no particular order
+1) Move camera config into files.
+2) Improve image acquisition by looking at grab strategies (technical Pylon term).
+3) Add guards when overwriting images (but maybe that is not this software layers job).
+4) Make into an installable package.
+
+
+Installation instructions
+=========================
+Dependencies
+-----------
+The GigECamera relies on 3 external packages numpy, scipy and pyplon. numpy and scipy are common packages and likely already preinstalled, if not see nump.org and scipy.org.
+
+There should be no dependency on the version of numpy and scipy, but it has been tested with the following versions:
+
++ numpy 1.12.1
++ scipy 0.18.1
++ pypylon 1.3.1
+
+Installing PyPylon
+------------------
+Installing pypylon is a more complicated process, pypyplon its self is a wrapper about the C++ library pylon. Detailed instructions can be found at https://github.com/basler/pypylon
+
+PyPylon has been tested by the developers with version 5.0.12 of pylon.
+
+
+How To Use
+==========
+Once the prerequisite software is installed, GigECamera is ready to be used.
+
+With the GigECamera.py file in the same folder as the script it can be imported with the following:
+
+import GigECamera
+
+GigECamera is a lot to type for a commonly used module, I would advise importing the module as follows:
+
+import GigECamera as gig
+
+to allow the short gig namespace.
+
+There are currently used one method (gig.saveImageFromCamera) and one dictionary (gig.TEST_CAMERA) offered and should be used in tandem like so:
+
+gig.saveImageFromCamera(gig.TEST_CAMERA, %filename%)
+
+This will save an image from the camera to a file with at %filename%, previously uploaded settings are currently used, if the settings need to be changed it is advised to do it in the GUI.
+
+
+Notes
+=====
+
+
+Reference
+=========
+Methods
+-------
++saveImageFromCamera(device_cofig, filename)
+    Function to save an image from a camera device and save it to a location.
+    
+    Connect to a Basler GIGe camera via the pypylon software suite.
+    
+    Parameters
+    ----------
+    device_config : dictionary
+        dictionary containing the device configuration, currently this is the IP address (IpAddress) and the pypylon class device (DeviceClass). The only useful value for DeviceClass is currently "BaslerGigE"
+    filename : str
+        Path to location where the image will be saved.
+
+Data Structures
+---------------
+TEST_CAMERA = {DEVICE_CLASS :BASLER_DEVICE_CLASS,
+                IP_ADDRESS :"169.254.187.121"}
+    The TEST_CAMERA is currently used for repeatability testing.
