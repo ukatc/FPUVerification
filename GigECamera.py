@@ -7,11 +7,14 @@ This is a prototype script and as such has several this still need to done, see 
 1[SIMPLE] Move config objects to files that can be read
 2[COMPLEX] Determine the best grab strategy (see samples/grabstrategies.py , while developing my strategy is to do the least configuration possible.
 3 [SIMPLE] Throw pretty exception when file already exists, need to manually check imsave clobbers. [UPDATE] According to SW this is acceptable behaviour. Calling code does not have a default save location.
+
+:DONE:
 4 [Complex] Add support for changing the exposure time.
 
 :History:
 31/08/2018: Creation AOB
 03/09/2018: Fixed countOfImagesToGrab variable not existing. Version delivered as prototype 0.1
+20/09/2018: 0.2.0 Updated to include exposure time parameter
 """
 from pypylon import pylon
 from pypylon import genicam
@@ -21,16 +24,16 @@ import sys
 import numpy as np
 from scipy.misc import imsave
 
-__version__ = 0.1.0
+__version__ = 0.2.0
 __author__ = "Alan O'Brien"
 
 DEVICE_CLASS = "DeviceClass"
 IP_ADDRESS = "IpAddress"
 BASLER_DEVICE_CLASS = "BaslerGigE"
 
-
 TEST_CAMERA = {DEVICE_CLASS :BASLER_DEVICE_CLASS,
-                IP_ADDRESS :"169.254.187.121"}
+                IP_ADDRESS :"169.254.187.121",
+                EXPOSURE_TIME: 499975}
 
 
 def saveImageFromCamera(device_config, filename):
@@ -56,11 +59,19 @@ def saveImageFromCamera(device_config, filename):
     
     print("Gained access to Camera")
     
-    #FROM HERE USES SAMPLS/GRAB.PY 
+    #FROM HERE USES SAMPLES/GRAB.PY 
     
     # Print the model name of the camera.
     print("Using device ", camera.GetDeviceInfo().GetModelName())
-
+    
+    
+    # Camera needs to be open to change the exposure time, normal camera.StartGrabbingMax will open a camera but this is an explicit call
+    camera.Open()
+    
+    if genicam.isWritable(camera.ExposureTimeRaw):
+        camera.ExposureTimeRaw.SetValue(device_config[EXPOSURE_TIME])
+    else:
+        print("Exposure Time is not settable, continuing with current exposure time.")
     # The parameter MaxNumBuffer can be used to control the count of buffers
     # allocated for grabbing. The default value of this parameter is 10.
     camera.MaxNumBuffer = 1
