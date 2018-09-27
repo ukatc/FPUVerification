@@ -3,8 +3,12 @@ Prototype script to get images from Basler GIGe cameras
 
 This is a prototype script and as such has several this still need to done, see below.
 
+Prerequisites
+-------------
+Pylon software - PyPylon is just python bindings to the C++ pylon software, the pylon software should be reinstalled.
+
 :TODO:
-1[SIMPLE] Move config objects to files that can be read
+1[SIMPLE] Move config objects to files that can be read -[UPDATE 27/09/2018] Config objects are less useful current use case is separate initialisation, exposure time and image acquisition steps.
 2[COMPLEX] Determine the best grab strategy (see samples/grabstrategies.py , while developing my strategy is to do the least configuration possible.
 3 [SIMPLE] Throw pretty exception when file already exists, need to manually check imsave clobbers. [UPDATE] According to SW this is acceptable behaviour. Calling code does not have a default save location.
 
@@ -15,6 +19,7 @@ This is a prototype script and as such has several this still need to done, see 
 31/08/2018: Creation AOB
 03/09/2018: Fixed countOfImagesToGrab variable not existing. Version delivered as prototype 0.1
 20/09/2018: 0.2.0 Updated to include exposure time parameter
+27/09/2018: 0.3.0 Refactoring to an OOP design
 """
 from pypylon import pylon
 from pypylon import genicam
@@ -24,7 +29,7 @@ import sys
 import numpy as np
 from scipy.misc import imsave
 
-__version__ = 0.2.0
+__version__ = "0.3.0"
 __author__ = "Alan O'Brien"
 
 DEVICE_CLASS = "DeviceClass"
@@ -32,71 +37,101 @@ IP_ADDRESS = "IpAddress"
 BASLER_DEVICE_CLASS = "BaslerGigE"
 
 TEST_CAMERA = {DEVICE_CLASS :BASLER_DEVICE_CLASS,
-                IP_ADDRESS :"169.254.187.121",
-                EXPOSURE_TIME: 499975}
+                IP_ADDRESS :"169.254.187.121"}
+# For history the EXPOSURE_TIME is 499975
 
 
-def saveImageFromCamera(device_config, filename):
-    """Function to save an image from a camera device and save it to a location.
+class GigECamera(object):
+    """ Prototype GIGeCamera interface.
     
-    Connect to a Basler GIGe camera via the pypylon software suite.
+    Simple Object design for the Basler GIGe cameras being used for the MOONs verification rig.
     
-    Parameters
-    ----------
-    device_config : dictionary
-        dictionary containing the device configuration, currently this is the IP address (IpAddress) and the pypylon class device (DeviceClass). The only useful value for DeviceClass is currently "BaslerGigE"
-    filename : str
-        Path to location where the image will be saved.
-        
     """
-    print("Starting Setup")
-    factory = pylon.TlFactory.GetInstance()
-    di = pylon.DeviceInfo()
-    di.SetDeviceClass(device_config[DEVICE_CLASS])
-    di.SetPropertyValue(IP_ADDRESS,device_config[IP_ADDRESS])
-    device = factory.CreateDevice(di)
-    camera = pylon.InstantCamera(device)
-    
-    print("Gained access to Camera")
-    
-    #FROM HERE USES SAMPLES/GRAB.PY 
-    
-    # Print the model name of the camera.
-    print("Using device ", camera.GetDeviceInfo().GetModelName())
-    
-    
-    # Camera needs to be open to change the exposure time, normal camera.StartGrabbingMax will open a camera but this is an explicit call
-    camera.Open()
-    
-    if genicam.isWritable(camera.ExposureTimeRaw):
-        camera.ExposureTimeRaw.SetValue(device_config[EXPOSURE_TIME])
-    else:
-        print("Exposure Time is not settable, continuing with current exposure time.")
-    # The parameter MaxNumBuffer can be used to control the count of buffers
-    # allocated for grabbing. The default value of this parameter is 10.
-    camera.MaxNumBuffer = 1
-    
-    #
-    countOfImagesToGrab = 1
 
-    # Start the grabbing of c_countOfImagesToGrab images.
-    # The camera device is parameterized with a default configuration which
-    # sets up free-running continuous acquisition.
-    camera.StartGrabbingMax(countOfImagesToGrab)
 
-    # Camera.StopGrabbing() is called automatically by the RetrieveResult() method
-    # when c_countOfImagesToGrab images have been retrieved.
-    while camera.IsGrabbing():
-        # Wait for an image and then retrieve it. A timeout of 5000 ms is used.
-        grabResult = camera.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException)
+    def __init__(self, device_config):
+        """ Create the Basler GIGe camera device.
+        
+        Parameters
+        ----------
+        device_config : dictionary
+            dictionary containing the device configuration, currently this is the IP address (IpAddress) and the pypylon class device (DeviceClass). The only useful value for DeviceClass is currently "BaslerGigE"
+        """
+        print("Starting Setup")
+        factory = pylon.TlFactory.GetInstance()
+        di = pylon.DeviceInfo()
+        di.SetDeviceClass(device_config[DEVICE_CLASS])
+        di.SetPropertyValue(IP_ADDRESS,device_config[IP_ADDRESS])
+        device = factory.CreateDevice(di)
+        camera = pylon.InstantCamera(device)
+        
+        print("Gained access to Camera")
+        
+        #FROM HERE USES SAMPLES/GRAB.PY 
+        
+        # Print the model name of the camera.
+        print("Using device ", camera.GetDeviceInfo().GetModelName())
+        
+        
+        # Camera needs to be open to change the exposure time, normal camera.StartGrabbingMax will open a camera but this is an explicit call
+        camera.Open()
+    
+    def SetExposureTime(self, exposure_time):
+        """Set the exposure time of the camera.
+        
+        Parameters
+        ----------
+        exposure_time : int
+            sets the raw exposure time in ms.
+        """
+    
+        if genicam.isWritable(camera.ExposureTimeRaw):
+            camera.ExposureTimeRaw.SetValue(exposure_time)
+        else:
+            print("Exposure Time is not settable, continuing with current exposure time.")
+    
+                
+    def saveImage(self, filename):
+        """Function to save an image from a camera device and save it to a location.
+        
+        Overwrites any existing file at filename.
+        Parameters
+        ----------
+        filename : str
+            Path to location where the image will be saved.
+            
+        """
+        # The parameter MaxNumBuffer can be used to control the count of buffers
+        # allocated for grabbing. The default value of this parameter is 10.
+        camera.MaxNumBuffer = 1
+        
+        #
+        countOfImagesToGrab = 1
 
-        # Image grabbed successfully?
-        if grabResult.GrabSucceeded():
-            # Access the image data.
-            img = grabResult.Array
-            imsave(filename,np.asarray(img))
-            print("Filesaved as : {}".format(filename))
-	else:
-            print("Error: ", grabResult.ErrorCode, grabResult.ErrorDescription)
+        # Start the grabbing of c_countOfImagesToGrab images.
+        # The camera device is parameterized with a default configuration which
+        # sets up free-running continuous acquisition.
+        camera.StartGrabbingMax(countOfImagesToGrab)
+
+        # Camera.StopGrabbing() is called automatically by the RetrieveResult() method
+        # when c_countOfImagesToGrab images have been retrieved.
+        while camera.IsGrabbing():
+            # Wait for an image and then retrieve it. A timeout of 5000 ms is used.
+            grabResult = camera.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException)
+
+            # Image grabbed successfully?
+            if grabResult.GrabSucceeded():
+                # Access the image data.
+                img = grabResult.Array
+                imsave(filename,np.asarray(img))
+                print("Filesaved as : {}".format(filename))
+        else:
+                print("Error: ", grabResult.ErrorCode, grabResult.ErrorDescription)
         grabResult.Release()
+            
+        def close(self):
+            if camera.IsOpen():
+                camera.Close()
+            else:
+                print("Camera is already closed.")
     
