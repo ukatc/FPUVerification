@@ -20,6 +20,7 @@ Pylon software - PyPylon is just python bindings to the C++ pylon software, the 
 03/09/2018: Fixed countOfImagesToGrab variable not existing. Version delivered as prototype 0.1
 20/09/2018: 0.2.0 Updated to include exposure time parameter
 27/09/2018: 0.3.0 Refactoring to an OOP design
+01/10/2018: 0.3.1 Fixed Error and added support to find a camera.
 """
 from pypylon import pylon
 from pypylon import genicam
@@ -29,16 +30,21 @@ import sys
 import numpy as np
 from scipy.misc import imsave
 
-__version__ = "0.3.0"
+__version__ = "0.3.1"
 __author__ = "Alan O'Brien"
 
 DEVICE_CLASS = "DeviceClass"
 IP_ADDRESS = "IpAddress"
 BASLER_DEVICE_CLASS = "BaslerGigE"
 
+# Currently used camera in the lab.
 TEST_CAMERA = {DEVICE_CLASS :BASLER_DEVICE_CLASS,
                 IP_ADDRESS :"169.254.187.121"}
 # For history the EXPOSURE_TIME is 499975
+
+# Dev device on desk.
+DEV_CAMERA = {DEVICE_CLASS :BASLER_DEVICE_CLASS,
+                IP_ADDRESS :"169.254.244.184"}
 
 
 class GigECamera(object):
@@ -55,26 +61,30 @@ class GigECamera(object):
         Parameters
         ----------
         device_config : dictionary
-            dictionary containing the device configuration, currently this is the IP address (IpAddress) and the pypylon class device (DeviceClass). The only useful value for DeviceClass is currently "BaslerGigE"
+            dictionary containing the device configuration, currently this is the IP address (IpAddress) and the pypylon class device (DeviceClass). The only useful value for DeviceClass is currently "BaslerGigE". If None is given, will use the camera finding tool and connect to the first one found.
         """
         print("Starting Setup")
-        factory = pylon.TlFactory.GetInstance()
-        di = pylon.DeviceInfo()
-        di.SetDeviceClass(device_config[DEVICE_CLASS])
-        di.SetPropertyValue(IP_ADDRESS,device_config[IP_ADDRESS])
-        device = factory.CreateDevice(di)
-        camera = pylon.InstantCamera(device)
+        if device_config is None:
+            print("No device config specified, using first camera found")
+            self.camera = pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateFirstDevice())
+        else:    
+            factory = pylon.TlFactory.GetInstance()
+            di = pylon.DeviceInfo()
+            di.SetDeviceClass(device_config[DEVICE_CLASS])
+            di.SetPropertyValue(IP_ADDRESS,device_config[IP_ADDRESS])
+            device = factory.CreateDevice(di)
+            self.camera = pylon.InstantCamera(device)
         
         print("Gained access to Camera")
         
         #FROM HERE USES SAMPLES/GRAB.PY 
         
         # Print the model name of the camera.
-        print("Using device ", camera.GetDeviceInfo().GetModelName())
+        print("Using device ", self.camera.GetDeviceInfo().GetModelName())
         
         
         # Camera needs to be open to change the exposure time, normal camera.StartGrabbingMax will open a camera but this is an explicit call
-        camera.Open()
+        self.camera.Open()
     
     def SetExposureTime(self, exposure_time):
         """Set the exposure time of the camera.
@@ -85,8 +95,8 @@ class GigECamera(object):
             sets the raw exposure time in ms.
         """
     
-        if genicam.isWritable(camera.ExposureTimeRaw):
-            camera.ExposureTimeRaw.SetValue(exposure_time)
+        if genicam.isWritable(self.camera.ExposureTimeRaw):
+            self.camera.ExposureTimeRaw.SetValue(exposure_time)
         else:
             print("Exposure Time is not settable, continuing with current exposure time.")
     
@@ -103,7 +113,7 @@ class GigECamera(object):
         """
         # The parameter MaxNumBuffer can be used to control the count of buffers
         # allocated for grabbing. The default value of this parameter is 10.
-        camera.MaxNumBuffer = 1
+        self.camera.MaxNumBuffer = 1
         
         #
         countOfImagesToGrab = 1
@@ -111,13 +121,13 @@ class GigECamera(object):
         # Start the grabbing of c_countOfImagesToGrab images.
         # The camera device is parameterized with a default configuration which
         # sets up free-running continuous acquisition.
-        camera.StartGrabbingMax(countOfImagesToGrab)
+        self.camera.StartGrabbingMax(countOfImagesToGrab)
 
         # Camera.StopGrabbing() is called automatically by the RetrieveResult() method
         # when c_countOfImagesToGrab images have been retrieved.
-        while camera.IsGrabbing():
+        while self.camera.IsGrabbing():
             # Wait for an image and then retrieve it. A timeout of 5000 ms is used.
-            grabResult = camera.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException)
+            grabResult = self.camera.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException)
 
             # Image grabbed successfully?
             if grabResult.GrabSucceeded():
@@ -125,13 +135,13 @@ class GigECamera(object):
                 img = grabResult.Array
                 imsave(filename,np.asarray(img))
                 print("Filesaved as : {}".format(filename))
-        else:
+            else:
                 print("Error: ", grabResult.ErrorCode, grabResult.ErrorDescription)
         grabResult.Release()
             
         def close(self):
-            if camera.IsOpen():
-                camera.Close()
+            if self.camera.IsOpen():
+                self.camera.Close()
             else:
                 print("Camera is already closed.")
     

@@ -62,12 +62,21 @@ import GigECamera as gig
 
 to allow the short gig namespace.
 
-There are currently used one method (gig.saveImageFromCamera) and one dictionary (gig.TEST_CAMERA) offered and should be used in tandem like so:
+Create a camera object using a device info dict (such as the provided TEST_CAMERA) or provide None to find a connected camera instead (No promises are made which camera is found or how repeatable results are).
 
-gig.saveImageFromCamera(gig.TEST_CAMERA, %filename%)
+camera = gig.GigECamera(gig.TEST_CAMERA)
+
+To take an image call the following
+
+camera.saveImage(%filename%)
 
 This will save an image from the camera to a file with at %filename%, previously uploaded settings are currently used, if the settings need to be changed it is advised to do it in the GUI.
 
+To change the raw exposure time call:
+
+camera.SetExposureTime(exposure_time)
+
+where exposure_time is in ms.
 
 Notes
 =====
@@ -77,17 +86,22 @@ Reference
 =========
 Methods
 -------
-+saveImageFromCamera(device_cofig, filename)
++saveImage( filename)
     Function to save an image from a camera device and save it to a location.
-    
-    Connect to a Basler GIGe camera via the pypylon software suite.
-    
-    Parameters
-    ----------
-    device_config : dictionary
-        dictionary containing the device configuration, currently this is the IP address (IpAddress) and the pypylon class device (DeviceClass). The only useful value for DeviceClass is currently "BaslerGigE"
-    filename : str
-        Path to location where the image will be saved.
+        
+        Overwrites any existing file at filename.
+        Parameters
+        ----------
+        filename : str
+            Path to location where the image will be saved.
+            
++SetExposureTime( exposure_time):
+    Set the exposure time of the camera.
+        
+        Parameters
+        ----------
+        exposure_time : int
+            sets the raw exposure time in ms.
 
 Data Structures
 ---------------
