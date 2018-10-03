@@ -21,6 +21,7 @@ Pylon software - PyPylon is just python bindings to the C++ pylon software, the 
 20/09/2018: 0.2.0 Updated to include exposure time parameter
 27/09/2018: 0.3.0 Refactoring to an OOP design
 01/10/2018: 0.3.1 Fixed Error and added support to find a camera.
+03/10/2018: 0.3.2 Fixed indent issues and updated documentation.
 """
 from pypylon import pylon
 from pypylon import genicam
@@ -30,7 +31,7 @@ import sys
 import numpy as np
 from scipy.misc import imsave
 
-__version__ = "0.3.1"
+__version__ = "0.3.2"
 __author__ = "Alan O'Brien"
 
 DEVICE_CLASS = "DeviceClass"
@@ -50,7 +51,7 @@ DEV_CAMERA = {DEVICE_CLASS :BASLER_DEVICE_CLASS,
 class GigECamera(object):
     """ Prototype GIGeCamera interface.
     
-    Simple Object design for the Basler GIGe cameras being used for the MOONs verification rig.
+    Simple Object design for the Basler GIGe cameras being used for the MOONs verification rig. The camera will open upon initialisation but needs to closed manually.
     
     """
 
@@ -139,9 +140,11 @@ class GigECamera(object):
                 print("Error: ", grabResult.ErrorCode, grabResult.ErrorDescription)
         grabResult.Release()
             
-        def close(self):
-            if self.camera.IsOpen():
-                self.camera.Close()
-            else:
-                print("Camera is already closed.")
+    def close(self):
+        '''If open, close access to camera.
+        '''
+        if self.camera.IsOpen():
+            self.camera.Close()
+        else:
+            print("Camera is already closed.")
     

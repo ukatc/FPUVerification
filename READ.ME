@@ -78,6 +78,10 @@ camera.SetExposureTime(exposure_time)
 
 where exposure_time is in ms.
 
+When you are finished with the camera close the connection with
+
+camera.close()
+
 Notes
 =====
 
@@ -102,6 +106,9 @@ Methods
         ----------
         exposure_time : int
             sets the raw exposure time in ms.
+            
++Close():
+    If open, close access to camera.
 
 Data Structures
 ---------------
