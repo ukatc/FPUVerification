@@ -82,6 +82,17 @@ When you are finished with the camera close the connection with
 
 camera.close()
 
+Connect to a particular camera
+------------------------------
+
+To connect to a particular camera you need to have  create a dict that have the "IpAddress" and "DeviceClass" items. The "DeviceClass" should usually be set to "BaslerGigE" and the "IpAddress" should be a string containing the IP address.
+
+For example:
+
+TEST_CAMERA = {DEVICE_CLASS :BASLER_DEVICE_CLASS,
+                IP_ADDRESS :"169.254.187.121"}
+
+
 Notes
 =====
 
