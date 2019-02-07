@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 DEFAULT_TASKS = ["test_gateway_connection",
                  "test_can_connection",
                  "flash_snum",
