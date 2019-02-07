@@ -172,6 +172,11 @@ if __name__ == '__main__':
                 raise ValueError("actual serial number of FPU %i = %r does not match configuration (%r)" %
                                  (fpu_id, actual_sn, configured_sn))
         
+    if args.resetFPUs:
+        print("resetting FPUs.... ", end='')
+        flush()
+        gd.resetFPUs(grid_state, fpuset=fpuset)
+        print("OK")
         
     if "test_datum" in args.tasks:
         expansion = ["test_datum_alpha",

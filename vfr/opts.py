@@ -23,6 +23,9 @@ def parse_args():
     parser.add_argument('-r', '--resetFPUs',   default=False, action='store_true',
                         help='reset all FPUs so that earlier aborts / collisions are ignored')
 
+    parser.add_argument('-ra', '--alwaysResetFPUs',   default=False, action='store_true',
+                        help='reset FPUs between each step of functional tests so that previous aborts / collisions are ignored')
+
     parser.add_argument('-R', '--re-initialize',   default=False, action='store_true',
                         help='re-initialize FPU counters even if entry exists')
 

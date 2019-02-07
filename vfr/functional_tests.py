@@ -45,7 +45,7 @@ def find_datum(gd, grid_state, args):
     return gd, grid_state
 
 
-def  save_datum_result(env, vfdb, args, fpu_config, fpuset, dasel, grid_state, valid, rigstate):
+def  save_datum_result(env, vfdb, args, fpu_config, fpuset, dasel, grid_state, rigstate):
     
     with env.begin(write=True,db=vfdb) as txn:
             
@@ -70,15 +70,14 @@ def  save_datum_result(env, vfdb, args, fpu_config, fpuset, dasel, grid_state, v
             key2 = repr( (serialnumber, 'findDatum', str(dasel), 'result', count) )
             fsuccess = ((DASEL_ALPHA and a_ok)
                         or (DASEL_BETA and b_ok)
-                        or (DASEL_BOTH and a_ok and b_ok)) and valid
+                        or (DASEL_BOTH and a_ok and b_ok)) 
 
             if fsuccess:
                 diagnostic = "OK"
             else:
                 diagnostic = rigstate
                 
-            val = repr({'valid' : valid,
-                        'success' : fsuccess,
+            val = repr({'success' : fsuccess,
                         'dasel' : str(dasel),
                         'result' : (a_ok, b_ok),
                         'fpuid' : fpu_id,
@@ -99,7 +98,7 @@ def test_datum(env, vfdb, gd, grid_state, args, fpuset, fpu_config, dasel=DASEL_
     gd.pingFPUs(grid_state, fpuset=fpuset)
 
     # depending on options, we reset & rewind the FPUs
-    if args.resetFPUs:
+    if args.alwaysResetFPUs:
         print("resetting FPUs.... ", end='')
         flush()
         gd.resetFPUs(grid_state, fpuset=fpuset)
@@ -139,6 +138,8 @@ def test_datum(env, vfdb, gd, grid_state, args, fpuset, fpu_config, dasel=DASEL_
         rigstate = str(e)
     print("findDatum finished, success=%s, rigstate=%s" % (success, rigstate))
 
-    save_datum_result(env, vfdb, args, fpu_config, fpuset, dasel, grid_state, valid, rigstate)
+    if valid:
+        save_datum_result(env, vfdb, args, fpu_config, fpuset, dasel,
+                          grid_state, rigstate)
                       
     
