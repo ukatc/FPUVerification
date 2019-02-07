@@ -10,3 +10,5 @@ DEFAULT_TASKS = ["test_gateway_connection",
                  "test_beta_min"]
 
 ALPHA_DATUM_OFFSET = -180
+ 
+DB_TIME_FORMAT = '%Y-%m-%dT%H:%M:%S%Z'

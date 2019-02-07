@@ -42,6 +42,12 @@ def load_config(config_file_name):
     return fconfig
 
 
+# two functional short-hands for set operations
+def intersection(set1, set2):
+    return set1.intersection(set2)
+
+def set_empty(set1):
+    return len(set1) == 0
 
 
 
@@ -98,8 +104,15 @@ if __name__ == '__main__':
     print("fpu_ids = %r" % fpuset)
 
 
+    tasks_which_need_rd = [ "test_can_connection",
+                            "flash_snum", ]
 
-    rd, grid_state = init_driver(args, max(fpuset), protected=False)
+    if not set_empty(intersection(set(args.tasks),
+                                  set(tasks_which_need_rd))):
+        
+        print("[initialize unprotected FPU driver] ###")
+
+        rd, grid_state = init_driver(args, max(fpuset), protected=False)
     
 
     if "test_can_connection" in args.tasks:
@@ -109,7 +122,7 @@ if __name__ == '__main__':
 
         
 
-    if "flash_snum"    in args.tasks:
+    if "flash_snum" in args.tasks:
         print("[flash_snum] ###")
         for fpu_id in fpuset:
             serial_number = fpu_config[fpu_id]['serialnumber']
@@ -134,15 +147,30 @@ if __name__ == '__main__':
                           alpha_start, beta_start, re_initialize=args.re_initialize)
             
 
-    # switch to protected driver instance
-    if len(set(args.tasks).intersection([ "test_datum",
-                                          "test_alpha_max",
-                                          "test_beta_max",
-                                          "test_beta_min" ])) > 0:
-        
-        del rd # delete raw (unprotected) driver instance
+    vfdb = env.open_db("verification")
+
+    # switch to protected driver instance, if needed
+    tasks_which_need_gd = [ "test_datum",
+                            "test_alpha_max",
+                            "test_beta_max",
+                            "test_beta_min" ]
+    
+    if not set_empty(intersection(set(args.tasks),
+                                  set(tasks_which_need_gd))):
+
+        if locals().has_key('rd'):
+            del rd # delete raw (unprotected) driver instance
+            
         print("[initialize protected driver] ###")
         gd, grid_state = init_driver(args, max(fpuset), protected=True)
+
+        gd.readSerialNumbers(grid_state)
+        for fpu_id in fpuset:
+            actual_sn = grid_state.FPU[fpu_id].serial_number
+            configured_sn = fpu_config[fpu_id]['serialnumber']
+            if configured_sn != actual_sn:
+                raise ValueError("actual serial number of FPU %i = %r does not match configuration (%r)" %
+                                 (fpu_id, actual_sn, configured_sn))
         
         
     if "test_datum" in args.tasks:
@@ -158,14 +186,14 @@ if __name__ == '__main__':
         
         # We can use grid_state to display the starting position
         print("the starting position (in degrees) is:", gd.trackedAngles(grid_state, retrieve=True))
-        test_datum(gd, grid_state, args, fpuset, DASEL_ALPHA)
+        test_datum(env, vfdb, gd, grid_state, args, fpuset, fpu_config, DASEL_ALPHA)
         
     if "test_datum_beta" in args.tasks:
         print("[test_datum_beta] ###")
         
         # We can use grid_state to display the starting position
         print("the starting position (in degrees) is:", gd.trackedAngles(grid_state, retrieve=True))
-        test_datum(gd, grid_state, args, fpuset, DASEL_BETA)
+        test_datum(env, vfdb, gd, grid_state, args, fpuset, fpu_config, DASEL_BETA)
         
     if "test_alpha_max" in args.tasks:
         pass

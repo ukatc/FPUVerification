@@ -1,14 +1,15 @@
 from __future__ import print_function, division
 
+
 from FpuGridDriver import (CAN_PROTOCOL_VERSION, SEARCH_CLOCKWISE, SEARCH_ANTI_CLOCKWISE,
                            DEFAULT_WAVEFORM_RULSET_VERSION, DATUM_TIMEOUT_DISABLE,
                            DASEL_BOTH, DASEL_ALPHA, DASEL_BETA,
-                           FirmwareTimeoutError, CollisionError)
+                           FirmwareTimeoutError, CollisionError, InvalidStateException)
 
 from fpu_commands import *
 from fpu_constants import *
 
-from vfr.tests_common import flush
+from vfr.tests_common import flush, timestamp
 
 
 def rewind_fpus(gd, grid_state, args):
@@ -43,7 +44,57 @@ def find_datum(gd, grid_state, args):
 
     return gd, grid_state
 
-def test_datum(gd, grid_state, args, fpuset, dasel=DASEL_BOTH):
+
+def  save_datum_result(env, vfdb, args, fpu_config, fpuset, dasel, grid_state, valid, rigstate):
+    
+    with env.begin(write=True,db=vfdb) as txn:
+            
+        for fpu_id in fpuset:
+            if CAN_PROTOCOL_VERSION == 1:
+                a_ok = grid_state.FPU[fpu_id].alpha_was_zeroed
+                b_ok = grid_state.FPU[fpu_id].beta_was_zeroed
+            else:
+                a_ok = grid_state.FPU[fpu_id].alpha_was_calibrated
+                b_ok = grid_state.FPU[fpu_id].beta_was_calibrated
+            
+            print("%i : (alpha datumed=%s, beta datumed = %s)" % (fpu_id, a_ok, b_ok))
+        
+            serialnumber = fpu_config[fpu_id]['serialnumber']
+            key1 = repr( (serialnumber, 'findDatum', str(dasel), 'ntests') )
+            last_cnt = txn.get(key1)
+            if last_cnt is None:
+                count = 0
+            else:
+                count = int(last_cnt) + 1
+                
+            key2 = repr( (serialnumber, 'findDatum', str(dasel), 'result', count) )
+            fsuccess = ((DASEL_ALPHA and a_ok)
+                        or (DASEL_BETA and b_ok)
+                        or (DASEL_BOTH and a_ok and b_ok)) and valid
+
+            if fsuccess:
+                diagnostic = "OK"
+            else:
+                diagnostic = rigstate
+                
+            val = repr({'valid' : valid,
+                        'success' : fsuccess,
+                        'dasel' : str(dasel),
+                        'result' : (a_ok, b_ok),
+                        'fpuid' : fpu_id,
+                        'result_state' : str(grid_state.FPU[fpu_id].state),
+                        'diagnostic' : diagnostic,
+                        'time' : timestamp()})
+
+            if args.verbosity > 2:
+                print("putting %r : %r" % (key2, val))
+                print("putting %r : %r" % (key1, str(count)))
+            
+            txn.put(key2, val)
+            txn.put(key1, str(count))
+
+
+def test_datum(env, vfdb, gd, grid_state, args, fpuset, fpu_config, dasel=DASEL_BOTH):
     
     gd.pingFPUs(grid_state, fpuset=fpuset)
 
@@ -76,21 +127,18 @@ def test_datum(gd, grid_state, args, fpuset, dasel=DASEL_BOTH):
         gd.findDatum(grid_state, timeout=DATUM_TIMEOUT_DISABLE, search_modes=modes,
                      selected_arm=dasel, fpuset=fpuset)
         success = True
-        diagnostic = "OK"
+        valid = True
+        rigstate = "OK"
     except (FirmwareTimeoutError, CollisionError) as e:
         success = False
-        diagnostic = str(e)
-    print("findDatum finished, success=%s, diagnostic=%s" % (success, diagnostic))
-    
-    for fpu_id in fpuset:
-        if CAN_PROTOCOL_VERSION == 1:
-            a_ok = grid_state.FPU[fpu_id].alpha_was_zeroed
-            b_ok = grid_state.FPU[fpu_id].beta_was_zeroed
-        else:
-            a_ok = grid_state.FPU[fpu_id].alpha_was_calibrated
-            b_ok = grid_state.FPU[fpu_id].beta_was_calibrated
-        
-        print("%i : (alpha datumed=%s, beta datumed = %s)" % (fpu_id, a_ok, b_ok))
-        
+        valid = True
+        rigstate = str(e)
+    except InvalidStateException as e:
+        success = False
+        valid = False
+        rigstate = str(e)
+    print("findDatum finished, success=%s, rigstate=%s" % (success, rigstate))
 
+    save_datum_result(env, vfdb, args, fpu_config, fpuset, dasel, grid_state, valid, rigstate)
+                      
     
