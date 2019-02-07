@@ -68,9 +68,9 @@ def  save_datum_result(env, vfdb, args, fpu_config, fpuset, dasel, grid_state, r
                 count = int(last_cnt) + 1
                 
             key2 = repr( (serialnumber, 'findDatum', str(dasel), 'result', count) )
-            fsuccess = ((DASEL_ALPHA and a_ok)
-                        or (DASEL_BETA and b_ok)
-                        or (DASEL_BOTH and a_ok and b_ok)) 
+            fsuccess = (((dasel == DASEL_ALPHA) and a_ok)
+                        or ((dasel == DASEL_BETA) and b_ok)
+                        or ((dasel == DASEL_BOTH) and a_ok and b_ok)) 
 
             if fsuccess:
                 diagnostic = "OK"
