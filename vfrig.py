@@ -16,7 +16,9 @@ from vfr.db import env
 from vfr.opts import parse_args
 from vfr.conf import DEFAULT_TASKS, ALPHA_DATUM_OFFSET
 from vfr.posdb import init_position
-from vfr.functional_tests import test_datum, find_datum, rewind_fpus, DASEL_BOTH, DASEL_ALPHA, DASEL_BETA
+from vfr.functional_tests import (test_datum, find_datum,  test_limit,
+                                  DASEL_BOTH, DASEL_ALPHA, DASEL_BETA)
+
 from vfr.connection import check_ping_ok, check_gateway_connection, check_can_connection, init_driver
 
     
@@ -67,7 +69,12 @@ if __name__ == '__main__':
                        "test_functional",
                        "flash_snum",
                        "init",
-                       "init_positions"]:
+                       "init_positions",
+                       "test_limits",
+                       "test_alpha_max",
+                       "test_alpha_min",
+                       "test_beta_max",
+                       "test_beta_min", ]:
             
             raise ValueError("invalid task name '%s'" % tsk)
         
@@ -177,7 +184,15 @@ if __name__ == '__main__':
         flush()
         gd.resetFPUs(grid_state, fpuset=fpuset)
         print("OK")
-        
+
+    if not set_empty(intersection(set(args.tasks), set(["test_limits",
+                                                        "test_alpha_max",
+                                                        "test_alpha_min",
+                                                        "test_beta_max",
+                                                        "test_beta_min"]))):
+        args.tasks.append(test_datum)
+                     
+    
     if "test_datum" in args.tasks:
         expansion = ["test_datum_alpha",
                      "test_datum_beta",]
@@ -200,12 +215,32 @@ if __name__ == '__main__':
         print("the starting position (in degrees) is:", gd.trackedAngles(grid_state, retrieve=True))
         test_datum(env, vfdb, gd, grid_state, args, fpuset, fpu_config, DASEL_BETA)
         
+    if "test_limits" in args.tasks:
+        expansion = ["test_alpha_max",
+                     "test_alpha_min",
+                     "test_beta_max",
+                     "test_beta_min"]
+        
+        print("[expanding test_limits] ###")
+        print("...expanded to %r" % expansion)
+        args.tasks.extend(expansion)
+        
     if "test_alpha_max" in args.tasks:
-        pass
+        print("[test_limit_alpha_max] ###")
+        test_limit(env, fpudb, vfdb, gd, grid_state, args, fpuset, fpu_config, "alpha_max")
+
+    
+    if "test_alpha_min" in args.tasks:
+        print("[test_limit_alpha_min] ###")
+        test_limit(env, fpudb, vfdb, gd, grid_state, args, fpuset, fpu_config, "alpha_min")
+
 
     if "test_beta_max" in args.tasks:
-        pass
+        print("[test_limit_beta_max] ###")
+        test_limit(env, fpudb, vfdb, gd, grid_state, args, fpuset, fpu_config, "beta_max")
+
 
     if "test_beta_min" in args.tasks:
-        pass
+        print("[test_limit_beta_min] ###")
+        test_limit(env, fpudb, vfdb, gd, grid_state, args, fpuset, fpu_config, "beta_min")
         
