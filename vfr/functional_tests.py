@@ -1,10 +1,10 @@
 from __future__ import print_function, division
 
-from numpy import zeros
+from numpy import zeros, nan
 
 from FpuGridDriver import (CAN_PROTOCOL_VERSION, SEARCH_CLOCKWISE, SEARCH_ANTI_CLOCKWISE,
                            DEFAULT_WAVEFORM_RULSET_VERSION, DATUM_TIMEOUT_DISABLE,
-                           DASEL_BOTH, DASEL_ALPHA, DASEL_BETA,
+                           DASEL_BOTH, DASEL_ALPHA, DASEL_BETA, REQD_ANTI_CLOCKWISE,  REQD_CLOCKWISE,
                            # see documentation reference for Exception hierarchy
                            # (for CAN protocol 1, this is section 12.6.1)
                            EtherCANException, MovementError, CollisionError, LimitBreachError, FirmwareTimeoutError,
@@ -146,6 +146,15 @@ def test_datum(env, vfdb, gd, grid_state, args, fpuset, fpu_config, dasel=DASEL_
         save_datum_result(env, vfdb, args, fpu_config, fpuset, dasel,
                           grid_state, rigstate)
                       
+
+def save_angular_range(env, vfdb, serialnumber, which_limit, test_succeeded, limit_val):
+    print("saving limit value")
+
+
+def set_protection_limit(env, fpudb, serialnumber, which_limit, limit_val,
+                         protection_tolerance, update):
+    pass
+
     
 def test_limit(env, fpudb, vfdb, gd, grid_state, args, fpuset, fpu_config, which_limit):
     abs_alpha_def = -180.0
@@ -161,10 +170,14 @@ def test_limit(env, fpudb, vfdb, gd, grid_state, args, fpuset, fpu_config, which
         dw = 30
         idx = 0
     elif which_limit == "beta_max":
-        abs_alpha, abs_beta = 0.0, 180.0
+        abs_alpha, abs_beta = -180.0, 180.0
+        free_dir = REQD_CLOCKWISE
+        dw = -30
         idx = 1
     elif which_limit == "beta_min":
-        abs_alpha, abs_beta = 0.0, -180.0
+        abs_alpha, abs_beta = -180.0, -180.0
+        free_dir = REQD_ANTI_CLOCKWISE
+        dw = 30
         idx = 1
 
     for fpu_id in fpuset:
@@ -184,7 +197,7 @@ def test_limit(env, fpudb, vfdb, gd, grid_state, args, fpuset, fpu_config, which
             print("detected : ", str(e))
             
         except MovementError as e:
-            test_succeeded = None
+            test_succeeded = False
             test_valid = False
             diagnostic = str(e)
     
@@ -195,15 +208,37 @@ def test_limit(env, fpudb, vfdb, gd, grid_state, args, fpuset, fpu_config, which
             gd.pingFPUs(grid_state, fpuset=[fpu_id])
             limit_val = (gd.trackedAngles(grid_state, retrieve=True)[fpu_id][idx]).as_scalar()
             print("%s limit hit at position %f" % (which_limit, limit_val))
-        
+        else:
+            limit_val = nan
 
-        N = args.N
-        if which_limit in ["alpha_max", "alpha_min"]:
-            print("moving fpu %i back by %i" % (fpu_id, dw))
-            gd.resetFPUs(grid_state, [fpu_id])
-            wf = gen_wf(dw * dirac(fpu_id,N) , 0)
-            gd.configMotion(wf, grid_state, soft_protection=False, warn_unsafe=False, allow_uninitialized=True)
-            gd.executeMotion(grid_state, fpuset=[fpu_id])
+        sn = fpu_config[fpu_id]['serialnumber']
+        if test_valid:
+            save_angular_range(env, vfdb, sn, which_limit, test_succeeded, limit_val)
+
+        if test_valid and test_succeeded:
+            set_protection_limit(env, fpudb, sn, which_limit, limit_val,
+                                 args.protection_tolerance, args.update_protection_limits)
+            
+        
+        if test_succeeded:
+            # bring FPU back into valid range and protected state
+            N = args.N
+            if which_limit in ["alpha_max", "alpha_min"]:
+                print("moving fpu %i back by %i degree" % (fpu_id, dw))
+                gd.resetFPUs(grid_state, [fpu_id])
+                wf = gen_wf(dw * dirac(fpu_id,N) , 0)
+                gd.configMotion(wf, grid_state, soft_protection=False, warn_unsafe=False, allow_uninitialized=True)
+                gd.executeMotion(grid_state, fpuset=[fpu_id])
+            else:
+                print("moving fpu %i back by %i steps" % (fpu_id, 10))
+                for k in range(3):
+                    gd.freeBetaCollision(fpu_id, free_dir, grid_state, soft_protection=False)
+                    gd.pingFPUs(grid_state, [fpu_id])
+                gd.enableBetaCollisionProtection(grid_state)
+                wf = gen_wf(0, dw * dirac(fpu_id,N))
+                gd.configMotion(wf, grid_state, soft_protection=False, warn_unsafe=False, allow_uninitialized=True)
+                gd.executeMotion(grid_state, fpuset=[fpu_id])
+            
             
 
         # bring fpu back to default position

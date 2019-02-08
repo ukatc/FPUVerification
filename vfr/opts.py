@@ -32,6 +32,12 @@ def parse_args():
     parser.add_argument('-s', '--reuse-serialnum', default=False, action='store_true',
                         help='reuse serial number')
 
+    parser.add_argument('-u', '--update-protection-limits', default=False, action='store_true',
+                        help='update range limits to protection database, even if already set')    
+
+    parser.add_argument('-t', '--protection-tolerance',  type=float, default=1.5,
+                        help='tolerance used when deriving protection limits from empirical range (default: %(default)s).')
+    
     parser.add_argument('-i', '--reinit-db', default=False, action='store_true',
                         help='reinitialize posiiton database entry')
 
