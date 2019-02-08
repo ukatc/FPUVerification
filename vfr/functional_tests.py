@@ -1,6 +1,9 @@
 from __future__ import print_function, division
 
 from numpy import zeros, nan
+from protectiondb import ProtectionDB as pdb
+from interval import Interval
+
 
 from FpuGridDriver import (CAN_PROTOCOL_VERSION, SEARCH_CLOCKWISE, SEARCH_ANTI_CLOCKWISE,
                            DEFAULT_WAVEFORM_RULSET_VERSION, DATUM_TIMEOUT_DISABLE,
@@ -13,7 +16,7 @@ from FpuGridDriver import (CAN_PROTOCOL_VERSION, SEARCH_CLOCKWISE, SEARCH_ANTI_C
                            SocketFailure, CommandTimeout, ProtectionError, HardwareProtectionError)
 
 from fpu_commands import *
-from fpu_constants import *
+from fpu_constants import ALPHA_MIN_DEGREE, ALPHA_MAX_DEGREE, BETA_MIN_DEGREE, BETA_MAX_DEGREE, ALPHA_DATUM_OFFSET
 
 from vfr.tests_common import flush, timestamp
 
@@ -153,7 +156,47 @@ def save_angular_range(env, vfdb, serialnumber, which_limit, test_succeeded, lim
 
 def set_protection_limit(env, fpudb, serialnumber, which_limit, limit_val,
                          protection_tolerance, update):
-    pass
+
+    """This replaces the corresponding entry in the protection database if
+    either the update flag is True, or the current entry is the default value.
+    """
+    alpha_min = float(argv[3])
+    alpha_max = float(argv[4])
+    
+    if which_limit in [ "alpha_max", "alpha_min"]:
+        subkey = pdb.alpha_limits
+        offset = ALPHA_DATUM_OFFSET        
+        minv, maxv = ALPHA_MIN_DEGREE, ALPHA_MAX_DEGREE
+    else:
+        subkey = pdb.beta_limits
+        offset = 0.0
+        minv, maxv = BETA_MIN_DEGREE, BETA_MAX_DEGREE
+
+    is_min = which_limit in [ "beta_min", "alpha_min"]
+
+    if is_min:
+        default_val = minv
+    else:
+        default_val = maxv
+        
+
+    with env.begin(write=True,db=fpudb) as txn:
+        val = pdb.getField(txn, fpu, subkey) + offset
+
+        val_min = val.min()
+        val_max = val.max()
+        if is_min:
+            if (val_min == default_val) or update:
+                val_min = limit_val + protection_tolerance
+        else:
+            if (val_max == default_val) or update:
+                val_max = limit_val - protection_tolerance
+    
+        
+        new_val = Interval(val_min, val_max)
+        print("limit %s: replacing %r by %r" % (which_limit, val, new_val))
+        pdb.putInterval(txn, serial_number, subkey, new_val, offset)
+
 
     
 def test_limit(env, fpudb, vfdb, gd, grid_state, args, fpuset, fpu_config, which_limit):
