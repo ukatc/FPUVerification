@@ -151,10 +151,11 @@ if __name__ == '__main__':
             print(rval)
             rd.readSerialNumbers(grid_state)
 
+    fpudb = env.open_db("fpu")
+    
     if TST_INITPOS    in args.tasks:
         print("[init_positions] ###")
         
-        fpudb = env.open_db("fpu")
         
         for fpu_id in fpuset:
             alpha_start, beta_start = fpu_config[fpu_id]['pos']

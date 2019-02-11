@@ -14,3 +14,36 @@ else:
 
 
 env = lmdb.open(DATABASE_FILE_NAME, max_dbs=10, map_size=dbsize)
+
+class TestResult:
+    OK = "OK"
+    FAILED = "FAILED"
+    NA = "NA"
+
+
+def  save_test_result(env, vfdb, fpuset, keyfunc, valfunc, verbosity=0):
+    
+    with env.begin(write=True,db=vfdb) as txn:
+            
+        for fpu_id in fpuset:
+
+            keybase = keyfunc(fpu_id)
+            key1 = str(keybase + ( 'ntests',))
+            
+            last_cnt = txn.get(key1)
+            if last_cnt is None:
+                count = 0
+            else:
+                count = int(last_cnt) + 1
+                
+            key2 = repr( keybase + ('result', count) )
+
+
+            val = valfunc(fpu_id)            
+
+            if verbosity > 2:
+                print("putting %r : %r" % (key1, str(count)))
+                print("putting %r : %r" % (key2, val))
+            
+            txn.put(key1, str(count))
+            txn.put(key2, val)

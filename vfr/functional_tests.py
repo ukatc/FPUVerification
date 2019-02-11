@@ -2,6 +2,7 @@ from __future__ import print_function, division
 
 from numpy import zeros, nan
 from protectiondb import ProtectionDB as pdb
+from vfr.db import save_test_result, TestResult
 from interval import Interval
 
 
@@ -15,17 +16,11 @@ from FpuGridDriver import (CAN_PROTOCOL_VERSION, SEARCH_CLOCKWISE, SEARCH_ANTI_C
                            InvalidParameterError, SetupError, InvalidWaveformException, ConnectionFailure,
                            SocketFailure, CommandTimeout, ProtectionError, HardwareProtectionError)
 
-from fpu_commands import *
+from fpu_commands import gen_wf
 from fpu_constants import ALPHA_MIN_DEGREE, ALPHA_MAX_DEGREE, BETA_MIN_DEGREE, BETA_MAX_DEGREE, ALPHA_DATUM_OFFSET
 
-from vfr.tests_common import flush, timestamp
+from vfr.tests_common import flush, timestamp, dirac, goto_position
 
-def dirac(n, L):
-    """return vector of length L with all zeros except a one at position n.
-    """
-    v = zeros(L, dtype=float)
-    v[n] = 1.0
-    return v
 
 def find_datum(gd, grid_state, args):
     
@@ -39,38 +34,6 @@ def find_datum(gd, grid_state, args):
     return gd, grid_state
 
 
-class TestResult:
-    OK = "OK"
-    FAILED = "FAILED"
-    NA = "NA"
-
-
-def  save_test_result(env, vfdb, fpuset, keyfunc, valfunc, verbosity=0):
-    
-    with env.begin(write=True,db=vfdb) as txn:
-            
-        for fpu_id in fpuset:
-
-            keybase = keyfunc(fpu_id)
-            key1 = str(keybase + ( 'ntests',))
-            
-            last_cnt = txn.get(key1)
-            if last_cnt is None:
-                count = 0
-            else:
-                count = int(last_cnt) + 1
-                
-            key2 = repr( keybase + ('result', count) )
-
-
-            val = valfunc(fpu_id)            
-
-            if verbosity > 2:
-                print("putting %r : %r" % (key1, str(count)))
-                print("putting %r : %r" % (key2, val))
-            
-            txn.put(key1, str(count))
-            txn.put(key2, val)
     
 
 def  save_datum_result(env, vfdb, args, fpu_config, fpuset, dasel, grid_state, rigstate):
@@ -112,71 +75,6 @@ def  save_datum_result(env, vfdb, args, fpu_config, fpuset, dasel, grid_state, r
     save_test_result(env, vfdb, fpuset, keyfunc, valfunc, verbosity=args.verbosity)
     
 
-def  save_datum_result_old(env, vfdb, args, fpu_config, fpuset, dasel, grid_state, rigstate):
-    
-    with env.begin(write=True,db=vfdb) as txn:
-            
-        for fpu_id in fpuset:
-            if CAN_PROTOCOL_VERSION == 1:
-                a_ok = grid_state.FPU[fpu_id].alpha_was_zeroed
-                b_ok = grid_state.FPU[fpu_id].beta_was_zeroed
-            else:
-                a_ok = grid_state.FPU[fpu_id].alpha_was_calibrated
-                b_ok = grid_state.FPU[fpu_id].beta_was_calibrated
-            
-            print("%i : (alpha datumed=%s, beta datumed = %s)" % (fpu_id, a_ok, b_ok))
-        
-            serialnumber = fpu_config[fpu_id]['serialnumber']
-            key1 = repr( (serialnumber, 'findDatum', str(dasel), 'ntests') )
-            last_cnt = txn.get(key1)
-            if last_cnt is None:
-                count = 0
-            else:
-                count = int(last_cnt) + 1
-                
-            key2 = repr( (serialnumber, 'findDatum', str(dasel), 'result', count) )
-            fsuccess = (((dasel == DASEL_ALPHA) and a_ok)
-                        or ((dasel == DASEL_BETA) and b_ok)
-                        or ((dasel == DASEL_BOTH) and a_ok and b_ok)) 
-
-            if fsuccess:
-                diagnostic = "OK"
-            else:
-                diagnostic = rigstate
-                
-            val = repr({'success' : fsuccess,
-                        'dasel' : str(dasel),
-                        'result' : (a_ok, b_ok),
-                        'fpuid' : fpu_id,
-                        'result_state' : str(grid_state.FPU[fpu_id].state),
-                        'diagnostic' : diagnostic,
-                        'time' : timestamp()})
-
-            if args.verbosity > 2:
-                print("putting %r : %r" % (key2, val))
-                print("putting %r : %r" % (key1, str(count)))
-            
-            txn.put(key2, val)
-            txn.put(key1, str(count))
-
-def goto_position(gd, abs_alpha, abs_beta, fpuset, grid_state, allow_uninitialized=False, soft_protection=True):
-        gd.pingFPUs(grid_state)
-        current_angles = gd.trackedAngles(grid_state, retrieve=True)
-        current_alpha = array([x.as_scalar() for x, y in current_angles ])
-        current_beta = array([y.as_scalar() for x, y in current_angles ])
-        print("current positions:\nalpha=%r,\nbeta=%r" % (current_alpha, current_beta))
-              
-        print("moving to (%6.2f,%6.2f)" % (abs_alpha, abs_beta))
-        
-        wf = gen_wf(- current_alpha + abs_alpha, - current_beta + abs_beta)
-        wf = { k : v for k, v in wf.items() if k in fpuset }
-        gd.configMotion(wf, grid_state, allow_uninitialized=allow_uninitialized,
-                        soft_protection=soft_protection, warn_unsafe=soft_protection)
-        
-        gd.executeMotion(grid_state, fpuset=fpuset)
-
-        if CAN_PROTOCOL_VERSION == 1:
-            gd.pingFPUs(grid_state)
 
             
 def test_datum(env, vfdb, gd, grid_state, args, fpuset, fpu_config, dasel=DASEL_BOTH):
@@ -223,9 +121,32 @@ def test_datum(env, vfdb, gd, grid_state, args, fpuset, fpu_config, dasel=DASEL_
                           grid_state, rigstate)
                       
 
-def save_angular_range(env, vfdb, serialnumber, which_limit, test_succeeded, limit_val):
+def save_angular_range(env, vfdb, fpu_id, serialnumber, which_limit,
+                       test_succeeded, limit_val, verbosity=2):
+    
     print("saving limit value")
 
+
+    def keyfunc(fpu_id):
+        keybase = (serialnumber, 'limit', which_limit)
+        return keybase
+
+    def valfunc(fpu_id):
+
+        if test_succeeded:
+            fsuccess = TestResult.OK
+        else:
+            fsuccess = TestResult.FAILED
+            
+        val = repr({'result' : fsuccess,                    
+                    'val' : limit_val,                    
+                    'time' : timestamp()})
+        return val
+
+    
+    save_test_result(env, vfdb, [fpu_id], keyfunc, valfunc, verbosity=verbosity)
+    
+    
 
 def set_protection_limit(env, fpudb, fpu, serialnumber, which_limit, measured_val,
                          protection_tolerance, update):
@@ -325,8 +246,9 @@ def test_limit(env, fpudb, vfdb, gd, grid_state, args, fpuset, fpu_config, which
             limit_val = nan
 
         sn = fpu_config[fpu_id]['serialnumber']
+        
         if test_valid:
-            save_angular_range(env, vfdb, sn, which_limit, test_succeeded, limit_val)
+            save_angular_range(env, vfdb, fpu_id, sn, which_limit, test_succeeded, limit_val, verbosity=3)
 
         if test_valid and test_succeeded:
             set_protection_limit(env, fpudb, grid_state.FPU[fpu_id],

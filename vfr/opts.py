@@ -23,7 +23,7 @@ from vfr.conf import ( DEFAULT_TASKS,
 def parse_args():
     parser = argparse.ArgumentParser(description='test FPUs in verification rig')
     
-    parser.add_argument('tasks',  nargs='?',
+    parser.add_argument('tasks',  nargs='*',
                         default=DEFAULT_TASKS, 
                         help="""list of tasks to perform (default: %(default)s)""")
     
