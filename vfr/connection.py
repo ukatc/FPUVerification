@@ -60,7 +60,7 @@ def init_driver(args, max_id, protected=True):
     return rd, grid_state
 
 
-def check_can_connection(rd, args, fpu_id):
+def check_can_connection(rd, grid_state, args, fpu_id):
     print("checking CAN connection to FPU %i ..." % fpu_id, end='')
     flush()
             

@@ -39,7 +39,80 @@ def find_datum(gd, grid_state, args):
     return gd, grid_state
 
 
+class TestResult:
+    OK = "OK"
+    FAILED = "FAILED"
+    NA = "NA"
+
+
+def  save_test_result(env, vfdb, fpuset, keyfunc, valfunc, verbosity=0):
+    
+    with env.begin(write=True,db=vfdb) as txn:
+            
+        for fpu_id in fpuset:
+
+            keybase = keyfunc(fpu_id)
+            key1 = str(keybase + ( 'ntests',))
+            
+            last_cnt = txn.get(key1)
+            if last_cnt is None:
+                count = 0
+            else:
+                count = int(last_cnt) + 1
+                
+            key2 = repr( keybase + ('result', count) )
+
+
+            val = valfunc(fpu_id)            
+
+            if verbosity > 2:
+                print("putting %r : %r" % (key1, str(count)))
+                print("putting %r : %r" % (key2, val))
+            
+            txn.put(key1, str(count))
+            txn.put(key2, val)
+    
+
 def  save_datum_result(env, vfdb, args, fpu_config, fpuset, dasel, grid_state, rigstate):
+
+    # define two closures - one for the unique key, another for the stored value 
+    def keyfunc(fpu_id):
+        serialnumber = fpu_config[fpu_id]['serialnumber']
+        keybase = (serialnumber, 'findDatum', str(dasel))
+        return keybase
+
+    def valfunc(fpu_id):
+        
+        if CAN_PROTOCOL_VERSION == 1:
+            a_ok = grid_state.FPU[fpu_id].alpha_was_zeroed
+            b_ok = grid_state.FPU[fpu_id].beta_was_zeroed
+        else:
+            a_ok = grid_state.FPU[fpu_id].alpha_was_calibrated
+            b_ok = grid_state.FPU[fpu_id].beta_was_calibrated
+        
+        print("%i : (alpha datumed=%s, beta datumed = %s)" % (fpu_id, a_ok, b_ok))
+        
+        if (((dasel == DASEL_ALPHA) and a_ok)
+            or ((dasel == DASEL_BETA) and b_ok)
+            or ((dasel == DASEL_BOTH) and a_ok and b_ok)):
+            
+            fsuccess = TestResult.OK
+        else:
+            fsuccess = TestResult.FAILED
+                        
+        val = repr({'result' : fsuccess,
+                    'datumed' : (a_ok, b_ok),
+                    'fpuid' : fpu_id,
+                    'result_state' : str(grid_state.FPU[fpu_id].state),
+                    'diagnostic' : "OK" if fsuccess else rigstate,
+                    'time' : timestamp()})
+        return val
+
+    
+    save_test_result(env, vfdb, fpuset, keyfunc, valfunc, verbosity=args.verbosity)
+    
+
+def  save_datum_result_old(env, vfdb, args, fpu_config, fpuset, dasel, grid_state, rigstate):
     
     with env.begin(write=True,db=vfdb) as txn:
             
@@ -87,10 +160,10 @@ def  save_datum_result(env, vfdb, args, fpu_config, fpuset, dasel, grid_state, r
             txn.put(key1, str(count))
 
 def goto_position(gd, abs_alpha, abs_beta, fpuset, grid_state, allow_uninitialized=False, soft_protection=True):
+        gd.pingFPUs(grid_state)
         current_angles = gd.trackedAngles(grid_state, retrieve=True)
         current_alpha = array([x.as_scalar() for x, y in current_angles ])
         current_beta = array([y.as_scalar() for x, y in current_angles ])
-        gd.pingFPUs(grid_state)
         print("current positions:\nalpha=%r,\nbeta=%r" % (current_alpha, current_beta))
               
         print("moving to (%6.2f,%6.2f)" % (abs_alpha, abs_beta))
@@ -154,30 +227,27 @@ def save_angular_range(env, vfdb, serialnumber, which_limit, test_succeeded, lim
     print("saving limit value")
 
 
-def set_protection_limit(env, fpudb, serialnumber, which_limit, limit_val,
+def set_protection_limit(env, fpudb, fpu, serialnumber, which_limit, measured_val,
                          protection_tolerance, update):
 
     """This replaces the corresponding entry in the protection database if
     either the update flag is True, or the current entry is the default value.
     """
-    alpha_min = float(argv[3])
-    alpha_max = float(argv[4])
-    
     if which_limit in [ "alpha_max", "alpha_min"]:
         subkey = pdb.alpha_limits
         offset = ALPHA_DATUM_OFFSET        
-        minv, maxv = ALPHA_MIN_DEGREE, ALPHA_MAX_DEGREE
+        default_min, default_max = ALPHA_MIN_DEGREE, ALPHA_MAX_DEGREE
     else:
         subkey = pdb.beta_limits
         offset = 0.0
-        minv, maxv = BETA_MIN_DEGREE, BETA_MAX_DEGREE
+        default_min, default_max = BETA_MIN_DEGREE, BETA_MAX_DEGREE
 
     is_min = which_limit in [ "beta_min", "alpha_min"]
 
     if is_min:
-        default_val = minv
+        default_val = default_min
     else:
-        default_val = maxv
+        default_val = default_max
         
 
     with env.begin(write=True,db=fpudb) as txn:
@@ -187,15 +257,15 @@ def set_protection_limit(env, fpudb, serialnumber, which_limit, limit_val,
         val_max = val.max()
         if is_min:
             if (val_min == default_val) or update:
-                val_min = limit_val + protection_tolerance
+                val_min = measured_val + protection_tolerance
         else:
             if (val_max == default_val) or update:
-                val_max = limit_val - protection_tolerance
+                val_max = measured_val - protection_tolerance
     
         
         new_val = Interval(val_min, val_max)
         print("limit %s: replacing %r by %r" % (which_limit, val, new_val))
-        pdb.putInterval(txn, serial_number, subkey, new_val, offset)
+        pdb.putInterval(txn, serialnumber, subkey, new_val, offset)
 
 
     
@@ -259,7 +329,8 @@ def test_limit(env, fpudb, vfdb, gd, grid_state, args, fpuset, fpu_config, which
             save_angular_range(env, vfdb, sn, which_limit, test_succeeded, limit_val)
 
         if test_valid and test_succeeded:
-            set_protection_limit(env, fpudb, sn, which_limit, limit_val,
+            set_protection_limit(env, fpudb, grid_state.FPU[fpu_id],
+                                 sn, which_limit, limit_val,
                                  args.protection_tolerance, args.update_protection_limits)
             
         

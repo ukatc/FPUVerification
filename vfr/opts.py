@@ -4,13 +4,26 @@ import argparse
 
 from fpu_constants import *
 
-from vfr.conf import DEFAULT_TASKS
+from vfr.conf import ( DEFAULT_TASKS,
+                       TST_GATEWAY_CONNECTION, 
+                       TST_CAN_CONNECTION,     
+                       TST_DATUM,              
+                       TST_ALPHA_MIN,          
+                       TST_ALPHA_MAX,
+                       TST_BETA_MAX,           
+                       TST_BETA_MIN,
+                       TST_FUNCTIONAL,
+                       TST_INIT,
+                       TST_FLASH,
+                       TST_INITPOS,
+                       TST_LIMITS)
+
 
 
 def parse_args():
     parser = argparse.ArgumentParser(description='test FPUs in verification rig')
     
-    parser.add_argument('tasks',  nargs='+',
+    parser.add_argument('tasks',  nargs='?',
                         default=DEFAULT_TASKS, 
                         help="""list of tasks to perform (default: %(default)s)""")
     
@@ -75,6 +88,9 @@ def parse_args():
     
     
     args = parser.parse_args()
+
+    if len(args.tasks) == 0:
+        args.tasks = DEFAULT_TASKS
     
     if args.mockup:
         args.gateway_address = "127.0.0.1"
