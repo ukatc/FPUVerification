@@ -3,6 +3,7 @@ from __future__ import print_function, division
 TST_GATEWAY_CONNECTION = "test_gateway_connection"
 TST_CAN_CONNECTION     = "test_can_connection"
 TST_DATUM              = "test_datum"
+TST_CDECT              = "test_collision_detection"
 TST_ALPHA_MIN          = "test_alpha_min"
 TST_ALPHA_MAX          = "test_alpha_max"
 TST_BETA_MAX           = "test_beta_max"
@@ -18,6 +19,7 @@ DEFAULT_TASKS = [TST_GATEWAY_CONNECTION,
                  TST_FLASH,
                  TST_INITPOS,
                  TST_DATUM,
+                 TST_CDECT,
                  TST_ALPHA_MAX,
                  TST_BETA_MAX,
                  TST_BETA_MIN]

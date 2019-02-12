@@ -3,6 +3,8 @@ from __future__ import print_function, division
 from numpy import zeros, nan
 from protectiondb import ProtectionDB as pdb
 from vfr.db import save_test_result, TestResult
+from vfr import turntable
+
 from interval import Interval
 
 
@@ -128,7 +130,10 @@ def save_angular_range(env, vfdb, fpu_id, serialnumber, which_limit,
 
 
     def keyfunc(fpu_id):
-        keybase = (serialnumber, 'limit', which_limit)
+        if which_limit == "beta_collision":
+            keybase = (serialnumber, which_limit)
+        else:
+            keybase = (serialnumber, 'limit', which_limit)
         return keybase
 
     def valfunc(fpu_id):
@@ -213,11 +218,19 @@ def test_limit(env, fpudb, vfdb, gd, grid_state, args, fpuset, fpu_config, which
         free_dir = REQD_ANTI_CLOCKWISE
         dw = 30
         idx = 1
+    elif which_limit == "beta_collision":
+        abs_alpha, abs_beta = -180.0, 90.0
+        free_dir = REQD_CLOCKWISE
+        dw = 30
+        idx = 1
 
     for fpu_id in fpuset:
         try:
             print("limit test %s: moving fpu %i to position (%6.2f, %6.2f)" % (
                 which_limit, fpu_id, abs_alpha, abs_beta))
+
+            if which_limit == "beta_collision":
+                turntable.go_collision_test_pos(fpu_id, args)
             
             goto_position(gd, abs_alpha, abs_beta, [fpu_id], grid_state, soft_protection=False)
             test_succeeded = False
@@ -250,7 +263,7 @@ def test_limit(env, fpudb, vfdb, gd, grid_state, args, fpuset, fpu_config, which
         if test_valid:
             save_angular_range(env, vfdb, fpu_id, sn, which_limit, test_succeeded, limit_val, verbosity=3)
 
-        if test_valid and test_succeeded:
+        if test_valid and test_succeeded and (which_limit != "beta_collision"):
             set_protection_limit(env, fpudb, grid_state.FPU[fpu_id],
                                  sn, which_limit, limit_val,
                                  args.protection_tolerance, args.update_protection_limits)

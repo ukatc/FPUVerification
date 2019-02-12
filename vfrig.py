@@ -18,7 +18,8 @@ from vfr.conf import (DEFAULT_TASKS,
                       ALPHA_DATUM_OFFSET,
                       TST_GATEWAY_CONNECTION, 
                       TST_CAN_CONNECTION,     
-                      TST_DATUM,              
+                      TST_DATUM,
+                      TST_CDECT,
                       TST_ALPHA_MIN,          
                       TST_ALPHA_MAX,
                       TST_BETA_MAX,           
@@ -81,6 +82,7 @@ if __name__ == '__main__':
                        TST_INIT,
                        TST_INITPOS,
                        TST_LIMITS,
+                       TST_CDECT,
                        TST_ALPHA_MAX,
                        TST_ALPHA_MIN,
                        TST_BETA_MAX,
@@ -227,7 +229,8 @@ if __name__ == '__main__':
         test_datum(env, vfdb, gd, grid_state, args, fpuset, fpu_config, DASEL_BETA)
         
     if TST_LIMITS in args.tasks:
-        expansion = [TST_ALPHA_MAX,
+        expansion = [TST_CDECT,
+                     TST_ALPHA_MAX,
                      TST_ALPHA_MIN,
                      TST_BETA_MAX,
                      TST_BETA_MIN]
@@ -236,6 +239,10 @@ if __name__ == '__main__':
         print("...expanded to %r" % expansion)
         args.tasks.extend(expansion)
         
+    if TST_CDECT in args.tasks:
+        print("[test_collision_detection] ###")
+        test_limit(env, fpudb, vfdb, gd, grid_state, args, fpuset, fpu_config, "beta_collision")
+
     if TST_ALPHA_MAX in args.tasks:
         print("[test_limit_alpha_max] ###")
         test_limit(env, fpudb, vfdb, gd, grid_state, args, fpuset, fpu_config, "alpha_max")
