@@ -1,4 +1,10 @@
 /_logs/
 *~
 *.pyc
-
+*.pyo
+*.swp
+*~
+.Python
+include/
+lib/
+man/
