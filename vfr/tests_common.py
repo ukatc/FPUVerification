@@ -53,3 +53,13 @@ def goto_position(gd, abs_alpha, abs_beta, fpuset, grid_state, allow_uninitializ
         if CAN_PROTOCOL_VERSION == 1:
             gd.pingFPUs(grid_state)
 
+def find_datum(gd, grid_state, args):
+    
+    print("issuing findDatum:")
+    gd.findDatum(grid_state, timeout=DATUM_TIMEOUT_DISABLE)
+    print("findDatum finished")
+
+    # We can use grid_state to display the starting position
+    print("the starting position (in degrees) is:", gd.trackedAngles(grid_state, retrieve=True))
+
+    return gd, grid_state

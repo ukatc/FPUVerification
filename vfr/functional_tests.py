@@ -24,17 +24,6 @@ from fpu_constants import ALPHA_MIN_DEGREE, ALPHA_MAX_DEGREE, BETA_MIN_DEGREE, B
 from vfr.tests_common import flush, timestamp, dirac, goto_position
 
 
-def find_datum(gd, grid_state, args):
-    
-    print("issuing findDatum:")
-    gd.findDatum(grid_state, timeout=DATUM_TIMEOUT_DISABLE)
-    print("findDatum finished")
-
-    # We can use grid_state to display the starting position
-    print("the starting position (in degrees) is:", gd.trackedAngles(grid_state, retrieve=True))
-
-    return gd, grid_state
-
 
     
 

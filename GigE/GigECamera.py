@@ -148,3 +148,7 @@ class GigECamera(object):
         else:
             print("Camera is already closed.")
     
+
+    def __del__(self):
+        self.close()
+        

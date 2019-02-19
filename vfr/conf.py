@@ -27,3 +27,15 @@ DEFAULT_TASKS = [TST_GATEWAY_CONNECTION,
 ALPHA_DATUM_OFFSET = -180
  
 DB_TIME_FORMAT = '%Y-%m-%dT%H:%M:%S%Z'
+
+NR360_SERIALNUMBER = 40873952
+
+IMAGE_FOLDER = '/moonsdata/verification/images'
+
+POS_REP_CAMERA_IP_ADDRESS = "169.254.187.121"
+
+DATUM_REP_PARS = { 'DATUM_REP_ITERATIONS' : 10, #  – the number of datum operations made for each test
+                   'DATUM_REP_PASS' : 20.0 ,  # – the maximum single deviation in microns from the baseline position which represents an acceptable FPU
+                   'DATUM_REP_EXPOSURE_MS' : 500, # – the exposure time in milliseconds for a correctly exposed image
+                   'POS_REP_POSITIONS' : [14 + k * 30 for  k in range(6)],
+}
