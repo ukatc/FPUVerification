@@ -5,3 +5,6 @@ def switch_backlight(state):
 
 def switch_ambientlight(state):
     pass
+
+def switch_silhouettelight(state):
+    pass

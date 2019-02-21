@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
 import os
+import ast
 import lmdb
 import platform
 
@@ -36,7 +37,7 @@ def  save_test_result(env, vfdb, fpuset, keyfunc, valfunc, verbosity=0):
             else:
                 count = int(last_cnt) + 1
                 
-            key2 = repr( keybase + ('result', count) )
+            key2 = repr( keybase + ('data', count) )
 
 
             val = valfunc(fpu_id)            
@@ -47,3 +48,33 @@ def  save_test_result(env, vfdb, fpuset, keyfunc, valfunc, verbosity=0):
             
             txn.put(key1, str(count))
             txn.put(key2, val)
+
+            
+def  get_test_result(env, vfdb, fpu_id, keyfunc, count=None, verbosity=0):
+    
+    with env.begin(write=True,db=vfdb) as txn:
+            
+        keybase = keyfunc(fpu_id)
+
+        if count is None:
+            key1 = str(keybase + ( 'ntests',))
+        
+            count = txn.get(key1)
+
+        assert(count is not None)
+            
+        key2 = repr( keybase + ('data', count) )
+
+        
+        val = txn.get(key2, val)
+
+        if val is not None:
+            val = ast.literal_eval(val)
+        
+        
+        if verbosity > 2:
+            print("got %r : %r" % (key2, val))
+
+    return val
+
+            

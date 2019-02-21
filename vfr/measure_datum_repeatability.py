@@ -27,20 +27,23 @@ from FpuGridDriver import (CAN_PROTOCOL_VERSION, SEARCH_CLOCKWISE, SEARCH_ANTI_C
 from fpu_commands import gen_wf
 from fpu_constants import ALPHA_MIN_DEGREE, ALPHA_MAX_DEGREE, BETA_MIN_DEGREE, BETA_MAX_DEGREE, ALPHA_DATUM_OFFSET
 
-from vfr.tests_common import flush, timestamp, dirac, goto_position, find_datum
+from vfr.tests_common import (flush, timestamp, dirac, goto_position, find_datum, store_image,
+                              get_sorted_positions, safe_home_turntable)
+
+from Lamps.lctrl import switch_backlight, switch_ambientlight
+
 import pyAPT
 
 from ImageAnalysisFuncs.analyze_datum_repeatability import (positional_repeatability_image_analysis,
                                                             evaluate_datum_repeatability)
 
 
-def  save_datum_result(env, vfdb, args, fpu_config, fpu_id, images, coords,
-                       datum_repeatability_mm, datum_repeatability_has_passed):
+def  save_datum_repeatability_images(env, vfdb, args, fpu_config, fpu_id, images):
 
     # define two closures - one for the unique key, another for the stored value 
     def keyfunc(fpu_id):
         serialnumber = fpu_config[fpu_id]['serialnumber']
-        keybase = (serialnumber, 'datum-repeatability')
+        keybase = (serialnumber, 'datum-repeatability', 'images')
         return keybase
 
     def valfunc(fpu_id):
@@ -48,6 +51,38 @@ def  save_datum_result(env, vfdb, args, fpu_config, fpu_id, images, coords,
                         
         val = repr({'fpuid' : fpu_id,
                     'images' : images),
+                    'time' : timestamp()})
+        return val
+
+    
+    save_test_result(env, vfdb, fpuset, keyfunc, valfunc, verbosity=args.verbosity)
+
+
+def  get_datum_repeatability_images(env, vfdb, args, fpu_config, fpu_id):
+
+    # define two closures - one for the unique key, another for the stored value 
+    def keyfunc(fpu_id):
+        serialnumber = fpu_config[fpu_id]['serialnumber']
+        keybase = (serialnumber, 'datum-repeatability', 'images')
+        return keybase
+
+    return get_test_result(env, vfdb, fpuset, keyfunc, verbosity=args.verbosity)
+    
+    
+def  save_datum_repeatability_result(env, vfdb, args, fpu_config, fpu_id, coords=None,
+                                     datum_repeatability_mm=None,
+                                     datum_repeatability_has_passed=None):
+
+    # define two closures - one for the unique key, another for the stored value 
+    def keyfunc(fpu_id):
+        serialnumber = fpu_config[fpu_id]['serialnumber']
+        keybase = (serialnumber, 'datum-repeatability', 'result')
+        return keybase
+
+    def valfunc(fpu_id):
+        
+                        
+        val = repr({'fpuid' : fpu_id,
                     'coords' : coords,
                     'repeatability_millimeter' : datum_repeatability_mm,
                     'result' : TestResult.OK if datum_repeatability_has_passed else TestResult.FAILED
@@ -56,42 +91,25 @@ def  save_datum_result(env, vfdb, args, fpu_config, fpu_id, images, coords,
 
     
     save_test_result(env, vfdb, fpuset, keyfunc, valfunc, verbosity=args.verbosity)
-
     
-def get_sorted_positions(fpuset, positions):
-    """we need to sort the turntable angles because 
-    we can only move it in rising order"""
-    
-    return [(fid, pos) for pos, fid in sorted((positions[fid], fid) for fid in fpuset)]
 
-
-def test_datum_repeatability(env, vfdb, gd, grid_state, args, fpuset, fpu_config, 
-                             DATUM_REP_ITERATIONS,
-                             DATUM_REP_PASS,
-                             DATUM_REP_EXPOSURE_MS):
+def measure_datum_repeatability(env, vfdb, gd, grid_state, args, fpuset, fpu_config, 
+                                DATUM_REP_ITERATIONS=None,
+                                DATUM_REP_PASS=None,
+                                DATUM_REP_EXPOSURE_MS=None):
 
     # home turntable
+    safe_home_turntable(gd, grid_state)    
 
-    gd.findDatum(grid_state)
-    
-    with pyAPT.NR360S(serial_number=NR360_SERIALNUMBER) as con:
-        print('\tHoming stage...', end=' ')
-        con.home(clockwise=True)
-        print('homed')
-    
-    # switch backlight off
-    # switch ambient light on
+    switch_backlight("off")
+    switch_ambientlight("on")
+    switch_fibre_backlight_voltage(0.0)
 
     # get sorted positions (this is needed because the turntable can only
     # move into one direction)
     for fpu_id, stage_position  in get_sorted_positions(fpuset, POS_REP_POSITIONS):
         # move rotary stage to POS_REP_POSN_N
-        with pyAPT.NR360S(serial_number=NR360_SERIALNUMBER) as con:
-            print('Found APT controller S/N', NR360_SERIALNUMBER)
-            con.goto(stage_position, wait=True)
-            print('\tNew position: %.2fmm %s'%(con.position(), con.unit))
-            print('\tStatus:',con.status())
-            
+        turntable_safe_goto(gd, grid_state, stage_position)            
     
         # initialize pos_rep camera
         # set pos_rep camera exposure time to DATUM_REP_EXPOSURE milliseconds
@@ -105,40 +123,30 @@ def test_datum_repeatability(env, vfdb, gd, grid_state, args, fpuset, fpu_config
         unmoved_images = []
         datumed_images = []
         moved_images = []
-        unmoved_coords = []
-        datumed_coords = []
-        moved_coords = []
 
         def capture_image(subtest, count):
-            serialnumber = fpu_config['serialnumber']
-            image_filename = "{sn}/{ts}/{tn}-{tc:%02d}-{tp}-{ic}-.bmp".format(sn=serialnumber,
-                                                                              tn="datum-repeatability",
-                                                                              tp=testphase,
-                                                                              tc=testcount,
-                                                                              ts=timestamp(),
-                                                                              ic=count)
-            ipath = path.join(IMAGE_FOLDER, image_filename)
 
+            ipath = store_image(pos_rep_cam,
+                                "{sn}/{tn}/{ts}/{tp}-{tc:%02d}-{ic:%03d}-.bmp",
+                                sn=fpu_config['serialnumber'],
+                                tn="datum-repeatability",
+                                ts=timestamp(),
+                                tp=testphase,
+                                tc=testcount,
+                                ic=count)
             
-            os.makedirs(ipath)
-            pos_rep_cam.saveImage(ipath)
-            
-            (x, y) = positional_repeatability_image_analysis(ipath)
-
-            return ipath, (x, y)
+            return ipath
 
             
         for k in range(DATUM_REP_ITERATIONS):
-            ipath, coords = capture_image("unmoved", count)
-            unmoved_images.append(image_filename)
-            unmoved_coords.append(coords)
+            ipath = capture_image("unmoved", count)
+            unmoved_images.append(ipath)
 
     
         for k in range(DATUM_REP_ITERATIONS):
             gd.findDatum(grid_state, fpuset=[fpu_id])
-            ipath, coords = capture_image("datumed", count)
-            datumed_images.append(image_filename)
-            datumed_coords.append(coords)
+            ipath = capture_image("datumed", count)
+            datumed_images.append(ipath)
     
         gd.findDatum(grid_state)
         for k in range(DATUM_REP_ITERATIONS):
@@ -149,23 +157,42 @@ def test_datum_repeatability(env, vfdb, gd, grid_state, args, fpuset, fpu_config
             gd.executeMotion(grid_state, fpuset=[fpu_id])
             gd.findDatum(grid_state, fpuset=[fpu_id])
             ipath, coords = capture_image("moved+datumed", count)
-            moved_images.append(image_filename)
-            moved_coords.append(coords)
-
-        datum_repeatability_mm = evaluate_datum_repeatability(unmoved_coords, datumed_coords, moved_coords)
-
-        datum_repeatability_has_passed = datum_repeatabilit_mm <= DATUM_REP_PASS
+            moved_images.append(ipath)
 
         images = { 'unmoved_images' : unmoved_images,
                    'datumed_images' : datumed_imaged,
                    'moved_images' : moved_images }
         
+
+        save_datum_repeatability_images(env, vfdb, args, fpu_config, fpu_id, images)
+
+
+
+def eval_datum_repeatability(env, vfdb, gd, grid_state, args, fpuset, fpu_config, pos_rep_analysis_pars):
+
+    for fpu_id in fpuset:
+        images = get_datum_repeatability_images(env, vfdb, args, fpu_config, fpu_id, images)
+
+        def analysis_func(ipath):
+            return positional_repeatability_image_analysis(ipath, **pos_rep_analysis_pars)
+        
+
+        unmoved_coords = map(analysis_func, images['inmoved_images'])
+        datumed_coords = map(analysis_func, images['datumed_images'])
+        moved_coords = map(analysis_func, images['moved_images'])
+        
+        
+        datum_repeatability_mm = evaluate_datum_repeatability(unmoved_coords, datumed_coords, moved_coords)
+
+        datum_repeatability_has_passed = datum_repeatability_mm <= DATUM_REP_PASS
+        
         coords = { 'unmoved_coords' : unmoved_coords,
                    'datumed_coords' : datumed_coords,
                    'moved_coords' : moved_coords }
 
-        save_datum_result(env, vfdb, args, fpu_config, fpu_id, images, coords,
-                          datum_repeatability_mm, datum_repeatability_has_passed)
+        save_datum_repeatability_result(env, vfdb, args, fpu_config, fpu_id, coords=coords,
+                                        datum_repeatability_mm=datum_repetability_mm,
+                                        datum_repeatability_has_passed=datum_repetability_has_passed)
         
 
 

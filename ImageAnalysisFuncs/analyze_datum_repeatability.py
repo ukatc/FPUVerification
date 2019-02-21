@@ -1,6 +1,16 @@
 from __future__ import print_function, division
+from numpy import nan
 
-def positional_repeatability_image_analysis(ipath):
+def positional_repeatability_image_analysis(ipath,
+                                            POSREP_SMALL_TARGET_DIA_LOWER_THRESH=nan,
+                                            POSREP_SMALL_TARGET_DIA_UPPER_THRESH=nan,
+                                            POSREP_LARGE_TARGET_DIA_LOWER_THRESH=nan,
+                                            POSREP_LARGE_TARGET_DIA_UPPER_THRESH=nan,
+                                            POSREP_TARGET_CIRCULARITY_THRESH=nan,
+                                            POSREP_THRESHOLD_VAL=nan,
+                                            POSREP_PLATESCALE=nan,
+                                            POSREP_DISTORTION_MATRIX=nan):
+    
     """Takes full path name of an image, and returns the (x, Y) coordinates
     of the fibre in millimeter. The coordinates need only to be relative
     to the camera position."""

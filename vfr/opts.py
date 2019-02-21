@@ -16,9 +16,10 @@ from vfr.conf import ( DEFAULT_TASKS,
                        TST_INIT,
                        TST_FLASH,
                        TST_INITPOS,
+                       TST_DATUM_REP,
                        TST_LIMITS)
 
-
+from vfr.tasks import *
 
 def parse_args():
     parser = argparse.ArgumentParser(description='test FPUs in verification rig')

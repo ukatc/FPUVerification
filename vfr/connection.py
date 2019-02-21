@@ -16,34 +16,16 @@ def check_ping_ok(ipaddr):
 
 
 
-def check_gateway_connection(args):
-    print("testing connection to gateway..", end='')
+def check_connection(args, name, address):
+    print("testing connection to %s .." % name, end='')
     flush()
     
-    pok = check_ping_ok(args.gateway_address)
+    pok = check_ping_ok(address)
     if not pok:
-        raise AssertionError("network connection to gateway address not alive")
+        raise AssertionError("network connection to %s at address %r not alive" % (name, address))
     else:
         print("... OK")
 
-
-##  def initialize_FPU(args):
-##      
-##      gd = FpuGridDriver.GridDriver(args.N,
-##                                    motor_minimum_frequency=args.min_step_frequency,  
-##                                    motor_maximum_frequency=args.max_step_frequency, 
-##                                    motor_max_start_frequency=args.max_start_frequency,
-##                                    motor_max_rel_increase=args.max_acceleration)
-##  
-##          
-##      gateway_address = [ GatewayAddress(args.gateway_address, args.gateway_port) ]
-##  
-##      print("connecting grid:", gd.connect(address_list=gateway_address))
-##  
-##      grid_state = gd.getGridState()
-##  
-##      return grid_state
-##  
 
 def init_driver(args, max_id, protected=True):
     if protected:

@@ -3,6 +3,7 @@ from __future__ import print_function, division
 import sys
 import time
 
+
 from numpy import zeros, nan, array
 
 from fpu_commands import gen_wf
@@ -17,7 +18,7 @@ from FpuGridDriver import (CAN_PROTOCOL_VERSION, SEARCH_CLOCKWISE, SEARCH_ANTI_C
                            InvalidParameterError, SetupError, InvalidWaveformException, ConnectionFailure,
                            SocketFailure, CommandTimeout, ProtectionError, HardwareProtectionError)
 
-from vfr.conf import DB_TIME_FORMAT
+from vfr.conf import DB_TIME_FORMAT, IMAGE_ROOT_FOLDER
 
 def flush():
     sys.stdout.flush()
@@ -63,3 +64,38 @@ def find_datum(gd, grid_state, args):
     print("the starting position (in degrees) is:", gd.trackedAngles(grid_state, retrieve=True))
 
     return gd, grid_state
+
+
+def safe_home_turntable(gd, grid_state):
+    gd.findDatum(grid_state)
+    
+    with pyAPT.NR360S(serial_number=NR360_SERIALNUMBER) as con:
+        print('\tHoming stage...', end=' ')
+        con.home(clockwise=True)
+        print('homed')
+
+def turntable_safe_goto(gd, grid_state, stage_position):
+    gd.findDatum(grid_state)
+    with pyAPT.NR360S(serial_number=NR360_SERIALNUMBER) as con:
+        print('Found APT controller S/N', NR360_SERIALNUMBER)
+        con.goto(stage_position, wait=True)
+        print('\tNew position: %.2fmm %s'%(con.position(), con.unit))
+        print('\tStatus:',con.status())
+        
+
+def store_image(camera, format_string, **kwargs):
+
+    image_filename = format_string.format(**kwargs)
+    ipath = path.join(IMAGE_ROOT_FOLDER, image_filename)
+         
+    os.makedirs(os.dirname(ipath))
+    camera.saveImage(ipath)
+
+    return ipath
+
+
+def get_sorted_positions(fpuset, positions):
+    """we need to sort the turntable angles because 
+    we can only move it in rising order"""
+    
+    return [(fid, pos) for pos, fid in sorted((positions[fid], fid) for fid in fpuset)]
