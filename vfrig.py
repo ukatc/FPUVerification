@@ -16,7 +16,7 @@ from vfr.db import env
 from vfr.opts import parse_args
 from vfr.conf import (ALPHA_DATUM_OFFSET, )
 
-import vfr.tasks as t
+from vfr.TaskLogic import T, resolve
 
 from vfr.connection import check_ping_ok, check_connection, check_can_connection, init_driver
 
@@ -69,30 +69,30 @@ if __name__ == '__main__':
     args = parse_args()
     print("tasks = %r" % args.tasks)
 
-    tasks = t.resolve(args.tasks)
+    tasks = resolve(args.tasks)
     
 
     # check connections to cameras and EtherCAN gateway
         
 
-    if t.TST_GATEWAY_CONNECTION in tasks:
-        print("[%s] ###" % t.TST_GATEWAY_CONNECTION)
+    if T.TST_GATEWAY_CONNECTION in tasks:
+        print("[%s] ###" % T.TST_GATEWAY_CONNECTION)
         check_connection(args, "gateway", args.gateway_address)
 
-    if t.TST_POS_REP_CAM_CONNECTION in tasks:
-        print("[%s] ###" % t.TST_POS_REP_CAM_CONNECTION)
+    if T.TST_POS_REP_CAM_CONNECTION in tasks:
+        print("[%s] ###" % T.TST_POS_REP_CAM_CONNECTION)
         check_connection(args, "positional repetability camera", POS_REP_CAMERA_IP_ADDRESS)
 
-    if t.TST_MET_CAL_CAM_CONNECTION in tasks:
-        print("[%s] ###" % t.TST_MET_CAL_CAM_CONNECTION)
+    if T.TST_MET_CAL_CAM_CONNECTION in tasks:
+        print("[%s] ###" % T.TST_MET_CAL_CAM_CONNECTION)
         check_connection(args, "metrology calibration camera", POS_REP_CAMERA_IP_ADDRESS)
 
-    if t.TST_MET_HEIGHT_CAM_CONNECTION in tasks:
-        print("[%s] ###" % t.TST_MET_HEIGHT_CAM_CONNECTION)
+    if T.TST_MET_HEIGHT_CAM_CONNECTION in tasks:
+        print("[%s] ###" % T.TST_MET_HEIGHT_CAM_CONNECTION)
         check_connection(args, "metrology height camera", MET_HEIGHT_CAMERA_IP_ADDRESS)
 
-    if t.TST_PUPIL_ALGN_CAM_CONNECTION in tasks:
-        print("[%s] ###" % t.TST_PUPIL_ALGN_CAM_CONNECTION)
+    if T.TST_PUPIL_ALGN_CAM_CONNECTION in tasks:
+        print("[%s] ###" % T.TST_PUPIL_ALGN_CAM_CONNECTION)
         check_connection(args, "pupil alignment camera", PUPIL_ALGN_CAMERA_IP_ADDRESS)
 
     fpu_config = load_config(args.setup_file)
@@ -104,21 +104,21 @@ if __name__ == '__main__':
 
 
 
-    if t.TASK_INIT_RD:
+    if T.TASK_INIT_RD:
         
         print("[initialize unprotected FPU driver] ###")
 
         rd, grid_state = init_driver(args, max(fpuset), protected=False)
     
 
-    if t.TST_CAN_CONNECTION in tasks:
+    if T.TST_CAN_CONNECTION in tasks:
         print("[test_can_connection] ###")
         for fpu_id in fpuset:
             rv = check_can_connection(rd, grid_state, args, fpu_id)
 
         
 
-    if t.TST_FLASH in tasks:
+    if T.TST_FLASH in tasks:
         print("[flash_snum] ###")
         for fpu_id in fpuset:
             serial_number = fpu_config[fpu_id]['serialnumber']
@@ -132,7 +132,7 @@ if __name__ == '__main__':
 
     fpudb = env.open_db("fpu")
     
-    if t.TST_INITPOS    in tasks:
+    if T.TST_INITPOS    in tasks:
         print("[init_positions] ###")
         
         
@@ -148,7 +148,7 @@ if __name__ == '__main__':
 
     # switch to protected driver instance, if needed
     
-    if t.TASK_INIT_GD:
+    if T.TASK_INIT_GD:
 
         if locals().has_key('rd'):
             del rd # delete raw (unprotected) driver instance
@@ -172,22 +172,22 @@ if __name__ == '__main__':
 
                      
             
-    if t.TST_DATUM_ALPHA in tasks:
-        print("[%s] ###" % t.TST_DATUM_ALPHA)
+    if T.TST_DATUM_ALPHA in tasks:
+        print("[%s] ###" % T.TST_DATUM_ALPHA)
         
         # We can use grid_state to display the starting position
         print("the starting position (in degrees) is:", gd.trackedAngles(grid_state, retrieve=True))
         test_datum(env, vfdb, gd, grid_state, args, fpuset, fpu_config, DASEL_ALPHA)
         
-    if t.TST_DATUM_BETA in tasks:
-        print("[%s] ###" % t.TST_DATUM_BETA)
+    if T.TST_DATUM_BETA in tasks:
+        print("[%s] ###" % T.TST_DATUM_BETA)
         
         # We can use grid_state to display the starting position
         print("the starting position (in degrees) is:", gd.trackedAngles(grid_state, retrieve=True))
         test_datum(env, vfdb, gd, grid_state, args, fpuset, fpu_config, DASEL_BETA)
 
-    if t.TASK_REFERENCE in tasks:
-        print("[%s] ###" % t.TASK_REFERENCE)
+    if T.TASK_REFERENCE in tasks:
+        print("[%s] ###" % T.TASK_REFERENCE)
         # move all fpus to datum which are not there
         # (this is needed to operate the turntable)
         unreferenced = []
@@ -199,56 +199,56 @@ if __name__ == '__main__':
             gd.findDatum(grid_state, fpuset=unreferenced, timeout=DATUM_TIMEOUT_DISABLE)
         
         
-    if t.TST_COLLDETECT in tasks:
+    if T.TST_COLLDETECT in tasks:
         print("[test_collision_detection] ###")
         test_limit(env, fpudb, vfdb, gd, grid_state, args, fpuset, fpu_config, "beta_collision")
 
-    if t.TST_ALPHA_MAX in tasks:
+    if T.TST_ALPHA_MAX in tasks:
         print("[test_limit_alpha_max] ###")
         test_limit(env, fpudb, vfdb, gd, grid_state, args, fpuset, fpu_config, "alpha_max")
 
     
-    if t.TST_ALPHA_MIN in tasks:
+    if T.TST_ALPHA_MIN in tasks:
         print("[test_limit_alpha_min] ###")
         test_limit(env, fpudb, vfdb, gd, grid_state, args, fpuset, fpu_config, "alpha_min")
 
 
-    if t.TST_BETA_MAX in tasks:
+    if T.TST_BETA_MAX in tasks:
         print("[test_limit_beta_max] ###")
         test_limit(env, fpudb, vfdb, gd, grid_state, args, fpuset, fpu_config, "beta_max")
 
 
-    if t.TST_BETA_MIN in tasks:
+    if T.TST_BETA_MIN in tasks:
         print("[test_limit_beta_min] ###")
         test_limit(env, fpudb, vfdb, gd, grid_state, args, fpuset, fpu_config, "beta_min")
 
         
-    if t.MEASURE_MET_CAL in tasks:
-        print("[%s] ###" % t.MEASURE_MET_CAL)
+    if T.MEASURE_MET_CAL in tasks:
+        print("[%s] ###" % T.MEASURE_MET_CAL)
         measure_metrology_calibration(env, vfdb, gd, grid_state, args, fpuset, fpu_config,
                                     **MET_CAL_PARS)
-    if t.EVAL_MET_CAL in tasks:
-        print("[%s] ###" % t.EVAL_MET_CAL)
+    if T.EVAL_MET_CAL in tasks:
+        print("[%s] ###" % T.EVAL_MET_CAL)
         eval_metrology_calibration(env, vfdb, gd, grid_state, args, fpuset, fpu_config,
                                    METCAL_TARGET_ANALYSIS_PARS, METCAL_FIBRE_ANALYSIS_PARS)
         
-    if t.MEASURE_DATUM_REP in tasks:
-        print("[%s] ###" % t.MEASURE_DATUM_REP)
+    if T.MEASURE_DATUM_REP in tasks:
+        print("[%s] ###" % T.MEASURE_DATUM_REP)
         measure_datum_repeatability(env, vfdb, gd, grid_state, args, fpuset, fpu_config,
                                     **DATUM_REP_PARS)
-    if t.EVAL_DATUM_REP in tasks:
-        print("[%s] ###" % t.EVAL_DATUM_REP)
+    if T.EVAL_DATUM_REP in tasks:
+        print("[%s] ###" % T.EVAL_DATUM_REP)
         eval_datum_repeatability(env, vfdb, gd, grid_state, args, fpuset, fpu_config,
                                  POSREP_ANALYSIS_PARS)
         
 
-    if t.MEASURE_POS_REP in tasks:
-        print("[%s] ###" % t.MEASURE_POS_REP)
+    if T.MEASURE_POS_REP in tasks:
+        print("[%s] ###" % T.MEASURE_POS_REP)
         measure_positional_repeatability(env, vfdb, gd, grid_state, args, fpuset, fpu_config,
                                          **POSREP_MEASUREMENT_PARS)
         
-    if t.EVAL_DATUM_REP in tasks:
-        print("[%s] ###" % t.EVAL_DATUM_REP)
+    if T.EVAL_DATUM_REP in tasks:
+        print("[%s] ###" % T.EVAL_DATUM_REP)
         eval_positional_repeatability(env, vfdb, gd, grid_state, args, fpuset, fpu_config,
                                       POSREP_ANALYSIS_PARS, POSREP_EVALUATION_PARS)
         

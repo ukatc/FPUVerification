@@ -6,7 +6,7 @@ from numpy import zeros, nan
 from protectiondb import ProtectionDB as pdb
 from vfr,conf import POS_REP_POSN_N, POS_REP_CAMERA_IP_ADDRESS, NR360_SERIALNUMBER
 
-from vfr.db import save_test_result, TestResult
+from vfr.db import save_test_result, TestResult, GIT_VERSION
 from vfr import turntable
 
 from interval import Interval
@@ -35,7 +35,8 @@ from Lamps.lctrl import switch_backlight, switch_ambientlight
 import pyAPT
 
 from ImageAnalysisFuncs.analyze_positional_repeatability import (positional_repeatability_image_analysis,
-                                                            evaluate_positional_repeatability)
+                                                                 evaluate_positional_repeatability, 
+                                                                 POSITIONAL_REPEATABILITY_ALGORITHM_VERSION)
 
 
 def  save_positional_repeatability_images(env, vfdb, args, fpu_config, fpu_id, images):

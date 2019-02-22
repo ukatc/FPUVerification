@@ -6,7 +6,8 @@ from numpy import zeros, nan
 from protectiondb import ProtectionDB as pdb
 from vfr,conf import POS_REP_POSN_N, POS_REP_CAMERA_IP_ADDRESS, NR360_SERIALNUMBER
 
-from vfr.db import save_test_result, TestResult
+from vfr.db import save_test_result, TestResult, GIT_VERSION
+
 from vfr import turntable
 
 from interval import Interval
@@ -36,7 +37,8 @@ import pyAPT
 
 from ImageAnalysisFuncs.analyze_metrology_calibration import (metrology_calibration_find_targets,
                                                               metrology_calibration_find_fibre,
-                                                              fibre_target_distance )
+                                                              fibre_target_distance,
+                                                              METROLOGY_ANALYSIS_ALGORITHM_VERSION)
 
 
 def  save_metrology_calibration_images(env, vfdb, args, fpu_config, fpu_id, images):
@@ -71,7 +73,8 @@ def  get_metrology_calibration_images(env, vfdb, args, fpu_config, fpu_id):
     
     
 def  save_metrology_calibration_result(env, vfdb, args, fpu_config, fpu_id,
-                                       coords=None, fibre_distance=None):
+                                       coords=None, fibre_distance=None,
+                                       analysis_version=None):
 
     # define two closures - one for the unique key, another for the stored value 
     def keyfunc(fpu_id):
@@ -85,6 +88,8 @@ def  save_metrology_calibration_result(env, vfdb, args, fpu_config, fpu_id,
         val = repr({'fpuid' : fpu_id,
                     'coords' : coords,
                     'fibre_distance' : fibre_distance,
+                    'algorithm_version' : analysis_version,
+                    'git_version' : GIT_VERSION,
                     'time' : timestamp()})
         return val
 
@@ -179,7 +184,8 @@ def eval_metrology_calibration(env, vfdb, gd, grid_state, args, fpuset, fpu_conf
         fibre_distance = fibre_target_distance(target_coordinates[0], target_coordinates[0], fibre_coordinates)
 
         save_metrology_calibration_result(env, vfdb, args, fpu_config, fpu_id, coords=coords,
-                                          fibre_distance=fibre_distance)
+                                          fibre_distance=fibre_distance,
+                                          analysis_version=METROLOGY_ANALYSIS_ALGORITHM_VERSION)
         
 
 

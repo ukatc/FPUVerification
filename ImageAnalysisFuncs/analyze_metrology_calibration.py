@@ -1,6 +1,24 @@
 from __future__ import print_function, division
 from numpy import nan
 
+from base import ImageAnalysisError
+
+# version number for analysis algorithm
+# (each different result for the same data
+# should yield a version number increase)
+
+METROLOGY_ANALYSIS_ALGORITHM_VERSION = 0.1
+
+
+# exceptions which are raised if image analysis functions fail
+
+class MetrologyAnalysisTargetError(ImageAnalysisError):
+    pass
+
+class MetrologyAnalysisFibreError(ImageAnalysisError):
+    pass
+
+
 def metrology_calibration_find_targets(ipath,
                                        METCAL_SMALL_TARGET_DIA_LOWER_THRESH=nan,
                                        METCAL_SMALL_TARGET_DIA_UPPER_THRESH=nan,

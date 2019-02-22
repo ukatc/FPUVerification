@@ -4,8 +4,12 @@ import os
 import ast
 import lmdb
 import platform
+import subprocess
 
 DATABASE_FILE_NAME = os.environ.get("FPU_DATABASE")
+
+
+GIT_VERSION = subprocess.check_output(["git", "describe"]).strip()
 
 # needs 64 bit OS (specifically, large file support) for normal database size
 if platform.architecture()[0] == "64bit":

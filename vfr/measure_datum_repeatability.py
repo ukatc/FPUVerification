@@ -6,7 +6,7 @@ from numpy import zeros, nan
 from protectiondb import ProtectionDB as pdb
 from vfr,conf import POS_REP_POSN_N, POS_REP_CAMERA_IP_ADDRESS, NR360_SERIALNUMBER
 
-from vfr.db import save_test_result, TestResult
+from vfr.db import save_test_result, TestResult, GIT_VERSION
 from vfr import turntable
 
 from interval import Interval
@@ -34,8 +34,8 @@ from Lamps.lctrl import switch_backlight, switch_ambientlight
 
 import pyAPT
 
-from ImageAnalysisFuncs.analyze_datum_repeatability import (positional_repeatability_image_analysis,
-                                                            evaluate_datum_repeatability)
+from ImageAnalysisFuncs.analyze_positional_repeatability import (positional_repeatability_image_analysis,
+                                                            evaluate_datum_repeatability,)
 
 
 def  save_datum_repeatability_images(env, vfdb, args, fpu_config, fpu_id, images):
@@ -71,7 +71,8 @@ def  get_datum_repeatability_images(env, vfdb, args, fpu_config, fpu_id):
     
 def  save_datum_repeatability_result(env, vfdb, args, fpu_config, fpu_id, coords=None,
                                      datum_repeatability_mm=None,
-                                     datum_repeatability_has_passed=None):
+                                     datum_repeatability_has_passed=None,
+                                     analysis_version=None):
 
     # define two closures - one for the unique key, another for the stored value 
     def keyfunc(fpu_id):
@@ -86,6 +87,7 @@ def  save_datum_repeatability_result(env, vfdb, args, fpu_config, fpu_id, coords
                     'coords' : coords,
                     'repeatability_millimeter' : datum_repeatability_mm,
                     'result' : TestResult.OK if datum_repeatability_has_passed else TestResult.FAILED
+                    'git-version' : GIT_VERSION,
                     'time' : timestamp()})
         return val
 
@@ -192,7 +194,8 @@ def eval_datum_repeatability(env, vfdb, gd, grid_state, args, fpuset, fpu_config
 
         save_datum_repeatability_result(env, vfdb, args, fpu_config, fpu_id, coords=coords,
                                         datum_repeatability_mm=datum_repetability_mm,
-                                        datum_repeatability_has_passed=datum_repetability_has_passed)
+                                        datum_repeatability_has_passed=datum_repetability_has_passed,
+                                        analysis_version=DATUM_REPEATABILITY_ALGORITHM_VERSION)
         
 
 
