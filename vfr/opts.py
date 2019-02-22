@@ -28,11 +28,17 @@ def parse_args():
                         default=DEFAULT_TASKS, 
                         help="""list of tasks to perform (default: %(default)s)""")
     
-    parser.add_argument('-f', '--setup-file',   default="fpus.cfg", type=str,
+    parser.add_argument('-f', '--setup-file',   default="fpus_batch0.cfg", type=str,
                         help='FPU configuration')
 
     parser.add_argument('-m', '--mockup',   default=False, action='store_true',
                         help='set gateway address to use mock-up gateway and FPU')
+
+    parser.add_argument('-n', '--dry-run',   default=False, action='store_true',
+                        help='do not use lamp and camera hardware')
+
+    parser.add_argument('-M', '--manual-lamp-control',   default=False, action='store_true',
+                        help='switch to manual lamp control')
 
     parser.add_argument('-r', '--resetFPUs',   default=False, action='store_true',
                         help='reset all FPUs so that earlier aborts / collisions are ignored')

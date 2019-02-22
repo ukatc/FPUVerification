@@ -72,6 +72,7 @@ def  get_datum_repeatability_images(env, vfdb, args, fpu_config, fpu_id):
 def  save_datum_repeatability_result(env, vfdb, args, fpu_config, fpu_id, coords=None,
                                      datum_repeatability_mm=None,
                                      datum_repeatability_has_passed=None,
+                                     errmsg="",
                                      analysis_version=None):
 
     # define two closures - one for the unique key, another for the stored value 
@@ -83,10 +84,10 @@ def  save_datum_repeatability_result(env, vfdb, args, fpu_config, fpu_id, coords
     def valfunc(fpu_id):
         
                         
-        val = repr({'fpuid' : fpu_id,
-                    'coords' : coords,
+        val = repr({'coords' : coords,
                     'repeatability_millimeter' : datum_repeatability_mm,
-                    'result' : TestResult.OK if datum_repeatability_has_passed else TestResult.FAILED
+                    'result' : datum_repeatability_has_passed,
+                    'error_message' : errmsg,
                     'git-version' : GIT_VERSION,
                     'time' : timestamp()})
         return val
@@ -103,9 +104,9 @@ def measure_datum_repeatability(env, vfdb, gd, grid_state, args, fpuset, fpu_con
     # home turntable
     safe_home_turntable(gd, grid_state)    
 
-    switch_backlight("off")
-    switch_ambientlight("on")
-    switch_fibre_backlight_voltage(0.0)
+    switch_backlight("off", manual_lamp_control=args.manual_lamp_control)
+    switch_ambientlight("on", manual_lamp_control=args.manual_lamp_control)
+    switch_fibre_backlight_voltage(0.0, manual_lamp_control=args.manual_lamp_control)
 
     # get sorted positions (this is needed because the turntable can only
     # move into one direction)
@@ -179,22 +180,33 @@ def eval_datum_repeatability(env, vfdb, gd, grid_state, args, fpuset, fpu_config
             return positional_repeatability_image_analysis(ipath, **pos_rep_analysis_pars)
         
 
-        unmoved_coords = map(analysis_func, images['inmoved_images'])
-        datumed_coords = map(analysis_func, images['datumed_images'])
-        moved_coords = map(analysis_func, images['moved_images'])
+        try:
+            
+            unmoved_coords = map(analysis_func, images['unmoved_images'])
+            datumed_coords = map(analysis_func, images['datumed_images'])
+            moved_coords = map(analysis_func, images['moved_images'])
         
-        
-        datum_repeatability_mm = evaluate_datum_repeatability(unmoved_coords, datumed_coords, moved_coords)
 
-        datum_repeatability_has_passed = datum_repeatability_mm <= DATUM_REP_PASS
+            datum_repeatability_mm = evaluate_datum_repeatability(unmoved_coords, datumed_coords, moved_coords)
+
+            datum_repeatability_has_passed = TestResult.OK if datum_repeatability_mm <= DATUM_REP_PASS else TestResult.FAILED
         
-        coords = { 'unmoved_coords' : unmoved_coords,
-                   'datumed_coords' : datumed_coords,
-                   'moved_coords' : moved_coords }
+            coords = { 'unmoved_coords' : unmoved_coords,
+                       'datumed_coords' : datumed_coords,
+                       'moved_coords' : moved_coords }
+            errmsg = ""
+            
+        except ImageAnalysisError as e:
+            errmsg = str(e)
+            coords = {}
+            datum_repeatability_mm = NaN
+            datum_repeatability_has_passed = TestResult.NA
+            
 
         save_datum_repeatability_result(env, vfdb, args, fpu_config, fpu_id, coords=coords,
                                         datum_repeatability_mm=datum_repetability_mm,
                                         datum_repeatability_has_passed=datum_repetability_has_passed,
+                                        ermmsg=errmsg,
                                         analysis_version=DATUM_REPEATABILITY_ALGORITHM_VERSION)
         
 

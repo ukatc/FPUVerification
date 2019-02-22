@@ -74,6 +74,7 @@ def  get_metrology_calibration_images(env, vfdb, args, fpu_config, fpu_id):
     
 def  save_metrology_calibration_result(env, vfdb, args, fpu_config, fpu_id,
                                        coords=None, fibre_distance=None,
+                                       errmsg=""
                                        analysis_version=None):
 
     # define two closures - one for the unique key, another for the stored value 
@@ -85,9 +86,9 @@ def  save_metrology_calibration_result(env, vfdb, args, fpu_config, fpu_id,
     def valfunc(fpu_id):
         
                         
-        val = repr({'fpuid' : fpu_id,
-                    'coords' : coords,
+        val = repr({'coords' : coords,
                     'fibre_distance' : fibre_distance,
+                    'error_message' = errmsg,
                     'algorithm_version' : analysis_version,
                     'git_version' : GIT_VERSION,
                     'time' : timestamp()})
@@ -106,9 +107,9 @@ def measure_metrology_calibration(env, vfdb, gd, grid_state, args, fpuset, fpu_c
     # home turntable
     safe_home_turntable(gd, grid_state)    
 
-    switch_backlight("off")
-    switch_ambientlight("off")
-    switch_fibre_backlight_voltage(0.0)
+    switch_backlight("off", manual_lamp_control=args.manual_lamp_control)
+    switch_ambientlight("off", manual_lamp_control=args.manual_lamp_control)
+    switch_fibre_backlight_voltage(0.0, manual_lamp_control=args.manual_lamp_control)
 
     MET_CAL_CAMERA_CONF = { DEVICE_CLASS : BASLER_DEVICE_CLASS,
                             IP_ADDRESS : MET_CAL_CAMERA_IP_ADDRESS }
@@ -146,16 +147,17 @@ def measure_metrology_calibration(env, vfdb, gd, grid_state, args, fpuset, fpu_c
             
         
         met_cal_cam.SetExposureTime(METROLOGY_CAL_TARGET_EXPOSURE_MS)
-        switch_backlight("off")
-        switch_ambientlight("on")
-        switch_fibre_backlight_voltage(0.0)
+        switch_backlight("off", manual_lamp_control=args.manual_lamp_control)
+        switch_ambientlight("on", manual_lamp_control=args.manual_lamp_control)
+        switch_fibre_backlight_voltage(0.0, manual_lamp_control=args.manual_lamp_control)
         target_ipath = capture_image(met_cal_cam, "target")
 
     
         met_cal_cam.SetExposureTime(METROLOGY_CAL_FIBRE_EXPOSURE_MS)
-        switch_backlight("off")
-        switch_ambientlight("off")
+        switch_backlight("off", manual_lamp_control=args.manual_lamp_control)
+        switch_ambientlight("off", manual_lamp_control=args.manual_lamp_control)
         switch_fibre_backlight_voltage(METROLOGY_CAL_BACKLIGHT_VOLTAGE)
+        
         fibre_ipath = capture_image(met_cal_cam, "fibre")
 
         images = { 'target' : target_ipath,
@@ -172,19 +174,27 @@ def eval_metrology_calibration(env, vfdb, gd, grid_state, args, fpuset, fpu_conf
         images = get_metrology_calibration_images(env, vfdb, args, fpu_config, fpu_id, images)
 
 
-        target_coordinates = positional_repeatability_image_analysis(images['target'], **pos_rep_analysis_pars)
-        fibre_coordinates = metrology_calibration_image_analysis(images['fibre'], **met_cal_analysis_pars)
+        try:
+            target_coordinates = positional_repeatability_image_analysis(images['target'], **pos_rep_analysis_pars)
+            fibre_coordinates = metrology_calibration_image_analysis(images['fibre'], **met_cal_analysis_pars)
 
         
         
-        coords = { 'target_small' : target_coordinates[0],
-                   'target_big' : target_coordinates[1],
-                   'fibre' : fibre_coordinates }
+            coords = { 'target_small' : target_coordinates[0],
+                       'target_big' : target_coordinates[1],
+                       'fibre' : fibre_coordinates }
 
-        fibre_distance = fibre_target_distance(target_coordinates[0], target_coordinates[0], fibre_coordinates)
+            fibre_distance = fibre_target_distance(target_coordinates[0], target_coordinates[0], fibre_coordinates)
+            errmsg = None
+            
+        except ImageAnalysisError as e:
+            errmsg = str(e)
+            coords = {}
+            fibre_distance = NaN
 
         save_metrology_calibration_result(env, vfdb, args, fpu_config, fpu_id, coords=coords,
                                           fibre_distance=fibre_distance,
+                                          errmsg=errmsg,
                                           analysis_version=METROLOGY_ANALYSIS_ALGORITHM_VERSION)
         
 

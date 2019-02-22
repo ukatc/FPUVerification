@@ -71,8 +71,9 @@ def  get_positional_repeatability_images(env, vfdb, args, fpu_config, fpu_id):
     
     
 def  save_positional_repeatability_result(env, vfdb, args, fpu_config, fpu_id, coords=None,
-                                     positional_repeatability_mm=None,
-                                     positional_repeatability_has_passed=None):
+                                          positional_repeatability_mm=None,
+                                          errmsg="",
+                                          positional_repeatability_has_passed=None):
 
     # define two closures - one for the unique key, another for the stored value 
     def keyfunc(fpu_id):
@@ -83,10 +84,11 @@ def  save_positional_repeatability_result(env, vfdb, args, fpu_config, fpu_id, c
     def valfunc(fpu_id):
         
                         
-        val = repr({'fpuid' : fpu_id,
-                    'coords' : coords,
+        val = repr({'coords' : coords,
                     'repeatability_millimeter' : positional_repeatability_mm,
-                    'result' : TestResult.OK if positional_repeatability_has_passed else TestResult.FAILED
+                    'result' : positional_repeatability_has_passed,
+                    'error_message' : errmsg,
+                    'git-version' : GIT_VERSION,
                     'time' : timestamp()})
         return val
 
@@ -103,9 +105,9 @@ def measure_positional_repeatability(env, vfdb, gd, grid_state, args, fpuset, fp
     # home turntable
     safe_home_turntable(gd, grid_state)    
 
-    switch_backlight("off")
-    switch_ambientlight("on")
-    switch_fibre_backlight_voltage(0.0)
+    switch_backlight("off", manual_lamp_control=args.manual_lamp_control)
+    switch_ambientlight("on", manual_lamp_control=args.manual_lamp_control)
+    switch_fibre_backlight_voltage(0.0, manual_lamp_control=args.manual_lamp_control)
 
     # get sorted positions (this is needed because the turntable can only
     # move into one direction)
@@ -193,9 +195,19 @@ def eval_positional_repeatability(env, vfdb, gd, grid_state, args, fpuset, fpu_c
                    'positionaled_coords' : positionaled_coords,
                    'moved_coords' : moved_coords }
 
+        except ImageAnalysisError as e:
+            errmsg = str(e)
+            coords = {}
+            datum_repeatability_mm = NaN
+            datum_repeatability_has_passed = TestResult.NA
+            
+
         save_positional_repeatability_result(env, vfdb, args, fpu_config, fpu_id, coords=coords,
-                                        positional_repeatability_mm=positional_repetability_mm,
-                                        positional_repeatability_has_passed=positional_repetability_has_passed)
+                                        datum_repeatability_mm=datum_repetability_mm,
+                                        datum_repeatability_has_passed=datum_repetability_has_passed,
+                                        ermmsg=errmsg,
+                                        analysis_version=DATUM_REPEATABILITY_ALGORITHM_VERSION)
+        
         
 
 
