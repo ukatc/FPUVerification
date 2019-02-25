@@ -24,11 +24,11 @@ from vfr.posdb import init_position
 from vfr.functional_tests import (test_datum, find_datum,  test_limit,
                                   DASEL_BOTH, DASEL_ALPHA, DASEL_BETA)
 
-from vfr.metrology_calibration import measure_metrology_calibration, eval_metrology_calibration
+from vfr.verification_tasks.metrology_calibration import measure_metrology_calibration, eval_metrology_calibration
 
-from vfr.measure_datum_repetability import measure_datum_repeatability, eval_datum_repeatability
+from vfr.verification_tasks.measure_datum_repeatability import measure_datum_repeatability, eval_datum_repeatability
 
-from vfr.positional_repeatability import measure_positional_repeatability, eval_positional_repeatability
+from vfr.verification_tasks.positional_repeatability import measure_positional_repeatability, eval_positional_repeatability
 
 
     

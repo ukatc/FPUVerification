@@ -5,7 +5,7 @@ from base import ImageAnalysisError
 
 # exceptions which are raised if image analysis functions fail
 
-class DatumRepeatabilityAnalysisError(ImageAnalysisError):
+class RepeatabilityAnalysisError(ImageAnalysisError):
     pass
 
 # version number for analysis algorithm
@@ -27,7 +27,10 @@ def positional_repeatability_image_analysis(ipath,
     
     """Takes full path name of an image, and returns the (x, Y) coordinates
     of the fibre in millimeter. The coordinates need only to be relative
-    to the camera position."""
+    to the camera position.
+
+    Any error should be signalled by throwing an Exception of class
+    ImageAnalysisError, with a string member which describes the problem."""
 
     return (0.0, 0.0)
 
@@ -40,6 +43,9 @@ def evaluate_datum_repeatability(unmoved_coords, datumed_coords, moved_coords):
     The units are in millimeter.
 
     The returned value is the repeatability value in millimeter.
+
+    Any error should be signalled by throwing an Exception of class
+    ImageAnalysisError, with a string member which describes the problem.
     
     """
 
