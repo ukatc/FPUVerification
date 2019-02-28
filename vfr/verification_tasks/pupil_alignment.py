@@ -184,12 +184,14 @@ def measure_pupil_alignment(env, vfdb, gd, grid_state, args, fpuset, fpu_config,
 
         images = {}
         for count, coords in enumerate(generate_positions()):
-            alpha, beta = coords
-            goto_position(gd, abs_alpha, abs_beta, grid_state, fpuset[fpu_id])
-            ipath = capture_image(count, alpha, beta)
-            images[(alpha, beta)] = ipath
+            abs_alpha, abs_beta = coords
+            goto_position(gd, abs_alpha, abs_beta, grid_state, fpuset=[fpu_id])
+            
+            if count < 16:
+                ipath = capture_image(count, alpha, beta)
+                images[(alpha, beta)] = ipath
 
-           
+        gd.findDatum(grid_state, fpuset=[fpu_id])
 
         save_pupil_alignment_images(env, vfdb, args, fpu_config, fpu_id, images)
 
@@ -201,7 +203,7 @@ def eval_pupil_alignment(env, vfdb, gd, grid_state, args, fpuset, fpu_config, po
         images = get_pupil_alignment_images(env, vfdb, args, fpu_config, fpu_id, images)
 
         def analysis_func(ipath):
-            return positional_repeatability_image_analysis(ipath, **pos_rep_analysis_pars)
+            return pupil_alignment_image_analysis(ipath, **pos_rep_analysis_pars)
         
 
         try:
