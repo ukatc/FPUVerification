@@ -18,7 +18,7 @@ from FpuGridDriver import (CAN_PROTOCOL_VERSION, SEARCH_CLOCKWISE, SEARCH_ANTI_C
                            InvalidParameterError, SetupError, InvalidWaveformException, ConnectionFailure,
                            SocketFailure, CommandTimeout, ProtectionError, HardwareProtectionError)
 
-from vfr.conf import DB_TIME_FORMAT, IMAGE_ROOT_FOLDER
+from vfr.conf import DB_TIME_FORMAT, IMAGE_ROOT_FOLDER, NR360_SERIALNUMBER, MTS50_SERIALNUMBER
 
 def flush():
     sys.stdout.flush()
@@ -34,7 +34,7 @@ def dirac(n, L):
     v[n] = 1.0
     return v
 
-def goto_position(gd, abs_alpha, abs_beta, fpuset, grid_state, allow_uninitialized=False,
+def goto_position(gd, abs_alpha, abs_beta, grid_state, fpuset=None, allow_uninitialized=False,
                   soft_protection=True, verbosity=0):
         gd.pingFPUs(grid_state)
         current_angles = gd.trackedAngles(grid_state, retrieve=True)
@@ -78,6 +78,19 @@ def turntable_safe_goto(gd, grid_state, stage_position):
     gd.findDatum(grid_state)
     with pyAPT.NR360S(serial_number=NR360_SERIALNUMBER) as con:
         print('Found APT controller S/N', NR360_SERIALNUMBER)
+        con.goto(stage_position, wait=True)
+        print('\tNew position: %.2fmm %s'%(con.position(), con.unit))
+        print('\tStatus:',con.status())
+        
+def home_linear_stage():    
+    with pyAPT.MTS50(serial_number=MTS50_SERIALNUMBER) as con:
+        print('\tHoming linear stage...', end=' ')
+        con.home(clockwise=True)
+        print('homed')
+
+def linear_stage_goto(stage_position):
+    with pyAPT.MTS50(serial_number=MTS50_SERIALNUMBER) as con:
+        print('Found APT controller S/N', MTS_SERIALNUMBER)
         con.goto(stage_position, wait=True)
         print('\tNew position: %.2fmm %s'%(con.position(), con.unit))
         print('\tStatus:',con.status())

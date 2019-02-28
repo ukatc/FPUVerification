@@ -52,7 +52,10 @@ DEFAULT_TASKS = [T.TST_GATEWAY_CONNECTION,
                  T.TST_BETA_MAX,
                  T.TST_BETA_MIN,
                  T.TST_DATUM_REP,
-                 T.TST_MET_CAL]
+                 T.TST_MET_CAL,
+                 T.TST_PUPIL_ALGN,
+                 T.TST_POS_REP,
+                 T.TST_POS_VER]
 
 usertasks = set([T.TST_GATEWAY_CONNECTION       , 
                  T.TST_CAN_CONNECTION           , 
@@ -111,9 +114,10 @@ task_dependencies = [ (T.TST_CAN_CONNECTION, [T.TST_GATEWAY_CONNECTION, T.TASK_I
                       
                       (T.MEASURE_DATUM_REP, [T.TST_POS_REP_CAM_CONNECTION, T.TASK_REFERENCE]),
                       
-                      (T.MEASURE_POS_REP, [T.TST_POS_REP_CAM_CONNECTION, T.TASK_REFERENCE]),
+                      (T.MEASURE_POS_REP, [T.TST_POS_REP_CAM_CONNECTION, T.TASK_REFERENCE, T.MEASURE_DATUM_REP, T.EVAL_DATUM_REP,
+                                           T.MEASURE_PUPIL_ALGN, T.EVAL_PUPIL_ALGN]),
                       
-                      (T.TST_POS_VER, [T.TST_POS_REP_CAM_CONNECTION, T.TASK_REFERENCE]),
+                      (T.TST_POS_VER, [T.TST_POS_REP_CAM_CONNECTION, T.TASK_REFERENCE, T.MEASURE_POS_REP, T.EVAL_POS_REP]),
                       
                       (T.MEASURE_MET_CAL, [T.TST_MET_CAL_CAM_CONNECTION, T.TASK_REFERENCE]),
                       
@@ -191,7 +195,7 @@ task_expansions = [ (T.TST_INIT, [T.TST_FLASH,
 
 
 
-def expand_tasks(goal, tasks, expansion, delete=False)
+def expand_tasks(goal, tasks, expansion, delete=False):
     if goal in tasks:
                       print("[expanding %s to %r] ###" % (goal, expansion))
         if delete:
@@ -200,8 +204,8 @@ def expand_tasks(goal, tasks, expansion, delete=False)
 
     return tasks
                       
-def resolve(tasks)    
-                      tasks = set(tasks)
+def resolve(tasks) :
+    tasks = set(tasks)
                       
     for tsk in tasks:
         if tsk not in usertasks:
@@ -210,14 +214,15 @@ def resolve(tasks)
                       
     while True:
 
-        n = len(tasks)
+        last_tasks = tasks.copy()
         for tsk, expansion in task_dependencies:
                       tasks = expand_tasks(tasks, tsk, expansion)
                       
         for tsk, expansion in task_expansions:
                       tasks = expand_tasks(tasks, tsk, expansion, delete=True)
 
-        if n == len(tasks):
+        # check for equality with last iteration
+        if tasks == last_tasks:
             break
                       
     return tasks

@@ -35,7 +35,8 @@ from Lamps.lctrl import switch_backlight, switch_ambientlight
 import pyAPT
 
 from ImageAnalysisFuncs.analyze_positional_repeatability import (positional_repeatability_image_analysis,
-                                                            evaluate_datum_repeatability,)
+                                                                 evaluate_datum_repeatability,
+                                                                 DATUM_REPEATABILITY_ALGORITHM_VERSION)
 
 
 def  save_datum_repeatability_images(env, vfdb, args, fpu_config, fpu_id, images):
@@ -94,12 +95,36 @@ def  save_datum_repeatability_result(env, vfdb, args, fpu_config, fpu_id, coords
 
     
     save_test_result(env, vfdb, fpuset, keyfunc, valfunc, verbosity=args.verbosity)
+
+
+def  get_datum_repeatability_result(env, vfdb, args, fpu_config, fpu_id):
+
+    # define two closures - one for the unique key, another for the stored value 
+    def keyfunc(fpu_id):
+        serialnumber = fpu_config[fpu_id]['serialnumber']
+        keybase = (serialnumber, 'datum-repeatability', 'result')
+        return keybase
+    
+    return get_test_result(env, vfdb, fpuset, keyfunc, verbosity=args.verbosity)
+
+def  get_datum_repeatability_passed_p(env, vfdb, args, fpu_config, fpu_id):
+    """returns True if the latest datum repetability test for this FPU
+    was passed successfully."""
+    
+    val = get_datum_repeatability_result(env, vfdb, args, fpu_config, fpu_id)
+
+    if val is None:
+        return False
+    
+    return (val['result'] == TestResult.OK)
     
 
 def measure_datum_repeatability(env, vfdb, gd, grid_state, args, fpuset, fpu_config, 
                                 DATUM_REP_ITERATIONS=None,
                                 DATUM_REP_PASS=None,
                                 DATUM_REP_EXPOSURE_MS=None):
+
+    tstamp=timestamp()
 
     # home turntable
     safe_home_turntable(gd, grid_state)    
@@ -130,10 +155,10 @@ def measure_datum_repeatability(env, vfdb, gd, grid_state, args, fpuset, fpu_con
         def capture_image(subtest, count):
 
             ipath = store_image(pos_rep_cam,
-                                "{sn}/{tn}/{ts}/{tp}-{tc:%02d}-{ic:%03d}-.bmp",
-                                sn=fpu_config['serialnumber'],
+                                "{sn}/{tn}/{ts}/{tp}-{tc:02d}-{ic:03d}-.bmp",
+                                sn=fpu_config[fpu_id]['serialnumber'],
                                 tn="datum-repeatability",
-                                ts=timestamp(),
+                                ts=ttamp,
                                 tp=testphase,
                                 tc=testcount,
                                 ic=count)

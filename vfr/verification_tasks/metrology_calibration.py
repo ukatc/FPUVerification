@@ -104,6 +104,8 @@ def measure_metrology_calibration(env, vfdb, gd, grid_state, args, fpuset, fpu_c
                                   METROLOGY_CAL_TARGET_EXPOSURE_MS=None,
                                   METROLOGY_CAL_FIBRE_EXPOSURE_MS=None):
 
+    tstamp=timestamp()
+    
     # home turntable
     safe_home_turntable(gd, grid_state)    
 
@@ -135,10 +137,10 @@ def measure_metrology_calibration(env, vfdb, gd, grid_state, args, fpuset, fpu_c
         def capture_image(camera, subtest):
 
             ipath = store_image(camera,
-                                "{sn}/{tn}/{ts}/{tp}-{tc:%02d}.bmp",
-                                sn=fpu_config['serialnumber'],
+                                "{sn}/{tn}/{ts}/{tp}-{tc:02d}.bmp",
+                                sn=fpu_config[fpu_id]['serialnumber'],
                                 tn="metrology-calibration",
-                                ts=timestamp(),
+                                ts=tstamp,
                                 tp=testphase,
                                 tc=testcount)
             

@@ -4,15 +4,12 @@ import os
 from os import path
 from numpy import zeros, nan
 from protectiondb import ProtectionDB as pdb
-from vfr,conf import POS_REP_POSN_N, POS_REP_CAMERA_IP_ADDRESS, NR360_SERIALNUMBER
+from GigE.GigECamera import DEVICE_CLASS, BASLER_DEVICE_CLASS, IP_ADDRESS
+from vfr.conf import POS_REP_POSN_N, POS_REP_CAMERA_IP_ADDRESS, NR360_SERIALNUMBER
 
+from vfr.verification_tasks.measure_datum_repeatability import get_datum_repeatability_passed_p
 from vfr.db import save_test_result, TestResult, GIT_VERSION
 from vfr import turntable
-
-from interval import Interval
-from GigE.GigECamera import DEVICE_CLASS, BASLER_DEVICE_CLASS, IP_ADDRESS
-
-
 
 from FpuGridDriver import (CAN_PROTOCOL_VERSION, SEARCH_CLOCKWISE, SEARCH_ANTI_CLOCKWISE,
                            DEFAULT_WAVEFORM_RULSET_VERSION, DATUM_TIMEOUT_DISABLE,
@@ -36,10 +33,12 @@ import pyAPT
 
 from ImageAnalysisFuncs.analyze_positional_repeatability import (positional_repeatability_image_analysis,
                                                                  evaluate_positional_repeatability, 
-                                                                 POSITIONAL_REPEATABILITY_ALGORITHM_VERSION)
+                                                                 POSITIONAL_REPEATABILITY_ALGORITHM_VERSION, fit_gearbox_correction)
 
 
-def  save_positional_repeatability_images(env, vfdb, args, fpu_config, fpu_id, images):
+from Gearbox.gear_correction import GearboxFitError, fit_gearbox_correction
+
+def  save_positional_repeatability_images(env, vfdb, args, fpu_config, fpu_id, images_dict):
 
     # define two closures - one for the unique key, another for the stored value 
     def keyfunc(fpu_id):
@@ -51,7 +50,7 @@ def  save_positional_repeatability_images(env, vfdb, args, fpu_config, fpu_id, i
         
                         
         val = repr({'fpuid' : fpu_id,
-                    'images' : images),
+                    'images' : image_dict),
                     'time' : timestamp()})
         return val
 
@@ -70,8 +69,9 @@ def  get_positional_repeatability_images(env, vfdb, args, fpu_config, fpu_id):
     return get_test_result(env, vfdb, fpuset, keyfunc, verbosity=args.verbosity)
     
     
-def  save_positional_repeatability_result(env, vfdb, args, fpu_config, fpu_id, coords=None,
+def  save_positional_repeatability_result(env, vfdb, args, fpu_config, fpu_id, analysis_results=None,
                                           positional_repeatability_mm=None,
+                                          gearbox_correction={},
                                           errmsg="",
                                           positional_repeatability_has_passed=None):
 
@@ -84,9 +84,10 @@ def  save_positional_repeatability_result(env, vfdb, args, fpu_config, fpu_id, c
     def valfunc(fpu_id):
         
                         
-        val = repr({'coords' : coords,
+        val = repr({'analysis_results' : analysis_results,
                     'repeatability_millimeter' : positional_repeatability_mm,
                     'result' : positional_repeatability_has_passed,
+                    'gearbox_correction' : gearbox_correction,
                     'error_message' : errmsg,
                     'git-version' : GIT_VERSION,
                     'time' : timestamp()})
@@ -96,11 +97,38 @@ def  save_positional_repeatability_result(env, vfdb, args, fpu_config, fpu_id, c
     save_test_result(env, vfdb, fpuset, keyfunc, valfunc, verbosity=args.verbosity)
     
 
+
+def  get_positional_repeatability_result(env, vfdb, args, fpu_config, fpu_id):
+
+    # define two closures - one for the unique key, another for the stored value 
+    def keyfunc(fpu_id):
+        serialnumber = fpu_config[fpu_id]['serialnumber']
+        keybase = (serialnumber, 'positional-repeatability', 'result')
+        return keybase
+
+    
+    return get_test_result(env, vfdb, fpuset, keyfunc, verbosity=args.verbosity)
+
+    
+def  get_positional_repeatability_passed_p(env, vfdb, args, fpu_config, fpu_id):
+    """returns True if the latest positional repetability test for this FPU
+    was passed successfully."""
+    
+    val = get_positional_repeatability_result(env, vfdb, args, fpu_config, fpu_id)
+
+    if val is None:
+        return False
+    
+    return (val['result'] == TestResult.OK)
+
+    
 def measure_positional_repeatability(env, vfdb, gd, grid_state, args, fpuset, fpu_config, 
                                      POSITIONAL_REP_ITERATIONS=None,
                                      POSITION_REP_POSITIONS=None,
-                                     POSITION_REP_INCREMENTS=None,
+                                     POSITION_REP_NUMINCREMENTS=None,
                                      POSITIONAL_REP_EXPOSURE_MS=None):
+
+    tstamp=timestamp()
 
     # home turntable
     safe_home_turntable(gd, grid_state)    
@@ -109,104 +137,144 @@ def measure_positional_repeatability(env, vfdb, gd, grid_state, args, fpuset, fp
     switch_ambientlight("on", manual_lamp_control=args.manual_lamp_control)
     switch_fibre_backlight_voltage(0.0, manual_lamp_control=args.manual_lamp_control)
 
+    # initialize pos_rep camera
+    # set pos_rep camera exposure time to POSITIONAL_REP_EXPOSURE milliseconds
+    POS_REP_CAMERA_CONF = { DEVICE_CLASS : BASLER_DEVICE_CLASS,
+                            IP_ADDRESS : POS_REP_CAMERA_IP_ADDRESS }
+    
+    pos_rep_cam = GigECamera(POS_REP_CAMERA_CONF)
+    pos_rep_cam.SetExposureTime(POSITIONAL_REP_EXPOSURE_MS)
+    
     # get sorted positions (this is needed because the turntable can only
     # move into one direction)
     for fpu_id, stage_position  in get_sorted_positions(fpuset, POS_REP_POSITIONS):
+        
+        if not get_datum_repeatability_passed_p(env, vfdb, args, fpu_config, fpu_id):
+            print("FPU %s: skipping positional repeatability measurement because"
+                  " there is no passed datum repeatability test" % fpu_config['serialnumber'])
+            continue
+
+        if not get_pupil_alignment_passed_p(env, vfdb, args, fpu_config, fpu_id):
+            print("FPU %s: skipping positional repeatability measurement because"
+                  " there is no passed pupil alignment test" % fpu_config['serialnumber'])
+            continue
+        
         # move rotary stage to POS_REP_POSN_N
         turntable_safe_goto(gd, grid_state, stage_position)            
-    
-        # initialize pos_rep camera
-        # set pos_rep camera exposure time to POSITIONAL_REP_EXPOSURE milliseconds
-        POS_REP_CAMERA_CONF = { DEVICE_CLASS : BASLER_DEVICE_CLASS,
-                                IP_ADDRESS : POS_REP_CAMERA_IP_ADDRESS }
-        
-        pos_rep_cam = GigECamera(POS_REP_CAMERA_CONF)
-        pos_rep_cam.SetExposureTime(POSITIONAL_REP_EXPOSURE_MS)
-        
+            
 
-        unmoved_images = []
-        datumed_images = []
-        moved_images = []
+        image_dict = {}
 
-        def capture_image(subtest, count):
+        def capture_image(iteration, increment, direction, alpha, beta):
 
             ipath = store_image(pos_rep_cam,
-                                "{sn}/{tn}/{ts}/{tp}-{tc:%02d}-{ic:%03d}-.bmp",
-                                sn=fpu_config['serialnumber'],
+                                "{sn}/{tn}/{ts}/{itr:03d}-{inc:03d}-{dir:03d}-{alpha:+08.3f}-{beta:+08.3f}.bmp",
+                                sn=fpu_config[fpu_id]['serialnumber'],
                                 tn="positional-repeatability",
-                                ts=timestamp(),
-                                tp=testphase,
-                                tc=testcount,
-                                ic=count)
+                                ts=tstamp,
+                                itr=iteration,
+                                inc=increment,
+                                dir=direction)
             
             return ipath
 
             
-        for k in range(POSITIONAL_REP_ITERATIONS):
-            ipath = capture_image("unmoved", count)
-            unmoved_images.append(ipath)
-
-    
-        for k in range(POSITIONAL_REP_ITERATIONS):
+        
+        
+        for i in range(POSITIONAL_REP_ITERATIONS):
             gd.findDatum(grid_state, fpuset=[fpu_id])
-            ipath = capture_image("positionaled", count)
-            positionaled_images.append(ipath)
-    
-        gd.findDatum(grid_state)
-        for k in range(POSITIONAL_REP_ITERATIONS):
-            wf = gen_wf(30 * dirac(fpu_id), 30)
-            gd.configMottion(wf, grid_state)
-            gd.executeMotion(grid_state, fpuset=[fpu_id])
-            gd.reverseMotion(grid_state, fpuset=[fpu_id])
-            gd.executeMotion(grid_state, fpuset=[fpu_id])
-            gd.findDatum(grid_state, fpuset=[fpu_id])
-            ipath, coords = capture_image("moved+positionaled", count)
-            moved_images.append(ipath)
+            alpha = 0.0
+            beta = 0.0
+            step_a = 320.0 / POSITIONAL_REP_INCREMENTS
+            step_b = 320.0 / POSITIONAL_REP_INCREMENTS
 
-        images = { 'unmoved_images' : unmoved_images,
-                   'positionaled_images' : positionaled_imaged,
-                   'moved_images' : moved_images }
+            wf = gen_wf(dirac(fpu_id) * 10, dirac(fpu_id) * -170)
+            gd.configMotion(wf, grid_state)
+            gd.executeMotion(grid_state)
+            
+
+
+            for j in range(4):
+                for k in range(POSITIONAL_REP_INCREMENTS):
+                    angles = gd.countedAngles()
+                    alpha = angles[fpu_id][0]
+                    beta = angles[fpu_id][1]
+                    alpha_steps = grid_state.FPU[fpu_id].alpha_steps
+                    beta_steps = grid_state.FPU[fpu_id].beta_steps
+                    
+                    ipath = capture_image(i, j, k, alpha, beta)
+                    image_dict[(i, j, k)] = (alpha, beta, alpha_steps, beta_steps, ipath)
+                    
+
+                    if k != (POSITIONAL_REP_INCREMENTS -1):
+                        
+                        if j == 0:
+                            delta_a = step_a
+                            delta_b = 0.0
+                        elif j == 1:
+                            delta_a = - step_a
+                            delta_b = 0.0
+                        elif j == 2:
+                            delta_a = 0.0
+                            delta_b = step_b
+                        else:
+                            delta_a = 0.0
+                            delta_b = - step_b
+                        
+                        wf = gen_wf(delta_a * dirac(fpu_id), delta_b * dirac(fpu_id))
+                        gd.configMotion(wf, grid_state)
+                        gd.executeMotion(grid_state, fpuset=[fpu_id])
+                        
+                    
+    
         
 
-        save_positional_repeatability_images(env, vfdb, args, fpu_config, fpu_id, images)
+        save_positional_repeatability_images(env, vfdb, args, fpu_config, fpu_id, image_dict)
 
 
 
 def eval_positional_repeatability(env, vfdb, gd, grid_state, args, fpuset, fpu_config,
                                   pos_rep_analysis_pars, pos_rep_evaluation_pars):
 
+    def analysis_func(ipath):
+        return positional_repeatability_image_analysis(ipath, **pos_rep_analysis_pars)
+
+    
     for fpu_id in fpuset:
         images = get_positional_repeatability_images(env, vfdb, args, fpu_config, fpu_id, images)
 
-        def analysis_func(ipath):
-            return positional_repeatability_image_analysis(ipath, **pos_rep_analysis_pars)
+        
+        try:
+            analysis_results = {}
+            
+            for k, v in images.items():
+                alpha, beta, alpha_steps, beta_steps, ipath = v
+                (x_measured_1, y_measured_1, qual1, x_measured_2, y_measured_2, qual2) = analysis_func(ipath)
+                
+                analysis_results[k] = (alpha_steps, beta_steps, x_measured_1, y_measured_1, x_measured_2, y_measured_2)
+                                 
+        
+        
+            positional_repeatability_mm = evaluate_positional_repeatability(analysis_results, **pos_rep_evaluation_pars)
+
+            positional_repeatability_has_passed = positional_repeatability_mm <= POSITIONAL_REP_PASS
+
+            gearbox_correction = fit_gearbox_correction(analysis_results)
         
 
-        unmoved_coords = map(analysis_func, images['inmoved_images'])
-        positionaled_coords = map(analysis_func, images['positionaled_images'])
-        moved_coords = map(analysis_func, images['moved_images'])
-        
-        
-        positional_repeatability_mm = evaluate_positional_repeatability(unmoved_coords, positionaled_coords, moved_coords)
-
-        positional_repeatability_has_passed = positional_repeatability_mm <= POSITIONAL_REP_PASS
-        
-        coords = { 'unmoved_coords' : unmoved_coords,
-                   'positionaled_coords' : positionaled_coords,
-                   'moved_coords' : moved_coords }
-
-        except ImageAnalysisError as e:
+        except (ImageAnalysisError, GearboxFitError) as e:
+            analysis_results = None
             errmsg = str(e)
-            coords = {}
-            datum_repeatability_mm = NaN
-            datum_repeatability_has_passed = TestResult.NA
+            positional_repeatability_mm = NaN
+            positional_repeatability_has_passed = TestResult.NA
             
 
-        save_positional_repeatability_result(env, vfdb, args, fpu_config, fpu_id, coords=coords,
-                                        datum_repeatability_mm=datum_repetability_mm,
-                                        datum_repeatability_has_passed=datum_repetability_has_passed,
-                                        ermmsg=errmsg,
-                                        analysis_version=DATUM_REPEATABILITY_ALGORITHM_VERSION)
+        save_positional_repeatability_result(env, vfdb, args, fpu_config, fpu_id, analysis_results=analysis_results,
+                                             positional_repeatability_mm=positional_repeatability_mm, 
+                                             positional_repeatability_has_passed=positional_repetability_has_passed,
+                                             gearbox_correction=gearbox_correction,
+                                             ermmsg=errmsg,
+                                             analysis_version=POSITIONAL_REPEATABILITY_ALGORITHM_VERSION)
         
         
 

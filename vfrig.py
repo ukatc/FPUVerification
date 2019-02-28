@@ -240,6 +240,15 @@ if __name__ == '__main__':
         print("[%s] ###" % T.EVAL_DATUM_REP)
         eval_datum_repeatability(env, vfdb, gd, grid_state, args, fpuset, fpu_config,
                                  POSREP_ANALYSIS_PARS)
+
+    if T.MEASURE_PUPIL_ALGN in tasks:
+        print("[%s] ###" % T.MEASURE_PUPIL_ALGN)
+        measure_pupil_alignment(env, vfdb, gd, grid_state, args, fpuset, fpu_config,
+                                **PUPALGN_MEASUREMENT_PARS)
+    if T.EVAL_PUPIL_ALGN in tasks:
+        print("[%s] ###" % T.EVAL_PUPIL_ALGN)
+        eval_pupil_alignment(env, vfdb, gd, grid_state, args, fpuset, fpu_config,
+                             PUPALGN_EVALUATION_PARS)
         
 
     if T.MEASURE_POS_REP in tasks:
@@ -247,10 +256,20 @@ if __name__ == '__main__':
         measure_positional_repeatability(env, vfdb, gd, grid_state, args, fpuset, fpu_config,
                                          **POSREP_MEASUREMENT_PARS)
         
-    if T.EVAL_DATUM_REP in tasks:
-        print("[%s] ###" % T.EVAL_DATUM_REP)
+    if T.EVAL_POS_REP in tasks:
+        print("[%s] ###" % T.EVAL_POS_REP)
         eval_positional_repeatability(env, vfdb, gd, grid_state, args, fpuset, fpu_config,
                                       POSREP_ANALYSIS_PARS, POSREP_EVALUATION_PARS)
+        
+    if T.MEASURE_POS_VER in tasks:
+        print("[%s] ###" % T.MEASURE_POS_VER)
+        measure_positional_repeatability(env, vfdb, gd, grid_state, args, fpuset, fpu_config,
+                                         **POSVER_MEASUREMENT_PARS)
+        
+    if T.EVAL_POS_VER in tasks:
+        print("[%s] ###" % T.EVAL_POS_VER)
+        eval_positional_repeatability(env, vfdb, gd, grid_state, args, fpuset, fpu_config,
+                                      POSVER_ANALYSIS_PARS, POSVER_EVALUATION_PARS)
         
                 
         

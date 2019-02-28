@@ -82,7 +82,7 @@ def test_datum(env, vfdb, gd, grid_state, args, fpuset, fpu_config, dasel=DASEL_
     abs_alpha = -180.0 + 1.5
     abs_beta = 1.5
     if args.rewind_fpus:
-        goto_position(gd, abs_alpha, abs_beta, fpuset, grid_state,
+        goto_position(gd, abs_alpha, abs_beta, grid_state, fpuset=fpuset,
                       allow_uninitialized=True)
     
     
@@ -187,7 +187,7 @@ def set_protection_limit(env, fpudb, fpu, serialnumber, which_limit, measured_va
 def test_limit(env, fpudb, vfdb, gd, grid_state, args, fpuset, fpu_config, which_limit):
     abs_alpha_def = -180.0
     abs_beta_def = 0.0
-    goto_position(gd, abs_alpha_def, abs_beta_def, fpuset, grid_state)
+    goto_position(gd, abs_alpha_def, abs_beta_def, grid_state, fpuset=fpuset)
 
     if which_limit == "alpha_max":
         abs_alpha, abs_beta = 180.0, 0.0
@@ -221,7 +221,7 @@ def test_limit(env, fpudb, vfdb, gd, grid_state, args, fpuset, fpu_config, which
             if which_limit == "beta_collision":
                 turntable.go_collision_test_pos(fpu_id, args)
             
-            goto_position(gd, abs_alpha, abs_beta, [fpu_id], grid_state, soft_protection=False)
+            goto_position(gd, abs_alpha, abs_beta, grid_state, fpuset=[fpu_id], soft_protection=False)
             test_succeeded = False
             test_valid = True
             diagnostic = "detection failed"
@@ -280,7 +280,8 @@ def test_limit(env, fpudb, vfdb, gd, grid_state, args, fpuset, fpu_config, which
             
 
         # bring fpu back to default position
-        goto_position(gd, abs_alpha_def, abs_beta_def, [fpu_id], grid_state, allow_uninitialized=True)
+        goto_position(gd, abs_alpha_def, abs_beta_def, grid_state,
+                      fpuset=[fpu_id], allow_uninitialized=True)
         print("searching datum for FPU %i, to resolve collision" % fpu_id)
         gd.findDatum(grid_state, fpuset=[fpu_id])
         
