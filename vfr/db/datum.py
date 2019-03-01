@@ -2,12 +2,14 @@ from __future__ import print_function, division,  absolute_import
 
 from db.base import env, GIT_VERSION, TestResult, get_test_result 
 
+RECORD_TYPE = 'findDatum'
+
 def  save_datum_result(env, vfdb, args, fpu_config, fpuset, dasel, grid_state, rigstate):
 
     # define two closures - one for the unique key, another for the stored value 
     def keyfunc(fpu_id):
         serialnumber = fpu_config[fpu_id]['serialnumber']
-        keybase = (serialnumber, 'findDatum', str(dasel))
+        keybase = (serialnumber, RECORD_TYPE, str(dasel))
         return keybase
 
     def valfunc(fpu_id):
