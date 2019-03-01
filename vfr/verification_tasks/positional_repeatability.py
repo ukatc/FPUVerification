@@ -8,7 +8,14 @@ from GigE.GigECamera import DEVICE_CLASS, BASLER_DEVICE_CLASS, IP_ADDRESS
 from vfr.conf import POS_REP_POSN_N, POS_REP_CAMERA_IP_ADDRESS, NR360_SERIALNUMBER
 
 from vfr.verification_tasks.measure_datum_repeatability import get_datum_repeatability_passed_p
-from vfr.db import save_test_result, TestResult, GIT_VERSION
+from vfr.db.positional_repetability import (env,
+                                            TestResult,
+                                            save_positional_repeatability_images,
+                                            get_positional_repeatability_images,
+                                            save_positional_repeatability_result,
+                                            get_positional_repeatability_result,
+                                            get_positional_repeatability_passed_p)
+
 from vfr import turntable
 
 from FpuGridDriver import (CAN_PROTOCOL_VERSION, SEARCH_CLOCKWISE, SEARCH_ANTI_CLOCKWISE,
@@ -38,88 +45,6 @@ from ImageAnalysisFuncs.analyze_positional_repeatability import (positional_repe
 
 from Gearbox.gear_correction import GearboxFitError, fit_gearbox_correction
 
-def  save_positional_repeatability_images(env, vfdb, args, fpu_config, fpu_id, images_dict):
-
-    # define two closures - one for the unique key, another for the stored value 
-    def keyfunc(fpu_id):
-        serialnumber = fpu_config[fpu_id]['serialnumber']
-        keybase = (serialnumber, 'positional-repeatability', 'images')
-        return keybase
-
-    def valfunc(fpu_id):
-        
-                        
-        val = repr({'fpuid' : fpu_id,
-                    'images' : image_dict),
-                    'time' : timestamp()})
-        return val
-
-    
-    save_test_result(env, vfdb, fpuset, keyfunc, valfunc, verbosity=args.verbosity)
-
-
-def  get_positional_repeatability_images(env, vfdb, args, fpu_config, fpu_id):
-
-    # define two closures - one for the unique key, another for the stored value 
-    def keyfunc(fpu_id):
-        serialnumber = fpu_config[fpu_id]['serialnumber']
-        keybase = (serialnumber, 'positional-repeatability', 'images')
-        return keybase
-
-    return get_test_result(env, vfdb, fpuset, keyfunc, verbosity=args.verbosity)
-    
-    
-def  save_positional_repeatability_result(env, vfdb, args, fpu_config, fpu_id, analysis_results=None,
-                                          positional_repeatability_mm=None,
-                                          gearbox_correction={},
-                                          errmsg="",
-                                          positional_repeatability_has_passed=None):
-
-    # define two closures - one for the unique key, another for the stored value 
-    def keyfunc(fpu_id):
-        serialnumber = fpu_config[fpu_id]['serialnumber']
-        keybase = (serialnumber, 'positional-repeatability', 'result')
-        return keybase
-
-    def valfunc(fpu_id):
-        
-                        
-        val = repr({'analysis_results' : analysis_results,
-                    'repeatability_millimeter' : positional_repeatability_mm,
-                    'result' : positional_repeatability_has_passed,
-                    'gearbox_correction' : gearbox_correction,
-                    'error_message' : errmsg,
-                    'git-version' : GIT_VERSION,
-                    'time' : timestamp()})
-        return val
-
-    
-    save_test_result(env, vfdb, fpuset, keyfunc, valfunc, verbosity=args.verbosity)
-    
-
-
-def  get_positional_repeatability_result(env, vfdb, args, fpu_config, fpu_id):
-
-    # define two closures - one for the unique key, another for the stored value 
-    def keyfunc(fpu_id):
-        serialnumber = fpu_config[fpu_id]['serialnumber']
-        keybase = (serialnumber, 'positional-repeatability', 'result')
-        return keybase
-
-    
-    return get_test_result(env, vfdb, fpuset, keyfunc, verbosity=args.verbosity)
-
-    
-def  get_positional_repeatability_passed_p(env, vfdb, args, fpu_config, fpu_id):
-    """returns True if the latest positional repetability test for this FPU
-    was passed successfully."""
-    
-    val = get_positional_repeatability_result(env, vfdb, args, fpu_config, fpu_id)
-
-    if val is None:
-        return False
-    
-    return (val['result'] == TestResult.OK)
 
     
 def measure_positional_repeatability(env, vfdb, gd, grid_state, args, fpuset, fpu_config, 
@@ -234,10 +159,12 @@ def measure_positional_repeatability(env, vfdb, gd, grid_state, args, fpuset, fp
 
 
 def eval_positional_repeatability(env, vfdb, gd, grid_state, args, fpuset, fpu_config,
-                                  pos_rep_analysis_pars, pos_rep_evaluation_pars):
+                                  pos_rep_calibration_pars,
+                                  pos_rep_analysis_pars,
+                                  pos_rep_evaluation_pars):
 
     def analysis_func(ipath):
-        return positional_repeatability_image_analysis(ipath, **pos_rep_analysis_pars)
+        return positional_repeatability_image_analysis(ipath, pos_rep_calibration_pars, **pos_rep_analysis_pars)
 
     
     for fpu_id in fpuset:
@@ -269,7 +196,9 @@ def eval_positional_repeatability(env, vfdb, gd, grid_state, args, fpuset, fpu_c
             positional_repeatability_has_passed = TestResult.NA
             
 
-        save_positional_repeatability_result(env, vfdb, args, fpu_config, fpu_id, analysis_results=analysis_results,
+        save_positional_repeatability_result(env, vfdb, args, fpu_config, fpu_id,
+                                             pos_rep_calibration_pars=pos_rep_calibration_pars,
+                                             analysis_results=analysis_results,
                                              positional_repeatability_mm=positional_repeatability_mm, 
                                              positional_repeatability_has_passed=positional_repetability_has_passed,
                                              gearbox_correction=gearbox_correction,

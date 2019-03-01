@@ -103,6 +103,13 @@ POSREP_MEASUREMENT_PARS = {
                                      # sweeps back and forth
     }
 
+
+POSREP_CALIBRATION_PARS = {
+    'algorithm' : 'identity',
+    'coeffs' : [[NaN, NaN, NaN], [NaN, NaN, NaN], [NaN, NaN, NaN], ],
+}
+
+
 POSREP_EVALUATION_PARS = {
     'POSITION_REP_PASS' : NaN, # the maximum angular deviation, in
                                # degrees, from an average position of
@@ -150,6 +157,15 @@ PUPALGN_MEASUREMENT_PARS = {
 
     }
 
+
+PUPALGN_ANALYSIS_PARS = {
+    'PUP_ALN_PLATESCALE' : NaN, # scaling of pupil alignment camera image (millimeter per pixel)
+}
+
+PUPALGN_CALIBRATION_PARS = {
+    'algorithm' : 'identity',
+    'coeffs' : [[NaN, NaN, NaN], [NaN, NaN, NaN], [NaN, NaN, NaN], ],
+    }
 
 PUPALGN_EVALUATION_PARS = {
     'PUPIL_ALN_PASS' : NaN, # the maximum total deviation in arcmin

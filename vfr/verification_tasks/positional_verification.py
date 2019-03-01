@@ -12,7 +12,13 @@ from vfr.verification_tasks.measure_datum_repeatability import get_datum_repeata
 from vfr.verification_tasks.positional_repeatability import (get_positional_repeatability_result,
                                                              get_positional_repeatability_passed_p )
 
-from vfr.db import save_test_result, TestResult, GIT_VERSION
+from vfr.db.positional_verification import (env,
+                                            TestResult,
+                                            save_positional_verification_images,
+                                            get_positional_verification_images,
+                                            save_positional_verification_result)
+                                            
+                                           
 from vfr import turntable
 
 from FpuGridDriver import (CAN_PROTOCOL_VERSION, SEARCH_CLOCKWISE, SEARCH_ANTI_CLOCKWISE,
@@ -41,63 +47,6 @@ from ImageAnalysisFuncs.analyze_positional_repeatability import (positional_repe
 
 from Gearbox.gear_correction import GearboxFitError, apply_gearbox_correction
 
-def  save_positional_verification_images(env, vfdb, args, fpu_config, fpu_id, images_dict):
-
-    # define two closures - one for the unique key, another for the stored value 
-    def keyfunc(fpu_id):
-        serialnumber = fpu_config[fpu_id]['serialnumber']
-        keybase = (serialnumber, 'positional-verification', 'images')
-        return keybase
-
-    def valfunc(fpu_id):
-        
-                        
-        val = repr({'fpuid' : fpu_id,
-                    'images' : image_dict),
-                    'time' : timestamp()})
-        return val
-
-    
-    save_test_result(env, vfdb, fpuset, keyfunc, valfunc, verbosity=args.verbosity)
-
-
-def  get_positional_verification_images(env, vfdb, args, fpu_config, fpu_id):
-
-    # define two closures - one for the unique key, another for the stored value 
-    def keyfunc(fpu_id):
-        serialnumber = fpu_config[fpu_id]['serialnumber']
-        keybase = (serialnumber, 'positional-verification', 'images')
-        return keybase
-
-    return get_test_result(env, vfdb, fpuset, keyfunc, verbosity=args.verbosity)
-    
-    
-def  save_positional_verification_result(env, vfdb, args, fpu_config, fpu_id, analysis_results=None,
-                                         posver_errors=None,
-                                         positional_verification_mm=None,
-                                         errmsg="",
-                                         positional_verification_has_passed=None):
-
-    # define two closures - one for the unique key, another for the stored value 
-    def keyfunc(fpu_id):
-        serialnumber = fpu_config[fpu_id]['serialnumber']
-        keybase = (serialnumber, 'positional-verification', 'result')
-        return keybase
-
-    def valfunc(fpu_id):
-        
-                        
-        val = repr({'analysis_results' : analysis_results,
-                    'verification_millimeter' : positional_verification_mm,
-                    'result' : positional_verification_has_passed,
-                    'posver_errors' : posver_errors,
-                    'error_message' : errmsg,
-                    'git-version' : GIT_VERSION,
-                    'time' : timestamp()})
-        return val
-
-    
-    save_test_result(env, vfdb, fpuset, keyfunc, valfunc, verbosity=args.verbosity)
     
 
 
@@ -241,7 +190,7 @@ def eval_positional_verification(env, vfdb, gd, grid_state, args, fpuset, fpu_co
         
             posver_errors, positional_verification_mm = evaluate_positional_verification(analysis_results, **pos_ver_evaluation_pars)
 
-            positional_verification_has_passed = positional_verification_mm <= POSITIONAL_VER_PASS
+            positional_verification_has_passed = TestResult.OK if positional_verification_mm <= POSITIONAL_VER_PASS else TestResult.FAILED
         
 
         except ImageAnalysisError as e:

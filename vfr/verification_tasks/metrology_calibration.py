@@ -4,9 +4,13 @@ import os
 from os import path
 from numpy import zeros, nan
 from protectiondb import ProtectionDB as pdb
-from vfr,conf import POS_REP_POSN_N, POS_REP_CAMERA_IP_ADDRESS, NR360_SERIALNUMBER
+from vfr.conf import POS_REP_POSN_N, POS_REP_CAMERA_IP_ADDRESS, NR360_SERIALNUMBER
 
-from vfr.db import save_test_result, TestResult, GIT_VERSION
+from vfr.db.metrology_calibration import (env,
+                                          TestResult,
+                                          save_metrology_calibration_images,
+                                          get_metrology_calibration_images,
+                                          save_metrology_calibration_result)
 
 from vfr import turntable
 
@@ -41,61 +45,6 @@ from ImageAnalysisFuncs.analyze_metrology_calibration import (metrology_calibrat
                                                               METROLOGY_ANALYSIS_ALGORITHM_VERSION)
 
 
-def  save_metrology_calibration_images(env, vfdb, args, fpu_config, fpu_id, images):
-
-    # define two closures - one for the unique key, another for the stored value 
-    def keyfunc(fpu_id):
-        serialnumber = fpu_config[fpu_id]['serialnumber']
-        keybase = (serialnumber, 'metrology-calibration', 'images')
-        return keybase
-
-    def valfunc(fpu_id):
-        
-                        
-        val = repr({'fpuid' : fpu_id,
-                    'images' : images),
-                    'time' : timestamp()})
-        return val
-
-    
-    save_test_result(env, vfdb, fpuset, keyfunc, valfunc, verbosity=args.verbosity)
-
-
-def  get_metrology_calibration_images(env, vfdb, args, fpu_config, fpu_id):
-
-    # define two closures - one for the unique key, another for the stored value 
-    def keyfunc(fpu_id):
-        serialnumber = fpu_config[fpu_id]['serialnumber']
-        keybase = (serialnumber, 'metrology-calibration', 'images')
-        return keybase
-
-    return get_test_result(env, vfdb, fpuset, keyfunc, verbosity=args.verbosity)
-    
-    
-def  save_metrology_calibration_result(env, vfdb, args, fpu_config, fpu_id,
-                                       coords=None, fibre_distance=None,
-                                       errmsg=""
-                                       analysis_version=None):
-
-    # define two closures - one for the unique key, another for the stored value 
-    def keyfunc(fpu_id):
-        serialnumber = fpu_config[fpu_id]['serialnumber']
-        keybase = (serialnumber, 'metrology-calibration', 'result')
-        return keybase
-
-    def valfunc(fpu_id):
-        
-                        
-        val = repr({'coords' : coords,
-                    'fibre_distance' : fibre_distance,
-                    'error_message' = errmsg,
-                    'algorithm_version' : analysis_version,
-                    'git_version' : GIT_VERSION,
-                    'time' : timestamp()})
-        return val
-
-    
-    save_test_result(env, vfdb, fpuset, keyfunc, valfunc, verbosity=args.verbosity)
     
 
 def measure_metrology_calibration(env, vfdb, gd, grid_state, args, fpuset, fpu_config, 

@@ -6,7 +6,13 @@ from numpy import zeros, nan
 from protectiondb import ProtectionDB as pdb
 from vfr.conf import PUP_ALN_CAMERA_IP_ADDRESS, NR360_SERIALNUMBER
 
-from vfr.db import save_test_result, TestResult, GIT_VERSION
+from vfr.db import (env,
+                    TestResult,
+                    save_pupil_alignment_images,
+                    get_pupil_alignment_images,
+                    save_pupil_alignment_result,
+                    get_pupil_alignment_result)
+
 from vfr import turntable
 
 from interval import Interval
@@ -40,82 +46,6 @@ from ImageAnalysisFuncs.analyze_pupil_alignment import (pupil_alignment_image_an
                                                         PUPIL_ALIGNMENT_ALGORITHM_VERSION)
 
 
-def  save_pupil_alignment_images(env, vfdb, args, fpu_config, fpu_id, images):
-
-    # define two closures - one for the unique key, another for the stored value 
-    def keyfunc(fpu_id):
-        serialnumber = fpu_config[fpu_id]['serialnumber']
-        keybase = (serialnumber, 'pupil-alignment', 'images')
-        return keybase
-
-    def valfunc(fpu_id):
-        
-                        
-        val = repr({'fpuid' : fpu_id,
-                    'images' : images),
-                    'time' : timestamp()})
-        return val
-
-    
-    save_test_result(env, vfdb, fpuset, keyfunc, valfunc, verbosity=args.verbosity)
-
-
-def  get_pupil_alignment_images(env, vfdb, args, fpu_config, fpu_id):
-
-    # define two closures - one for the unique key, another for the stored value 
-    def keyfunc(fpu_id):
-        serialnumber = fpu_config[fpu_id]['serialnumber']
-        keybase = (serialnumber, 'pupil-alignment', 'images')
-        return keybase
-
-    return get_test_result(env, vfdb, fpuset, keyfunc, verbosity=args.verbosity)
-    
-    
-def  save_pupil_alignment_result(env, vfdb, args, fpu_config, fpu_id, coords=None,
-                                     pupil_alignment_has_passed=None,
-                                     errmsg="",
-                                     analysis_version=None):
-
-    # define two closures - one for the unique key, another for the stored value 
-    def keyfunc(fpu_id):
-        serialnumber = fpu_config[fpu_id]['serialnumber']
-        keybase = (serialnumber, 'pupil-alignment', 'result')
-        return keybase
-
-    def valfunc(fpu_id):
-        
-                        
-        val = repr({'coords' : coords,
-                    'result' : pupil_alignment_has_passed,
-                    'error_message' : errmsg,
-                    'git-version' : GIT_VERSION,
-                    'time' : timestamp()})
-        return val
-
-    
-    save_test_result(env, vfdb, fpuset, keyfunc, valfunc, verbosity=args.verbosity)
-
-
-def  get_pupil_alignment_result(env, vfdb, args, fpu_config, fpu_id):
-
-    # define two closures - one for the unique key, another for the stored value 
-    def keyfunc(fpu_id):
-        serialnumber = fpu_config[fpu_id]['serialnumber']
-        keybase = (serialnumber, 'pupil-alignment', 'result')
-        return keybase
-    
-    return get_test_result(env, vfdb, fpuset, keyfunc, verbosity=args.verbosity)
-
-def  get_pupil_alignment_passed_p(env, vfdb, args, fpu_config, fpu_id):
-    """returns True if the latest datum repetability test for this FPU
-    was passed successfully."""
-    
-    val = get_pupil_alignment_result(env, vfdb, args, fpu_config, fpu_id)
-
-    if val is None:
-        return False
-    
-    return (val['result'] == TestResult.OK)
 
 
 def generate_positions():
@@ -197,43 +127,46 @@ def measure_pupil_alignment(env, vfdb, gd, grid_state, args, fpuset, fpu_config,
 
 
 
-def eval_pupil_alignment(env, vfdb, gd, grid_state, args, fpuset, fpu_config, pos_rep_analysis_pars):
+def eval_pupil_alignment(env, vfdb, gd, grid_state, args, fpuset, fpu_config,
+                         PUPALGN_CALIBRATION_PARS=None,
+                         PUPALGN_ANALYSIS_PARS=None, PUPIL_ALN_PASS=NaN):
 
     for fpu_id in fpuset:
         images = get_pupil_alignment_images(env, vfdb, args, fpu_config, fpu_id, images)
 
         def analysis_func(ipath):
-            return pupil_alignment_image_analysis(ipath, **pos_rep_analysis_pars)
+            return pupil_alignment_image_analysis(ipath, PUPALGN_CALIBRATION_PARS, **PUPALGN_ANALYSIS_PARS)
         
 
         try:
-            
-            unmoved_coords = map(analysis_func, images['unmoved_images'])
-            datumed_coords = map(analysis_func, images['datumed_images'])
-            moved_coords = map(analysis_func, images['moved_images'])
-        
+            coords = dict( (k, analysis_func(v)) for k, v in images.items() )
+                    
 
-            pupil_alignment_mm = evaluate_pupil_alignment(unmoved_coords, datumed_coords, moved_coords)
+            pupalnChassisErr, pupalnAlphaErr, pupalnBetaErr,  pupalnTotalErr = evaluate_pupil_alignment(coords)
 
-            pupil_alignment_has_passed = TestResult.OK if pupil_alignment_mm <= DATUM_REP_PASS else TestResult.FAILED
+            pupil_alignment_has_passed = TestResult.OK if pupil_alignment_mm <= PUPIL_ALN_PASS else TestResult.FAILED
         
-            coords = { 'unmoved_coords' : unmoved_coords,
-                       'datumed_coords' : datumed_coords,
-                       'moved_coords' : moved_coords }
             errmsg = ""
             
         except ImageAnalysisError as e:
             errmsg = str(e)
             coords = {}
-            pupil_alignment_mm = NaN
+            pupalnChassisErr = pupalnAlphaErr = pupalnBetaErr =  pupalnTotalErr = NaN
             pupil_alignment_has_passed = TestResult.NA
             
 
-        save_pupil_alignment_result(env, vfdb, args, fpu_config, fpu_id, coords=coords,
-                                        pupil_alignment_mm=datum_repetability_mm,
-                                        pupil_alignment_has_passed=datum_repetability_has_passed,
-                                        ermmsg=errmsg,
-                                        analysis_version=PUPIL_ALIGNMENT_ALGORITHM_VERSION)
+        pupil_alignment_measures = { 'chassis_error':  pupalnChassisErr,
+                                      'alpha_error' : pupalnAlphaErr,
+                                      'beta_error' : pupalnBetaErr,
+                                      'total_error' :pupalnTotalErr}
+        
+        save_pupil_alignment_result(env, vfdb, args, fpu_config, fpu_id,
+                                    calibration_pars=PUPALGN_CALIBRATION_PARS,
+                                    coords=coords,
+                                    pupil_alignment_measures=pupil_alignment_measures,
+                                    pupil_alignment_has_passed=datum_repetability_has_passed,
+                                    ermmsg=errmsg,
+                                    analysis_version=PUPIL_ALIGNMENT_ALGORITHM_VERSION)
         
 
 

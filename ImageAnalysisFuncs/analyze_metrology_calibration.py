@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 from numpy import nan
 
-from base import ImageAnalysisError
+from ImageAnalysisFuncs.base import ImageAnalysisError
 
 # version number for analysis algorithm
 # (each different result for the same data

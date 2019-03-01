@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 from numpy import nan
-from base import ImageAnalysisError
+from ImageAnalysisFuncs.base import ImageAnalysisError
+from DistortionCorrection import correct
 
 
 # exceptions which are raised if image analysis functions fail
@@ -17,6 +18,7 @@ DATUM_REPEATABILITY_ALGORITHM_VERSION = 0.1
 
 
 def positional_repeatability_image_analysis(ipath,
+                                            CALIBRATION_PARS=None,
                                             POSREP_SMALL_TARGET_DIA_LOWER_THRESH=nan,
                                             POSREP_SMALL_TARGET_DIA_UPPER_THRESH=nan,
                                             POSREP_LARGE_TARGET_DIA_LOWER_THRESH=nan,
@@ -36,6 +38,9 @@ def positional_repeatability_image_analysis(ipath,
 
     """
 
+    # perform correction with loaded image
+    image = correct(image, CALIBRATION_PARS)
+    
     bigtarget_coords = (0.0, 0.0)
     smalltarget_coords = (0.0, 0.0)
 
