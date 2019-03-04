@@ -3,6 +3,7 @@ from __future__ import print_function, division
 from numpy import zeros, nan
 from protectiondb import ProtectionDB as pdb
 from vfr.db.datum import env, TestResult, save_datum_result
+from vfr.db.colldect_limits import save_angular_limit, set_protection_limit
 from vfr import turntable
 
 from interval import Interval
@@ -75,75 +76,6 @@ def test_datum(env, vfdb, gd, grid_state, args, fpuset, fpu_config, dasel=DASEL_
                           grid_state, rigstate)
                       
 
-def save_angular_range(env, vfdb, fpu_id, serialnumber, which_limit,
-                       test_succeeded, limit_val, verbosity=2):
-    
-    print("saving limit value")
-
-
-    def keyfunc(fpu_id):
-        if which_limit == "beta_collision":
-            keybase = (serialnumber, which_limit)
-        else:
-            keybase = (serialnumber, 'limit', which_limit)
-        return keybase
-
-    def valfunc(fpu_id):
-
-        if test_succeeded:
-            fsuccess = TestResult.OK
-        else:
-            fsuccess = TestResult.FAILED
-            
-        val = repr({'result' : fsuccess,                    
-                    'val' : limit_val,                    
-                    'time' : timestamp()})
-        return val
-
-    
-    save_test_result(env, vfdb, [fpu_id], keyfunc, valfunc, verbosity=verbosity)
-    
-    
-
-def set_protection_limit(env, fpudb, fpu, serialnumber, which_limit, measured_val,
-                         protection_tolerance, update):
-
-    """This replaces the corresponding entry in the protection database if
-    either the update flag is True, or the current entry is the default value.
-    """
-    if which_limit in [ "alpha_max", "alpha_min"]:
-        subkey = pdb.alpha_limits
-        offset = ALPHA_DATUM_OFFSET        
-        default_min, default_max = ALPHA_MIN_DEGREE, ALPHA_MAX_DEGREE
-    else:
-        subkey = pdb.beta_limits
-        offset = 0.0
-        default_min, default_max = BETA_MIN_DEGREE, BETA_MAX_DEGREE
-
-    is_min = which_limit in [ "beta_min", "alpha_min"]
-
-    if is_min:
-        default_val = default_min
-    else:
-        default_val = default_max
-        
-
-    with env.begin(write=True,db=fpudb) as txn:
-        val = pdb.getField(txn, fpu, subkey) + offset
-
-        val_min = val.min()
-        val_max = val.max()
-        if is_min:
-            if (val_min == default_val) or update:
-                val_min = measured_val + protection_tolerance
-        else:
-            if (val_max == default_val) or update:
-                val_max = measured_val - protection_tolerance
-    
-        
-        new_val = Interval(val_min, val_max)
-        print("limit %s: replacing %r by %r" % (which_limit, val, new_val))
-        pdb.putInterval(txn, serialnumber, subkey, new_val, offset)
 
 
     
@@ -213,7 +145,7 @@ def test_limit(env, fpudb, vfdb, gd, grid_state, args, fpuset, fpu_config, which
         sn = fpu_config[fpu_id]['serialnumber']
         
         if test_valid:
-            save_angular_range(env, vfdb, fpu_id, sn, which_limit, test_succeeded, limit_val, verbosity=3)
+            save_angular_limit(env, vfdb, fpu_id, sn, which_limit, test_succeeded, limit_val, verbosity=3)
 
         if test_valid and test_succeeded and (which_limit != "beta_collision"):
             set_protection_limit(env, fpudb, grid_state.FPU[fpu_id],

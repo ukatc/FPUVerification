@@ -1,5 +1,11 @@
 from __future__ import print_function, division
 
+from vrf.db.datum import get_datum_passed_p
+from vrf.db.datum_repeatability import get_datum_repetability_passed_p
+from vrf.db.colldect_limits import get_colldect_passed_p
+from vrf.db.pupil_alignment import get_pupil_alignment_passed_p
+from vrf.db.positional_repetability import get_positional_repeatability_passed_p
+
 class T:
     EVAL_DATUM_REP                 = "eval_datum_repeatability"
     EVAL_MET_CAL                   = "ecval_metrology_calibration"
@@ -38,6 +44,10 @@ class T:
     TST_POS_VER                    = "test_positional_verification"
     TST_PUPIL_ALGN                 = "test_pupil_alignment"
     TST_PUPIL_ALGN_CAM_CONNECTION  = "test_pupil_alignment_camera__connection"
+    REQ_DATUM_REP_PASSED           = "Requires datum repetability test passed"
+    REQ_FUNCTIONAL_PASSED          = "Requires functional test & limit characterisation passed"
+    REQ_PUP_ALGN_PASSED            = "Requires pupil alignment test passed"
+    REQ_POS_REP_PASSED             = "require positional repetability test passed"
     TASK_MEASURE_ALL               = "measure_FPUs"
     TASK_EVAL_ALL                  = "evaluate"
 
@@ -104,26 +114,37 @@ task_dependencies = [ (T.TST_CAN_CONNECTION, [T.TST_GATEWAY_CONNECTION, T.TASK_I
                       
                       (T.TST_DATUM_BETA, [T.TASK_INIT_GD, T.TST_CAN_CONNECTION]),
                       
-                      (T.TST_ALPHA_MAX, [T.TASK_INIT_GD, T.TST_CAN_CONNECTION, T.TASK_REFERENCE]),
+                      (T.TST_ALPHA_MAX, [T.TASK_INIT_GD, T.TST_CAN_CONNECTION, T.REQ_DATUM_PASSED, T.TASK_REFERENCE]),
                       
-                      (T.TST_ALPHA_MIN, [T.TASK_INIT_GD, T.TST_CAN_CONNECTION, T.TASK_REFERENCE]),
+                      (T.TST_ALPHA_MIN, [T.TASK_INIT_GD, T.TST_CAN_CONNECTION, T.REQ_DATUM_PASSED, T.TASK_REFERENCE]),
                       
-                      (T.TST_BETA_MAX, [T.TASK_INIT_GD, T.TST_CAN_CONNECTION, T.TASK_REFERENCE]),
+                      (T.TST_BETA_MAX, [T.TASK_INIT_GD, T.TST_CAN_CONNECTION, T.REQ_DATUM_PASSED, T.TASK_REFERENCE]),
                       
-                      (T.TST_BETA_MIN, [T.TASK_INIT_GD, T.TST_CAN_CONNECTION, T.TASK_REFERENCE]),
+                      (T.TST_BETA_MIN, [T.TASK_INIT_GD, T.TST_CAN_CONNECTION, T.REQ_DATUM_PASSED, T.TASK_REFERENCE]),
+
+                      (T.TST_COLLDETECT, [T.REQ_DATUM_PASSED, T.TASK_REFERENCE ]),
                       
-                      (T.MEASURE_DATUM_REP, [T.TST_POS_REP_CAM_CONNECTION, T.TASK_REFERENCE]),
+                      (T.MEASURE_DATUM_REP, [T.TST_POS_REP_CAM_CONNECTION, T.REQ_DATUM_PASSED,
+                                             T.REQ_COLLDECT_PASSED, T.TASK_REFERENCE]),
                       
-                      (T.MEASURE_POS_REP, [T.TST_POS_REP_CAM_CONNECTION, T.TASK_REFERENCE, T.MEASURE_DATUM_REP, T.EVAL_DATUM_REP,
-                                           T.MEASURE_PUPIL_ALGN, T.EVAL_PUPIL_ALGN]),
+                      (T.MEASURE_POS_REP, [T.TST_POS_REP_CAM_CONNECTION, T.TASK_REFERENCE,
+                                           T.REQ_DATUM_PASSED, T.REQ_COLLDECT_PASSED,
+                                           # T.REQ_PUP_ALGN_PASSED,
+                                           T.REQ_DATUM_REP_PASSED]),
                       
-                      (T.TST_POS_VER, [T.TST_POS_REP_CAM_CONNECTION, T.TASK_REFERENCE, T.MEASURE_POS_REP, T.EVAL_POS_REP]),
+                      (T.TST_POS_VER, [T.TST_POS_REP_CAM_CONNECTION,
+                                       T.REQ_DATUM_PASSED, T.REQ_COLLDECT_PASSED,
+                                       # T.REQ_PUP_ALGN_PASSED,
+                                       T.REQ_DATUM_REP_PASSED,
+                                       T.REQ_POS_REP_PASSED,
+                                       T.TASK_REFERENCE]),
                       
-                      (T.MEASURE_MET_CAL, [T.TST_MET_CAL_CAM_CONNECTION, T.TASK_REFERENCE]),
+                      (T.MEASURE_MET_CAL, [T.TST_MET_CAL_CAM_CONNECTION]),
                       
-                      (T.MEASURE_MET_HEIGHT, [T.TST_MET_HEIGHT_CAM_CONNECTION, T.TASK_REFERENCE]),
+                      (T.MEASURE_MET_HEIGHT, [T.TST_MET_HEIGHT_CAM_CONNECTION]),
                       
-                      (T.MEASURE_PUPIL_ALGN, [T.TST_PUPIL_ALGN_CAM_CONNECTION, T.TASK_REFERENCE]),
+                      (T.MEASURE_PUPIL_ALGN, [T.TST_PUPIL_ALGN_CAM_CONNECTION,
+                                              T.REQ_DATUM_PASSED, T.REQ_COLLDECT_PASSED, T.TASK_REFERENCE]),
                       
                       (T.MEASURE_ALL, [ T.TST_GATEWAY_CONNECTION       , 
                                         T.TST_CAN_CONNECTION           , 
@@ -148,6 +169,15 @@ task_dependencies = [ (T.TST_CAN_CONNECTION, [T.TST_GATEWAY_CONNECTION, T.TASK_I
                                        T.EVAL_MET_HEIGHT              , 
                                        T.EVAL_PUPIL_ALGN              ,    ]),
 
+]
+
+# conditional dependencies which are skipped if last test was already
+# passed for all FPUs, otherwise the listed tasks are addded.
+conditional_dependencies = [ (T.REQ_DATUM_REP_PASSED, get_datum_repeatability_passed_p, [T.TST_DATUM_REP, ]),
+                             (T.REQ_DATUM_PASSED, get_datum_passed_p, [T.TST_DATUM]),
+                             (T.REQ_COLLDECT_PASSED, get_colldect_passed_p, [T.TST_COLLDECT]),
+                             (T.REQ_PUP_ALGN_PASSED, get_pupil_alignment_passed_p, [T.TST_PUPIL_ALGN]),
+                             (T.REQ_POS_REP_PASSED, get_positional_repeatability_passed_p, [T.TST_POS_REP]),
 ]
 
 
@@ -194,6 +224,14 @@ task_expansions = [ (T.TST_INIT, [T.TST_FLASH,
 ]
 
 
+def all_true(testfun, sequence):
+    passed = True
+    for item in sequence:
+        if not testfun(item):
+            passed = False
+            break
+
+    return passed
 
 def expand_tasks(goal, tasks, expansion, delete=False):
     if goal in tasks:
@@ -204,7 +242,7 @@ def expand_tasks(goal, tasks, expansion, delete=False):
 
     return tasks
                       
-def resolve(tasks) :
+def resolve(tasks, env, vfdb, args, fpu_config, fpuset) :
     tasks = set(tasks)
                       
     for tsk in tasks:
@@ -215,13 +253,25 @@ def resolve(tasks) :
     while True:
 
         last_tasks = tasks.copy()
-        for tsk, expansion in task_dependencies:
-                      tasks = expand_tasks(tasks, tsk, expansion)
-                      
+        # check for expansions (replace user shorthands by detailed task breakdown)
         for tsk, expansion in task_expansions:
                       tasks = expand_tasks(tasks, tsk, expansion, delete=True)
 
+        # add dependencies (add tasks required to do a test)
+        for tsk, expansion in task_dependencies:
+                      tasks = expand_tasks(tasks, tsk, expansion)                      
+
+
+        # add conditional dependencies (add tests which need to be passed before,
+        # and are not already passed)
+        for tsk, testfun, cond_expansion in conditional_dependencies:
+            if tsk in tasks:
+                tfun = lambda fpu_id: testfun(env, vfdb, args, fpu_config, fpu_id)
+                if not all_true(tfun, fpuset)
+                    tasks = expand_tasks(tasks, tsk, cond_expansion, delete=True)
+                    
         # check for equality with last iteration
+        # -- if equal, expansion is finished
         if tasks == last_tasks:
             break
                       

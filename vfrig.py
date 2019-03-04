@@ -69,8 +69,19 @@ if __name__ == '__main__':
     args = parse_args()
     print("tasks = %r" % args.tasks)
 
-    tasks = resolve(args.tasks)
-    
+    fpu_config = load_config(args.setup_file)
+
+
+    print("config= %r" % fpu_config)
+    fpuset = sorted(fpu_config.keys())
+    print("fpu_ids = %r" % fpuset)
+
+    # get database handle
+    vfdb = env.open_db("verification")
+
+    # resolve high-level tasks and dependent checks and measurements into
+    # low-level actions
+    tasks = resolve(args.tasks, env, vfdb, args, fpu_config, fpuset)
 
     # check connections to cameras and EtherCAN gateway
         
@@ -94,13 +105,6 @@ if __name__ == '__main__':
     if T.TST_PUPIL_ALGN_CAM_CONNECTION in tasks:
         print("[%s] ###" % T.TST_PUPIL_ALGN_CAM_CONNECTION)
         check_connection(args, "pupil alignment camera", PUPIL_ALGN_CAMERA_IP_ADDRESS)
-
-    fpu_config = load_config(args.setup_file)
-
-
-    print("config= %r" % fpu_config)
-    fpuset = sorted(fpu_config.keys())
-    print("fpu_ids = %r" % fpuset)
 
 
 
@@ -144,7 +148,6 @@ if __name__ == '__main__':
                           alpha_start, beta_start, re_initialize=args.re_initialize)
             
 
-    vfdb = env.open_db("verification")
 
     # switch to protected driver instance, if needed
     

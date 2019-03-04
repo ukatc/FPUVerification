@@ -41,3 +41,26 @@ def  save_datum_result(env, vfdb, args, fpu_config, fpuset, dasel, grid_state, r
 
     
     save_test_result(env, vfdb, fpuset, keyfunc, valfunc, verbosity=args.verbosity)
+
+
+def  get_datum_result(env, vfdb, args, fpu_config, fpu_id):
+
+    # define two closures - one for the unique key, another for the stored value 
+    def keyfunc(fpu_id):
+        serialnumber = fpu_config[fpu_id]['serialnumber']
+        keybase = (serialnumber, RECORD_TYPE, 'result')
+        return keybase
+    
+    return get_test_result(env, vfdb, fpuset, keyfunc, verbosity=args.verbosity)
+
+def  get_datum_passed_p(env, vfdb, args, fpu_config, fpu_id):
+    """returns True if the latest datum repetability test for this FPU
+    was passed successfully."""
+    
+    val = get_datum_result(env, vfdb, args, fpu_config, fpu_id)
+
+    if val is None:
+        return False
+    
+    return (val['result'] == TestResult.OK)
+    
