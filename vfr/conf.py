@@ -67,8 +67,7 @@ POSREP_ANALYSIS_PARS = {
 	              'POSREP_DIAMETER_TOLERANCE' : 0.1, #mm 
 	              'POSREP_THRESHOLD' : 40, #0-255
 	              'POSREP_QUALITY_METRIC' : 0.8, #dimensionless
-	              'POSREP_DISTORTION_COEFFICIENTS' : {},
-	              'POSREP_DISTORTION_MATRIX' : {},
+	              'POSREP_CALIBRATION_PARS' : None,
 	              'display' : False}
 
 METCAL_ANALYSIS_PARS = {
@@ -166,8 +165,7 @@ PUPALGN_ANALYSIS_PARS = {
     'PUPALN_PLATESCALE' :0.00668, #mm per pixel
     'PUPALN_CIRCULARITY_THRESH' : 0.8, #dimensionless
     'PUPALN_NOISE_METRIC' :0,
-    'PUPALN_DISTORTION_MATRIX' : 0,
-    'PUPALN_CAMERA_COEFFICIENTS' : 0,
+    'PUPALN_CALIBRATION_PARS' : None,
     'display' : False
 }
 

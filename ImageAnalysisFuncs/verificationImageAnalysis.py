@@ -6,6 +6,8 @@ import numpy as np
 from numpy.polynomial import Polynomial
 from matplotlib import pyplot as plt
 
+from ImageAnalysisFuncs import correct
+
 __version__ = 0.1
 __date__ = 190304
 __author__ = "Steve Watson"
@@ -15,8 +17,7 @@ def pupalnCoordinates(image_path,
 	              PUPALN_PLATESCALE=0.00668, #mm per pixel
 	              PUPALN_CIRCULARITY_THRESH=0.8, #dimensionless
 	              PUPALN_NOISE_METRIC=0,
-	              PUPALN_DISTORTION_MATRIX=0,
-	              PUPALN_CAMERA_COEFFICIENTS=0,
+	              PUPALN_CALIBRATION_PARS=None,
 	              verbosity=0, # a value > 5 will write contour parameters to terminal
 	              display=False): #will display image with contours annotated
 
@@ -30,6 +31,7 @@ def pupalnCoordinates(image_path,
 
 	#image processing
 	#APPLY DISTORTION CORRECTION
+        image = correct(image, calibration_pars=PUPALN_CALIBRATION_PARS)
 	gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 	
 	PUPALN_SPOT_X = 0
@@ -49,8 +51,7 @@ def posrepCoordinates(image_path,
 	              POSREP_DIAMETER_TOLERANCE=0.1, #mm 
 	              POSREP_THRESHOLD=40, #0-255
 	              POSREP_QUALITY_METRIC=0.8, #dimensionless
-	              POSREP_DISTORTION_COEFFICIENTS={},
-	              POSREP_DISTORTION_MATRIX={},
+	              POSREP_CALIBRATION_PARS=None,
 	              verbosity=0, # a value > 5 will write contour parameters to terminal
 	              display=False): #will display image with contours annotated
         
@@ -73,10 +74,7 @@ def posrepCoordinates(image_path,
 
 	image = cv2.imread(image_path)
 
-	#possible commands for camera calibration
-	#newcameramtx, roi=cv2.getOptimalNewCameraMatrix(POSREP_CAMERA_MATRIX,POSREP_DISTORTION_COEFFICIENTS,(w,h),1,(w,h))	
-	#mapx,mapy = cv2.initUndistortRectifyMap(POSREP_CAMERA_MATRIX,POSREP_DISTORTION_COEFFICIENTS,None,newcameramtx,(w,h),5)
-        #image_corr = cv2.remap(image,mapx,mapy,cv2.INTER_LINEAR)
+        image = correct(image, calibration_pars=POSREP_CALIBRATION_PARS)
 
 	#image processing
 	gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
