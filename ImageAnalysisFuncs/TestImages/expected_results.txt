@@ -1,0 +1,62 @@
+The results I get currently are as follows:
+
+
+
+	
+	                                Small_X 	Small_Y 	Small_Q 	Large_X 	Large_Y 	Large_Q
+
+	                Posrep_001 	45.833 	30.703 	0.892 	44.083 	29.115 	0.904
+No change 	        Posrep_002 	45.830 	30.699 	0.886 	44.081 	29.111 	0.899
+Shorter exposure 	Posrep_003 	45.831 	30.700 	0.895 	44.080 	29.111 	0.898
+Move rot stage 0.5 deg 	Posrep_004 	45.156 	30.715 	0.894 	43.419 	29.113 	0.898
+Longer exposure 	Posrep_005 	45.152 	30.717 	0.888 	43.418 	29.112 	0.903
+
+	
+	
+	
+	
+	
+	
+	
+
+	
+	Small_X 	Small_Y 	Small_Q 	Large_X 	Large_Y 	Large_Q
+
+	                Metcal_001 	15.461 	10.267 	0.874 	13.771 	8.620 	0.892
+Longer exposure 	Metcal_002 	Exception – small target not found
+Shorter exposure 	Metcal_003 	15.463 	10.265 	0.862 	13.771 	8.618 	0.892
+Move 	                Metcal_004 	14.789 	10.260 	0.860 	13.112 	8.598 	0.894
+Original exposure 	Metcal_005 	14.788 	10.260 	0.872 	13.112 	8.598 	0.892
+
+	
+	
+	
+	
+	
+	
+	
+
+	
+                                        Small 	Large 		
+
+	                   Metht_001 	0.076 	0.055 	
+No change 	           Metht_002 	0.074 	0.058 	
+Shorter exposure 	   Metht_003 	0.073 	0.060 	
+Longer exposure 	   Metht_004 	0.071 	0.055 	
+Move rot stage 1 degree    Metht_005 	0.070 	0.055 	
+	
+	
+	
+
+
+Hope this is OK!  I think the results above show that sensitivity to
+small changes in illumination is within the accuracy requirements.
+The exception that is returned on metcal_002 is because the
+illumination for that station is proving difficult.  The ambient LED
+is not bright enough, so I had the door ajar and the silhouette light
+on to get enough flux onto the targets.  Unfortunately, this causes
+very non-uniform illumination, so the longer exposure must have caused
+some adjacent reflections to overly contaminate the image.  We'll fix
+this soon.
+
+
