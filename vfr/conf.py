@@ -61,28 +61,32 @@ MET_CAL_MEASUREMENT_PARS = {
 
 
 POSREP_ANALYSIS_PARS = {
-    'POSREP_SMALL_TARGET_DIA_LOWER_THRESH' : NaN,
-    'POSREP_SMALL_TARGET_DIA_UPPER_THRESH' : NaN,
-    'POSREP_LARGE_TARGET_DIA_LOWER_THRESH' : NaN,
-    'POSREP_LARGE_TARGET_DIA_UPPER_THRESH' : NaN,
-    'POSREP_TARGET_CIRCULARITY_THRESH' : NaN,
-    'POSREP_THRESHOLD_VAL' : NaN,
-    'POSREP_PLATESCALE' : NaN,
-    'POSREP_DISTORTION_MATRIX' : NaN,
-}
+	              'POSREP_PLATESCALE' : 0.02361, #mm per pixel
+	              'POSREP_SMALL_DIAMETER' : 1.5, #mm 
+	              'POSREP_LARGE_DIAMETER' : 2.5, #mm 
+	              'POSREP_DIAMETER_TOLERANCE' : 0.1, #mm 
+	              'POSREP_THRESHOLD' : 40, #0-255
+	              'POSREP_QUALITY_METRIC' : 0.8, #dimensionless
+	              'POSREP_DISTORTION_COEFFICIENTS' : {},
+	              'POSREP_DISTORTION_MATRIX' : {},
+	              'display' : False}
 
 METCAL_ANALYSIS_PARS = {
-    'METCAL_SMALL_TARGET_DIA_LOWER_THRESH' : NaN,
-    'METCAL_SMALL_TARGET_DIA_UPPER_THRESH' : NaN,
-    'METCAL_LARGE_TARGET_DIA_LOWER_THRESH' : NaN,
-    'METCAL_LARGE_TARGET_DIA_UPPER_THRESH' : NaN,
-    'METCAL_TARGET_CIRCULARITY_THRESH' : NaN,
-    'METCAL_THRESHOLD_VAL' : NaN,
-    'METCAL_PLATESCALE' : NaN,
+	                    'METCAL_PLATESCALE' : 0.00668, #mm per pixel
+	                    'METCAL_SMALL_DIAMETER' : 1.5, #mm
+	                    'METCAL_LARGE_DIAMETER' : 2.5, #mm 
+	                    'METCAL_DIAMETER_TOLERANCE' : 0.1, #mm 
+	                    'METCAL_GAUSS_BLUR' : 3, #pixels - MUST BE AN ODD NUMBER
+	                    'METCAL_THRESHOLD' : 40,  #0-255
+	                    'METCAL_QUALITY_METRIC' : 0.8, #dimensionless                            
+	                    'display' : False  #will display image with contours annotated
 }
 
-METCAL_FIBRE_ANALYSIS_PARS = {'METCAL_FIND_GAUSSIAN_BOX_SIZE' : nan,
-                              'METCAL_PLATESCALE' : nan}
+METCAL_FIBRE_ANALYSIS_PARS = {
+	                   'METCAL_PLATESCALE' : 0.00668, #mm per pixel
+	                   'METCAL_QUALITY_METRIC' : 0.8, #dimensionless
+	                   'display' : False#will display image with contours annotated
+}
 
 
 POSITION_REP_POSITIONS = [132, 192, 252, 312, 12, 72]
@@ -159,7 +163,12 @@ PUPALGN_MEASUREMENT_PARS = {
 
 
 PUPALGN_ANALYSIS_PARS = {
-    'PUP_ALN_PLATESCALE' : NaN, # scaling of pupil alignment camera image (millimeter per pixel)
+    'PUPALN_PLATESCALE' :0.00668, #mm per pixel
+    'PUPALN_CIRCULARITY_THRESH' : 0.8, #dimensionless
+    'PUPALN_NOISE_METRIC' :0,
+    'PUPALN_DISTORTION_MATRIX' : 0,
+    'PUPALN_CAMERA_COEFFICIENTS' : 0,
+    'display' : False
 }
 
 PUPALGN_CALIBRATION_PARS = {
@@ -187,4 +196,15 @@ MET_HEIGHT_MEASUREMENT_PARS = {
     
     }
 
+
+
+MET_HEIGHT_ANALYSIS_PARS =  {
+    'METHT_PLATESCALE' : 0.00668, #mm per pixel
+    'METHT_THRESHOLD' : 150, #0-255
+    'METHT_SCAN_HEIGHT' : 2000, #pixels
+    'METHT_GAUSS_BLUR' : 1, #pixels - MUST BE AN ODD NUMBER
+    'METHT_STANDARD_DEV' : 0.04, #mm
+    'METHT_NOISE_METRIC' : 0.25, #dimensionless
+    'display' : False,
+}
 

@@ -50,7 +50,7 @@ def posrepCoordinates(image_path,
 	              POSREP_THRESHOLD=40, #0-255
 	              POSREP_QUALITY_METRIC=0.8, #dimensionless
 	              POSREP_DISTORTION_COEFFICIENTS={},
-	              POSREP_CAMERA_MATRIX={},
+	              POSREP_DISTORTION_MATRIX={},
 	              verbosity=0, # a value > 5 will write contour parameters to terminal
 	              display=False): #will display image with contours annotated
         
