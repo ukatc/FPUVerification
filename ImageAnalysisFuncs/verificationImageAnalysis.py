@@ -34,13 +34,13 @@ def pupalnCoordinates(image_path,
         image = correct(image, calibration_pars=PUPALN_CALIBRATION_PARS)
 	gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 	
-	PUPALN_SPOT_X = 0
-	PUPALN_SPOT_Y = 0
-	PUPALN_QUALITY = 0
+	pupaln_spot_x = 0
+	pupaln_spot_y = 0
+	pupaln_quality = 0
 
 	#exceptions
 
-	return PUPALN_SPOT_X, PUPALN_SPOT_Y, PUPALN_QUALITY
+	return pupaln_spot_x, pupaln_spot_y, pupaln_quality
 
 
 def posrepCoordinates(image_path,
@@ -140,29 +140,29 @@ def posrepCoordinates(image_path,
                 print("Contour %i = small target, contour %i = large target" %(
                         centres['Small Target'][3], centres['Large Target'][3]))
 
-	POSREP_SMALL_TARGET_X = centres['Small Target'][0] * POSREP_PLATESCALE
-	POSREP_SMALL_TARGET_Y = centres['Small Target'][1] * POSREP_PLATESCALE
-	POSREP_SMALL_TARGET_QUALITY = centres['Small Target'][2]
-	POSREP_LARGE_TARGET_X = centres['Large Target'][0] * POSREP_PLATESCALE
-	POSREP_LARGE_TARGET_Y = centres['Large Target'][1] * POSREP_PLATESCALE
-	POSREP_LARGE_TARGET_QUALITY = centres['Large Target'][2]
+	posrep_small_target_x = centres['Small Target'][0] * POSREP_PLATESCALE
+	posrep_small_target_y = centres['Small Target'][1] * POSREP_PLATESCALE
+	posrep_small_target_quality = centres['Small Target'][2]
+	posrep_large_target_x = centres['Large Target'][0] * POSREP_PLATESCALE
+	posrep_large_target_y = centres['Large Target'][1] * POSREP_PLATESCALE
+	posrep_large_target_quality = centres['Large Target'][2]
 
 	#target separation check - the values here are not configurable, as
         # they represent real mechanical tolerances
-	targetSeparation = sqrt((POSREP_SMALL_TARGET_X - POSREP_LARGE_TARGET_X)**2 +
-                                (POSREP_SMALL_TARGET_Y - POSREP_LARGE_TARGET_Y)**2)
+	targetSeparation = sqrt((posrep_small_target_x - posrep_large_target_x)**2 +
+                                (posrep_small_target_y - posrep_large_target_y)**2)
 	if verbosity > 5:
                 print("Target separation is %.3f mm.  Specification is 2.375 +/- 0.1 mm." % targetSeparation)
 	if targetSeparation > 2.475 or targetSeparation < 2.275:
 		raise Exception("Target separation is out of spec - "
                                 "use display option to check for target-like reflections")
 
-	return (POSREP_SMALL_TARGET_X,
-                POSREP_SMALL_TARGET_Y,
-                POSREP_SMALL_TARGET_QUALITY,
-                POSREP_LARGE_TARGET_X,
-                POSREP_LARGE_TARGET_Y,
-                POSREP_LARGE_TARGET_QUALITY)
+	return (posrep_small_target_x,
+                posrep_small_target_y,
+                posrep_small_target_quality,
+                posrep_large_target_x,
+                posrep_large_target_y,
+                posrep_large_target_quality)
 
 
 def metcalTargetCoordinates(image_path,
@@ -254,17 +254,17 @@ def metcalTargetCoordinates(image_path,
 	if verbosity > 5:
                 print("Contour %i = small target, contour %i = large target" %(centres['Small Target'][3], centres['Large Target'][3]))
 
-	METCAL_SMALL_TARGET_X = centres['Small Target'][0] * METCAL_PLATESCALE
-	METCAL_SMALL_TARGET_Y = centres['Small Target'][1] * METCAL_PLATESCALE
-	METCAL_SMALL_TARGET_QUALITY = centres['Small Target'][2]
-	METCAL_LARGE_TARGET_X = centres['Large Target'][0] * METCAL_PLATESCALE
-	METCAL_LARGE_TARGET_Y = centres['Large Target'][1] * METCAL_PLATESCALE
-	METCAL_LARGE_TARGET_QUALITY = centres['Large Target'][2]
+	metcal_small_target_x = centres['Small Target'][0] * METCAL_PLATESCALE
+	metcal_small_target_y = centres['Small Target'][1] * METCAL_PLATESCALE
+	metcal_small_target_quality= centres['Small Target'][2]
+	metcal_large_target_x = centres['Large Target'][0] * METCAL_PLATESCALE
+	metcal_large_target_y = centres['Large Target'][1] * METCAL_PLATESCALE
+	metcal_large_target_quality = centres['Large Target'][2]
 
 	# target separation check - the values here are not configurable,
         # as they represent real mechanical tolerances
-	targetSeparation = sqrt((METCAL_SMALL_TARGET_X - METCAL_LARGE_TARGET_X)**2 +
-                                (METCAL_SMALL_TARGET_Y - METCAL_LARGE_TARGET_Y)**2)
+	targetSeparation = sqrt((metcal_small_target_x - metcal_large_target_x)**2 +
+                                (metcal_small_target_y - metcal_large_target_y)**2)
         
 	if verbosity > 5:
                 print("Target separation is %.3f mm.  Specification is 2.375 +/- 0.1 mm." % targetSeparation)
@@ -273,12 +273,12 @@ def metcalTargetCoordinates(image_path,
 		raise Exception("Target separation is out of spec - use display option "
                                 "to check for target-like reflections")
 
-	return (METCAL_SMALL_TARGET_X,
-                METCAL_SMALL_TARGET_Y,
-                METCAL_SMALL_TARGET_QUALITY,
-                METCAL_LARGE_TARGET_X,
-                METCAL_LARGE_TARGET_Y,
-                METCAL_LARGE_TARGET_QUALITY)
+	return (metcal_small_target_x,
+                metcal_small_target_y,
+                metcal_small_target_quality,
+                metcal_large_target_x,
+                metcal_large_target_y,
+                metcal_large_target_quality)
 
 
 def metcalFibreCoordinates(image_path,
@@ -298,13 +298,13 @@ def metcalFibreCoordinates(image_path,
 	#image processing
 	gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 	
-	METCAL_FIBRE_X = 0
-	METCAL_FIBRE_Y = 0
-	METCAL_FIBRE_QUALITY = 0
+	metcal_fibre_x = 0
+	metcal_fibre_y = 0
+	metcal_fibre_quality = 0
 
 	#exceptions
 
-	return METCAL_FIBRE_X, METCAL_FIBRE_Y, METCAL_FIBRE_QUALITY
+	return metcal_fibre_x, metcal_fibre_y, metcal_fibre_quality
 
 
 def methtHeight(image_path,	#configurable parameters
@@ -424,10 +424,10 @@ def methtHeight(image_path,	#configurable parameters
 	if noiseMetric > METHT_NOISE_METRIC:
 		raise Exception("Image noise excessive - consider changing Gaussian blur value")
 
-	METHT_SMALL_TARGET_HEIGHT = sum(smallTargetHeights)/len(smallTargetHeights) * METHT_PLATESCALE
-	METHT_LARGE_TARGET_HEIGHT = sum(largeTargetHeights)/len(largeTargetHeights) * METHT_PLATESCALE
+	metht_small_target_height = sum(smallTargetHeights)/len(smallTargetHeights) * METHT_PLATESCALE
+	metht_large_target_height = sum(largeTargetHeights)/len(largeTargetHeights) * METHT_PLATESCALE
 
-	return METHT_SMALL_TARGET_HEIGHT, METHT_LARGE_TARGET_HEIGHT
+	return metht_small_target_height, metht_large_target_height
 
 
 
