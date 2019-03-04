@@ -126,16 +126,20 @@ def eval_metrology_calibration(env, vfdb, gd, grid_state, args, fpuset, fpu_conf
 
 
         try:
-            target_coordinates = positional_repeatability_image_analysis(images['target'], **pos_rep_analysis_pars)
-            fibre_coordinates = metrology_calibration_image_analysis(images['fibre'], **met_cal_analysis_pars)
+            target_coordinates = metcalTargetCoordinates(images['target'], **pos_rep_analysis_pars)
+            fibre_coordinates = metcalFibreCoordinates(images['fibre'], **met_cal_analysis_pars)
 
         
         
-            coords = { 'target_small' : target_coordinates[0],
-                       'target_big' : target_coordinates[1],
-                       'fibre' : fibre_coordinates }
+            coords = { 'target_small_xy' : target_coordinates[0:2],
+                       'target_small_q' : target_coordinates[2],
+                       'target_big_xy' : target_coordinates[3:5],
+                       'target_big_q' : target_coordinates[5],
+                       'fibre_xy' : fibre_coordinates[0:2],
+                       'fibre_q' : fibre_coordinates[2],}
 
-            fibre_distance = fibre_target_distance(target_coordinates[0], target_coordinates[0], fibre_coordinates)
+            fibre_distance = fibre_target_distance(target_coordinates[0:2], target_coordinates[3:5], fibre_coordinates[0:2])
+            
             errmsg = None
             
         except ImageAnalysisError as e:

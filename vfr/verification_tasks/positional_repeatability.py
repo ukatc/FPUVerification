@@ -184,9 +184,10 @@ def eval_positional_repeatability(env, vfdb, gd, grid_state, args, fpuset, fpu_c
             
             for k, v in images.items():
                 alpha, beta, alpha_steps, beta_steps, ipath = v
-                (x_measured_1, y_measured_1, qual1, x_measured_2, y_measured_2, qual2) = analysis_func(ipath)
+                (x_measured_small, y_measured_small, qual_small, x_measured_big, y_measured_big, qual_big) = analysis_func(ipath)
                 
-                analysis_results[k] = (alpha_steps, beta_steps, x_measured_1, y_measured_1, x_measured_2, y_measured_2)
+                analysis_results[k] = (alpha_steps, beta_steps, x_measured_small, y_measured_small,
+                                       x_measured_big, y_measured_big, qual_small, qual_big)
                                  
         
         
