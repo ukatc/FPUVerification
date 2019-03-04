@@ -38,7 +38,7 @@ from Lamps.lctrl import switch_backlight, switch_ambientlight
 
 import pyAPT
 
-from ImageAnalysisFuncs.analyze_positional_repeatability import (positional_repeatability_image_analysis,
+from ImageAnalysisFuncs.analyze_positional_repeatability import (posrepCoordinates,
                                                                  evaluate_positional_repeatability, 
                                                                  POSITIONAL_REPEATABILITY_ALGORITHM_VERSION, fit_gearbox_correction)
 
@@ -172,7 +172,7 @@ def eval_positional_repeatability(env, vfdb, gd, grid_state, args, fpuset, fpu_c
                                   pos_rep_evaluation_pars):
 
     def analysis_func(ipath):
-        return positional_repeatability_image_analysis(ipath, pos_rep_calibration_pars, **pos_rep_analysis_pars)
+        return posrepCoordinates(ipath, POSREP_CALIBRATION_PARS=pos_rep_calibration_pars, **pos_rep_analysis_pars)
 
     
     for fpu_id in fpuset:

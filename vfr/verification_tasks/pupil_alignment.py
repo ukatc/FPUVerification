@@ -42,7 +42,7 @@ from Lamps.lctrl import switch_backlight, switch_ambientlight
 
 import pyAPT
 
-from ImageAnalysisFuncs.analyze_pupil_alignment import (pupil_alignment_image_analysis, 
+from ImageAnalysisFuncs.analyze_pupil_alignment import (pupalnCoordinates, 
                                                         evaluate_pupil_alignment,
                                                         PUPIL_ALIGNMENT_ALGORITHM_VERSION)
 
@@ -145,7 +145,8 @@ def eval_pupil_alignment(env, vfdb, gd, grid_state, args, fpuset, fpu_config,
         images = get_pupil_alignment_images(env, vfdb, args, fpu_config, fpu_id, images)
 
         def analysis_func(ipath):
-            return pupil_alignment_image_analysis(ipath, PUPALGN_CALIBRATION_PARS, **PUPALGN_ANALYSIS_PARS)
+            return pupalnCoordinates(ipath, PUPALGN_CALIBRATION_PARS=PUPALGN_CALIBRATION_PARS,
+                                     **PUPALGN_ANALYSIS_PARS)
         
 
         try:

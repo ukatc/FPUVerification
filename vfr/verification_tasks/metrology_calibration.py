@@ -39,8 +39,8 @@ from Lamps.lctrl import switch_backlight, switch_ambientlight
 
 import pyAPT
 
-from ImageAnalysisFuncs.analyze_metrology_calibration import (metrology_calibration_find_targets,
-                                                              metrology_calibration_find_fibre,
+from ImageAnalysisFuncs.analyze_metrology_calibration import (metcalTargetCoordinates,
+                                                              metcalFibreCoordinates,
                                                               fibre_target_distance,
                                                               METROLOGY_ANALYSIS_ALGORITHM_VERSION)
 
