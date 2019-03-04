@@ -83,6 +83,14 @@ def measure_positional_repeatability(env, vfdb, gd, grid_state, args, fpuset, fp
             print("FPU %s: skipping positional repeatability measurement because"
                   " there is no passed pupil alignment test" % fpu_config['serialnumber'])
             continue
+
+        if (get_positional_repeatability_passed_p(env, vfdb, args, fpu_config, fpu_id) and (
+                not args.repeat_passed_tests)):
+
+            sn = fpu_config[fpu_id]['serialnumber']
+            print("FPU %s : positional repeatability test already passed, skipping test" % sn)
+            continue
+
         
         # move rotary stage to POS_REP_POSN_N
         turntable_safe_goto(gd, grid_state, stage_position)            

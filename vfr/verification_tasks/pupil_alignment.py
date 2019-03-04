@@ -11,7 +11,8 @@ from vfr.db import (env,
                     save_pupil_alignment_images,
                     get_pupil_alignment_images,
                     save_pupil_alignment_result,
-                    get_pupil_alignment_result)
+                    get_pupil_alignment_result,
+                    get_pupil_alignment_passed_p)
 
 from vfr import turntable
 
@@ -88,6 +89,15 @@ def measure_pupil_alignment(env, vfdb, gd, grid_state, args, fpuset, fpu_config,
     # get sorted positions (this is needed because the turntable can only
     # move into one direction)
     for fpu_id, stage_position  in get_sorted_positions(fpuset, PUP_ALN_POSITIONS):
+
+        if (get_pupil_alignment_passed_p(env, vfdb, args, fpu_config, fpu_id) and (
+                not args.repeat_passed_tests)):
+
+            sn = fpu_config[fpu_id]['serialnumber']
+            print("FPU %s : pupil alignment test already passed, skipping test" % sn)
+            continue
+
+        
         # move rotary stage to PUP_ALN_POSN_N
         turntable_safe_goto(gd, grid_state, stage_position)            
         linear_stage__goto(PUPIL_ALN_LINPOSITIONS[fpu_id])            

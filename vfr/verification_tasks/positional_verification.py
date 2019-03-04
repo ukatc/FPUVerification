@@ -108,6 +108,13 @@ def measure_positional_verification(env, vfdb, gd, grid_state, args, fpuset, fpu
                   " there is no passed positional repetability test" % fpu_config['serialnumber'])
             continue
 
+        if (get_datum_verification_passed_p(env, vfdb, args, fpu_config, fpu_id) and (
+                not args.repeat_passed_tests)):
+
+            sn = fpu_config[fpu_id]['serialnumber']
+            print("FPU %s : datum verification test already passed, skipping test" % sn)
+            continue
+        
         pr_result = get_positional_repeatability_result(env, vfdb, args, fpu_config, fpu_id)
         gearbox_correction = pr_result['gearbox_correction']
         fpu_coeffs = gearbox_correction['coeffs']

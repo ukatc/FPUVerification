@@ -52,8 +52,8 @@ def parse_args():
     parser.add_argument('-s', '--reuse-serialnum', default=False, action='store_true',
                         help='reuse serial number')
     
-    parser.add_argument('-S', '--skip-passed-tests', default=False, action='store_true',
-                        help='skip tests which were already passed successfully')
+    parser.add_argument('-p', '--repeat-passed-tests', default=False, action='store_true',
+                        help='repeat tests which were already passed successfully')
 
     parser.add_argument('-u', '--update-protection-limits', default=False, action='store_true',
                         help='update range limits to protection database, even if already set')    

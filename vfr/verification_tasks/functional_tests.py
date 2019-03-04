@@ -3,7 +3,7 @@ from __future__ import print_function, division
 from numpy import zeros, nan
 from protectiondb import ProtectionDB as pdb
 from vfr.db.datum import env, TestResult, save_datum_result
-from vfr.db.colldect_limits import save_angular_limit, set_protection_limit
+from vfr.db.colldect_limits import save_angular_limit, set_protection_limit, get_anglimit_passed_p
 from vfr import turntable
 
 from interval import Interval
@@ -109,6 +109,16 @@ def test_limit(env, fpudb, vfdb, gd, grid_state, args, fpuset, fpu_config, which
         idx = 1
 
     for fpu_id in fpuset:
+        sn = fpu_config[fpu_id]['serialnumber']
+        
+        if (get_anglimit_passed_p(env, vfdb, fpu_id, sn, which_limit,
+                                  verbosity=args.verbosity) and (
+                                      not args.repeat_passed_tests)):
+            
+            print("FPU %s : limit test %r already passed, skipping test" % (sn, which_limit))
+            continue
+            
+
         try:
             print("limit test %s: moving fpu %i to position (%6.2f, %6.2f)" % (
                 which_limit, fpu_id, abs_alpha, abs_beta))
@@ -142,7 +152,6 @@ def test_limit(env, fpudb, vfdb, gd, grid_state, args, fpuset, fpu_config, which
         else:
             limit_val = nan
 
-        sn = fpu_config[fpu_id]['serialnumber']
         
         if test_valid:
             save_angular_limit(env, vfdb, fpu_id, sn, which_limit, test_succeeded, limit_val, verbosity=3)
