@@ -44,14 +44,20 @@ def get_angular_limit(env, vfdb, fpu_id, serialnumber, which_limit, verbosity=2)
     
     return get_test_result(env, vfdb, [fpu_id], keyfunc, verbosity=verbosity)
 
+
+def get_anglimit_passed_p(env, vfdb, fpu_id, serialnumber, which_limit,
+                          verbosity=2):
     
-def get_colldect_passed_p(env, vfdb, fpu_id, serialnumber, verbosity=2):
     result = get_angular_limit(env, vfdb, fpu_id, serialnumber,
-                               "beta_collision", verbosity=verbosity)
+                               which_limit, verbosity=verbosity)
     if result is None:
         return False
     return result['result'] == TestResult.OK
 
+
+def get_colldect_passed_p(env, vfdb, fpu_id, serialnumber, verbosity=2):
+    return get_anglimit_passed_p(env, vfdb, fpu_id, serialnumber,
+                                 "beta_collision", verbosity=2)
 
 def set_protection_limit(env, fpudb, fpu, serialnumber, which_limit, measured_val,
                          protection_tolerance, update):
