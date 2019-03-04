@@ -1,3 +1,5 @@
+Test image filename convention is FpuID_CameraID_testN_imageN.bmp .
+
 The results I get currently are as follows:
 
 
