@@ -6,6 +6,8 @@ import lmdb
 import platform
 import subprocess
 
+from vfr.tests_common import timestamp
+
 DATABASE_FILE_NAME = os.environ.get("FPU_DATABASE")
 
 

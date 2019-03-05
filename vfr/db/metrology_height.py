@@ -1,10 +1,10 @@
 from __future__ import print_function, division,  absolute_import
 
-from db.base import env, GIT_VERSION, TestResult, get_test_result, timestamp  
+from db.base import env, GIT_VERSION, TestResult, get_test_result, timestamp 
 
-RECORD_TYPE = 'metrology-calibration'
+RECORD_TYPE = 'metrology-height'
 
-def  save_metrology_calibration_images(env, vfdb, args, fpu_config, fpu_id, images):
+def  save_metrology_height_images(env, vfdb, args, fpu_config, fpu_id, images):
 
     # define two closures - one for the unique key, another for the stored value 
     def keyfunc(fpu_id):
@@ -24,7 +24,7 @@ def  save_metrology_calibration_images(env, vfdb, args, fpu_config, fpu_id, imag
     save_test_result(env, vfdb, fpuset, keyfunc, valfunc, verbosity=args.verbosity)
 
 
-def  get_metrology_calibration_images(env, vfdb, args, fpu_config, fpu_id):
+def  get_metrology_height_images(env, vfdb, args, fpu_config, fpu_id):
 
     # define two closures - one for the unique key, another for the stored value 
     def keyfunc(fpu_id):
@@ -35,10 +35,12 @@ def  get_metrology_calibration_images(env, vfdb, args, fpu_config, fpu_id):
     return get_test_result(env, vfdb, fpuset, keyfunc, verbosity=args.verbosity)
     
     
-def  save_metrology_calibration_result(env, vfdb, args, fpu_config, fpu_id,
-                                       coords=None, fibre_distance=None,
-                                       errmsg=""
-                                       analysis_version=None):
+def save_metrology_height_result(env, vfdb, args, fpu_config, fpu_id,
+                                 metht_small_target_height=None,
+                                 metht_large_target_height=None,
+                                 test_result=None,
+                                 errmsg="",
+                                 analysis_version=None)
 
     # define two closures - one for the unique key, another for the stored value 
     def keyfunc(fpu_id):
@@ -49,8 +51,9 @@ def  save_metrology_calibration_result(env, vfdb, args, fpu_config, fpu_id,
     def valfunc(fpu_id):
         
                         
-        val = repr({'coords' : coords,
-                    'fibre_distance' : fibre_distance,
+        val = repr({'small_target_height' : metht_small_target_height,
+                    'large_target_height' : metht_large_target_height,
+                    'test_result'=testResult,
                     'error_message' = errmsg,
                     'algorithm_version' : analysis_version,
                     'git_version' : GIT_VERSION,

@@ -7,19 +7,30 @@ from vrf.db.pupil_alignment import get_pupil_alignment_passed_p
 from vrf.db.positional_repetability import get_positional_repeatability_passed_p
 
 class T:
+    # evaluation of measurements
     EVAL_DATUM_REP                 = "eval_datum_repeatability"
     EVAL_MET_CAL                   = "ecval_metrology_calibration"
     EVAL_MET_HEIGHT                = "eval_metrology_target_height"
     EVAL_POS_REP                   = "eval_positional_repeatability"
     EVAL_PUPIL_ALGN                = "eval_pupil_alignment"
+    # measurements
     MEASURE_DATUM_REP              = "measure_datum_repeatability"
     MEASURE_MET_CAL                = "measure_metrology_calibration"
     MEASURE_MET_HEIGHT             = "measure_metrology_target_height"
     MEASURE_POS_REP                = "measure_positional_repeatability"
     MEASURE_PUPIL_ALGN             = "measure_pupil_alignment"
+    # conditional dependencies (can be skipped if done once)
+    REQ_DATUM_REP_PASSED           = "Requires datum repetability test passed"
+    REQ_FUNCTIONAL_PASSED          = "Requires functional test & limit characterisation passed"
+    REQ_POS_REP_PASSED             = "require positional repetability test passed"
+    REQ_PUP_ALGN_PASSED            = "Requires pupil alignment test passed"
+    # tasks which pack measurements and evaluation in pairs
+    TASK_EVAL_ALL                  = "evaluate_all"
     TASK_INIT_GD                   = "initialize_grid_driver"
     TASK_INIT_RD                   = "initialize_unprotected_fpu_driver"
+    TASK_MEASURE_ALL               = "measure_FPUs"
     TASK_REFERENCE                 = "reference_FPU_step_counters"
+    # elementary tests
     TST_ALPHA_MAX                  = "test_alpha_max"
     TST_ALPHA_MIN                  = "test_alpha_min"
     TST_BETA_MAX                   = "test_beta_max"
@@ -44,12 +55,6 @@ class T:
     TST_POS_VER                    = "test_positional_verification"
     TST_PUPIL_ALGN                 = "test_pupil_alignment"
     TST_PUPIL_ALGN_CAM_CONNECTION  = "test_pupil_alignment_camera__connection"
-    REQ_DATUM_REP_PASSED           = "Requires datum repetability test passed"
-    REQ_FUNCTIONAL_PASSED          = "Requires functional test & limit characterisation passed"
-    REQ_PUP_ALGN_PASSED            = "Requires pupil alignment test passed"
-    REQ_POS_REP_PASSED             = "require positional repetability test passed"
-    TASK_MEASURE_ALL               = "measure_FPUs"
-    TASK_EVAL_ALL                  = "evaluate"
 
 
 DEFAULT_TASKS = [T.TST_GATEWAY_CONNECTION,
@@ -263,11 +268,11 @@ def resolve(tasks, env, vfdb, args, fpu_config, fpuset) :
 
 
         # add conditional dependencies (add tests which need to be passed before,
-        # and are not already passed)
+        # and are not already passed by all FPUs)
         for tsk, testfun, cond_expansion in conditional_dependencies:
             if tsk in tasks:
                 tfun = lambda fpu_id: testfun(env, vfdb, args, fpu_config, fpu_id)
-                if not all_true(tfun, fpuset)
+                if (not all_true(tfun, fpuset)) or args.repeat_passed_tests:
                     tasks = expand_tasks(tasks, tsk, cond_expansion, delete=True)
                     
         # check for equality with last iteration

@@ -61,20 +61,20 @@ MET_CAL_MEASUREMENT_PARS = {
 
 
 POSREP_ANALYSIS_PARS = {
-	              'POSREP_PLATESCALE' : 0.02361, #mm per pixel
-	              'POSREP_SMALL_DIAMETER' : 1.5, #mm 
-	              'POSREP_LARGE_DIAMETER' : 2.5, #mm 
-	              'POSREP_DIAMETER_TOLERANCE' : 0.1, #mm 
+	              'POSREP_PLATESCALE' : 0.02361, #millimeter per pixel
+	              'POSREP_SMALL_DIAMETER' : 1.5, #millimeter 
+	              'POSREP_LARGE_DIAMETER' : 2.5, #millimeter 
+	              'POSREP_DIAMETER_TOLERANCE' : 0.1, #millimeter 
 	              'POSREP_THRESHOLD' : 40, #0-255
 	              'POSREP_QUALITY_METRIC' : 0.8, #dimensionless
 	              'POSREP_CALIBRATION_PARS' : None,
 	              'display' : False}
 
 METCAL_ANALYSIS_PARS = {
-	                    'METCAL_PLATESCALE' : 0.00668, #mm per pixel
-	                    'METCAL_SMALL_DIAMETER' : 1.5, #mm
-	                    'METCAL_LARGE_DIAMETER' : 2.5, #mm 
-	                    'METCAL_DIAMETER_TOLERANCE' : 0.1, #mm 
+	                    'METCAL_PLATESCALE' : 0.00668, #millimeter per pixel
+	                    'METCAL_SMALL_DIAMETER' : 1.5, #millimeter
+	                    'METCAL_LARGE_DIAMETER' : 2.5, #millimeter 
+	                    'METCAL_DIAMETER_TOLERANCE' : 0.1, #millimeter 
 	                    'METCAL_GAUSS_BLUR' : 3, #pixels - MUST BE AN ODD NUMBER
 	                    'METCAL_THRESHOLD' : 40,  #0-255
 	                    'METCAL_QUALITY_METRIC' : 0.8, #dimensionless                            
@@ -82,7 +82,7 @@ METCAL_ANALYSIS_PARS = {
 }
 
 METCAL_FIBRE_ANALYSIS_PARS = {
-	                   'METCAL_PLATESCALE' : 0.00668, #mm per pixel
+	                   'METCAL_PLATESCALE' : 0.00668, #millimeter per pixel
 	                   'METCAL_QUALITY_METRIC' : 0.8, #dimensionless
 	                   'display' : False#will display image with contours annotated
 }
@@ -162,7 +162,7 @@ PUPALGN_MEASUREMENT_PARS = {
 
 
 PUPALGN_ANALYSIS_PARS = {
-    'PUPALN_PLATESCALE' :0.00668, #mm per pixel
+    'PUPALN_PLATESCALE' :0.00668, #millimeter per pixel
     'PUPALN_CIRCULARITY_THRESH' : 0.8, #dimensionless
     'PUPALN_NOISE_METRIC' :0,
     'PUPALN_CALIBRATION_PARS' : None,
@@ -186,7 +186,7 @@ MET_HEIGHT_MEASUREMENT_PARS = {
     'MET_HEIGHT_POSITIONS' : [268, 328, 28, 88, 148, 208], # the rotary stage angle required to place each FPU
     #                                                        in front of the metrology height camera
 
-    'METROLOGY_HT_TARGET_EXPOSURE_MS' : NaN, # the exposure time in
+    'MET_HEIGHT_TARGET_EXPOSURE_MS' : NaN, # the exposure time in
                                              # milliseconds for a
                                              # correctly exposed image
                                              # of the illuminated
@@ -197,12 +197,16 @@ MET_HEIGHT_MEASUREMENT_PARS = {
 
 
 MET_HEIGHT_ANALYSIS_PARS =  {
-    'METHT_PLATESCALE' : 0.00668, #mm per pixel
+    'METHT_PLATESCALE' : 0.00668, #millimeter per pixel
     'METHT_THRESHOLD' : 150, #0-255
     'METHT_SCAN_HEIGHT' : 2000, #pixels
     'METHT_GAUSS_BLUR' : 1, #pixels - MUST BE AN ODD NUMBER
-    'METHT_STANDARD_DEV' : 0.04, #mm
+    'METHT_STANDARD_DEV' : 0.04, #millimeter
     'METHT_NOISE_METRIC' : 0.25, #dimensionless
     'display' : False,
+}
+
+MET_HEIGHT_EVALUATION_PARS =  {
+    'METHT_HEIGHT_TOLERANCE' : NaN, # maximum allowable height of both targets, in millimeter
 }
 

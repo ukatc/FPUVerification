@@ -148,3 +148,17 @@ def methtHeight(image_path,	#configurable parameters
 	metht_large_target_height = sum(largeTargetHeights)/len(largeTargetHeights) * METHT_PLATESCALE
 
 	return metht_small_target_height, metht_large_target_height
+
+
+
+
+def eval_met_height_inspec(metht_small_target_height, metht_large_target_height, METHT_HEIGHT_TOLERANCE=0.01):
+    if ( (metht_small_target_height > 0)
+         and  (metht_small_target_height <= MET_HEIGHT_TOLERANCE)
+         and (metht_large_target_height > 0)
+         and (metht_large_target_height <= MET_HEIGHT_TOLERANCE)):
+
+        return True
+    else:
+        return False
+    

@@ -30,6 +30,7 @@ from vfr.verification_tasks.measure_datum_repeatability import measure_datum_rep
 
 from vfr.verification_tasks.positional_repeatability import measure_positional_repeatability, eval_positional_repeatability
 
+from vfr.verification_tasks.metrology_height import measure_metrology_height, eval_metrology_height
 
     
  
@@ -234,6 +235,16 @@ if __name__ == '__main__':
         print("[%s] ###" % T.EVAL_MET_CAL)
         eval_metrology_calibration(env, vfdb, gd, grid_state, args, fpuset, fpu_config,
                                    METCAL_TARGET_ANALYSIS_PARS, METCAL_FIBRE_ANALYSIS_PARS)
+
+    if T.MEASURE_MET_HEIGHT in tasks:
+        print("[%s] ###" % T.MEASURE_MET_HEIGHT)
+        measure_metrology_height(env, vfdb, gd, grid_state, args, fpuset, fpu_config,
+                                 **MET_HEIGHT_ANALYSIS_PARS)
+    if T.EVAL_MET_HEIGHT in tasks:
+        print("[%s] ###" % T.EVAL_MET_HEIGHT)
+        eval_metrology_height(env, vfdb, gd, grid_state, args, fpuset, fpu_config,
+                              MET_HEIGHT_ANALYSIS_PARS, MET_HEIGHT_EVALUATION_PARS)
+
         
     if T.MEASURE_DATUM_REP in tasks:
         print("[%s] ###" % T.MEASURE_DATUM_REP)
