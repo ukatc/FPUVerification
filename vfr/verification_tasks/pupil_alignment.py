@@ -38,7 +38,7 @@ from vfr.tests_common import (flush, timestamp, dirac, goto_position, find_datum
                               get_sorted_positions, safe_home_turntable,
                               linear_stage_goto, home_linear_stage)
 
-from Lamps.lctrl import switch_backlight, switch_ambientlight
+from Lamps.lctrl import switch_backlight, switch_ambientlight, use_backlight
 
 import pyAPT
 
@@ -76,66 +76,67 @@ def measure_pupil_alignment(env, vfdb, gd, grid_state, args, fpuset, fpu_config,
     switch_ambientlight("off", manual_lamp_control=args.manual_lamp_control)
     switch_silhouettelight("off", manual_lamp_control=args.manual_lamp_control)
     switch_fibre_backlight_voltage(5.0, manual_lamp_control=args.manual_lamp_control)
-    switch_backlight("on", manual_lamp_control=args.manual_lamp_control)
 
-    # initialize pos_rep camera
-    # set pos_rep camera exposure time to DATUM_REP_EXPOSURE milliseconds
-    PUP_ALN_CAMERA_CONF = { DEVICE_CLASS : BASLER_DEVICE_CLASS,
-                            IP_ADDRESS : PUP_ALN_CAMERA_IP_ADDRESS }
-        
-    pup_aln_cam = GigECamera(PUP_ALN_CAMERA_CONF)
-    pup_aln_cam.SetExposureTime(PUPIL_ALN_EXPOSURE_MS)
-        
-    # get sorted positions (this is needed because the turntable can only
-    # move into one direction)
-    for fpu_id, stage_position  in get_sorted_positions(fpuset, PUP_ALN_POSITIONS):
-
-        if (get_pupil_alignment_passed_p(env, vfdb, args, fpu_config, fpu_id) and (
-                not args.repeat_passed_tests)):
-
-            sn = fpu_config[fpu_id]['serialnumber']
-            print("FPU %s : pupil alignment test already passed, skipping test" % sn)
-            continue
-
-        
-        # move rotary stage to PUP_ALN_POSN_N
-        turntable_safe_goto(gd, grid_state, stage_position)            
-        linear_stage__goto(PUPIL_ALN_LINPOSITIONS[fpu_id])            
+    with use_backlight("on", manual_lamp_control=args.manual_lamp_control):
     
+        # initialize pos_rep camera
+        # set pos_rep camera exposure time to DATUM_REP_EXPOSURE milliseconds
+        PUP_ALN_CAMERA_CONF = { DEVICE_CLASS : BASLER_DEVICE_CLASS,
+                                IP_ADDRESS : PUP_ALN_CAMERA_IP_ADDRESS }
+            
+        pup_aln_cam = GigECamera(PUP_ALN_CAMERA_CONF)
+        pup_aln_cam.SetExposureTime(PUPIL_ALN_EXPOSURE_MS)
+            
+        # get sorted positions (this is needed because the turntable can only
+        # move into one direction)
+        for fpu_id, stage_position  in get_sorted_positions(fpuset, PUP_ALN_POSITIONS):
+    
+            if (get_pupil_alignment_passed_p(env, vfdb, args, fpu_config, fpu_id) and (
+                    not args.repeat_passed_tests)):
+    
+                sn = fpu_config[fpu_id]['serialnumber']
+                print("FPU %s : pupil alignment test already passed, skipping test" % sn)
+                continue
+    
+            
+            # move rotary stage to PUP_ALN_POSN_N
+            turntable_safe_goto(gd, grid_state, stage_position)            
+            linear_stage__goto(PUPIL_ALN_LINPOSITIONS[fpu_id])            
         
-
-        unmoved_images = []
-        datumed_images = []
-        moved_images = []
-
-        def capture_image(count, alpha, beta):
-
-            ipath = store_image(pup_aln_cam,
-                                "{sn}/{tn}/{ts}/{tp}-{cnt:02d}-{alpha:+08.3f}-{beta:+08.3f}.bmp",
-                                sn=fpu_config[fpu_id]['serialnumber'],
-                                tn="pupil-alignment",
-                                ts=tstamp,
-                                cnt=count,
-                                alpha=alpha,
-                                beta=beta)
             
-            return ipath
-
-
-        images = {}
-        for count, coords in enumerate(generate_positions()):
-            abs_alpha, abs_beta = coords
-            goto_position(gd, abs_alpha, abs_beta, grid_state, fpuset=[fpu_id])
-            
-            if count < 16:
-                ipath = capture_image(count, alpha, beta)
-                images[(alpha, beta)] = ipath
-
-        gd.findDatum(grid_state, fpuset=[fpu_id])
-
-        save_pupil_alignment_images(env, vfdb, args, fpu_config, fpu_id, images)
-
-
+    
+            unmoved_images = []
+            datumed_images = []
+            moved_images = []
+    
+            def capture_image(count, alpha, beta):
+    
+                ipath = store_image(pup_aln_cam,
+                                    "{sn}/{tn}/{ts}/{tp}-{cnt:02d}-{alpha:+08.3f}-{beta:+08.3f}.bmp",
+                                    sn=fpu_config[fpu_id]['serialnumber'],
+                                    tn="pupil-alignment",
+                                    ts=tstamp,
+                                    cnt=count,
+                                    alpha=alpha,
+                                    beta=beta)
+                
+                return ipath
+    
+    
+            images = {}
+            for count, coords in enumerate(generate_positions()):
+                abs_alpha, abs_beta = coords
+                goto_position(gd, abs_alpha, abs_beta, grid_state, fpuset=[fpu_id])
+                
+                if count < 16:
+                    ipath = capture_image(count, alpha, beta)
+                    images[(alpha, beta)] = ipath
+    
+            gd.findDatum(grid_state, fpuset=[fpu_id])
+    
+            save_pupil_alignment_images(env, vfdb, args, fpu_config, fpu_id, images)
+    
+    
 
 def eval_pupil_alignment(env, vfdb, gd, grid_state, args, fpuset, fpu_config,
                          PUPALGN_CALIBRATION_PARS=None,

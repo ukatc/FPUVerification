@@ -37,7 +37,8 @@ from fpu_constants import ALPHA_MIN_DEGREE, ALPHA_MAX_DEGREE, BETA_MIN_DEGREE, B
 from vfr.tests_common import (flush, timestamp, dirac, goto_position, find_datum, store_image,
                               get_sorted_positions, safe_home_turntable)
 
-from Lamps.lctrl import switch_backlight, switch_ambientlight
+from Lamps.lctrl import switch_backlight, switch_ambientlight, use_ambientlight
+
 
 import pyAPT
 
@@ -80,97 +81,98 @@ def measure_positional_verification(env, vfdb, gd, grid_state, args, fpuset, fpu
     switch_ambientlight("on", manual_lamp_control=args.manual_lamp_control)
     switch_fibre_backlight_voltage(0.0, manual_lamp_control=args.manual_lamp_control)
 
-    # initialize pos_rep camera
-    # set pos_rep camera exposure time to POSITIONAL_VER_EXPOSURE milliseconds
-    POS_VER_CAMERA_CONF = { DEVICE_CLASS : BASLER_DEVICE_CLASS,
-                            IP_ADDRESS : POS_REP_CAMERA_IP_ADDRESS }
+    with use_ambientlight(manual_lamp_control=args.manual_lamp_control):
+        # initialize pos_rep camera
+        # set pos_rep camera exposure time to POSITIONAL_VER_EXPOSURE milliseconds
+        POS_VER_CAMERA_CONF = { DEVICE_CLASS : BASLER_DEVICE_CLASS,
+                                IP_ADDRESS : POS_REP_CAMERA_IP_ADDRESS }
+        
+        pos_rep_cam = GigECamera(POS_VER_CAMERA_CONF)
+        pos_rep_cam.SetExposureTime(POSITIONAL_VER_EXPOSURE_MS)
     
-    pos_rep_cam = GigECamera(POS_VER_CAMERA_CONF)
-    pos_rep_cam.SetExposureTime(POSITIONAL_VER_EXPOSURE_MS)
-
+        
+        # get sorted positions (this is needed because the turntable can only
+        # move into one direction)
+        for fpu_id, stage_position  in get_sorted_positions(fpuset, POS_REP_POSITIONS):
+            
+            if not get_datum_verification_passed_p(env, vfdb, args, fpu_config, fpu_id):
+                print("FPU %s: skipping positional verification measurement because"
+                      " there is no passed datum verification test" % fpu_config['serialnumber'])
+                continue
     
-    # get sorted positions (this is needed because the turntable can only
-    # move into one direction)
-    for fpu_id, stage_position  in get_sorted_positions(fpuset, POS_REP_POSITIONS):
-        
-        if not get_datum_verification_passed_p(env, vfdb, args, fpu_config, fpu_id):
-            print("FPU %s: skipping positional verification measurement because"
-                  " there is no passed datum verification test" % fpu_config['serialnumber'])
-            continue
-
-        if not get_pupil_alignment_passed_p(env, vfdb, args, fpu_config, fpu_id):
-            print("FPU %s: skipping positional verification measurement because"
-                  " there is no passed pupil alignment test" % fpu_config['serialnumber'])
-            continue
-
-        if not get_positional_repeatability_passed_p(env, vfdb, args, fpu_config, fpu_id):
-            print("FPU %s: skipping positional verification measurement because"
-                  " there is no passed positional repetability test" % fpu_config['serialnumber'])
-            continue
-
-        if (get_datum_verification_passed_p(env, vfdb, args, fpu_config, fpu_id) and (
-                not args.repeat_passed_tests)):
-
-            sn = fpu_config[fpu_id]['serialnumber']
-            print("FPU %s : datum verification test already passed, skipping test" % sn)
-            continue
-        
-        pr_result = get_positional_repeatability_result(env, vfdb, args, fpu_config, fpu_id)
-        gearbox_correction = pr_result['gearbox_correction']
-        fpu_coeffs = gearbox_correction['coeffs']
-        
-        # move rotary stage to POS_VER_POSN_N
-        turntable_safe_goto(gd, grid_state, stage_position)            
+            if not get_pupil_alignment_passed_p(env, vfdb, args, fpu_config, fpu_id):
+                print("FPU %s: skipping positional verification measurement because"
+                      " there is no passed pupil alignment test" % fpu_config['serialnumber'])
+                continue
+    
+            if not get_positional_repeatability_passed_p(env, vfdb, args, fpu_config, fpu_id):
+                print("FPU %s: skipping positional verification measurement because"
+                      " there is no passed positional repetability test" % fpu_config['serialnumber'])
+                continue
+    
+            if (get_datum_verification_passed_p(env, vfdb, args, fpu_config, fpu_id) and (
+                    not args.repeat_passed_tests)):
+    
+                sn = fpu_config[fpu_id]['serialnumber']
+                print("FPU %s : datum verification test already passed, skipping test" % sn)
+                continue
             
-
-        image_dict = {}
-
-
-        def capture_image(idx, alpha, beta):
-
-            ipath = store_image(pos_rep_cam,
-                                "{sn}/{tn}/{ts}/{idx:04d}-{alpha:+08.3f}-{beta:+08.3f}.bmp",
-                                sn=fpu_config[fpu_id]['serialnumber'],
-                                tn="positional-verification",
-                                alpha=alpha,
-                                beta=beta,
-                                ts=tstamp,
-                                idx=dx)
+            pr_result = get_positional_repeatability_result(env, vfdb, args, fpu_config, fpu_id)
+            gearbox_correction = pr_result['gearbox_correction']
+            fpu_coeffs = gearbox_correction['coeffs']
             
-            return ipath
-
+            # move rotary stage to POS_VER_POSN_N
+            turntable_safe_goto(gd, grid_state, stage_position)            
+                
+    
+            image_dict = {}
+    
+    
+            def capture_image(idx, alpha, beta):
+    
+                ipath = store_image(pos_rep_cam,
+                                    "{sn}/{tn}/{ts}/{idx:04d}-{alpha:+08.3f}-{beta:+08.3f}.bmp",
+                                    sn=fpu_config[fpu_id]['serialnumber'],
+                                    tn="positional-verification",
+                                    alpha=alpha,
+                                    beta=beta,
+                                    ts=tstamp,
+                                    idx=dx)
+                
+                return ipath
+    
+                
             
-        
-        tested_positions = generate_tested_positions(POSITIONAL_VER_ITERATIONS)
-        
-        gd.findDatum(grid_state, fpuset=[fpu_id])
-
-        image_dict = {}
-        for k, (alpha, beta) in enumerate(tested_positions):
-            # get current step count
-            alpha_cursteps = grid_state.FPU[fpu_id].alpha_steps
-            beta_cursteps = grid_state.FPU[fpu_id].beta_steps
-
-            # get absolute corrected step count from desired absolute angle
-            asteps_target, bsteps_target = apply_gearbox_correction((alpha, beta), coeffs=fpu_coeffs)
-
-            # compute deltas of step counts
-            adelta = asteps_target - alpha_cursteps
-            bdelta = bsteps_target - beta_cursteps
-
-            # move by delta
-            wf = gen_wf(dirac(fpu_id) * adelta, dirac(fpu_id) * bdelta, units='steps')
+            tested_positions = generate_tested_positions(POSITIONAL_VER_ITERATIONS)
             
-            gd.configMotion(wf, grid_state)
-            gd.executeMotion(grid_state)
-
-            ipath = capture_image(k, alpha, beta)
-
-            image_dict[(k, alpha, beta)] = ipath
-
-        # store dict of image paths
-        save_positional_verification_images(env, vfdb, args, fpu_config, fpu_id, image_dict)
-
+            gd.findDatum(grid_state, fpuset=[fpu_id])
+    
+            image_dict = {}
+            for k, (alpha, beta) in enumerate(tested_positions):
+                # get current step count
+                alpha_cursteps = grid_state.FPU[fpu_id].alpha_steps
+                beta_cursteps = grid_state.FPU[fpu_id].beta_steps
+    
+                # get absolute corrected step count from desired absolute angle
+                asteps_target, bsteps_target = apply_gearbox_correction((alpha, beta), coeffs=fpu_coeffs)
+    
+                # compute deltas of step counts
+                adelta = asteps_target - alpha_cursteps
+                bdelta = bsteps_target - beta_cursteps
+    
+                # move by delta
+                wf = gen_wf(dirac(fpu_id) * adelta, dirac(fpu_id) * bdelta, units='steps')
+                
+                gd.configMotion(wf, grid_state)
+                gd.executeMotion(grid_state)
+    
+                ipath = capture_image(k, alpha, beta)
+    
+                image_dict[(k, alpha, beta)] = ipath
+    
+            # store dict of image paths
+            save_positional_verification_images(env, vfdb, args, fpu_config, fpu_id, image_dict)
+    
 
 
 def eval_positional_verification(env, vfdb, gd, grid_state, args, fpuset, fpu_config,

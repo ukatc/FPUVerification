@@ -24,17 +24,6 @@ def switch_fibre_backlight_voltage(voltage, manual_lamp_control=False):
         time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
     pass
 
-@contextmanager
-def use_backlight(voltage, manual_lamp_control=False):
-    switch_fibre_voltage(voltage, manual_lamp_control=manual_lamp_control)
-    switch_fibre_backlight("on", manual_lamp_control=manual_lamp_control)
-    time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
-    try:
-        yield None
-        
-    finally:
-        switch_fibre_backlight("off", manual_lamp_control=manual_lamp_control)
-        time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
 
 
 def switch_ambientlight(state, manual_lamp_control=False):
@@ -42,16 +31,6 @@ def switch_ambientlight(state, manual_lamp_control=False):
         raw_input("switch state of ambient light to %r and presse <enter>" % state)
     pass
 
-@contextmanager
-def use_ambientlight(manual_lamp_control=False):
-    switch_ambientlight("on", manual_lamp_control=manual_lamp_control)
-    time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
-    try:
-        yield None
-        
-    finally:
-        switch_ambientlight("off", manual_lamp_control=manual_lamp_control)
-        time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
 
 
 def switch_silhouettelight(state, manual_lamp_control=False):
@@ -71,3 +50,28 @@ def use_silhouettelight(manual_lamp_control=False):
     finally:
         switch_silhouettelight("off", manual_lamp_control=manual_lamp_control)
         time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
+
+@contextmanager
+def use_backlight(voltage, manual_lamp_control=False):
+    switch_fibre_voltage(voltage, manual_lamp_control=manual_lamp_control)
+    switch_fibre_backlight("on", manual_lamp_control=manual_lamp_control)
+    time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
+    try:
+        yield None
+        
+    finally:
+        switch_fibre_backlight("off", manual_lamp_control=manual_lamp_control)
+        time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
+
+
+@contextmanager
+def use_ambientlight(manual_lamp_control=False):
+    switch_ambientlight("on", manual_lamp_control=manual_lamp_control)
+    time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
+    try:
+        yield None
+        
+    finally:
+        switch_ambientlight("off", manual_lamp_control=manual_lamp_control)
+        time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
+        

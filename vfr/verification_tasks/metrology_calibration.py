@@ -35,7 +35,7 @@ from fpu_constants import ALPHA_MIN_DEGREE, ALPHA_MAX_DEGREE, BETA_MIN_DEGREE, B
 from vfr.tests_common import (flush, timestamp, dirac, goto_position, find_datum, store_image,
                               get_sorted_positions, safe_home_turntable)
 
-from Lamps.lctrl import switch_backlight, switch_ambientlight, switch_fibre_backlight_voltage
+from Lamps.lctrl import switch_backlight, switch_ambientlight, switch_fibre_backlight_voltage, use_ambientlight, use_backlight
 
 import pyAPT
 
@@ -93,18 +93,20 @@ def measure_metrology_calibration(env, vfdb, gd, grid_state, args, fpuset, fpu_c
         
         met_cal_cam.SetExposureTime(METROLOGY_CAL_TARGET_EXPOSURE_MS)
         switch_backlight("off", manual_lamp_control=args.manual_lamp_control)
-        switch_ambientlight("on", manual_lamp_control=args.manual_lamp_control)
         switch_fibre_backlight_voltage(0.0, manual_lamp_control=args.manual_lamp_control)
-        
-        target_ipath = capture_image(met_cal_cam, "target")
+
+        # use context manager to switch lamp on
+        # and guarantee it is switched off after the
+        # measurement (even if exceptions occur)
+        with use_ambientlight(manual_lamp_control=args.manual_lamp_control):
+            target_ipath = capture_image(met_cal_cam, "target")
 
     
         met_cal_cam.SetExposureTime(METROLOGY_CAL_FIBRE_EXPOSURE_MS)
-        switch_backlight("on", manual_lamp_control=args.manual_lamp_control)
         switch_ambientlight("off", manual_lamp_control=args.manual_lamp_control)
-        switch_fibre_backlight_voltage(METROLOGY_CAL_BACKLIGHT_VOLTAGE)
         
-        fibre_ipath = capture_image(met_cal_cam, "fibre")
+        with use_backlight(METROLOGY_CAL_BACKLIGHT_VOLTAGE, manual_lamp_control=args.manual_lamp_control):
+            fibre_ipath = capture_image(met_cal_cam, "fibre")
 
         images = { 'target' : target_ipath,
                    'fibre' : fibre_ipath }

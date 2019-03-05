@@ -34,7 +34,7 @@ from fpu_constants import ALPHA_MIN_DEGREE, ALPHA_MAX_DEGREE, BETA_MIN_DEGREE, B
 from vfr.tests_common import (flush, timestamp, dirac, goto_position, find_datum, store_image,
                               get_sorted_positions, safe_home_turntable)
 
-from Lamps.lctrl import switch_backlight, switch_ambientlight
+from Lamps.lctrl import switch_backlight, switch_ambientlight, use_ambientlight
 
 import pyAPT
 
@@ -59,111 +59,111 @@ def measure_positional_repeatability(env, vfdb, gd, grid_state, args, fpuset, fp
     safe_home_turntable(gd, grid_state)    
 
     switch_backlight("off", manual_lamp_control=args.manual_lamp_control)
-    switch_ambientlight("on", manual_lamp_control=args.manual_lamp_control)
     switch_fibre_backlight_voltage(0.0, manual_lamp_control=args.manual_lamp_control)
 
-    # initialize pos_rep camera
-    # set pos_rep camera exposure time to POSITIONAL_REP_EXPOSURE milliseconds
-    POS_REP_CAMERA_CONF = { DEVICE_CLASS : BASLER_DEVICE_CLASS,
-                            IP_ADDRESS : POS_REP_CAMERA_IP_ADDRESS }
+    with use_ambientlight(manual_lamp_control=args.manual_lamp_control):
+        # initialize pos_rep camera
+        # set pos_rep camera exposure time to POSITIONAL_REP_EXPOSURE milliseconds
+        POS_REP_CAMERA_CONF = { DEVICE_CLASS : BASLER_DEVICE_CLASS,
+                                IP_ADDRESS : POS_REP_CAMERA_IP_ADDRESS }
+        
+        pos_rep_cam = GigECamera(POS_REP_CAMERA_CONF)
+        pos_rep_cam.SetExposureTime(POSITIONAL_REP_EXPOSURE_MS)
+        
+        # get sorted positions (this is needed because the turntable can only
+        # move into one direction)
+        for fpu_id, stage_position  in get_sorted_positions(fpuset, POS_REP_POSITIONS):
+            
+            if not get_datum_repeatability_passed_p(env, vfdb, args, fpu_config, fpu_id):
+                print("FPU %s: skipping positional repeatability measurement because"
+                      " there is no passed datum repeatability test" % fpu_config['serialnumber'])
+                continue
     
-    pos_rep_cam = GigECamera(POS_REP_CAMERA_CONF)
-    pos_rep_cam.SetExposureTime(POSITIONAL_REP_EXPOSURE_MS)
+            if not get_pupil_alignment_passed_p(env, vfdb, args, fpu_config, fpu_id):
+                print("FPU %s: skipping positional repeatability measurement because"
+                      " there is no passed pupil alignment test" % fpu_config['serialnumber'])
+                continue
     
-    # get sorted positions (this is needed because the turntable can only
-    # move into one direction)
-    for fpu_id, stage_position  in get_sorted_positions(fpuset, POS_REP_POSITIONS):
-        
-        if not get_datum_repeatability_passed_p(env, vfdb, args, fpu_config, fpu_id):
-            print("FPU %s: skipping positional repeatability measurement because"
-                  " there is no passed datum repeatability test" % fpu_config['serialnumber'])
-            continue
-
-        if not get_pupil_alignment_passed_p(env, vfdb, args, fpu_config, fpu_id):
-            print("FPU %s: skipping positional repeatability measurement because"
-                  " there is no passed pupil alignment test" % fpu_config['serialnumber'])
-            continue
-
-        if (get_positional_repeatability_passed_p(env, vfdb, args, fpu_config, fpu_id) and (
-                not args.repeat_passed_tests)):
-
-            sn = fpu_config[fpu_id]['serialnumber']
-            print("FPU %s : positional repeatability test already passed, skipping test" % sn)
-            continue
-
-        
-        # move rotary stage to POS_REP_POSN_N
-        turntable_safe_goto(gd, grid_state, stage_position)            
-            
-
-        image_dict = {}
-
-        def capture_image(iteration, increment, direction, alpha, beta):
-
-            ipath = store_image(pos_rep_cam,
-                                "{sn}/{tn}/{ts}/{itr:03d}-{inc:03d}-{dir:03d}-{alpha:+08.3f}-{beta:+08.3f}.bmp",
-                                sn=fpu_config[fpu_id]['serialnumber'],
-                                tn="positional-repeatability",
-                                ts=tstamp,
-                                itr=iteration,
-                                inc=increment,
-                                dir=direction)
-            
-            return ipath
-
-            
-        
-        
-        for i in range(POSITIONAL_REP_ITERATIONS):
-            gd.findDatum(grid_state, fpuset=[fpu_id])
-            alpha = 0.0
-            beta = 0.0
-            step_a = 320.0 / POSITIONAL_REP_INCREMENTS
-            step_b = 320.0 / POSITIONAL_REP_INCREMENTS
-
-            wf = gen_wf(dirac(fpu_id) * 10, dirac(fpu_id) * -170)
-            gd.configMotion(wf, grid_state)
-            gd.executeMotion(grid_state)
-            
-
-
-            for j in range(4):
-                for k in range(POSITIONAL_REP_INCREMENTS):
-                    angles = gd.countedAngles()
-                    alpha = angles[fpu_id][0]
-                    beta = angles[fpu_id][1]
-                    alpha_steps = grid_state.FPU[fpu_id].alpha_steps
-                    beta_steps = grid_state.FPU[fpu_id].beta_steps
-                    
-                    ipath = capture_image(i, j, k, alpha, beta)
-                    image_dict[(i, j, k)] = (alpha, beta, alpha_steps, beta_steps, ipath)
-                    
-
-                    if k != (POSITIONAL_REP_INCREMENTS -1):
-                        
-                        if j == 0:
-                            delta_a = step_a
-                            delta_b = 0.0
-                        elif j == 1:
-                            delta_a = - step_a
-                            delta_b = 0.0
-                        elif j == 2:
-                            delta_a = 0.0
-                            delta_b = step_b
-                        else:
-                            delta_a = 0.0
-                            delta_b = - step_b
-                        
-                        wf = gen_wf(delta_a * dirac(fpu_id), delta_b * dirac(fpu_id))
-                        gd.configMotion(wf, grid_state)
-                        gd.executeMotion(grid_state, fpuset=[fpu_id])
-                        
-                    
+            if (get_positional_repeatability_passed_p(env, vfdb, args, fpu_config, fpu_id) and (
+                    not args.repeat_passed_tests)):
     
+                sn = fpu_config[fpu_id]['serialnumber']
+                print("FPU %s : positional repeatability test already passed, skipping test" % sn)
+                continue
+    
+            
+            # move rotary stage to POS_REP_POSN_N
+            turntable_safe_goto(gd, grid_state, stage_position)            
+                
+    
+            image_dict = {}
+    
+            def capture_image(iteration, increment, direction, alpha, beta):
+    
+                ipath = store_image(pos_rep_cam,
+                                    "{sn}/{tn}/{ts}/{itr:03d}-{inc:03d}-{dir:03d}-{alpha:+08.3f}-{beta:+08.3f}.bmp",
+                                    sn=fpu_config[fpu_id]['serialnumber'],
+                                    tn="positional-repeatability",
+                                    ts=tstamp,
+                                    itr=iteration,
+                                    inc=increment,
+                                    dir=direction)
+                
+                return ipath
+    
+                
+            
+            
+            for i in range(POSITIONAL_REP_ITERATIONS):
+                gd.findDatum(grid_state, fpuset=[fpu_id])
+                alpha = 0.0
+                beta = 0.0
+                step_a = 320.0 / POSITIONAL_REP_INCREMENTS
+                step_b = 320.0 / POSITIONAL_REP_INCREMENTS
+    
+                wf = gen_wf(dirac(fpu_id) * 10, dirac(fpu_id) * -170)
+                gd.configMotion(wf, grid_state)
+                gd.executeMotion(grid_state)
+                
+    
+    
+                for j in range(4):
+                    for k in range(POSITIONAL_REP_INCREMENTS):
+                        angles = gd.countedAngles()
+                        alpha = angles[fpu_id][0]
+                        beta = angles[fpu_id][1]
+                        alpha_steps = grid_state.FPU[fpu_id].alpha_steps
+                        beta_steps = grid_state.FPU[fpu_id].beta_steps
+                        
+                        ipath = capture_image(i, j, k, alpha, beta)
+                        image_dict[(i, j, k)] = (alpha, beta, alpha_steps, beta_steps, ipath)
+                        
+    
+                        if k != (POSITIONAL_REP_INCREMENTS -1):
+                            
+                            if j == 0:
+                                delta_a = step_a
+                                delta_b = 0.0
+                            elif j == 1:
+                                delta_a = - step_a
+                                delta_b = 0.0
+                            elif j == 2:
+                                delta_a = 0.0
+                                delta_b = step_b
+                            else:
+                                delta_a = 0.0
+                                delta_b = - step_b
+                            
+                            wf = gen_wf(delta_a * dirac(fpu_id), delta_b * dirac(fpu_id))
+                            gd.configMotion(wf, grid_state)
+                            gd.executeMotion(grid_state, fpuset=[fpu_id])
+                            
+                        
         
-
-        save_positional_repeatability_images(env, vfdb, args, fpu_config, fpu_id, image_dict)
-
+            
+    
+            save_positional_repeatability_images(env, vfdb, args, fpu_config, fpu_id, image_dict)
+    
 
 
 def eval_positional_repeatability(env, vfdb, gd, grid_state, args, fpuset, fpu_config,

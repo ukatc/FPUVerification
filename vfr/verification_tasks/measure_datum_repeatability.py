@@ -35,7 +35,7 @@ from fpu_constants import ALPHA_MIN_DEGREE, ALPHA_MAX_DEGREE, BETA_MIN_DEGREE, B
 from vfr.tests_common import (flush, timestamp, dirac, goto_position, find_datum, store_image,
                               get_sorted_positions, safe_home_turntable)
 
-from Lamps.lctrl import switch_backlight, switch_ambientlight
+from Lamps.lctrl import switch_backlight, switch_ambientlight, use_ambientlight, switch_fibre_backlight_voltage
 
 import pyAPT
 
@@ -57,79 +57,80 @@ def measure_datum_repeatability(env, vfdb, gd, grid_state, args, fpuset, fpu_con
     safe_home_turntable(gd, grid_state)    
 
     switch_backlight("off", manual_lamp_control=args.manual_lamp_control)
-    switch_ambientlight("on", manual_lamp_control=args.manual_lamp_control)
     switch_fibre_backlight_voltage(0.0, manual_lamp_control=args.manual_lamp_control)
 
-    # get sorted positions (this is needed because the turntable can only
-    # move into one direction)
-    for fpu_id, stage_position  in get_sorted_positions(fpuset, POS_REP_POSITIONS):
-
-        if (get_datum_repeatability_passed_p(env, vfdb, args, fpu_config, fpu_id) and (
-                not args.repeat_passed_tests)):
-
-            sn = fpu_config[fpu_id]['serialnumber']
-            print("FPU %s : datum repeatability test already passed, skipping test" % sn)
-            continue
-
-        
-        # move rotary stage to POS_REP_POSN_N
-        turntable_safe_goto(gd, grid_state, stage_position)            
+    with use_ambientlight(manual_lamp_control=args.manual_lamp_control):
     
-        # initialize pos_rep camera
-        # set pos_rep camera exposure time to DATUM_REP_EXPOSURE milliseconds
-        POS_REP_CAMERA_CONF = { DEVICE_CLASS : BASLER_DEVICE_CLASS,
-                                IP_ADDRESS : POS_REP_CAMERA_IP_ADDRESS }
-        
-        pos_rep_cam = GigECamera(POS_REP_CAMERA_CONF)
-        pos_rep_cam.SetExposureTime(DATUM_REP_EXPOSURE_MS)
-        
-
-        unmoved_images = []
-        datumed_images = []
-        moved_images = []
-
-        def capture_image(subtest, count):
-
-            ipath = store_image(pos_rep_cam,
-                                "{sn}/{tn}/{ts}/{tp}-{tc:02d}-{ic:03d}-.bmp",
-                                sn=fpu_config[fpu_id]['serialnumber'],
-                                tn="datum-repeatability",
-                                ts=ttamp,
-                                tp=testphase,
-                                tc=testcount,
-                                ic=count)
+        # get sorted positions (this is needed because the turntable can only
+        # move into one direction)
+        for fpu_id, stage_position  in get_sorted_positions(fpuset, POS_REP_POSITIONS):
+    
+            if (get_datum_repeatability_passed_p(env, vfdb, args, fpu_config, fpu_id) and (
+                    not args.repeat_passed_tests)):
+    
+                sn = fpu_config[fpu_id]['serialnumber']
+                print("FPU %s : datum repeatability test already passed, skipping test" % sn)
+                continue
+    
             
-            return ipath
-
-            
-        for k in range(DATUM_REP_ITERATIONS):
-            ipath = capture_image("unmoved", count)
-            unmoved_images.append(ipath)
-
-    
-        for k in range(DATUM_REP_ITERATIONS):
-            gd.findDatum(grid_state, fpuset=[fpu_id])
-            ipath = capture_image("datumed", count)
-            datumed_images.append(ipath)
-    
-        gd.findDatum(grid_state)
-        for k in range(DATUM_REP_ITERATIONS):
-            wf = gen_wf(30 * dirac(fpu_id), 30)
-            gd.configMottion(wf, grid_state)
-            gd.executeMotion(grid_state, fpuset=[fpu_id])
-            gd.reverseMotion(grid_state, fpuset=[fpu_id])
-            gd.executeMotion(grid_state, fpuset=[fpu_id])
-            gd.findDatum(grid_state, fpuset=[fpu_id])
-            ipath, coords = capture_image("moved+datumed", count)
-            moved_images.append(ipath)
-
-        images = { 'unmoved_images' : unmoved_images,
-                   'datumed_images' : datumed_imaged,
-                   'moved_images' : moved_images }
+            # move rotary stage to POS_REP_POSN_N
+            turntable_safe_goto(gd, grid_state, stage_position)            
         
-
-        save_datum_repeatability_images(env, vfdb, args, fpu_config, fpu_id, images)
-
+            # initialize pos_rep camera
+            # set pos_rep camera exposure time to DATUM_REP_EXPOSURE milliseconds
+            POS_REP_CAMERA_CONF = { DEVICE_CLASS : BASLER_DEVICE_CLASS,
+                                    IP_ADDRESS : POS_REP_CAMERA_IP_ADDRESS }
+            
+            pos_rep_cam = GigECamera(POS_REP_CAMERA_CONF)
+            pos_rep_cam.SetExposureTime(DATUM_REP_EXPOSURE_MS)
+            
+    
+            unmoved_images = []
+            datumed_images = []
+            moved_images = []
+    
+            def capture_image(subtest, count):
+    
+                ipath = store_image(pos_rep_cam,
+                                    "{sn}/{tn}/{ts}/{tp}-{tc:02d}-{ic:03d}-.bmp",
+                                    sn=fpu_config[fpu_id]['serialnumber'],
+                                    tn="datum-repeatability",
+                                    ts=ttamp,
+                                    tp=testphase,
+                                    tc=testcount,
+                                    ic=count)
+                
+                return ipath
+    
+                
+            for k in range(DATUM_REP_ITERATIONS):
+                ipath = capture_image("unmoved", count)
+                unmoved_images.append(ipath)
+    
+        
+            for k in range(DATUM_REP_ITERATIONS):
+                gd.findDatum(grid_state, fpuset=[fpu_id])
+                ipath = capture_image("datumed", count)
+                datumed_images.append(ipath)
+        
+            gd.findDatum(grid_state)
+            for k in range(DATUM_REP_ITERATIONS):
+                wf = gen_wf(30 * dirac(fpu_id), 30)
+                gd.configMottion(wf, grid_state)
+                gd.executeMotion(grid_state, fpuset=[fpu_id])
+                gd.reverseMotion(grid_state, fpuset=[fpu_id])
+                gd.executeMotion(grid_state, fpuset=[fpu_id])
+                gd.findDatum(grid_state, fpuset=[fpu_id])
+                ipath, coords = capture_image("moved+datumed", count)
+                moved_images.append(ipath)
+    
+            images = { 'unmoved_images' : unmoved_images,
+                       'datumed_images' : datumed_imaged,
+                       'moved_images' : moved_images }
+            
+    
+            save_datum_repeatability_images(env, vfdb, args, fpu_config, fpu_id, images)
+    
 
 
 def eval_datum_repeatability(env, vfdb, gd, grid_state, args, fpuset, fpu_config, pos_rep_analysis_pars):
