@@ -42,7 +42,6 @@ def pupalnCoordinates(image_path,
 
 	#image processing
 	#APPLY DISTORTION CORRECTION
-        image = correct(image, calibration_pars=PUPALN_CALIBRATION_PARS)
 	gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 	
 	pupaln_spot_x = 0
@@ -50,7 +49,15 @@ def pupalnCoordinates(image_path,
 	pupaln_quality = 0
 
 	#exceptions
+        # scale and straighten the result coordinates
+        
+        if POSREP_CALIBRATION_PARS is None:
+            POSREP_CALIBRATION_PARS = { 'algorithm' : 'scale',
+                                        'scale_factor' : PUPALN_PLATESCALE }
 
+        pupaln_spot_x, pupaln_spot_y, = correct(pupaln_spot_x, pupaln_spot_y,
+                                                calibration_pars=PUPALN_CALIBRATION_PARS)
+            
 	return pupaln_spot_x, pupaln_spot_y, pupaln_quality
 
 

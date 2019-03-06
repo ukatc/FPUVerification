@@ -40,6 +40,13 @@ def posrepCoordinates(image_path,
         # Johannes Nix (code imported and re-formatted)
 
 
+        # using the 'PLATESCALE' parameter here has the problem that
+        # it does not account for non-linear distortion of the image,
+        # and it is also overlapping with the image correction
+        # function.  (Also, 'PLATESCALE' means normally something
+        # different, it normally thescribes the ratio between a ppixel
+        # number and an angle, not a pixel number and a distance.)
+        
 	smallPerimeterLo = (POSREP_SMALL_DIAMETER - POSREP_DIAMETER_TOLERANCE) * pi / POSREP_PLATESCALE
 	smallPerimeterHi = (POSREP_SMALL_DIAMETER + POSREP_DIAMETER_TOLERANCE) * pi / POSREP_PLATESCALE
 	largePerimeterLo = (POSREP_LARGE_DIAMETER - POSREP_DIAMETER_TOLERANCE) * pi / POSREP_PLATESCALE
@@ -54,7 +61,6 @@ def posrepCoordinates(image_path,
 
 	image = cv2.imread(image_path)
 
-        image = correct(image, calibration_pars=POSREP_CALIBRATION_PARS)
 
 	#image processing
 	gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -122,13 +128,26 @@ def posrepCoordinates(image_path,
                 print("Contour %i = small target, contour %i = large target" %(
                         centres['Small Target'][3], centres['Large Target'][3]))
 
-	posrep_small_target_x = centres['Small Target'][0] * POSREP_PLATESCALE
-	posrep_small_target_y = centres['Small Target'][1] * POSREP_PLATESCALE
+	pixels_posrep_small_target_x = centres['Small Target'][0]
+	pixels_posrep_small_target_y = centres['Small Target'][1]
 	posrep_small_target_quality = centres['Small Target'][2]
-	posrep_large_target_x = centres['Large Target'][0] * POSREP_PLATESCALE
-	posrep_large_target_y = centres['Large Target'][1] * POSREP_PLATESCALE
+	pixels_posrep_large_target_x = centres['Large Target'][0]
+	pixels_posrep_large_target_y = centres['Large Target'][1]
 	posrep_large_target_quality = centres['Large Target'][2]
 
+        # scale and straighten the result coordinates
+        # the distortion correction is applied here, using the 'correct' function
+        # from the distortion correction module
+        if POSREP_CALIBRATION_PARS is None:
+            POSREP_CALIBRATION_PARS = { 'algorithm' : 'scale',
+                                        'scale_factor' : POSREP_PLATESCALE }
+
+        posrep_small_target_x, posrep_small_target_y = correct(pixels_posrep_small_target_x, pixels_posrep_small_target_y,
+                                                                calibration_pars=POSREP_CALIBRATION_PARS)
+
+        posrep_large_target_x, posrep_large_target_y = correct(pixels_posrep_large_target_x, pixels_posrep_large_target_y,
+                                                              calibration_pars=POSREP_CALIBRATION_PARS)
+        
 	#target separation check - the values here are not configurable, as
         # they represent real mechanical tolerances
 	targetSeparation = sqrt((posrep_small_target_x - posrep_large_target_x)**2 +
@@ -138,7 +157,7 @@ def posrepCoordinates(image_path,
 	if targetSeparation > 2.475 or targetSeparation < 2.275:
 		raise RepeatabilityAnalysisError("Target separation is out of spec - "
                                 "use display option to check for target-like reflections")
-
+        
 	return (posrep_small_target_x,
                 posrep_small_target_y,
                 posrep_small_target_quality,
