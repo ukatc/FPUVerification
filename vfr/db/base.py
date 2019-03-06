@@ -58,7 +58,7 @@ def  save_test_result(env, vfdb, fpuset, keyfunc, valfunc, verbosity=0):
             
 def  get_test_result(env, vfdb, fpu_id, keyfunc, count=None, verbosity=0):
     
-    with env.begin(write=True,db=vfdb) as txn:
+    with env.begin(write=False, db=vfdb) as txn:
             
         keybase = keyfunc(fpu_id)
 

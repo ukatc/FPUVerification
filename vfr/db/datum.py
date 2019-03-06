@@ -1,6 +1,7 @@
 from __future__ import print_function, division,  absolute_import
 
-from db.base import env, GIT_VERSION, TestResult, get_test_result, timestamp  
+from vfr.db.base import env, GIT_VERSION, TestResult, get_test_result, timestamp  
+from vfr.db.snset import add_sns_to_set
 
 RECORD_TYPE = 'findDatum'
 
@@ -41,7 +42,9 @@ def  save_datum_result(env, vfdb, args, fpu_config, fpuset, dasel, grid_state, r
 
     
     save_test_result(env, vfdb, fpuset, keyfunc, valfunc, verbosity=args.verbosity)
-
+    # we update the set of FPUs which are in the database,
+    # so that we can iterate over existing data when generating reports.
+    add_sns_to_set(env, vfdb, fpuset, verbosity==args.verbosity):
 
 def  get_datum_result(env, vfdb, args, fpu_config, fpu_id):
 
