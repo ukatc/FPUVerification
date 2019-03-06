@@ -2,6 +2,8 @@ from __future__ import print_function, division
 
 import argparse
 
+from ast import literal_eval
+
 from fpu_constants import *
 
 from vfr.conf import ( DEFAULT_TASKS,
@@ -29,13 +31,10 @@ def parse_args():
                         help="""list of tasks to perform (default: %(default)s)""")
     
     parser.add_argument('-f', '--setup-file',   default="fpus_batch0.cfg", type=str,
-                        help='FPU configuration')
+                        help='set FPU flashing and measurement configuration file')
 
     parser.add_argument('-m', '--mockup',   default=False, action='store_true',
                         help='set gateway address to use mock-up gateway and FPU')
-
-    parser.add_argument('-n', '--dry-run',   default=False, action='store_true',
-                        help='do not use lamp and camera hardware')
 
     parser.add_argument('-M', '--manual-lamp-control',   default=False, action='store_true',
                         help='switch to manual lamp control')
@@ -48,6 +47,12 @@ def parse_args():
 
     parser.add_argument('-R', '--re-initialize',   default=False, action='store_true',
                         help='re-initialize FPU counters even if entry exists')
+
+    
+    parser.add_argument('-S', '--snset', default=None, 
+                        help="""apply tasks only to passed set of serial numbers, passed as "['MP001', 'MP002', ...]" """)
+
+    
 
     parser.add_argument('-s', '--reuse-serialnum', default=False, action='store_true',
                         help='reuse serial number')
@@ -105,5 +110,8 @@ def parse_args():
     if args.mockup:
         args.gateway_address = "127.0.0.1"
         args.gateway_port = 4700
+
+    if not (args.fpuset is None):
+        args.fpuset = literal_eval(args.fpuset)
 
     return args
