@@ -13,7 +13,7 @@ from fpu_constants import *
 from vfr.tests_common import flush
 
 from vfr.db import env
-from vfr.options import parse_args
+from vfr.options import parse_args, load_config
 from vfr.conf import (ALPHA_DATUM_OFFSET, )
 
 from vfr.TaskLogic import T, resolve
@@ -32,102 +32,10 @@ from vfr.verification_tasks.positional_repeatability import measure_positional_r
 
 from vfr.verification_tasks.metrology_height import measure_metrology_height, eval_metrology_height
 
-    
- 
-sn_pat = re.compile('[a-zA-Z0-9]{1,5}$')
-
-
-def load_config(config_file_name):
-    print("reading configuratiom from %r..." % config_file_name)
-    cfg_list = ast.literal_eval(''.join(open(config_file_name).readlines()))
-
-    fconfig = dict([ (entry['fpu_id'], { 'serialnumber' : entry['serialnumber'],
-                                     'pos' : entry['pos'],
-                                     'fpu_id' : entry['fpu_id']}) for entry in cfg_list])
-
-    for key, val in fconfig.items():
-        if key < 0:
-            raise ValueError("FPU id %i is not valid!" % key)
-        serialnumber = val['serialnumber']
-        if not sn_pat.match(serialnumber):
-            raise ValueError("serial number %r for FPU %i is not valid!" % (serialnumber, key))
+from vfr.verification_tasks.report import report, dump_data
 
     
-    return fconfig
 
-
-# two functional short-hands for set operations
-def intersection(set1, set2):
-    return set1.intersection(set2)
-
-def set_empty(set1):
-    return len(set1) == 0
-
-
-def get_sets(vfdb, fpu_config, opts):
-    """Under normal operation, we want to measure and evaluate the FPUs
-    in the rig.
-
-    However, we also need to be able to query and/or re-evaluate data
-    for FPUs which have been measured before. To do that, there is a
-    command line parameter so that we can select a subset of all
-    stored FPUs to be displayed.
-
-    This allows also to restrict a new measurement to FPUs which are 
-    explicityly listed, for example because the need to be selectively 
-    repeated.
-
-    """
-    eval_snset = opts.snset
-    
-    
-    if eval_snset == "all":
-        # get the serial numbers of all FPUs which have been measured so far
-        eval_snset = get_snset(env, vfdb)
-    elif eval_snset is not None:
-        # in this case, it needs to be a list of serial numbers
-        eval_snset = set(eval_snset)
-
-    # check passed serial numbers for validity
-    for sn in eval_snset:
-        if not sn_pat.match(sn):
-            raise ValueError("serial number %r is not valid!" % sn)
-        
-    if eval_snset is None:
-        # both mesured and evaluated sets are exclusively defined by
-        # the measurement configuration file
-        measure_fpuset = fpu_config.keys()
-        eval_fpuset = fpuset
-    else:
-        # we restrict the measured FPUs to the serial numbers passed
-        # in the command line option, and create a config which has
-        # entries for these and the additional requested serial
-        # numbers
-        config_by_sn = {val['serialnumber'] : val for val in fpu_config.values()}
-            
-        config_sns = set(config_by_sn.keys())
-        if len(config_sns) != len(fpu_config):
-            raise ValueError("the measurement configuration file has duplicate serial numbers")
-        
-        measure_sns = config_sns.intersection(eval_snset)
-        
-        measure_config = {config_by_sn[sn]['fpu_id'] : config_by_sn[sn] for sn in measure_sns }
-        
-        measure_fpuset = fpu_config.keys()
-        
-        extra_eval_sns = requested_snset.difference(measure_sns)
-
-        # we use the serial numbers as key - these need not to have
-        # integer type as they are not used in measurements.
-        
-        fpu_config = { sn : {'serialnumber' : sn} for sn in extra_eval_sns}
-        
-        fpu_config.update(measure_config)
-
-        eval_fpuset = fpu_config.keys()
-                       
-            
-    return fpu_config, sorted(measure_fpuset), sorted(eval_fpuset)
 
 
 if __name__ == '__main__':
@@ -137,14 +45,10 @@ if __name__ == '__main__':
 
     vfdb = env.open_db("verification")
     
-    fpu_config = load_config(opts.setup_file)
+    fpu_config, measure_fpuset, eval_fpuset = load_config(opts.setup_file, vfdb)
 
 
     print("measurement config= %r" % fpu_config)
-
-
-    # get sets of measured and evaluated FPUs
-    fpu_config, measure_fpuset, eval_fpuset = get_sets(vfdb, fpu_config, opts)
     
     print("fpu_ids = %r" % measure_fpuset)
 
@@ -153,7 +57,8 @@ if __name__ == '__main__':
     # low-level actions
     tasks = resolve(opts.tasks, env, vfdb, opts, fpu_config, measure_fpuset)
 
-    # change current directory to image root
+    # change current directory to image root folder, so that
+    # we can use relative image paths
     os.chdir(IMAGE_ROOT_FOLDER)
     # check connections to cameras and EtherCAN gateway    
 
@@ -361,6 +266,15 @@ if __name__ == '__main__':
                                      POSVER_ANALYSIS_PARS,
                                      POSVER_EVALUATION_PARS)
         
-                
+
+        
+    if T.TASK_REPORT in tasks:
+        print("[%s] ###" % T.TASK_REPORT)
+        report(env, vfdb, gd, grid_state, opts, eval_fpuset, fpu_config)
+        
+    if T.TASK_DUMP in tasks:
+        print("[%s] ###" % T.TASK_DUMP)
+        dump_data(env, vfdb, gd, grid_state, opts, eval_fpuset, fpu_config)
+        
         
         
