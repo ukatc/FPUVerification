@@ -42,6 +42,9 @@ def parse_args():
     
     parser.add_argument('-f', '--setup-file',   default="fpus_batch0.cfg", type=str,
                         help='set FPU flashing and measurement configuration file')
+    
+    parser.add_argument('-F', '--report-format',   default="terse", choices=['terse', 'long', 'extensive']
+                        help="output format of 'report' task (one of 'terse', 'long', 'extensive', default is 'terse')")
 
     parser.add_argument('-m', '--mockup',   default=False, action='store_true',
                         help='set gateway address to use mock-up gateway and FPU')

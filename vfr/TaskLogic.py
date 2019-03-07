@@ -30,6 +30,8 @@ class T:
     TASK_INIT_RD                   = "initialize_unprotected_fpu_driver"
     TASK_MEASURE_ALL               = "measure_FPUs"
     TASK_REFERENCE                 = "reference_FPU_step_counters"
+    TASK_REPORT                    = "report"
+    TASK_DUMP                      = "dump"
     # elementary tests
     TST_ALPHA_MAX                  = "test_alpha_max"
     TST_ALPHA_MIN                  = "test_alpha_min"
