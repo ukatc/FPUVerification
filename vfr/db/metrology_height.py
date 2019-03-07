@@ -62,3 +62,16 @@ def save_metrology_height_result(env, vfdb, opts, fpu_config, fpu_id,
 
     
     save_test_result(env, vfdb, fpuset, keyfunc, valfunc, verbosity=opts.verbosity)
+
+
+
+def  get_metrology_height_result(env, vfdb, opts, fpu_config, fpu_id):
+
+    # define two closures - one for the unique key, another for the stored value 
+    def keyfunc(fpu_id):
+        serialnumber = fpu_config[fpu_id]['serialnumber']
+        keybase = (serialnumber, RECORD_TYPE, 'result')
+        return keybase
+    
+    return get_test_result(env, vfdb, fpuset, keyfunc, verbosity=opts.verbosity)
+    

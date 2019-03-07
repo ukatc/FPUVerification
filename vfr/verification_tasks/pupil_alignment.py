@@ -6,13 +6,13 @@ from numpy import zeros, nan
 from protectiondb import ProtectionDB as pdb
 from vfr.conf import PUP_ALN_CAMERA_IP_ADDRESS, NR360_SERIALNUMBER
 
-from vfr.db import (env,
-                    TestResult,
-                    save_pupil_alignment_images,
-                    get_pupil_alignment_images,
-                    save_pupil_alignment_result,
-                    get_pupil_alignment_result,
-                    get_pupil_alignment_passed_p)
+from vfr.db.pupil_alignment import (env,
+                                    TestResult,
+                                    save_pupil_alignment_images,
+                                    get_pupil_alignment_images,
+                                    save_pupil_alignment_result,
+                                    get_pupil_alignment_result,
+                                    get_pupil_alignment_passed_p)
 
 from vfr import turntable
 

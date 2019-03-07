@@ -31,11 +31,13 @@ def  save_datum_result(env, vfdb, opts, fpu_config, fpuset, dasel, grid_state, r
             fsuccess = TestResult.OK
         else:
             fsuccess = TestResult.FAILED
-                        
+
+        fpu=grid_state.FPU[fpu_id]
         val = repr({'result' : fsuccess,
                     'datumed' : (a_ok, b_ok),
                     'fpuid' : fpu_id,
-                    'result_state' : str(grid_state.FPU[fpu_id].state),
+                    'counter_deviation' : (fpu.alpha_deviation, fpu.alpha_deviation)
+                    'result_state' : str(fpu.state),
                     'diagnostic' : "OK" if fsuccess else rigstate,
                     'time' : timestamp()})
         return val

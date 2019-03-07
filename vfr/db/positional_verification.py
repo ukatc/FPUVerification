@@ -39,6 +39,7 @@ def  save_positional_verification_result(env, vfdb, opts, fpu_config, fpu_id,
                                          posver_errors=None,
                                          positional_verification_mm=None,
                                          errmsg="",
+                                         analysis_version=None,
                                          positional_verification_has_passed=None):
 
     # define two closures - one for the unique key, another for the stored value 
@@ -56,9 +57,22 @@ def  save_positional_verification_result(env, vfdb, opts, fpu_config, fpu_id,
                     'result' : positional_verification_has_passed,
                     'posver_errors' : posver_errors,
                     'error_message' : errmsg,
+                    'algorithm_version' : analysis_version,
                     'git-version' : GIT_VERSION,
+                    'algorithm_version' : analysis_version,
                     'time' : timestamp()})
         return val
 
     
     save_test_result(env, vfdb, fpuset, keyfunc, valfunc, verbosity=opts.verbosity)
+
+
+def  get_positional_verification_result(env, vfdb, opts, fpu_config, fpu_id):
+
+    def keyfunc(fpu_id):
+        serialnumber = fpu_config[fpu_id]['serialnumber']
+        keybase = (serialnumber, 'positional-verification', 'result')
+        return keybase
+    
+    return get_test_result(env, vfdb, fpuset, keyfunc, verbosity=opts.verbosity)
+    

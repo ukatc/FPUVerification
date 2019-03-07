@@ -42,6 +42,7 @@ def  save_positional_repeatability_result(env, vfdb, opts, fpu_config, fpu_id,
                                           analysis_results=None,
                                           positional_repeatability_mm=None,
                                           gearbox_correction={},
+                                          analysis_version=None,
                                           errmsg="",
                                           positional_repeatability_has_passed=None):
 
@@ -60,6 +61,7 @@ def  save_positional_repeatability_result(env, vfdb, opts, fpu_config, fpu_id,
                     'result' : positional_repeatability_has_passed,
                     'gearbox_correction' : gearbox_correction,
                     'error_message' : errmsg,
+                    'algorithm_version' : analysis_version,
                     'git-version' : GIT_VERSION,
                     'time' : timestamp()})
         return val

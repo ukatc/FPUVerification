@@ -154,7 +154,7 @@ def test_limit(env, fpudb, vfdb, gd, grid_state, opts, fpuset, fpu_config, which
 
         
         if test_valid:
-            save_angular_limit(env, vfdb, fpu_id, sn, which_limit, test_succeeded, limit_val, verbosity=3)
+            save_angular_limit(env, vfdb, fpu_id, sn, which_limit, test_succeeded, limit_val, diagnostic, verbosity=3)
 
         if test_valid and test_succeeded and (which_limit != "beta_collision"):
             set_protection_limit(env, fpudb, grid_state.FPU[fpu_id],

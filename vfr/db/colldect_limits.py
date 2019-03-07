@@ -4,7 +4,7 @@ from db.base import env, GIT_VERSION, TestResult, get_test_result, timestamp
 
 
 def save_angular_limit(env, vfdb, fpu_id, serialnumber, which_limit,
-                       test_succeeded, limit_val, verbosity=2):
+                       test_succeeded, limit_val, diagnostic, verbosity=2):
     
     print("saving limit value")
 
@@ -24,7 +24,8 @@ def save_angular_limit(env, vfdb, fpu_id, serialnumber, which_limit,
             fsuccess = TestResult.FAILED
             
         val = repr({'result' : fsuccess,                    
-                    'val' : limit_val,                    
+                    'val' : limit_val,
+                    'diagnostic' : diagnostic,
                     'time' : timestamp()})
         return val
 

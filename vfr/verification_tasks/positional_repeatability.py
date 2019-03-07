@@ -8,7 +8,7 @@ from GigE.GigECamera import DEVICE_CLASS, BASLER_DEVICE_CLASS, IP_ADDRESS
 from vfr.conf import POS_REP_POSN_N, POS_REP_CAMERA_IP_ADDRESS, NR360_SERIALNUMBER
 
 from vfr.verification_tasks.measure_datum_repeatability import get_datum_repeatability_passed_p
-from vfr.db.positional_repetability import (env,
+from vfr.db.positional_repeatability import (env,
                                             TestResult,
                                             save_positional_repeatability_images,
                                             get_positional_repeatability_images,
