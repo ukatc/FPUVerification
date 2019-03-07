@@ -4,7 +4,8 @@ from db.base import env, GIT_VERSION, TestResult, get_test_result, timestamp
 
 RECORD_TYPE='positional-repeatability'
 
-def  save_positional_repeatability_images(env, vfdb, args, fpu_config, fpu_id, images_dict):
+def  save_positional_repeatability_images(env, vfdb, args, fpu_config, fpu_id,
+                                          images_dict, waveform_pars={}):
 
     # define two closures - one for the unique key, another for the stored value 
     def keyfunc(fpu_id):
@@ -16,7 +17,8 @@ def  save_positional_repeatability_images(env, vfdb, args, fpu_config, fpu_id, i
         
                         
         val = repr({'fpuid' : fpu_id,
-                    'images' : image_dict),
+                    'images' : image_dict,
+                    'waveform_pars' : waveform_pars,
                     'time' : timestamp()})
         return val
 

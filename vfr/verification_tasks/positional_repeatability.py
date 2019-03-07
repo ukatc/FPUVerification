@@ -47,7 +47,8 @@ from Gearbox.gear_correction import GearboxFitError, fit_gearbox_correction
 
 
     
-def measure_positional_repeatability(env, vfdb, gd, grid_state, args, fpuset, fpu_config, 
+def measure_positional_repeatability(env, vfdb, gd, grid_state, args, fpuset, fpu_config,
+                                     POSITION_REP_WAVEFORM_PARS=None,
                                      POSITIONAL_REP_ITERATIONS=None,
                                      POSITION_REP_POSITIONS=None,
                                      POSITION_REP_NUMINCREMENTS=None,
@@ -121,7 +122,7 @@ def measure_positional_repeatability(env, vfdb, gd, grid_state, args, fpuset, fp
                 step_a = 320.0 / POSITIONAL_REP_INCREMENTS
                 step_b = 320.0 / POSITIONAL_REP_INCREMENTS
     
-                wf = gen_wf(dirac(fpu_id) * 10, dirac(fpu_id) * -170)
+                wf = gen_wf(dirac(fpu_id) * 10, dirac(fpu_id) * -170, **POSITION_REP_WAVEFORM_PARS)
                 gd.configMotion(wf, grid_state)
                 gd.executeMotion(grid_state)
                 
@@ -162,7 +163,8 @@ def measure_positional_repeatability(env, vfdb, gd, grid_state, args, fpuset, fp
         
             
     
-            save_positional_repeatability_images(env, vfdb, args, fpu_config, fpu_id, image_dict)
+            save_positional_repeatability_images(env, vfdb, args, fpu_config, fpu_id, image_dict,
+                                                 waveform_pars=POSITION_REP_WAVEFORM_PARS)
     
 
 

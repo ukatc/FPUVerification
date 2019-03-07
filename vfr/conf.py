@@ -90,6 +90,15 @@ METCAL_FIBRE_ANALYSIS_PARS = {
 
 POSITION_REP_POSITIONS = [132, 192, 252, 312, 12, 72]
 
+# these values are for CAN protocol version 1 firmware
+MOTOR_MIN_STEP_FREQUENCY=500
+MOTOR_MAX_STEP_FREQUENCY=2000
+MOTOR_MAX_START_FREQUENCY=550
+WAVEFORM_SEGMENT_LENGTH_MS=250
+STEPS_LOWER_LIMIT= int(MOTOR_MIN_STEP_FREQUENCY * WAVEFORM_SEGMENT_LENGTH_MS / 1000)
+STEPS_UPPER_LIMIT=int(ceil(MOTOR_MAX_STEP_FREQUENCY * WAVEFORM_SEGMENT_LENGTH_MS / 1000))
+
+
 POSREP_MEASUREMENT_PARS = {
     'POSITION_REP_POSITIONS' : POSITION_REP_POSITIONS, # the rotary stage angle required to
                                # place each FPU under the positional
@@ -104,6 +113,30 @@ POSREP_MEASUREMENT_PARS = {
                                      # the starting position
     'POSITION_REP_ITERATIONS' : NaN, # the number of times each FPU
                                      # sweeps back and forth
+
+    'POSITION_REP_WAVEFORM_PARS' :  { 'mode' : 'fast',
+                                      'max_change' : 1.2,
+                                      'min_steps' : STEPS_LOWER_LIMIT,
+                                      'max_steps' :STEPS_UPPER_LIMIT,
+                                      'max_change_alpha' : None,
+                                      'max_acceleration_alpha' : None,
+                                      'max_deceleration_alpha' : None,
+                                      'min_steps_alpha' : None,
+                                      'min_stop_steps_alpha' : None,
+                                      'max_steps_alpha' : None,
+                                      'max_change_beta' : None,
+                                      'max_acceleration_beta' : None,
+                                      'max_deceleration_beta' : None,
+                                      'min_steps_beta' : None,
+                                      'min_stop_steps_beta' : None,
+                                      'max_steps_beta' : None,
+                                      'max_change' : 1.2,
+                                      'max_acceleration' : 35,
+                                      'max_deceleration' : 35,
+                                      'min_steps' : STEPS_LOWER_LIMIT,
+                                      'min_stop_steps' : None,
+                                      'max_steps' : STEPS_UPPER_LIMIT,
+                                      }
     }
 
 
