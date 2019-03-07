@@ -47,7 +47,7 @@ from ImageAnalysisFuncs.analyze_metrology_calibration import (metcalTargetCoordi
 
     
 
-def measure_metrology_calibration(env, vfdb, gd, grid_state, args, fpuset, fpu_config, 
+def measure_metrology_calibration(env, vfdb, gd, grid_state, opts, fpuset, fpu_config, 
                                   METROLOGY_CAL_POSITIONS=None,
                                   METROLOGY_CAL_BACKLIGHT_VOLTAGE=None,
                                   METROLOGY_CAL_TARGET_EXPOSURE_MS=None,
@@ -58,9 +58,9 @@ def measure_metrology_calibration(env, vfdb, gd, grid_state, args, fpuset, fpu_c
     # home turntable
     safe_home_turntable(gd, grid_state)    
 
-    switch_backlight("off", manual_lamp_control=args.manual_lamp_control)
-    switch_ambientlight("off", manual_lamp_control=args.manual_lamp_control)
-    switch_fibre_backlight_voltage(0.0, manual_lamp_control=args.manual_lamp_control)
+    switch_backlight("off", manual_lamp_control=opts.manual_lamp_control)
+    switch_ambientlight("off", manual_lamp_control=opts.manual_lamp_control)
+    switch_fibre_backlight_voltage(0.0, manual_lamp_control=opts.manual_lamp_control)
 
     MET_CAL_CAMERA_CONF = { DEVICE_CLASS : BASLER_DEVICE_CLASS,
                             IP_ADDRESS : MET_CAL_CAMERA_IP_ADDRESS }
@@ -92,34 +92,34 @@ def measure_metrology_calibration(env, vfdb, gd, grid_state, args, fpuset, fpu_c
             
         
         met_cal_cam.SetExposureTime(METROLOGY_CAL_TARGET_EXPOSURE_MS)
-        switch_backlight("off", manual_lamp_control=args.manual_lamp_control)
-        switch_fibre_backlight_voltage(0.0, manual_lamp_control=args.manual_lamp_control)
+        switch_backlight("off", manual_lamp_control=opts.manual_lamp_control)
+        switch_fibre_backlight_voltage(0.0, manual_lamp_control=opts.manual_lamp_control)
 
         # use context manager to switch lamp on
         # and guarantee it is switched off after the
         # measurement (even if exceptions occur)
-        with use_ambientlight(manual_lamp_control=args.manual_lamp_control):
+        with use_ambientlight(manual_lamp_control=opts.manual_lamp_control):
             target_ipath = capture_image(met_cal_cam, "target")
 
     
         met_cal_cam.SetExposureTime(METROLOGY_CAL_FIBRE_EXPOSURE_MS)
-        switch_ambientlight("off", manual_lamp_control=args.manual_lamp_control)
+        switch_ambientlight("off", manual_lamp_control=opts.manual_lamp_control)
         
-        with use_backlight(METROLOGY_CAL_BACKLIGHT_VOLTAGE, manual_lamp_control=args.manual_lamp_control):
+        with use_backlight(METROLOGY_CAL_BACKLIGHT_VOLTAGE, manual_lamp_control=opts.manual_lamp_control):
             fibre_ipath = capture_image(met_cal_cam, "fibre")
 
         images = { 'target' : target_ipath,
                    'fibre' : fibre_ipath }
 
-        save_metrology_calibration_images(env, vfdb, args, fpu_config, fpu_id, images)
+        save_metrology_calibration_images(env, vfdb, opts, fpu_config, fpu_id, images)
 
 
 
-def eval_metrology_calibration(env, vfdb, gd, grid_state, args, fpuset, fpu_config,
+def eval_metrology_calibration(env, vfdb, gd, grid_state, opts, fpuset, fpu_config,
                                pos_rep_analysis_pars, met_cal_analysis_pars):
 
     for fpu_id in fpuset:
-        images = get_metrology_calibration_images(env, vfdb, args, fpu_config, fpu_id)
+        images = get_metrology_calibration_images(env, vfdb, opts, fpu_config, fpu_id)
 
 
         try:
@@ -144,7 +144,7 @@ def eval_metrology_calibration(env, vfdb, gd, grid_state, args, fpuset, fpu_conf
             coords = {}
             fibre_distance = NaN
 
-        save_metrology_calibration_result(env, vfdb, args, fpu_config, fpu_id, coords=coords,
+        save_metrology_calibration_result(env, vfdb, opts, fpu_config, fpu_id, coords=coords,
                                           fibre_distance=fibre_distance,
                                           errmsg=errmsg,
                                           analysis_version=METROLOGY_ANALYSIS_ALGORITHM_VERSION)

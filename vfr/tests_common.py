@@ -54,7 +54,7 @@ def goto_position(gd, abs_alpha, abs_beta, grid_state, fpuset=None, allow_uninit
         if CAN_PROTOCOL_VERSION == 1:
             gd.pingFPUs(grid_state)
 
-def find_datum(gd, grid_state, args):
+def find_datum(gd, grid_state, opts):
     
     print("issuing findDatum:")
     gd.findDatum(grid_state, timeout=DATUM_TIMEOUT_DISABLE)

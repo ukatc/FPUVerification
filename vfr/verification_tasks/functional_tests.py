@@ -32,12 +32,12 @@ from vfr.tests_common import flush, timestamp, dirac, goto_position
 
 
             
-def test_datum(env, vfdb, gd, grid_state, args, fpuset, fpu_config, dasel=DASEL_BOTH):
+def test_datum(env, vfdb, gd, grid_state, opts, fpuset, fpu_config, dasel=DASEL_BOTH):
     
     gd.pingFPUs(grid_state, fpuset=fpuset)
 
     # depending on options, we reset & rewind the FPUs
-    if args.alwaysResetFPUs:
+    if opts.alwaysResetFPUs:
         print("resetting FPUs.... ", end='')
         flush()
         gd.resetFPUs(grid_state, fpuset=fpuset)
@@ -45,7 +45,7 @@ def test_datum(env, vfdb, gd, grid_state, args, fpuset, fpu_config, dasel=DASEL_
 
     abs_alpha = -180.0 + 1.5
     abs_beta = 1.5
-    if args.rewind_fpus:
+    if opts.rewind_fpus:
         goto_position(gd, abs_alpha, abs_beta, grid_state, fpuset=fpuset,
                       allow_uninitialized=True)
     
@@ -72,14 +72,14 @@ def test_datum(env, vfdb, gd, grid_state, args, fpuset, fpu_config, dasel=DASEL_
     print("findDatum finished, success=%s, rigstate=%s" % (success, rigstate))
 
     if valid:
-        save_datum_result(env, vfdb, args, fpu_config, fpuset, dasel,
+        save_datum_result(env, vfdb, opts, fpu_config, fpuset, dasel,
                           grid_state, rigstate)
                       
 
 
 
     
-def test_limit(env, fpudb, vfdb, gd, grid_state, args, fpuset, fpu_config, which_limit):
+def test_limit(env, fpudb, vfdb, gd, grid_state, opts, fpuset, fpu_config, which_limit):
     abs_alpha_def = -180.0
     abs_beta_def = 0.0
     goto_position(gd, abs_alpha_def, abs_beta_def, grid_state, fpuset=fpuset)
@@ -112,8 +112,8 @@ def test_limit(env, fpudb, vfdb, gd, grid_state, args, fpuset, fpu_config, which
         sn = fpu_config[fpu_id]['serialnumber']
         
         if (get_anglimit_passed_p(env, vfdb, fpu_id, sn, which_limit,
-                                  verbosity=args.verbosity) and (
-                                      not args.repeat_passed_tests)):
+                                  verbosity=opts.verbosity) and (
+                                      not opts.repeat_passed_tests)):
             
             print("FPU %s : limit test %r already passed, skipping test" % (sn, which_limit))
             continue
@@ -124,7 +124,7 @@ def test_limit(env, fpudb, vfdb, gd, grid_state, args, fpuset, fpu_config, which
                 which_limit, fpu_id, abs_alpha, abs_beta))
 
             if which_limit == "beta_collision":
-                turntable.go_collision_test_pos(fpu_id, args)
+                turntable.go_collision_test_pos(fpu_id, opts)
             
             goto_position(gd, abs_alpha, abs_beta, grid_state, fpuset=[fpu_id], soft_protection=False)
             test_succeeded = False
@@ -159,12 +159,12 @@ def test_limit(env, fpudb, vfdb, gd, grid_state, args, fpuset, fpu_config, which
         if test_valid and test_succeeded and (which_limit != "beta_collision"):
             set_protection_limit(env, fpudb, grid_state.FPU[fpu_id],
                                  sn, which_limit, limit_val,
-                                 args.protection_tolerance, args.update_protection_limits)
+                                 opts.protection_tolerance, opts.update_protection_limits)
             
         
         if test_succeeded:
             # bring FPU back into valid range and protected state
-            N = args.N
+            N = opts.N
             if which_limit in ["alpha_max", "alpha_min"]:
                 print("moving fpu %i back by %i degree" % (fpu_id, dw))
                 gd.resetFPUs(grid_state, [fpu_id])

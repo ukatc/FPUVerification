@@ -49,7 +49,7 @@ from ImageAnalysisFuncs.analyze_metrology_height import (methtHeight,
 
     
 
-def measure_metrology_height(env, vfdb, gd, grid_state, args, fpuset, fpu_config, 
+def measure_metrology_height(env, vfdb, gd, grid_state, opts, fpuset, fpu_config, 
                                   MET_HEIGHT_POSITIONS=None,
                                   MET_HIGHT_TARGET_EXPOSURE_MS=None):
 
@@ -58,11 +58,11 @@ def measure_metrology_height(env, vfdb, gd, grid_state, args, fpuset, fpu_config
     # home turntable
     safe_home_turntable(gd, grid_state)    
 
-    switch_backlight("off", manual_lamp_control=args.manual_lamp_control)
-    switch_ambientlight("off", manual_lamp_control=args.manual_lamp_control)
-    switch_fibre_backlight_voltage(0.0, manual_lamp_control=args.manual_lamp_control)
+    switch_backlight("off", manual_lamp_control=opts.manual_lamp_control)
+    switch_ambientlight("off", manual_lamp_control=opts.manual_lamp_control)
+    switch_fibre_backlight_voltage(0.0, manual_lamp_control=opts.manual_lamp_control)
 
-    with use_silhouettelight(manual_lamp_control=args.manual_lamp_control):
+    with use_silhouettelight(manual_lamp_control=opts.manual_lamp_control):
 
         MET_HEIGHT_CAMERA_CONF = { DEVICE_CLASS : BASLER_DEVICE_CLASS,
                                    IP_ADDRESS : MET_HEIGHT_CAMERA_IP_ADDRESS }
@@ -96,15 +96,15 @@ def measure_metrology_height(env, vfdb, gd, grid_state, args, fpuset, fpu_config
     
             image = fibre_ipath 
     
-            save_metrology_height_images(env, vfdb, args, fpu_config, fpu_id, images)
+            save_metrology_height_images(env, vfdb, opts, fpu_config, fpu_id, images)
 
 
 
-def eval_metrology_height(env, vfdb, gd, grid_state, args, fpuset, fpu_config,
+def eval_metrology_height(env, vfdb, gd, grid_state, opts, fpuset, fpu_config,
                           met_height_analysis_pars, met_height_evaluation_pars):
 
     for fpu_id in fpuset:
-        image = get_metrology_height_images(env, vfdb, args, fpu_config, fpu_id)
+        image = get_metrology_height_images(env, vfdb, opts, fpu_config, fpu_id)
 
 
         try:
@@ -126,7 +126,7 @@ def eval_metrology_height(env, vfdb, gd, grid_state, args, fpuset, fpu_config,
             result = TestResult.NA
             
 
-        save_metrology_height_result(env, vfdb, args, fpu_config, fpu_id,
+        save_metrology_height_result(env, vfdb, opts, fpu_config, fpu_id,
                                      metht_small_target_height=metht_small_target_height,
                                      metht_large_target_height= metht_large_target_height
                                      test_result=testResult,

@@ -4,7 +4,7 @@ from db.base import env, GIT_VERSION, TestResult, get_test_result, timestamp
 
 RECORD_TYPE='datum-repeatability'
 
-def  save_datum_repeatability_images(env, vfdb, args, fpu_config, fpu_id, images):
+def  save_datum_repeatability_images(env, vfdb, opts, fpu_config, fpu_id, images):
 
     # define two closures - one for the unique key, another for the stored value 
     def keyfunc(fpu_id):
@@ -21,10 +21,10 @@ def  save_datum_repeatability_images(env, vfdb, args, fpu_config, fpu_id, images
         return val
 
     
-    save_test_result(env, vfdb, fpuset, keyfunc, valfunc, verbosity=args.verbosity)
+    save_test_result(env, vfdb, fpuset, keyfunc, valfunc, verbosity=opts.verbosity)
 
 
-def  get_datum_repeatability_images(env, vfdb, args, fpu_config, fpu_id):
+def  get_datum_repeatability_images(env, vfdb, opts, fpu_config, fpu_id):
 
     # define two closures - one for the unique key, another for the stored value 
     def keyfunc(fpu_id):
@@ -32,10 +32,10 @@ def  get_datum_repeatability_images(env, vfdb, args, fpu_config, fpu_id):
         keybase = (serialnumber, RECORD_TYPE, 'images')
         return keybase
 
-    return get_test_result(env, vfdb, fpuset, keyfunc, verbosity=args.verbosity)
+    return get_test_result(env, vfdb, fpuset, keyfunc, verbosity=opts.verbosity)
     
     
-def  save_datum_repeatability_result(env, vfdb, args, fpu_config, fpu_id, coords=None,
+def  save_datum_repeatability_result(env, vfdb, opts, fpu_config, fpu_id, coords=None,
                                      datum_repeatability_mm=None,
                                      datum_repeatability_has_passed=None,
                                      errmsg="",
@@ -59,10 +59,10 @@ def  save_datum_repeatability_result(env, vfdb, args, fpu_config, fpu_id, coords
         return val
 
     
-    save_test_result(env, vfdb, fpuset, keyfunc, valfunc, verbosity=args.verbosity)
+    save_test_result(env, vfdb, fpuset, keyfunc, valfunc, verbosity=opts.verbosity)
 
 
-def  get_datum_repeatability_result(env, vfdb, args, fpu_config, fpu_id):
+def  get_datum_repeatability_result(env, vfdb, opts, fpu_config, fpu_id):
 
     # define two closures - one for the unique key, another for the stored value 
     def keyfunc(fpu_id):
@@ -70,13 +70,13 @@ def  get_datum_repeatability_result(env, vfdb, args, fpu_config, fpu_id):
         keybase = (serialnumber, RECORD_TYPE, 'result')
         return keybase
     
-    return get_test_result(env, vfdb, fpuset, keyfunc, verbosity=args.verbosity)
+    return get_test_result(env, vfdb, fpuset, keyfunc, verbosity=opts.verbosity)
 
-def  get_datum_repeatability_passed_p(env, vfdb, args, fpu_config, fpu_id):
+def  get_datum_repeatability_passed_p(env, vfdb, opts, fpu_config, fpu_id):
     """returns True if the latest datum repetability test for this FPU
     was passed successfully."""
     
-    val = get_datum_repeatability_result(env, vfdb, args, fpu_config, fpu_id)
+    val = get_datum_repeatability_result(env, vfdb, opts, fpu_config, fpu_id)
 
     if val is None:
         return False

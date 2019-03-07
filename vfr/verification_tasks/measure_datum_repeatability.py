@@ -46,7 +46,7 @@ from ImageAnalysisFuncs.analyze_positional_repeatability import (positional_repe
 
     
 
-def measure_datum_repeatability(env, vfdb, gd, grid_state, args, fpuset, fpu_config, 
+def measure_datum_repeatability(env, vfdb, gd, grid_state, opts, fpuset, fpu_config, 
                                 DATUM_REP_ITERATIONS=None,
                                 DATUM_REP_PASS=None,
                                 DATUM_REP_EXPOSURE_MS=None):
@@ -56,17 +56,17 @@ def measure_datum_repeatability(env, vfdb, gd, grid_state, args, fpuset, fpu_con
     # home turntable
     safe_home_turntable(gd, grid_state)    
 
-    switch_backlight("off", manual_lamp_control=args.manual_lamp_control)
-    switch_fibre_backlight_voltage(0.0, manual_lamp_control=args.manual_lamp_control)
+    switch_backlight("off", manual_lamp_control=opts.manual_lamp_control)
+    switch_fibre_backlight_voltage(0.0, manual_lamp_control=opts.manual_lamp_control)
 
-    with use_ambientlight(manual_lamp_control=args.manual_lamp_control):
+    with use_ambientlight(manual_lamp_control=opts.manual_lamp_control):
     
         # get sorted positions (this is needed because the turntable can only
         # move into one direction)
         for fpu_id, stage_position  in get_sorted_positions(fpuset, POS_REP_POSITIONS):
     
-            if (get_datum_repeatability_passed_p(env, vfdb, args, fpu_config, fpu_id) and (
-                    not args.repeat_passed_tests)):
+            if (get_datum_repeatability_passed_p(env, vfdb, opts, fpu_config, fpu_id) and (
+                    not opts.repeat_passed_tests)):
     
                 sn = fpu_config[fpu_id]['serialnumber']
                 print("FPU %s : datum repeatability test already passed, skipping test" % sn)
@@ -129,14 +129,14 @@ def measure_datum_repeatability(env, vfdb, gd, grid_state, args, fpuset, fpu_con
                        'moved_images' : moved_images }
             
     
-            save_datum_repeatability_images(env, vfdb, args, fpu_config, fpu_id, images)
+            save_datum_repeatability_images(env, vfdb, opts, fpu_config, fpu_id, images)
     
 
 
-def eval_datum_repeatability(env, vfdb, gd, grid_state, args, fpuset, fpu_config, pos_rep_analysis_pars):
+def eval_datum_repeatability(env, vfdb, gd, grid_state, opts, fpuset, fpu_config, pos_rep_analysis_pars):
 
     for fpu_id in fpuset:
-        images = get_datum_repeatability_images(env, vfdb, args, fpu_config, fpu_id, images)
+        images = get_datum_repeatability_images(env, vfdb, opts, fpu_config, fpu_id, images)
 
         def analysis_func(ipath):
             return positional_repeatability_image_analysis(ipath, **pos_rep_analysis_pars)
@@ -165,7 +165,7 @@ def eval_datum_repeatability(env, vfdb, gd, grid_state, args, fpuset, fpu_config
             datum_repeatability_has_passed = TestResult.NA
             
 
-        save_datum_repeatability_result(env, vfdb, args, fpu_config, fpu_id, coords=coords,
+        save_datum_repeatability_result(env, vfdb, opts, fpu_config, fpu_id, coords=coords,
                                         datum_repeatability_mm=datum_repetability_mm,
                                         datum_repeatability_has_passed=datum_repetability_has_passed,
                                         ermmsg=errmsg,

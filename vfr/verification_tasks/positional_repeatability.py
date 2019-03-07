@@ -47,7 +47,7 @@ from Gearbox.gear_correction import GearboxFitError, fit_gearbox_correction
 
 
     
-def measure_positional_repeatability(env, vfdb, gd, grid_state, args, fpuset, fpu_config,
+def measure_positional_repeatability(env, vfdb, gd, grid_state, opts, fpuset, fpu_config,
                                      POSITION_REP_WAVEFORM_PARS=None,
                                      POSITIONAL_REP_ITERATIONS=None,
                                      POSITION_REP_POSITIONS=None,
@@ -59,10 +59,10 @@ def measure_positional_repeatability(env, vfdb, gd, grid_state, args, fpuset, fp
     # home turntable
     safe_home_turntable(gd, grid_state)    
 
-    switch_backlight("off", manual_lamp_control=args.manual_lamp_control)
-    switch_fibre_backlight_voltage(0.0, manual_lamp_control=args.manual_lamp_control)
+    switch_backlight("off", manual_lamp_control=opts.manual_lamp_control)
+    switch_fibre_backlight_voltage(0.0, manual_lamp_control=opts.manual_lamp_control)
 
-    with use_ambientlight(manual_lamp_control=args.manual_lamp_control):
+    with use_ambientlight(manual_lamp_control=opts.manual_lamp_control):
         # initialize pos_rep camera
         # set pos_rep camera exposure time to POSITIONAL_REP_EXPOSURE milliseconds
         POS_REP_CAMERA_CONF = { DEVICE_CLASS : BASLER_DEVICE_CLASS,
@@ -75,18 +75,18 @@ def measure_positional_repeatability(env, vfdb, gd, grid_state, args, fpuset, fp
         # move into one direction)
         for fpu_id, stage_position  in get_sorted_positions(fpuset, POS_REP_POSITIONS):
             
-            if not get_datum_repeatability_passed_p(env, vfdb, args, fpu_config, fpu_id):
+            if not get_datum_repeatability_passed_p(env, vfdb, opts, fpu_config, fpu_id):
                 print("FPU %s: skipping positional repeatability measurement because"
                       " there is no passed datum repeatability test" % fpu_config['serialnumber'])
                 continue
     
-            if not get_pupil_alignment_passed_p(env, vfdb, args, fpu_config, fpu_id):
+            if not get_pupil_alignment_passed_p(env, vfdb, opts, fpu_config, fpu_id):
                 print("FPU %s: skipping positional repeatability measurement because"
                       " there is no passed pupil alignment test" % fpu_config['serialnumber'])
                 continue
     
-            if (get_positional_repeatability_passed_p(env, vfdb, args, fpu_config, fpu_id) and (
-                    not args.repeat_passed_tests)):
+            if (get_positional_repeatability_passed_p(env, vfdb, opts, fpu_config, fpu_id) and (
+                    not opts.repeat_passed_tests)):
     
                 sn = fpu_config[fpu_id]['serialnumber']
                 print("FPU %s : positional repeatability test already passed, skipping test" % sn)
@@ -163,12 +163,12 @@ def measure_positional_repeatability(env, vfdb, gd, grid_state, args, fpuset, fp
         
             
     
-            save_positional_repeatability_images(env, vfdb, args, fpu_config, fpu_id, image_dict,
+            save_positional_repeatability_images(env, vfdb, opts, fpu_config, fpu_id, image_dict,
                                                  waveform_pars=POSITION_REP_WAVEFORM_PARS)
     
 
 
-def eval_positional_repeatability(env, vfdb, gd, grid_state, args, fpuset, fpu_config,
+def eval_positional_repeatability(env, vfdb, gd, grid_state, opts, fpuset, fpu_config,
                                   pos_rep_calibration_pars,
                                   pos_rep_analysis_pars,
                                   pos_rep_evaluation_pars):
@@ -178,7 +178,7 @@ def eval_positional_repeatability(env, vfdb, gd, grid_state, args, fpuset, fpu_c
 
     
     for fpu_id in fpuset:
-        images = get_positional_repeatability_images(env, vfdb, args, fpu_config, fpu_id, images)
+        images = get_positional_repeatability_images(env, vfdb, opts, fpu_config, fpu_id, images)
 
         
         try:
@@ -207,7 +207,7 @@ def eval_positional_repeatability(env, vfdb, gd, grid_state, args, fpuset, fpu_c
             positional_repeatability_has_passed = TestResult.NA
             
 
-        save_positional_repeatability_result(env, vfdb, args, fpu_config, fpu_id,
+        save_positional_repeatability_result(env, vfdb, opts, fpu_config, fpu_id,
                                              pos_rep_calibration_pars=pos_rep_calibration_pars,
                                              analysis_results=analysis_results,
                                              positional_repeatability_mm=positional_repeatability_mm, 

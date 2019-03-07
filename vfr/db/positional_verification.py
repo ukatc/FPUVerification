@@ -2,7 +2,7 @@ from __future__ import print_function, division,  absolute_import
 
 from db.base import env, GIT_VERSION, TestResult, get_test_result, timestamp  
 
-def  save_positional_verification_images(env, vfdb, args, fpu_config, fpu_id, images_dict):
+def  save_positional_verification_images(env, vfdb, opts, fpu_config, fpu_id, images_dict):
 
     # define two closures - one for the unique key, another for the stored value 
     def keyfunc(fpu_id):
@@ -19,10 +19,10 @@ def  save_positional_verification_images(env, vfdb, args, fpu_config, fpu_id, im
         return val
 
     
-    save_test_result(env, vfdb, fpuset, keyfunc, valfunc, verbosity=args.verbosity)
+    save_test_result(env, vfdb, fpuset, keyfunc, valfunc, verbosity=opts.verbosity)
 
 
-def  get_positional_verification_images(env, vfdb, args, fpu_config, fpu_id):
+def  get_positional_verification_images(env, vfdb, opts, fpu_config, fpu_id):
 
     # define two closures - one for the unique key, another for the stored value 
     def keyfunc(fpu_id):
@@ -30,10 +30,10 @@ def  get_positional_verification_images(env, vfdb, args, fpu_config, fpu_id):
         keybase = (serialnumber, 'positional-verification', 'images')
         return keybase
 
-    return get_test_result(env, vfdb, fpuset, keyfunc, verbosity=args.verbosity)
+    return get_test_result(env, vfdb, fpuset, keyfunc, verbosity=opts.verbosity)
     
     
-def  save_positional_verification_result(env, vfdb, args, fpu_config, fpu_id,
+def  save_positional_verification_result(env, vfdb, opts, fpu_config, fpu_id,
                                          pos_rep_calibration_pars=None,
                                          analysis_results=None,
                                          posver_errors=None,
@@ -61,4 +61,4 @@ def  save_positional_verification_result(env, vfdb, args, fpu_config, fpu_id,
         return val
 
     
-    save_test_result(env, vfdb, fpuset, keyfunc, valfunc, verbosity=args.verbosity)
+    save_test_result(env, vfdb, fpuset, keyfunc, valfunc, verbosity=opts.verbosity)

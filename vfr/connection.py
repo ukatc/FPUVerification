@@ -16,7 +16,7 @@ def check_ping_ok(ipaddr):
 
 
 
-def check_connection(args, name, address):
+def check_connection(opts, name, address):
     print("testing connection to %s .." % name, end='')
     flush()
     
@@ -27,13 +27,13 @@ def check_connection(args, name, address):
         print("... OK")
 
 
-def init_driver(args, max_id, protected=True):
+def init_driver(opts, max_id, protected=True):
     if protected:
         rd = FpuGridDriver.GridDriver(max_id+1)
     else:
         rd = FpuGridDriver.UnprotectedGridDriver(max_id+1)
 
-    gateway_adr = [ FpuGridDriver.GatewayAddress(args.gateway_address, args.gateway_port) ]
+    gateway_adr = [ FpuGridDriver.GatewayAddress(opts.gateway_address, opts.gateway_port) ]
 
     print("connecting grid:", rd.connect(address_list=gateway_adr))
 
@@ -42,7 +42,7 @@ def init_driver(args, max_id, protected=True):
     return rd, grid_state
 
 
-def check_can_connection(rd, grid_state, args, fpu_id):
+def check_can_connection(rd, grid_state, opts, fpu_id):
     print("checking CAN connection to FPU %i ..." % fpu_id, end='')
     flush()
             
@@ -52,12 +52,12 @@ def check_can_connection(rd, grid_state, args, fpu_id):
     return rv == FpuGridDriver.ethercanif.DE_OK
 
 
-def ping_fpus(gd, grid_state, args):    
+def ping_fpus(gd, grid_state, opts):    
     
     gd.pingFPUs(grid_state)
     
 
-    if args.resetFPUs:
+    if opts.resetFPUs:
         print("resetting FPUs")
         gd.resetFPUs(grid_state)
         print("OK")

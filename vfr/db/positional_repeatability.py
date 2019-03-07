@@ -4,7 +4,7 @@ from db.base import env, GIT_VERSION, TestResult, get_test_result, timestamp
 
 RECORD_TYPE='positional-repeatability'
 
-def  save_positional_repeatability_images(env, vfdb, args, fpu_config, fpu_id,
+def  save_positional_repeatability_images(env, vfdb, opts, fpu_config, fpu_id,
                                           images_dict, waveform_pars={}):
 
     # define two closures - one for the unique key, another for the stored value 
@@ -23,10 +23,10 @@ def  save_positional_repeatability_images(env, vfdb, args, fpu_config, fpu_id,
         return val
 
     
-    save_test_result(env, vfdb, fpuset, keyfunc, valfunc, verbosity=args.verbosity)
+    save_test_result(env, vfdb, fpuset, keyfunc, valfunc, verbosity=opts.verbosity)
 
 
-def  get_positional_repeatability_images(env, vfdb, args, fpu_config, fpu_id):
+def  get_positional_repeatability_images(env, vfdb, opts, fpu_config, fpu_id):
 
     # define two closures - one for the unique key, another for the stored value 
     def keyfunc(fpu_id):
@@ -34,10 +34,10 @@ def  get_positional_repeatability_images(env, vfdb, args, fpu_config, fpu_id):
         keybase = (serialnumber, RECORD_TYPE, 'images')
         return keybase
 
-    return get_test_result(env, vfdb, fpuset, keyfunc, verbosity=args.verbosity)
+    return get_test_result(env, vfdb, fpuset, keyfunc, verbosity=opts.verbosity)
     
     
-def  save_positional_repeatability_result(env, vfdb, args, fpu_config, fpu_id,
+def  save_positional_repeatability_result(env, vfdb, opts, fpu_config, fpu_id,
                                           pos_rep_calibration_pars=None,
                                           analysis_results=None,
                                           positional_repeatability_mm=None,
@@ -65,11 +65,11 @@ def  save_positional_repeatability_result(env, vfdb, args, fpu_config, fpu_id,
         return val
 
     
-    save_test_result(env, vfdb, fpuset, keyfunc, valfunc, verbosity=args.verbosity)
+    save_test_result(env, vfdb, fpuset, keyfunc, valfunc, verbosity=opts.verbosity)
     
 
 
-def  get_positional_repeatability_result(env, vfdb, args, fpu_config, fpu_id):
+def  get_positional_repeatability_result(env, vfdb, opts, fpu_config, fpu_id):
 
     # define two closures - one for the unique key, another for the stored value 
     def keyfunc(fpu_id):
@@ -78,14 +78,14 @@ def  get_positional_repeatability_result(env, vfdb, args, fpu_config, fpu_id):
         return keybase
 
     
-    return get_test_result(env, vfdb, fpuset, keyfunc, verbosity=args.verbosity)
+    return get_test_result(env, vfdb, fpuset, keyfunc, verbosity=opts.verbosity)
 
     
-def  get_positional_repeatability_passed_p(env, vfdb, args, fpu_config, fpu_id):
+def  get_positional_repeatability_passed_p(env, vfdb, opts, fpu_config, fpu_id):
     """returns True if the latest positional repetability test for this FPU
     was passed successfully."""
     
-    val = get_positional_repeatability_result(env, vfdb, args, fpu_config, fpu_id)
+    val = get_positional_repeatability_result(env, vfdb, opts, fpu_config, fpu_id)
 
     if val is None:
         return False

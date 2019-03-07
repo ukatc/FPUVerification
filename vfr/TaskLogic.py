@@ -249,7 +249,7 @@ def expand_tasks(goal, tasks, expansion, delete=False):
 
     return tasks
                       
-def resolve(tasks, env, vfdb, args, fpu_config, fpuset) :
+def resolve(tasks, env, vfdb, opts, fpu_config, fpuset) :
     tasks = set(tasks)
                       
     for tsk in tasks:
@@ -273,8 +273,8 @@ def resolve(tasks, env, vfdb, args, fpu_config, fpuset) :
         # and are not already passed by all FPUs)
         for tsk, testfun, cond_expansion in conditional_dependencies:
             if tsk in tasks:
-                tfun = lambda fpu_id: testfun(env, vfdb, args, fpu_config, fpu_id)
-                if (not all_true(tfun, fpuset)) or args.repeat_passed_tests:
+                tfun = lambda fpu_id: testfun(env, vfdb, opts, fpu_config, fpu_id)
+                if (not all_true(tfun, fpuset)) or opts.repeat_passed_tests:
                     tasks = expand_tasks(tasks, tsk, cond_expansion, delete=True)
                     
         # check for equality with last iteration

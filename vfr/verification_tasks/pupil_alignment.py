@@ -62,7 +62,7 @@ def generate_positions():
     
     yield (ALPHA_DATUM_OFFSET + a_near, 0 + b_near)
 
-def measure_pupil_alignment(env, vfdb, gd, grid_state, args, fpuset, fpu_config,
+def measure_pupil_alignment(env, vfdb, gd, grid_state, opts, fpuset, fpu_config,
                             PUPIL_ALN_POSITIONS=None,
                             PUPIL_ALN_LINPOSITIONS=None,
                             PUPIL_ALN_EXPOSURE_MS=None):
@@ -73,11 +73,11 @@ def measure_pupil_alignment(env, vfdb, gd, grid_state, args, fpuset, fpu_config,
     safe_home_turntable(gd, grid_state)    
     home_linear_stage()    
 
-    switch_ambientlight("off", manual_lamp_control=args.manual_lamp_control)
-    switch_silhouettelight("off", manual_lamp_control=args.manual_lamp_control)
-    switch_fibre_backlight_voltage(5.0, manual_lamp_control=args.manual_lamp_control)
+    switch_ambientlight("off", manual_lamp_control=opts.manual_lamp_control)
+    switch_silhouettelight("off", manual_lamp_control=opts.manual_lamp_control)
+    switch_fibre_backlight_voltage(5.0, manual_lamp_control=opts.manual_lamp_control)
 
-    with use_backlight("on", manual_lamp_control=args.manual_lamp_control):
+    with use_backlight("on", manual_lamp_control=opts.manual_lamp_control):
     
         # initialize pos_rep camera
         # set pos_rep camera exposure time to DATUM_REP_EXPOSURE milliseconds
@@ -91,8 +91,8 @@ def measure_pupil_alignment(env, vfdb, gd, grid_state, args, fpuset, fpu_config,
         # move into one direction)
         for fpu_id, stage_position  in get_sorted_positions(fpuset, PUP_ALN_POSITIONS):
     
-            if (get_pupil_alignment_passed_p(env, vfdb, args, fpu_config, fpu_id) and (
-                    not args.repeat_passed_tests)):
+            if (get_pupil_alignment_passed_p(env, vfdb, opts, fpu_config, fpu_id) and (
+                    not opts.repeat_passed_tests)):
     
                 sn = fpu_config[fpu_id]['serialnumber']
                 print("FPU %s : pupil alignment test already passed, skipping test" % sn)
@@ -134,16 +134,16 @@ def measure_pupil_alignment(env, vfdb, gd, grid_state, args, fpuset, fpu_config,
     
             gd.findDatum(grid_state, fpuset=[fpu_id])
     
-            save_pupil_alignment_images(env, vfdb, args, fpu_config, fpu_id, images)
+            save_pupil_alignment_images(env, vfdb, opts, fpu_config, fpu_id, images)
     
     
 
-def eval_pupil_alignment(env, vfdb, gd, grid_state, args, fpuset, fpu_config,
+def eval_pupil_alignment(env, vfdb, gd, grid_state, opts, fpuset, fpu_config,
                          PUPALGN_CALIBRATION_PARS=None,
                          PUPALGN_ANALYSIS_PARS=None, PUPIL_ALN_PASS=NaN):
 
     for fpu_id in fpuset:
-        images = get_pupil_alignment_images(env, vfdb, args, fpu_config, fpu_id, images)
+        images = get_pupil_alignment_images(env, vfdb, opts, fpu_config, fpu_id, images)
 
         def analysis_func(ipath):
             return pupalnCoordinates(ipath, PUPALGN_CALIBRATION_PARS=PUPALGN_CALIBRATION_PARS,
@@ -172,7 +172,7 @@ def eval_pupil_alignment(env, vfdb, gd, grid_state, args, fpuset, fpu_config,
                                       'beta_error' : pupalnBetaErr,
                                       'total_error' :pupalnTotalErr}
         
-        save_pupil_alignment_result(env, vfdb, args, fpu_config, fpu_id,
+        save_pupil_alignment_result(env, vfdb, opts, fpu_config, fpu_id,
                                     calibration_pars=PUPALGN_CALIBRATION_PARS,
                                     coords=coords,
                                     pupil_alignment_measures=pupil_alignment_measures,

@@ -4,7 +4,7 @@ from db.base import env, GIT_VERSION, TestResult, get_test_result, timestamp
 
 RECORD_TYPE = 'metrology-calibration'
 
-def  save_metrology_calibration_images(env, vfdb, args, fpu_config, fpu_id, images):
+def  save_metrology_calibration_images(env, vfdb, opts, fpu_config, fpu_id, images):
 
     # define two closures - one for the unique key, another for the stored value 
     def keyfunc(fpu_id):
@@ -21,10 +21,10 @@ def  save_metrology_calibration_images(env, vfdb, args, fpu_config, fpu_id, imag
         return val
 
     
-    save_test_result(env, vfdb, fpuset, keyfunc, valfunc, verbosity=args.verbosity)
+    save_test_result(env, vfdb, fpuset, keyfunc, valfunc, verbosity=opts.verbosity)
 
 
-def  get_metrology_calibration_images(env, vfdb, args, fpu_config, fpu_id):
+def  get_metrology_calibration_images(env, vfdb, opts, fpu_config, fpu_id):
 
     # define two closures - one for the unique key, another for the stored value 
     def keyfunc(fpu_id):
@@ -32,10 +32,10 @@ def  get_metrology_calibration_images(env, vfdb, args, fpu_config, fpu_id):
         keybase = (serialnumber, RECORD_TYPE, 'images')
         return keybase
 
-    return get_test_result(env, vfdb, fpuset, keyfunc, verbosity=args.verbosity)
+    return get_test_result(env, vfdb, fpuset, keyfunc, verbosity=opts.verbosity)
     
     
-def  save_metrology_calibration_result(env, vfdb, args, fpu_config, fpu_id,
+def  save_metrology_calibration_result(env, vfdb, opts, fpu_config, fpu_id,
                                        coords=None, fibre_distance=None,
                                        errmsg=""
                                        analysis_version=None):
@@ -58,4 +58,4 @@ def  save_metrology_calibration_result(env, vfdb, args, fpu_config, fpu_id,
         return val
 
     
-    save_test_result(env, vfdb, fpuset, keyfunc, valfunc, verbosity=args.verbosity)
+    save_test_result(env, vfdb, fpuset, keyfunc, valfunc, verbosity=opts.verbosity)

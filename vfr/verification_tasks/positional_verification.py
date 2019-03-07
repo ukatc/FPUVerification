@@ -67,7 +67,7 @@ def generate_tested_positions(niterations):
 
     return positions
     
-def measure_positional_verification(env, vfdb, gd, grid_state, args, fpuset, fpu_config, 
+def measure_positional_verification(env, vfdb, gd, grid_state, opts, fpuset, fpu_config, 
                                      POSITIONAL_VER_ITERATIONS=None,
                                      POSITION_REP_POSITIONS=None,
                                      POSITIONAL_VER_EXPOSURE_MS=None):
@@ -77,11 +77,11 @@ def measure_positional_verification(env, vfdb, gd, grid_state, args, fpuset, fpu
     
     safe_home_turntable(gd, grid_state)    
 
-    switch_backlight("off", manual_lamp_control=args.manual_lamp_control)
-    switch_ambientlight("on", manual_lamp_control=args.manual_lamp_control)
-    switch_fibre_backlight_voltage(0.0, manual_lamp_control=args.manual_lamp_control)
+    switch_backlight("off", manual_lamp_control=opts.manual_lamp_control)
+    switch_ambientlight("on", manual_lamp_control=opts.manual_lamp_control)
+    switch_fibre_backlight_voltage(0.0, manual_lamp_control=opts.manual_lamp_control)
 
-    with use_ambientlight(manual_lamp_control=args.manual_lamp_control):
+    with use_ambientlight(manual_lamp_control=opts.manual_lamp_control):
         # initialize pos_rep camera
         # set pos_rep camera exposure time to POSITIONAL_VER_EXPOSURE milliseconds
         POS_VER_CAMERA_CONF = { DEVICE_CLASS : BASLER_DEVICE_CLASS,
@@ -95,29 +95,29 @@ def measure_positional_verification(env, vfdb, gd, grid_state, args, fpuset, fpu
         # move into one direction)
         for fpu_id, stage_position  in get_sorted_positions(fpuset, POS_REP_POSITIONS):
             
-            if not get_datum_verification_passed_p(env, vfdb, args, fpu_config, fpu_id):
+            if not get_datum_verification_passed_p(env, vfdb, opts, fpu_config, fpu_id):
                 print("FPU %s: skipping positional verification measurement because"
                       " there is no passed datum verification test" % fpu_config['serialnumber'])
                 continue
     
-            if not get_pupil_alignment_passed_p(env, vfdb, args, fpu_config, fpu_id):
+            if not get_pupil_alignment_passed_p(env, vfdb, opts, fpu_config, fpu_id):
                 print("FPU %s: skipping positional verification measurement because"
                       " there is no passed pupil alignment test" % fpu_config['serialnumber'])
                 continue
     
-            if not get_positional_repeatability_passed_p(env, vfdb, args, fpu_config, fpu_id):
+            if not get_positional_repeatability_passed_p(env, vfdb, opts, fpu_config, fpu_id):
                 print("FPU %s: skipping positional verification measurement because"
                       " there is no passed positional repetability test" % fpu_config['serialnumber'])
                 continue
     
-            if (get_datum_verification_passed_p(env, vfdb, args, fpu_config, fpu_id) and (
-                    not args.repeat_passed_tests)):
+            if (get_datum_verification_passed_p(env, vfdb, opts, fpu_config, fpu_id) and (
+                    not opts.repeat_passed_tests)):
     
                 sn = fpu_config[fpu_id]['serialnumber']
                 print("FPU %s : datum verification test already passed, skipping test" % sn)
                 continue
             
-            pr_result = get_positional_repeatability_result(env, vfdb, args, fpu_config, fpu_id)
+            pr_result = get_positional_repeatability_result(env, vfdb, opts, fpu_config, fpu_id)
             gearbox_correction = pr_result['gearbox_correction']
             fpu_coeffs = gearbox_correction['coeffs']
             
@@ -171,11 +171,11 @@ def measure_positional_verification(env, vfdb, gd, grid_state, args, fpuset, fpu
                 image_dict[(k, alpha, beta)] = ipath
     
             # store dict of image paths
-            save_positional_verification_images(env, vfdb, args, fpu_config, fpu_id, image_dict)
+            save_positional_verification_images(env, vfdb, opts, fpu_config, fpu_id, image_dict)
     
 
 
-def eval_positional_verification(env, vfdb, gd, grid_state, args, fpuset, fpu_config,
+def eval_positional_verification(env, vfdb, gd, grid_state, opts, fpuset, fpu_config,
                                   pos_rep_analysis_pars, pos_ver_evaluation_pars):
 
     def analysis_func(ipath):
@@ -183,7 +183,7 @@ def eval_positional_verification(env, vfdb, gd, grid_state, args, fpuset, fpu_co
 
     
     for fpu_id in fpuset:
-        image_dict = get_positional_verification_images(env, vfdb, args, fpu_config, fpu_id)
+        image_dict = get_positional_verification_images(env, vfdb, opts, fpu_config, fpu_id)
 
         
         try:
@@ -210,7 +210,7 @@ def eval_positional_verification(env, vfdb, gd, grid_state, args, fpuset, fpu_co
             positional_verification_has_passed = TestResult.NA
             
 
-        save_positional_verification_result(env, vfdb, args, fpu_config, fpu_id, analysis_results=analysis_results,
+        save_positional_verification_result(env, vfdb, opts, fpu_config, fpu_id, analysis_results=analysis_results,
                                             posver_errors=posver_errors,
                                             positional_verification_mm=positional_verification_mm, 
                                             positional_verification_has_passed=positional_verification_has_passed,

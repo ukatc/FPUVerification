@@ -33,6 +33,6 @@ def go_collision_test_pos_mockup(fpu_id):
     os.kill(gw_pid, signal.SIGRTMIN)
     
         
-def go_collision_test_pos(fpu_id, args):
-    if args.mockup:
+def go_collision_test_pos(fpu_id, opts):
+    if opts.mockup:
         go_collision_test_pos_mockup(fpu_id)
