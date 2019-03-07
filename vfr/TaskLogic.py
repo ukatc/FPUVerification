@@ -8,28 +8,29 @@ from vrf.db.positional_repetability import get_positional_repeatability_passed_p
 
 class T:
     # evaluation of measurements
-    EVAL_DATUM_REP                 = "eval_datum_repeatability"
-    EVAL_MET_CAL                   = "ecval_metrology_calibration"
-    EVAL_MET_HEIGHT                = "eval_metrology_target_height"
-    EVAL_POS_REP                   = "eval_positional_repeatability"
-    EVAL_PUPIL_ALGN                = "eval_pupil_alignment"
+    EVAL_DATUM_REP                 = "eval_datum_rep"
+    EVAL_MET_CAL                   = "eval_met_cal"
+    EVAL_MET_HEIGHT                = "eval_met_height"
+    EVAL_POS_REP                   = "eval_pos_rep"
+    EVAL_PUPIL_ALGN                = "eval_pup_align"
     # measurements
-    MEASURE_DATUM_REP              = "measure_datum_repeatability"
-    MEASURE_MET_CAL                = "measure_metrology_calibration"
-    MEASURE_MET_HEIGHT             = "measure_metrology_target_height"
-    MEASURE_POS_REP                = "measure_positional_repeatability"
-    MEASURE_PUPIL_ALGN             = "measure_pupil_alignment"
+    MEASURE_DATUM_REP              = "measure_datum_rep"
+    MEASURE_MET_CAL                = "measure_met_cal"
+    MEASURE_MET_HEIGHT             = "measure_met_height"
+    MEASURE_POS_REP                = "measure_pos_rep"
+    MEASURE_PUPIL_ALGN             = "measure_pup_align"
     # conditional dependencies (can be skipped if done once)
-    REQ_DATUM_REP_PASSED           = "Requires datum repetability test passed"
-    REQ_FUNCTIONAL_PASSED          = "Requires functional test & limit characterisation passed"
-    REQ_POS_REP_PASSED             = "require positional repetability test passed"
-    REQ_PUP_ALGN_PASSED            = "Requires pupil alignment test passed"
+    REQ_DATUM_REP_PASSED           = "req_datum_repeatability_passed"
+    REQ_FUNCTIONAL_PASSED          = "req_functional_test_passed"
+    REQ_POS_REP_PASSED             = "req_positional_repeatability_passed"
+    REQ_PUP_ALGN_PASSED            = "req_pupil_alignment_passed"
     # tasks which pack measurements and evaluation in pairs
     TASK_EVAL_ALL                  = "evaluate_all"
     TASK_INIT_GD                   = "initialize_grid_driver"
     TASK_INIT_RD                   = "initialize_unprotected_fpu_driver"
-    TASK_MEASURE_ALL               = "measure_FPUs"
-    TASK_REFERENCE                 = "reference_FPU_step_counters"
+    TASK_MEASURE_ALL               = "measure_all"
+    TASK_REFERENCE                 = "reference_step_counters"
+    TASK_SELFTEST                  = "selftest"
     TASK_REPORT                    = "report"
     TASK_DUMP                      = "dump"
     # elementary tests
@@ -49,65 +50,71 @@ class T:
     TST_INIT                       = "init"
     TST_INITPOS                    = "init_positions"
     TST_LIMITS                     = "test_limits"
-    TST_MET_CAL                    = "test_metrology_calibration"
-    TST_MET_CAL_CAM_CONNECTION     = "test_metrology_camera_connection"
-    TST_MET_HEIGHT_CAM_CONNECTION  = "test_metrology_height_camera_connection"
-    TST_POS_REP                    = "test_positional_repeatability"
-    TST_POS_REP_CAM_CONNECTION     = "test_positional_repetability_camera_connection"
-    TST_POS_VER                    = "test_positional_verification"
-    TST_PUPIL_ALGN                 = "test_pupil_alignment"
-    TST_PUPIL_ALGN_CAM_CONNECTION  = "test_pupil_alignment_camera__connection"
+    TST_MET_CAL                    = "test_met_cal"
+    TST_MET_CAL_CAM_CONNECTION     = "test_met_camera_connection"
+    TST_MET_HEIGHT_CAM_CONNECTION  = "test_met_height_camera_connection"
+    TST_POS_REP                    = "test_pos_rep"
+    TST_POS_REP_CAM_CONNECTION     = "test_pos_repetability_camera_connection"
+    TST_POS_VER                    = "test_pos_ver"
+    TST_PUPIL_ALGN                 = "test_pup_align"
+    TST_PUPIL_ALGN_CAM_CONNECTION  = "test_pup_alignment_camera_connection"
 
 
-DEFAULT_TASKS = [T.TST_GATEWAY_CONNECTION,
-                 T.TST_CAN_CONNECTION,
-                 T.TST_FLASH,
-                 T.TST_INITPOS,
-                 T.TST_DATUM,
-                 T.TST_CDECT,
-                 T.TST_ALPHA_MAX,
-                 T.TST_BETA_MAX,
-                 T.TST_BETA_MIN,
-                 T.TST_DATUM_REP,
-                 T.TST_MET_CAL,
-                 T.TST_PUPIL_ALGN,
-                 T.TST_POS_REP,
-                 T.TST_POS_VER]
+DEFAULT_TASKS = [T.TASK_SELFTEST    ,
+                 T.TASK_EVAL_ALL    ,
+                 T.TASK_MEASURE_ALL ,
+                 T.TASK_REPORT      ,]
 
-usertasks = set([T.TST_GATEWAY_CONNECTION       , 
-                 T.TST_CAN_CONNECTION           , 
-                 T.TST_POS_REP_CAM_CONNECTION   , 
-                 T.TST_MET_CAL_CAM_CONNECTION   , 
-                 T.TST_MET_HEIGHT_CAM_CONNECTION, 
-                 T.TST_PUPIL_ALGN_CAM_CONNECTION, 
-                 T.TST_DATUM                    , 
-                 T.TST_DATUM_ALPHA              , 
-                 T.TST_DATUM_BETA               , 
-                 T.TST_COLLDETECT               , 
-                 T.TST_ALPHA_MIN                , 
-                 T.TST_ALPHA_MAX                , 
-                 T.TST_BETA_MAX                 , 
-                 T.TST_BETA_MIN                 , 
-                 T.TST_FUNCTIONAL               , 
-                 T.TST_INIT                     , 
-                 T.TST_FLASH                    , 
-                 T.TST_INITPOS                  , 
-                 T.TST_LIMITS                   , 
-                 T.TST_DATUM_REP                , 
-                 T.MEASURE_DATUM_REP            , 
-                 T.EVAL_DATUM_REP               , 
-                 T.TST_MET_CAL                  , 
-                 T.MEASURE_MET_CAL              , 
-                 T.EVAL_MET_CAL                 , 
-                 T.TST_POS_REP                  , 
-                 T.MEASURE_POS_REP              , 
-                 T.EVAL_POS_REP                 , 
-                 T.TST_POS_VER                  , 
-                 T.MEASURE_MET_HEIGHT           ,                     
-                 T.EVAL_MET_HEIGHT              , 
-                 T.TST_PUPIL_ALGN               , 
-                 T.MEASURE_PUPIL_ALGN           , 
-                 T.EVAL_PUPIL_ALGN              ,    ])
+usertasks = set([ T.EVAL_DATUM_REP               , 
+                  T.EVAL_DATUM_REP               ,  
+                  T.EVAL_MET_CAL                 , 
+                  T.EVAL_MET_CAL                 ,  
+                  T.EVAL_MET_HEIGHT              , 
+                  T.EVAL_MET_HEIGHT              ,  
+                  T.EVAL_POS_REP                 , 
+                  T.EVAL_POS_REP                 ,  
+                  T.EVAL_PUPIL_ALGN              ,
+                  T.EVAL_PUPIL_ALGN              ,                    
+                  T.MEASURE_DATUM_REP            , 
+                  T.MEASURE_DATUM_REP            ,  
+                  T.MEASURE_MET_CAL              , 
+                  T.MEASURE_MET_CAL              ,  
+                  T.MEASURE_MET_HEIGHT           ,  
+                  T.MEASURE_MET_HEIGHT           ,                     
+                  T.MEASURE_POS_REP              , 
+                  T.MEASURE_POS_REP              ,  
+                  T.MEASURE_PUPIL_ALGN           , 
+                  T.MEASURE_PUPIL_ALGN           ,  
+                  T.TASK_DUMP                    ,
+                  T.TASK_MEASURE_ALL             ,
+                  T.TASK_REFERENCE               ,
+                  T.TASK_REPORT                  ,
+                  T.TASK_SELFTEST                ,
+                  T.TST_ALPHA_MAX                , 
+                  T.TST_ALPHA_MIN                , 
+                  T.TST_BETA_MAX                 , 
+                  T.TST_BETA_MIN                 , 
+                  T.TST_CAN_CONNECTION           , 
+                  T.TST_COLLDETECT               , 
+                  T.TST_DATUM                    , 
+                  T.TST_DATUM_ALPHA              , 
+                  T.TST_DATUM_BETA               , 
+                  T.TST_DATUM_REP                , 
+                  T.TST_FLASH                    , 
+                  T.TST_FUNCTIONAL               , 
+                  T.TST_GATEWAY_CONNECTION       , 
+                  T.TST_INIT                     , 
+                  T.TST_INITPOS                  , 
+                  T.TST_LIMITS                   , 
+                  T.TST_MET_CAL                  , 
+                  T.TST_MET_CAL_CAM_CONNECTION   , 
+                  T.TST_MET_HEIGHT_CAM_CONNECTION, 
+                  T.TST_POS_REP                  , 
+                  T.TST_POS_REP_CAM_CONNECTION   , 
+                  T.TST_POS_VER                  , 
+                  T.TST_PUPIL_ALGN               , 
+                  T.TST_PUPIL_ALGN_CAM_CONNECTION, 
+                  T.TASK_EVAL_ALL    ,])
 
 
 # task dependencies (where doing one task requires doing another task before)
@@ -131,29 +138,30 @@ task_dependencies = [ (T.TST_CAN_CONNECTION, [T.TST_GATEWAY_CONNECTION, T.TASK_I
 
                       (T.TST_COLLDETECT, [T.REQ_DATUM_PASSED, T.TASK_REFERENCE ]),
                       
-                      (T.MEASURE_DATUM_REP, [T.TST_POS_REP_CAM_CONNECTION, T.REQ_DATUM_PASSED,
+                      (T.MEASURE_DATUM_REP, [T.TASK_SELFTEST, T.TST_POS_REP_CAM_CONNECTION, T.REQ_DATUM_PASSED,
                                              T.REQ_COLLDECT_PASSED, T.TASK_REFERENCE]),
                       
-                      (T.MEASURE_POS_REP, [T.TST_POS_REP_CAM_CONNECTION, T.TASK_REFERENCE,
+                      (T.MEASURE_POS_REP, [T.TASK_SELFTEST, T.TST_POS_REP_CAM_CONNECTION, T.TASK_REFERENCE,
                                            T.REQ_DATUM_PASSED, T.REQ_COLLDECT_PASSED,
                                            # T.REQ_PUP_ALGN_PASSED,
                                            T.REQ_DATUM_REP_PASSED]),
                       
-                      (T.TST_POS_VER, [T.TST_POS_REP_CAM_CONNECTION,
+                      (T.TST_POS_VER, [T.TASK_SELFTEST, T.TST_POS_REP_CAM_CONNECTION,
                                        T.REQ_DATUM_PASSED, T.REQ_COLLDECT_PASSED,
                                        # T.REQ_PUP_ALGN_PASSED,
                                        T.REQ_DATUM_REP_PASSED,
                                        T.REQ_POS_REP_PASSED,
                                        T.TASK_REFERENCE]),
                       
-                      (T.MEASURE_MET_CAL, [T.TST_MET_CAL_CAM_CONNECTION]),
+                      (T.MEASURE_MET_CAL, [T.TASK_SELFTEST, T.TST_MET_CAL_CAM_CONNECTION]),
                       
-                      (T.MEASURE_MET_HEIGHT, [T.TST_MET_HEIGHT_CAM_CONNECTION]),
+                      (T.MEASURE_MET_HEIGHT, [T.TASK_SELFTEST, T.TST_MET_HEIGHT_CAM_CONNECTION]),
                       
-                      (T.MEASURE_PUPIL_ALGN, [T.TST_PUPIL_ALGN_CAM_CONNECTION,
+                      (T.MEASURE_PUPIL_ALGN, [T.TASK_SELFTEST, T.TST_PUPIL_ALGN_CAM_CONNECTION,
                                               T.REQ_DATUM_PASSED, T.REQ_COLLDECT_PASSED, T.TASK_REFERENCE]),
                       
-                      (T.MEASURE_ALL, [ T.TST_GATEWAY_CONNECTION       , 
+                      (T.MEASURE_ALL, [ T.TASK_SELFTEST                ,
+                                        T.TST_GATEWAY_CONNECTION       , 
                                         T.TST_CAN_CONNECTION           , 
                                         T.TST_POS_REP_CAM_CONNECTION   , 
                                         T.TST_MET_CAL_CAM_CONNECTION   , 

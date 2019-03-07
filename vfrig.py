@@ -32,6 +32,8 @@ from vfr.verification_tasks.positional_repeatability import measure_positional_r
 
 from vfr.verification_tasks.metrology_height import measure_metrology_height, eval_metrology_height
 
+from vfr.verification_tasks.rig_selftest import selftest
+
 from vfr.verification_tasks.report import report, dump_data
 
     
@@ -178,6 +180,14 @@ if __name__ == '__main__':
             gd.findDatum(grid_state, fpuset=unreferenced, timeout=DATUM_TIMEOUT_DISABLE)
         
         
+    if T.TASK_SELFTEST in tasks:
+        print("[%s] ###" % T.TASK_SELFTEST)
+        selftest(env, fpudb, vfdb, gd, grid_state, opts, measure_fpuset, fpu_config,
+                 **MET_CAL_MEASUREMENT_PARS,
+                 **POS_REP_MEASUREMENT_PARS,
+                 **MET_HEIGHT_MEASUREMENT_PARS,
+                 **PUPALGN_MEASUREMENT_PARS)
+        
     if T.TST_COLLDETECT in tasks:
         print("[test_collision_detection] ###")
         test_limit(env, fpudb, vfdb, gd, grid_state, opts, measure_fpuset, fpu_config, "beta_collision")
@@ -200,12 +210,11 @@ if __name__ == '__main__':
     if T.TST_BETA_MIN in tasks:
         print("[test_limit_beta_min] ###")
         test_limit(env, fpudb, vfdb, gd, grid_state, opts, measure_fpuset, fpu_config, "beta_min")
-
         
     if T.MEASURE_MET_CAL in tasks:
         print("[%s] ###" % T.MEASURE_MET_CAL)
         measure_metrology_calibration(env, vfdb, gd, grid_state, opts, measure_fpuset, fpu_config,
-                                    **MET_CAL_PARS)
+                                    **MET_CAL_MEASUREMENT_PARS)
     if T.EVAL_MET_CAL in tasks:
         print("[%s] ###" % T.EVAL_MET_CAL)
         eval_metrology_calibration(env, vfdb, gd, grid_state, opts, eval_fpuset, fpu_config,
@@ -214,7 +223,7 @@ if __name__ == '__main__':
     if T.MEASURE_MET_HEIGHT in tasks:
         print("[%s] ###" % T.MEASURE_MET_HEIGHT)
         measure_metrology_height(env, vfdb, gd, grid_state, opts, measure_fpuset, fpu_config,
-                                 **MET_HEIGHT_ANALYSIS_PARS)
+                                 **MET_HEIGHT_MEASUREMENT_PARS)
     if T.EVAL_MET_HEIGHT in tasks:
         print("[%s] ###" % T.EVAL_MET_HEIGHT)
         eval_metrology_height(env, vfdb, gd, grid_state, opts, eval_fpuset, fpu_config,
@@ -224,7 +233,7 @@ if __name__ == '__main__':
     if T.MEASURE_DATUM_REP in tasks:
         print("[%s] ###" % T.MEASURE_DATUM_REP)
         measure_datum_repeatability(env, vfdb, gd, grid_state, opts, measure_fpuset, fpu_config,
-                                    **DATUM_REP_PARS)
+                                    **DATUM_REP_MEASUREMENT_PARS)
     if T.EVAL_DATUM_REP in tasks:
         print("[%s] ###" % T.EVAL_DATUM_REP)
         eval_datum_repeatability(env, vfdb, gd, grid_state, opts, eval_fpuset, fpu_config,
