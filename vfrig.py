@@ -153,8 +153,9 @@ if __name__ == '__main__':
     # low-level actions
     tasks = resolve(args.tasks, env, vfdb, args, fpu_config, measure_fpuset)
 
-    # check connections to cameras and EtherCAN gateway
-        
+    # change current directory to image root
+    os.chdir(IMAGE_ROOT_FOLDER)
+    # check connections to cameras and EtherCAN gateway    
 
     if T.TST_GATEWAY_CONNECTION in tasks:
         print("[%s] ###" % T.TST_GATEWAY_CONNECTION)
