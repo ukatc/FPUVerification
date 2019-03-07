@@ -1,6 +1,8 @@
 from __future__ import print_function, division
 
 import argparse
+import sys
+from os import environ
 
 from ast import literal_eval
 
@@ -23,8 +25,16 @@ from vfr.conf import ( DEFAULT_TASKS,
 
 from vfr.tasks import *
 
+from helptext import summary
+
 def parse_args():
-    parser = argparse.ArgumentParser(description='test FPUs in verification rig')
+    try:
+        DEFAULT_VERBOSITY = int(environ.get("VFR_VERBOSITY", "0"))
+    except:
+        print("VFR_VERBOSITY has invalid value, setting verbosity to one")
+        DEFAULT_VERBOSITY = 1
+                                     
+    parser = argparse.ArgumentParser(description='test FPUs in verification rig', description=summary)
     
     parser.add_argument('tasks',  nargs='*',
                         default=DEFAULT_TASKS, 
@@ -48,11 +58,11 @@ def parse_args():
     parser.add_argument('-R', '--re-initialize',   default=False, action='store_true',
                         help='re-initialize FPU counters even if entry exists')
 
-    
     parser.add_argument('-S', '--snset', default=None, 
                         help="""apply tasks only to passed set of serial numbers, passed as "['MP001', 'MP002', ...]" """)
-
     
+    parser.add_argument('-o', '--output-file', default=None, type=str,
+                        help='output file for report and dump (defaults to stdout)')
 
     parser.add_argument('-s', '--reuse-serialnum', default=False, action='store_true',
                         help='reuse serial number')
@@ -114,4 +124,9 @@ def parse_args():
     if not (args.fpuset is None):
         args.fpuset = literal_eval(args.fpuset)
 
+    if args.output_file is None:
+        args.output_file = sys.stdout
+    else:
+        args.output_file = open(args,output_file, "w")
+        
     return args
