@@ -1,6 +1,8 @@
 from __future__ import print_function, division
 
-summary="""\ 
+from textwrap import dedent
+
+summary=dedent("""\
 The program performs a set of measurements and evaluations on
 FPUs. Which measurements and evaluations are done, is defined by the
 "tasks" command line arguments. Tasks can represent bundles of
@@ -20,4 +22,4 @@ A third type of task is the "report" task, which by default prints a
 terse summary of the evaluated results.
 
 
-"""
+""")
