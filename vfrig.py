@@ -12,7 +12,7 @@ from fpu_constants import *
 
 from vfr.tests_common import flush
 
-from vfr.db import env
+from vfr.db import open_database_env
 from vfr.options import parse_args, load_config
 from vfr.conf import (ALPHA_DATUM_OFFSET, )
 
@@ -45,6 +45,12 @@ if __name__ == '__main__':
     opts = parse_args()
     print("tasks = %r" % opts.tasks)
 
+    env = open_database_env(mockup=opts.mockup)
+            
+    if env is None:
+        raise ValueError("The environment variable FPU_DATABASE needs to"
+                         " be set to the directory path of the LMDB position database!")
+    
     vfdb = env.open_db("verification")
     
     fpu_config, measure_fpuset, eval_fpuset = load_config(opts.setup_file, vfdb)
@@ -135,7 +141,7 @@ if __name__ == '__main__':
             del rd # delete raw (unprotected) driver instance
             
         print("[initialize protected driver] ###")
-        gd, grid_state = init_driver(opts, max(measure_fpuset), protected=True)
+        gd, grid_state = init_driver(opts, max(measure_fpuset), env=env, protected=True)
 
         gd.readSerialNumbers(grid_state)
         for fpu_id in measure_fpuset:

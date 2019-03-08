@@ -27,9 +27,9 @@ def check_connection(opts, name, address):
         print("... OK")
 
 
-def init_driver(opts, max_id, protected=True):
+def init_driver(opts, max_id, env=None, protected=True):
     if protected:
-        rd = FpuGridDriver.GridDriver(max_id+1)
+        rd = FpuGridDriver.GridDriver(max_id+1, env=env)
     else:
         rd = FpuGridDriver.UnprotectedGridDriver(max_id+1)
 

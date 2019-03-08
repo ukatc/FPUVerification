@@ -52,6 +52,8 @@ def measure_datum_repeatability(env, vfdb, gd, grid_state, opts, fpuset, fpu_con
                                 DATUM_REP_EXPOSURE_MS=None):
 
     tstamp=timestamp()
+    if opts.mockup:
+        hw = hws
 
     # home turntable
     safe_home_turntable(gd, grid_state)    

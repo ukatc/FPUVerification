@@ -67,7 +67,7 @@ def find_datum(gd, grid_state, opts):
 
 
 def safe_home_turntable(gd, grid_state):
-    gd.findDatum(grid_state)
+    gd.findDatum(grid_state, timeout=DATUM_TIMEOUT_DISABLE)
     
     with pyAPT.NR360S(serial_number=NR360_SERIALNUMBER) as con:
         print('\tHoming stage...', end=' ')
