@@ -70,7 +70,7 @@ POSREP_ANALYSIS_PARS = {
 	              'POSREP_CALIBRATION_PARS' : None,
 	              'display' : False}
 
-METCAL_ANALYSIS_PARS = {
+METCAL_TARGET_ANALYSIS_PARS = {
 	                    'METCAL_PLATESCALE' : 0.00668, #millimeter per pixel
 	                    'METCAL_SMALL_DIAMETER' : 1.5, #millimeter
 	                    'METCAL_LARGE_DIAMETER' : 2.5, #millimeter 

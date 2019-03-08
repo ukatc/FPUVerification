@@ -98,7 +98,7 @@ def print_report_extended(serial_number=None,
             Datum test: alpha datumed = {datumed[0]}
             Datum test: beta datumed = {datumed[1]}
             Datum test: fpu_id/FPU state = {fpu_id} / {result_state}
-            Datum test: counter deviations = {counter_deviation:r}
+            Datum test: counter deviations = {counter_deviation!r}
             Datum test: time = {time}
             Datum test: result = {diagnostic}""").format(**datum_result), file=outfile)
     

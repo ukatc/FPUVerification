@@ -116,15 +116,15 @@ def measure_metrology_calibration(env, vfdb, gd, grid_state, opts, fpuset, fpu_c
 
 
 def eval_metrology_calibration(env, vfdb, gd, grid_state, opts, fpuset, fpu_config,
-                               pos_rep_analysis_pars, met_cal_analysis_pars):
+                               metcal_target_analysis_pars, metcal_fibre_analysis_pars):
 
     for fpu_id in fpuset:
         images = get_metrology_calibration_images(env, vfdb, opts, fpu_config, fpu_id)
 
 
         try:
-            target_coordinates = metcalTargetCoordinates(images['target'], **pos_rep_analysis_pars)
-            fibre_coordinates = metcalFibreCoordinates(images['fibre'], **met_cal_analysis_pars)
+            target_coordinates = metcalTargetCoordinates(images['target'], **metcal_target_analysis_pars)
+            fibre_coordinates = metcalFibreCoordinates(images['fibre'], **metcal_fibre_analysis_pars)
 
         
         

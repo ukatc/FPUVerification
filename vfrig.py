@@ -183,10 +183,15 @@ if __name__ == '__main__':
     if T.TASK_SELFTEST in tasks:
         print("[%s] ###" % T.TASK_SELFTEST)
         selftest(env, fpudb, vfdb, gd, grid_state, opts, measure_fpuset, fpu_config,
-                 **MET_CAL_MEASUREMENT_PARS,
-                 **POS_REP_MEASUREMENT_PARS,
-                 **MET_HEIGHT_MEASUREMENT_PARS,
-                 **PUPALGN_MEASUREMENT_PARS)
+                 MET_CAL_MEASUREMENT_PARS=MET_CAL_MEASUREMENT_PARS,
+                 METCAL_TARGET_ANALYSIS_PARS=METCAL_TARGET_ANALYSIS_PARS,
+                 METCAL_FIBRE_ANALYSIS_PARS=METCAL_FIBRE_ANALYSIS_PARS,
+                 POS_REP_MEASUREMENT_PARS=POS_REP_MEASUREMENT_PARS,
+                 PUPALGN_MEASUREMENT_PARS=PUPALGN_MEASUREMENT_PARS,
+                 MET_HEIGHT_MEASUREMENT_PARS=MET_HEIGHT_MEASUREMENT_PARS,
+                 MET_HEIGHT_ANALYSIS_PARS=MET_HEIGHT_ANALYSIS_PARS,
+                 POS_REP_ANALYSIS_PARS=POS_REP_ANALYSIS_PARS,
+                 POS_REP_CALIBRATION_PARS=POS_REP_CALIBRATION_PARS)
         
     if T.TST_COLLDETECT in tasks:
         print("[test_collision_detection] ###")

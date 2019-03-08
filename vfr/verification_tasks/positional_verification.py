@@ -42,7 +42,7 @@ from Lamps.lctrl import switch_backlight, switch_ambientlight, use_ambientlight
 
 import pyAPT
 
-from ImageAnalysisFuncs.analyze_positional_repeatability import (positional_repeatability_image_analysis,
+from ImageAnalysisFuncs.analyze_positional_repeatability import (posrepCoordinates,
                                                                  evaluate_positional_verification, 
                                                                  POSITIONAL_VERIFICATION_ALGORITHM_VERSION, fit_gearbox_correction)
 

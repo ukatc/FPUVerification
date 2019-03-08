@@ -92,9 +92,8 @@ def measure_metrology_height(env, vfdb, gd, grid_state, opts, fpuset, fpu_config
     
                 
                        
-            fibre_ipath = capture_image(met_height_cam)
+            images = capture_image(met_height_cam)
     
-            image = fibre_ipath 
     
             save_metrology_height_images(env, vfdb, opts, fpu_config, fpu_id, images)
 

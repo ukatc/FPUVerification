@@ -238,9 +238,6 @@ task_expansions = [ (T.TST_INIT, [T.TST_FLASH,
                     (T.TST_BETA_MIN, [ T.TST_DATUM, ]),
 ]
 
-# two functional short-hands for set operations
-def intersection(set1, set2):
-    return set1.intersection(set2)
 
 def set_empty(set1):
     return len(set1) == 0
