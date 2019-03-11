@@ -83,6 +83,16 @@ def safe_home_turntable(gd, grid_state):
     print("findDatum finished")
     
     print("moving turntable to home position")
+
+def home_linear_stage():    
+    print('\tHoming linear stage...', end=' ')
+    print('homed')
+
+def linear_stage_goto(stage_position):
+    print('Found APT controller S/N', "[MOCKUP]")
+    print('\tNew position: %.2fmm %s'%(stage_position, "mm"))
+    print('\tStatus:',"OK")
+
     
 
         

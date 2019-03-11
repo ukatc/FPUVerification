@@ -1,6 +1,6 @@
 from __future__ import print_function, division,  absolute_import
 
-from db.base import env, GIT_VERSION, TestResult, get_test_result, timestamp  
+from db.base import GIT_VERSION, TestResult, get_test_result, timestamp  
 
 RECORD_TYPE='pupil-alignment'
 

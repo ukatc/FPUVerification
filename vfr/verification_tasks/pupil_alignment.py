@@ -1,46 +1,27 @@
 from __future__ import print_function, division
 
-import os
-from os import path
-from numpy import zeros, nan
-from protectiondb import ProtectionDB as pdb
-from vfr.conf import PUP_ALN_CAMERA_IP_ADDRESS, NR360_SERIALNUMBER
+from numpy import NaN
 
-from vfr.db.pupil_alignment import (env,
-                                    TestResult,
+from vfr.conf import PUP_ALN_CAMERA_IP_ADDRESS
+
+from vfr.db.pupil_alignment import (TestResult,
                                     save_pupil_alignment_images,
                                     get_pupil_alignment_images,
                                     save_pupil_alignment_result,
                                     get_pupil_alignment_result,
                                     get_pupil_alignment_passed_p)
 
-from vfr import turntable
+from vfr import hw
+from vfr import hwsimulation
 
-from interval import Interval
+
 from GigE.GigECamera import DEVICE_CLASS, BASLER_DEVICE_CLASS, IP_ADDRESS
 
 
 
-from FpuGridDriver import (CAN_PROTOCOL_VERSION, SEARCH_CLOCKWISE, SEARCH_ANTI_CLOCKWISE,
-                           DEFAULT_WAVEFORM_RULSET_VERSION, DATUM_TIMEOUT_DISABLE,
-                           DASEL_BOTH, DASEL_ALPHA, DASEL_BETA, REQD_ANTI_CLOCKWISE,  REQD_CLOCKWISE,
-                           # see documentation reference for Exception hierarchy
-                           # (for CAN protocol 1, this is section 12.6.1)
-                           EtherCANException, MovementError, CollisionError, LimitBreachError, FirmwareTimeoutError,
-                           AbortMotionError, StepTimingError, InvalidStateException, SystemFailure,
-                           InvalidParameterError, SetupError, InvalidWaveformException, ConnectionFailure,
-                           SocketFailure, CommandTimeout, ProtectionError, HardwareProtectionError)
-
-from fpu_commands import gen_wf
-from fpu_constants import ALPHA_MIN_DEGREE, ALPHA_MAX_DEGREE, BETA_MIN_DEGREE, BETA_MAX_DEGREE, ALPHA_DATUM_OFFSET
-
 from vfr.tests_common import (flush, timestamp, dirac, goto_position, find_datum, store_image,
-                              get_sorted_positions, safe_home_turntable,
-                              linear_stage_goto, home_linear_stage)
+                              get_sorted_positions)
 
-from Lamps.lctrl import switch_backlight, switch_ambientlight, use_backlight
-
-import pyAPT
 
 from ImageAnalysisFuncs.analyze_pupil_alignment import (pupalnCoordinates, 
                                                         evaluate_pupil_alignment,
@@ -68,23 +49,27 @@ def measure_pupil_alignment(env, vfdb, gd, grid_state, opts, fpuset, fpu_config,
                             PUPIL_ALN_EXPOSURE_MS=None):
 
     tstamp=timestamp()
+    
+    if opts.mockup:
+        # replace all hardware functions by mock-up interfaces
+        hw = hwsimulation
 
     # home turntable
-    safe_home_turntable(gd, grid_state)    
-    home_linear_stage()    
+    hw.safe_home_turntable(gd, grid_state)    
+    hw.home_linear_stage()    
 
-    switch_ambientlight("off", manual_lamp_control=opts.manual_lamp_control)
-    switch_silhouettelight("off", manual_lamp_control=opts.manual_lamp_control)
-    switch_fibre_backlight_voltage(5.0, manual_lamp_control=opts.manual_lamp_control)
+    hw.switch_ambientlight("off", manual_lamp_control=opts.manual_lamp_control)
+    hw.switch_silhouettelight("off", manual_lamp_control=opts.manual_lamp_control)
+    hw.switch_fibre_backlight_voltage(5.0, manual_lamp_control=opts.manual_lamp_control)
 
-    with use_backlight("on", manual_lamp_control=opts.manual_lamp_control):
+    with hw.use_backlight("on", manual_lamp_control=opts.manual_lamp_control):
     
         # initialize pos_rep camera
         # set pos_rep camera exposure time to DATUM_REP_EXPOSURE milliseconds
         PUP_ALN_CAMERA_CONF = { DEVICE_CLASS : BASLER_DEVICE_CLASS,
                                 IP_ADDRESS : PUP_ALN_CAMERA_IP_ADDRESS }
             
-        pup_aln_cam = GigECamera(PUP_ALN_CAMERA_CONF)
+        pup_aln_cam = hw.GigECamera(PUP_ALN_CAMERA_CONF)
         pup_aln_cam.SetExposureTime(PUPIL_ALN_EXPOSURE_MS)
             
         # get sorted positions (this is needed because the turntable can only
@@ -100,8 +85,8 @@ def measure_pupil_alignment(env, vfdb, gd, grid_state, opts, fpuset, fpu_config,
     
             
             # move rotary stage to PUP_ALN_POSN_N
-            turntable_safe_goto(gd, grid_state, stage_position)            
-            linear_stage__goto(PUPIL_ALN_LINPOSITIONS[fpu_id])            
+            hw.turntable_safe_goto(gd, grid_state, stage_position)            
+            hw.linear_stage__goto(PUPIL_ALN_LINPOSITIONS[fpu_id])            
         
             
     

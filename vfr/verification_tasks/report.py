@@ -1,7 +1,5 @@
 from __future__ import print_function, division
 
-import os
-from os import path
 
 from textwrap import dedent
 

@@ -1,43 +1,29 @@
 from __future__ import print_function, division
 
-import os
-from os import path
-from numpy import zeros, nan
-from protectiondb import ProtectionDB as pdb
-from vfr.conf import POS_REP_POSN_N, POS_REP_CAMERA_IP_ADDRESS, NR360_SERIALNUMBER
+from numpy import NaN
 
-from vfr.db.datum_repeatability import (env,
-                                        TestResult,
+from vfr.conf import POS_REP_CAMERA_IP_ADDRESS 
+
+from vfr.db.datum_repeatability import (TestResult,
                                         save_datum_repeatability_images,
                                         get_datum_repeatability_images, save_datum_repeatability_result,
                                         get_datum_repeatability_result, get_datum_repeatability_passed_p)
 
-from vfr import turntable
 
-from interval import Interval
+from vfr import hw
+from vfr import hwsimulation
+
+
 from GigE.GigECamera import DEVICE_CLASS, BASLER_DEVICE_CLASS, IP_ADDRESS
 
 
 
-from FpuGridDriver import (CAN_PROTOCOL_VERSION, SEARCH_CLOCKWISE, SEARCH_ANTI_CLOCKWISE,
-                           DEFAULT_WAVEFORM_RULSET_VERSION, DATUM_TIMEOUT_DISABLE,
-                           DASEL_BOTH, DASEL_ALPHA, DASEL_BETA, REQD_ANTI_CLOCKWISE,  REQD_CLOCKWISE,
-                           # see documentation reference for Exception hierarchy
-                           # (for CAN protocol 1, this is section 12.6.1)
-                           EtherCANException, MovementError, CollisionError, LimitBreachError, FirmwareTimeoutError,
-                           AbortMotionError, StepTimingError, InvalidStateException, SystemFailure,
-                           InvalidParameterError, SetupError, InvalidWaveformException, ConnectionFailure,
-                           SocketFailure, CommandTimeout, ProtectionError, HardwareProtectionError)
-
 from fpu_commands import gen_wf
-from fpu_constants import ALPHA_MIN_DEGREE, ALPHA_MAX_DEGREE, BETA_MIN_DEGREE, BETA_MAX_DEGREE, ALPHA_DATUM_OFFSET
 
-from vfr.tests_common import (flush, timestamp, dirac, goto_position, find_datum, store_image,
-                              get_sorted_positions, safe_home_turntable)
 
-from Lamps.lctrl import switch_backlight, switch_ambientlight, use_ambientlight, switch_fibre_backlight_voltage
+from vfr.tests_common import (timestamp, dirac, goto_position, find_datum, store_image,
+                              get_sorted_positions)
 
-import pyAPT
 
 from ImageAnalysisFuncs.analyze_positional_repeatability import (positional_repeatability_image_analysis,
                                                                  evaluate_datum_repeatability,
@@ -53,15 +39,16 @@ def measure_datum_repeatability(env, vfdb, gd, grid_state, opts, fpuset, fpu_con
 
     tstamp=timestamp()
     if opts.mockup:
-        hw = hws
+        # replace all hardware functions by mock-up interfaces
+        hw = hwsimulation
 
     # home turntable
-    safe_home_turntable(gd, grid_state)    
+    hw.safe_home_turntable(gd, grid_state)    
 
-    switch_backlight("off", manual_lamp_control=opts.manual_lamp_control)
-    switch_fibre_backlight_voltage(0.0, manual_lamp_control=opts.manual_lamp_control)
+    hw.switch_backlight("off", manual_lamp_control=opts.manual_lamp_control)
+    hw.switch_fibre_backlight_voltage(0.0, manual_lamp_control=opts.manual_lamp_control)
 
-    with use_ambientlight(manual_lamp_control=opts.manual_lamp_control):
+    with hw.use_ambientlight(manual_lamp_control=opts.manual_lamp_control):
     
         # get sorted positions (this is needed because the turntable can only
         # move into one direction)
@@ -76,14 +63,14 @@ def measure_datum_repeatability(env, vfdb, gd, grid_state, opts, fpuset, fpu_con
     
             
             # move rotary stage to POS_REP_POSN_N
-            turntable_safe_goto(gd, grid_state, stage_position)            
+            hw.turntable_safe_goto(gd, grid_state, stage_position)            
         
             # initialize pos_rep camera
             # set pos_rep camera exposure time to DATUM_REP_EXPOSURE milliseconds
             POS_REP_CAMERA_CONF = { DEVICE_CLASS : BASLER_DEVICE_CLASS,
                                     IP_ADDRESS : POS_REP_CAMERA_IP_ADDRESS }
             
-            pos_rep_cam = GigECamera(POS_REP_CAMERA_CONF)
+            pos_rep_cam = hw.GigECamera(POS_REP_CAMERA_CONF)
             pos_rep_cam.SetExposureTime(DATUM_REP_EXPOSURE_MS)
             
     

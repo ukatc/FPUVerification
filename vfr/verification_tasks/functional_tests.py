@@ -1,12 +1,9 @@
 from __future__ import print_function, division
 
-from numpy import zeros, nan
-from protectiondb import ProtectionDB as pdb
+from numpy import NaN
+
 from vfr.db.datum import env, TestResult, save_datum_result
 from vfr.db.colldect_limits import save_angular_limit, set_protection_limit, get_anglimit_passed_p
-from vfr import turntable
-
-from interval import Interval
 
 
 from FpuGridDriver import (CAN_PROTOCOL_VERSION, SEARCH_CLOCKWISE, SEARCH_ANTI_CLOCKWISE,
@@ -20,7 +17,7 @@ from FpuGridDriver import (CAN_PROTOCOL_VERSION, SEARCH_CLOCKWISE, SEARCH_ANTI_C
                            SocketFailure, CommandTimeout, ProtectionError, HardwareProtectionError)
 
 from fpu_commands import gen_wf
-from fpu_constants import ALPHA_MIN_DEGREE, ALPHA_MAX_DEGREE, BETA_MIN_DEGREE, BETA_MAX_DEGREE, ALPHA_DATUM_OFFSET
+
 
 from vfr.tests_common import flush, timestamp, dirac, goto_position
 
@@ -150,7 +147,7 @@ def test_limit(env, fpudb, vfdb, gd, grid_state, opts, fpuset, fpu_config, which
             limit_val = (gd.trackedAngles(grid_state, retrieve=True)[fpu_id][idx]).as_scalar()
             print("%s limit hit at position %f" % (which_limit, limit_val))
         else:
-            limit_val = nan
+            limit_val = NaN
 
         
         if test_valid:

@@ -1,50 +1,37 @@
 from __future__ import print_function, division
 
-import os
-from os import path
-from numpy import zeros, nan
-from protectiondb import ProtectionDB as pdb
+from numpy import NaN
+
 from GigE.GigECamera import DEVICE_CLASS, BASLER_DEVICE_CLASS, IP_ADDRESS
-from vfr.conf import POS_REP_POSN_N, POS_REP_CAMERA_IP_ADDRESS, NR360_SERIALNUMBER
+
+from vfr.conf import POS_REP_CAMERA_IP_ADDRESS
 
 from vfr.verification_tasks.measure_datum_repeatability import get_datum_repeatability_passed_p
 
 from vfr.verification_tasks.positional_repeatability import (get_positional_repeatability_result,
                                                              get_positional_repeatability_passed_p )
 
-from vfr.db.positional_verification import (env,
-                                            TestResult,
+from vfr.db.positional_verification import (TestResult,
                                             save_positional_verification_images,
                                             get_positional_verification_images,
                                             save_positional_verification_result)
                                             
-                                           
-from vfr import turntable
 
-from FpuGridDriver import (CAN_PROTOCOL_VERSION, SEARCH_CLOCKWISE, SEARCH_ANTI_CLOCKWISE,
-                           DEFAULT_WAVEFORM_RULSET_VERSION, DATUM_TIMEOUT_DISABLE,
-                           DASEL_BOTH, DASEL_ALPHA, DASEL_BETA, REQD_ANTI_CLOCKWISE,  REQD_CLOCKWISE,
-                           # see documentation reference for Exception hierarchy
-                           # (for CAN protocol 1, this is section 12.6.1)
-                           EtherCANException, MovementError, CollisionError, LimitBreachError, FirmwareTimeoutError,
-                           AbortMotionError, StepTimingError, InvalidStateException, SystemFailure,
-                           InvalidParameterError, SetupError, InvalidWaveformException, ConnectionFailure,
-                           SocketFailure, CommandTimeout, ProtectionError, HardwareProtectionError)
+from vfr import hw
+from vfr import hwsimulation
+
+
 
 from fpu_commands import gen_wf
-from fpu_constants import ALPHA_MIN_DEGREE, ALPHA_MAX_DEGREE, BETA_MIN_DEGREE, BETA_MAX_DEGREE, ALPHA_DATUM_OFFSET
+
 
 from vfr.tests_common import (flush, timestamp, dirac, goto_position, find_datum, store_image,
-                              get_sorted_positions, safe_home_turntable)
-
-from Lamps.lctrl import switch_backlight, switch_ambientlight, use_ambientlight
-
-
-import pyAPT
+                              get_sorted_positions)
 
 from ImageAnalysisFuncs.analyze_positional_repeatability import (posrepCoordinates,
                                                                  evaluate_positional_verification, 
-                                                                 POSITIONAL_VERIFICATION_ALGORITHM_VERSION, fit_gearbox_correction)
+                                                                 POSITIONAL_VERIFICATION_ALGORITHM_VERSION,
+                                                                 fit_gearbox_correction)
 
 from Gearbox.gear_correction import GearboxFitError, apply_gearbox_correction
 
@@ -74,20 +61,25 @@ def measure_positional_verification(env, vfdb, gd, grid_state, opts, fpuset, fpu
 
     # home turntable
     tstamp=timestamp()
+
+    if opts.mockup:
+        # replace all hardware functions by mock-up interfaces
+        hw = hwsimulation
+
     
-    safe_home_turntable(gd, grid_state)    
+    hw.safe_home_turntable(gd, grid_state)    
 
-    switch_backlight("off", manual_lamp_control=opts.manual_lamp_control)
-    switch_ambientlight("on", manual_lamp_control=opts.manual_lamp_control)
-    switch_fibre_backlight_voltage(0.0, manual_lamp_control=opts.manual_lamp_control)
+    hw.switch_backlight("off", manual_lamp_control=opts.manual_lamp_control)
+    hw.switch_ambientlight("on", manual_lamp_control=opts.manual_lamp_control)
+    hw.switch_fibre_backlight_voltage(0.0, manual_lamp_control=opts.manual_lamp_control)
 
-    with use_ambientlight(manual_lamp_control=opts.manual_lamp_control):
+    with hw.use_ambientlight(manual_lamp_control=opts.manual_lamp_control):
         # initialize pos_rep camera
         # set pos_rep camera exposure time to POSITIONAL_VER_EXPOSURE milliseconds
         POS_VER_CAMERA_CONF = { DEVICE_CLASS : BASLER_DEVICE_CLASS,
                                 IP_ADDRESS : POS_REP_CAMERA_IP_ADDRESS }
         
-        pos_rep_cam = GigECamera(POS_VER_CAMERA_CONF)
+        pos_rep_cam = hw.GigECamera(POS_VER_CAMERA_CONF)
         pos_rep_cam.SetExposureTime(POSITIONAL_VER_EXPOSURE_MS)
     
         
@@ -122,7 +114,7 @@ def measure_positional_verification(env, vfdb, gd, grid_state, opts, fpuset, fpu
             fpu_coeffs = gearbox_correction['coeffs']
             
             # move rotary stage to POS_VER_POSN_N
-            turntable_safe_goto(gd, grid_state, stage_position)            
+            hw.turntable_safe_goto(gd, grid_state, stage_position)            
                 
     
             image_dict = {}

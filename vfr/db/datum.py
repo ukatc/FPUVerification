@@ -1,6 +1,6 @@
 from __future__ import print_function, division,  absolute_import
 
-from vfr.db.base import env, GIT_VERSION, TestResult, get_test_result, timestamp  
+from vfr.db.base import GIT_VERSION, TestResult, get_test_result, timestamp  
 from vfr.db.snset import add_sns_to_set
 
 RECORD_TYPE = 'findDatum'

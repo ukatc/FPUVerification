@@ -66,35 +66,6 @@ def find_datum(gd, grid_state, opts):
     return gd, grid_state
 
 
-def safe_home_turntable(gd, grid_state):
-    gd.findDatum(grid_state, timeout=DATUM_TIMEOUT_DISABLE)
-    
-    with pyAPT.NR360S(serial_number=NR360_SERIALNUMBER) as con:
-        print('\tHoming stage...', end=' ')
-        con.home(clockwise=True)
-        print('homed')
-
-def turntable_safe_goto(gd, grid_state, stage_position):
-    gd.findDatum(grid_state)
-    with pyAPT.NR360S(serial_number=NR360_SERIALNUMBER) as con:
-        print('Found APT controller S/N', NR360_SERIALNUMBER)
-        con.goto(stage_position, wait=True)
-        print('\tNew position: %.2fmm %s'%(con.position(), con.unit))
-        print('\tStatus:',con.status())
-        
-def home_linear_stage():    
-    with pyAPT.MTS50(serial_number=MTS50_SERIALNUMBER) as con:
-        print('\tHoming linear stage...', end=' ')
-        con.home(clockwise=True)
-        print('homed')
-
-def linear_stage_goto(stage_position):
-    with pyAPT.MTS50(serial_number=MTS50_SERIALNUMBER) as con:
-        print('Found APT controller S/N', MTS_SERIALNUMBER)
-        con.goto(stage_position, wait=True)
-        print('\tNew position: %.2fmm %s'%(con.position(), con.unit))
-        print('\tStatus:',con.status())
-        
 
 def store_image(camera, format_string, **kwargs):
 
