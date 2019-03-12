@@ -2,12 +2,13 @@ from __future__ import print_function, division
 
 import cv2
 from math import pi, sqrt
-from numpy.polynomial import Polynomial
 from matplotlib import pyplot as plt
-from numpy import nan
+from numpy import NaN, mean
+from nunpy.linalg import norm
 
 from ImageAnalysisFuncs.base import ImageAnalysisError
 from DistortionCorrection import correct
+from vfr.config import INSTRUMENT_FOCAL_LENGTH
 
 
 # exceptions which are raised if image analysis functions fail
@@ -63,7 +64,8 @@ def pupalnCoordinates(image_path,
 
 
 
-def evaluate_pupil_alignment(dict_of_coordinates, POSITION_REP_PASS=None):
+def evaluate_pupil_alignment(dict_of_coordinates,
+                             PUPALN_CALIBRATED_CENTRE_X, PUPALN_CALIBRATED_CENTRE_Y):
     """
     ...
 
@@ -72,7 +74,39 @@ def evaluate_pupil_alignment(dict_of_coordinates, POSITION_REP_PASS=None):
 
     """
 
-    return 0.005
+    # group by having the same alpha coordinates
+    alpha_dict  = {}
+    for pos, coord in dict_of_coordinates.items():
+        alpha, beta = pos
+        if not alpha_dict.has_key(alpha):
+            alpha_dict[alpha] = []
+        alpha_dict[alpha].append(coord)
+
+    beta_errors = []
+    beta_centers = []
+    for alpha, bgroup in alpha_dict.items():
+        bcoords = array(bgroup)
+        bcenter = mean(bcoords, axis=0)
+        beta_centers.append(bcenter)
+        beta_errors.append(mean(map(norm, boords - bcenter)))
+
+    pupalnBetaErr = mean(beta_errors)
+
+    alpha_center = mean(beta_centers, axis=0)
+    pupalnAlphaErr = mean(map(norm, beta_centers - alpha_center))
+
+    xc = norm(mean(dict_of_coordinates.values(), axis=0)
+              - array((PUPALN_CALIBRATED_CENTRE_X, PUPALN_CALIBRATED_CENTRE_Y)))
+
+    # ask Steve Watson what the following means - it is from his spec
+    warnings.warn("probably rubbish here")
+    pupalnChassisErr = atan((xc / INSTRUMENT_FOCAL_LENGTH)
+
+    pupalnTotalErr = sum([pupalnChassisErr, pupalnAlphaErr, pupalnBetaErr])
+
+    pupalnErrorBars = "TBD"
+
+    return pupalnChassisErr, pupalnAlphaErr, pupalnBetaErr,  pupalnTotalErr, pupalnErrorBars
 
 
 

@@ -1,5 +1,5 @@
 from __future__ import print_function, division
-from numpy import nan
+from numpy import NaN, std, array
 
 import cv2
 from math import pi, sqrt
@@ -167,8 +167,8 @@ def posrepCoordinates(image_path,
 
 
 
-def evaluate_datum_repeatability(unmoved_coords, datumed_coords, moved_coords):
-    """Takes three lists of (x,y) coordinates : coordinates
+def evaluate_datum_repeatability(datumed_coords, moved_coords):
+    """Takes two lists of (x,y) coordinates : coordinates
     for unmoved FPU, for an FPU which was only datumed, for an FPU which
     was moved, then datumed.
 
@@ -181,38 +181,112 @@ def evaluate_datum_repeatability(unmoved_coords, datumed_coords, moved_coords):
     
     """
 
-    return 0.005
+    # get data, omitting quality factors
+    xy_datumed = array(datumed_coords)
+    xy_moved = array(moved_coords)
+
+    datumed_mean = mean(xy_datumed, axis=0)  # averages small and big targets
+    moved_mean = mean(xy_datumed, axis=0)
+
+    datumed_errors_small = map(norm, xy_datumed[:2] - datumed_mean[:2])
+    datumed_errors_big = map(norm, xy_datumed[2:] - datumed_mean[2:])
+    moved_errors_small = map(norm, xy_moved[:2] - moved_mean[:2])
+    moved_errors_big = map(norm, xy_moved[2:] - moved_mean[2:])
+    
+    datrep_dat_only_max = max([datumed_errors_big, datumed_errors_small])
+    datrep_dat_only_std = std([datumed_errors_big, datumed_errors_small])
+    datrep_move_dat_max = max([moved_errors_big, moved_errors_small])
+    datrep_move_dat_std = std([moved_errors_big, moved_errors_small])
+    
+    return (datrep_dat_only_max,
+            datrep_dat_only_std,
+            datrep_move_dat_max,
+            datrep_move_dat_std )
+
+
 
 
 
 def evaluate_positional_repeatability(dict_of_coordinates, POSITION_REP_PASS=None):
     """Takes a dictionary. The keys of the dictionary
-    are the i,j,k indices of the positional repeteability measurement.
-    Equal i and k mean equal step counts, and j indicates
-    the arm and movement direction of the corresponding arm 
-    during measurement.
+    are the (alpha, beta, i,j,k) coordinates  indices of the positional 
+    repeateability measurement.
 
-    The values of the dictionary are a 4-tuple
-    (alpha_steps, beta_steps, x_measured_1, y_measured_1, x_measured_2, y_measured_2).
+    The values of the dictionary are a 4-tuple of the metrology target
+    coordinates: 
 
-    Here, (alpha_steps, beta_steps) are the angle coordinates given by
-    the motor step counts (measured in degrees), and (alpha_measured,
-    beta_measured) are the cartesian values of the large (index 1) and
-    the small (index 2) target measured from the images taken.
+    (x_small_tgt, y_small_tgt, x_big_tgt, y_big_tgt).
 
+    The units are always millimeter.
 
-    The units are dimensionless counts (for alpha_steps and beta_steps) 
-    and millimeter (for x_measured and y_measured).
+    The returned value are the specified values in millimeter:
 
-    The returned value is the repeatability value in millimeter.
+    posrep_alpha_max_at_angle – maximum positional error at average
+                                  of all points at alpha angle Φ
+
+    posrep_beta_max_at_angle – maximum positional error at average
+                                  of all points at beta angle Φ, where
+                                  Φ depends on the configurable
+                                  parameters in 2.10
+
+    posrep_alpha_max – maximum alpha positional error at any angle
+
+    posrep_beta_max – maximum beta positional error at any angle
+
+    posrep_rss – RSS (Root sum of squares) of POSREP_ALPHA_MAX and POSREP_BETA_MAX    
 
     Any error should be signalled by throwing an Exception of class
     ImageAnalysisError, with a string member which describes the problem.
 
     """
 
-    return 0.005
+    # transform to lists of measurements for the same coordinates
 
+    coords_per_angles = {}
+    for k, v in dict_of_coordinates.items():
+        alpha, beta, i, j, k = k
+        if not coords_per_angles.has_key( (alpha, beta)):
+            coords_per_angles[(alpha, beta)] = []
+            
+        coords_per_angles[(alpha, beta)].append(v)
+
+
+    deviations_per_angle = {}
+    for k, v in coords_per_angles:
+        avg = mean(v, axis=0) # this is an average of big and small target coords separately
+        err_small = map(norm, v [:2] - avg[:2])
+        err_big = map(norm, v [2:] - avg[2:])
+        
+        deviations_per_angle[k] = max([err_small, err_big]) # this is a maximum of all errors
+
+    posrep_alpha_max_at_angle = {}
+    posrep_alpha_max_at_angle = {}
+
+    for k, v in deviations_per_angle:
+        alpha, beta = k
+        
+        if not posrep_beta_max_at_angle.has_key(beta):
+            posrep_beta_max_at_angle[beta] = 0.0
+        if not posrep_alpha_max_at_angle.has_key(alpha):
+            posrep_alpha_max_at_angle[alpha] = 0.0
+            
+        posrep_beta_max_at_angle[beta] = max(posrep_beta_max_at_angle[beta], v)
+        posrep_alpha_max_at_angle[alpha] = max(posrep_alpha_max_at_angle[alpha], v)
+
+
+    # that doesn't make sense because both values are the same
+    
+    posrep_alpha_max = max(posrep_alpha_max_at_angle.values())
+    posrep_beta_max = max(posrep_beta_max_at_angle.values())
+
+    posrep_rss = sqrt(posrep_alpha_max ** 2 + posrep_beta_max ** 2)
+    
+    return (posrep_alpha_max_at_angle,
+            posrep_beta_max_at_angle,
+            posrep_alpha_max,
+            posrep_beta_max,
+            posrep_rss)
+ 
 
 
 def evaluate_positional_verification(dict_of_coordinates, POSITION_VER_PASS=None):

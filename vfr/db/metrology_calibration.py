@@ -36,7 +36,11 @@ def  get_metrology_calibration_images(env, vfdb, opts, fpu_config, fpu_id):
     
     
 def  save_metrology_calibration_result(env, vfdb, opts, fpu_config, fpu_id,
-                                       coords=None, fibre_distance=None,
+                                       coords=None, 
+                                       metcal_fibre_large_target_distance=NaN,
+                                       metcal_fibre_small_target_distance=NaN,
+                                       metcal_target_vector_angle=NaN,
+
                                        errmsg=""
                                        analysis_version=None):
 
@@ -51,6 +55,9 @@ def  save_metrology_calibration_result(env, vfdb, opts, fpu_config, fpu_id,
                         
         val = repr({'coords' : coords,
                     'fibre_distance' : fibre_distance,
+                    'metcal_fibre_large_target_distance' = metcal_fibre_large_target_distance 
+                    'metcal_fibre_small_target_distance' = metcal_fibre_small_target_distance
+                    'metcal_target_vector_angle' = metcal_target_vector_angle
                     'error_message' = errmsg,
                     'algorithm_version' : analysis_version,
                     'git_version' : GIT_VERSION,

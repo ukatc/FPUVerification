@@ -1,5 +1,6 @@
 from __future__ import print_function, division
 
+INSTRUMENT_FOCAL_LENGTH = 4101.4 # millimeter (does not change)
 
 ALPHA_DATUM_OFFSET = -180
  

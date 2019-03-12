@@ -153,7 +153,10 @@ def print_report_extended(serial_number=None,
     else:
         err_msg = metrology_calibration_result['error_message']
         if len(err_msg) == 0:
-            print("Metrology calibration: fibre_distance = {fibre_distance:7.3f} mm,"
+            print("Metrology calibration:"
+                  " metcal_fibre_large_target_distance = {metcal_fibre_large_target_distance:7.3f} mm,"
+                  " metcal_fibre_small_target_distance = {metcal_fibre_small_target_distance:7.3f} mm,"
+                  " metcal_target_vector_angle = {metcal_target_vector_angle:6.3f} degrees,"
                   " time={time}, version = {algorithm_version}".format(**metrology_calibration_result), file=outfile)
         else:
             print("Metrology calibration: {error_message}, time = {time}, "

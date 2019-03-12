@@ -107,47 +107,46 @@ def measure_positional_repeatability(env, vfdb, gd, grid_state, opts, fpuset, fp
             
             for i in range(POSITIONAL_REP_ITERATIONS):
                 gd.findDatum(grid_state, fpuset=[fpu_id])
-                alpha = 0.0
-                beta = 0.0
+                
                 step_a = 320.0 / POSITIONAL_REP_INCREMENTS
                 step_b = 320.0 / POSITIONAL_REP_INCREMENTS
-    
-                wf = gen_wf(dirac(fpu_id) * 10, dirac(fpu_id) * -170, **POSITION_REP_WAVEFORM_PARS)
-                gd.configMotion(wf, grid_state)
-                gd.executeMotion(grid_state)
-                
-    
+
+                alpha0 = -170.0
+                beta0 = -170.0
+                    
     
                 for j in range(4):
-                    for k in range(POSITIONAL_REP_INCREMENTS):
+
+                    M = POSITIONAL_REP_INCREMENTS
+                    for k in range(M):
+                        if j == 0:
+                            ka = k
+                            kb = 0
+                        elif j == 1:
+                            ka = M - k - 1
+                            kb = 0
+                        elif j == 2:
+                            ka = 0
+                            kb = l
+                        elif j == 3:
+                            ka = 0
+                            kb = M - k - 1
+                            
+                            
+                        abs_alpha = alpha0 + step_a * ka
+                        abs_beta = beta0 + step_b * kb
+                        goto_position(gd, abs_alpha, abs_beta, grid_state, fpuset=[fpu_id])
+                            
                         angles = gd.countedAngles()
-                        alpha = angles[fpu_id][0]
-                        beta = angles[fpu_id][1]
+                        alpha_count = angles[fpu_id][0]
+                        beta_count = angles[fpu_id][1]
                         alpha_steps = grid_state.FPU[fpu_id].alpha_steps
                         beta_steps = grid_state.FPU[fpu_id].beta_steps
                         
-                        ipath = capture_image(i, j, k, alpha, beta)
-                        image_dict[(i, j, k)] = (alpha, beta, alpha_steps, beta_steps, ipath)
+                        ipath = capture_image(i, j, k, alpha_count, beta_count)
+                        image_dict[(abs_alpha, abs_beta, i, j, k)] = (alpha_steps, beta_steps, ipath)
                         
     
-                        if k != (POSITIONAL_REP_INCREMENTS -1):
-                            
-                            if j == 0:
-                                delta_a = step_a
-                                delta_b = 0.0
-                            elif j == 1:
-                                delta_a = - step_a
-                                delta_b = 0.0
-                            elif j == 2:
-                                delta_a = 0.0
-                                delta_b = step_b
-                            else:
-                                delta_a = 0.0
-                                delta_b = - step_b
-                            
-                            wf = gen_wf(delta_a * dirac(fpu_id), delta_b * dirac(fpu_id))
-                            gd.configMotion(wf, grid_state)
-                            gd.executeMotion(grid_state, fpuset=[fpu_id])
                             
                         
         
@@ -175,11 +174,11 @@ def eval_positional_repeatability(env, vfdb, gd, grid_state, opts, fpuset, fpu_c
             analysis_results = {}
             
             for k, v in images.items():
-                alpha, beta, alpha_steps, beta_steps, ipath = v
+                alpha_steps, beta_steps, ipath = v
                 (x_measured_small, y_measured_small, qual_small, x_measured_big, y_measured_big, qual_big) = analysis_func(ipath)
                 
-                analysis_results[k] = (alpha_steps, beta_steps, x_measured_small, y_measured_small,
-                                       x_measured_big, y_measured_big, qual_small, qual_big)
+                analysis_results[k] = (x_measured_small, y_measured_small,
+                                       x_measured_big, y_measured_big)
                                  
         
         

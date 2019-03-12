@@ -74,7 +74,6 @@ def measure_datum_repeatability(env, vfdb, gd, grid_state, opts, fpuset, fpu_con
             pos_rep_cam.SetExposureTime(DATUM_REP_EXPOSURE_MS)
             
     
-            unmoved_images = []
             datumed_images = []
             moved_images = []
     
@@ -92,10 +91,6 @@ def measure_datum_repeatability(env, vfdb, gd, grid_state, opts, fpuset, fpu_con
                 return ipath
     
                 
-            for k in range(DATUM_REP_ITERATIONS):
-                ipath = capture_image("unmoved", count)
-                unmoved_images.append(ipath)
-    
         
             for k in range(DATUM_REP_ITERATIONS):
                 gd.findDatum(grid_state, fpuset=[fpu_id])
@@ -113,8 +108,7 @@ def measure_datum_repeatability(env, vfdb, gd, grid_state, opts, fpuset, fpu_con
                 ipath, coords = capture_image("moved+datumed", count)
                 moved_images.append(ipath)
     
-            images = { 'unmoved_images' : unmoved_images,
-                       'datumed_images' : datumed_imaged,
+            images = { 'datumed_images' : datumed_images,
                        'moved_images' : moved_images }
             
     
@@ -128,22 +122,20 @@ def eval_datum_repeatability(env, vfdb, gd, grid_state, opts, fpuset, fpu_config
         images = get_datum_repeatability_images(env, vfdb, opts, fpu_config, fpu_id, images)
 
         def analysis_func(ipath):
-            return positional_repeatability_image_analysis(ipath, **pos_rep_analysis_pars)
+            return posrepCoordinates(ipath, **pos_rep_analysis_pars)
         
 
         try:
             
-            unmoved_coords = map(analysis_func, images['unmoved_images'])
             datumed_coords = map(analysis_func, images['datumed_images'])
             moved_coords = map(analysis_func, images['moved_images'])
         
 
-            datum_repeatability_mm = evaluate_datum_repeatability(unmoved_coords, datumed_coords, moved_coords)
+            datum_repeatability_mm = evaluate_datum_repeatability(datumed_coords, moved_coords)
 
             datum_repeatability_has_passed = TestResult.OK if datum_repeatability_mm <= DATUM_REP_PASS else TestResult.FAILED
         
-            coords = { 'unmoved_coords' : unmoved_coords,
-                       'datumed_coords' : datumed_coords,
+            coords = { 'datumed_coords' : datumed_coords,
                        'moved_coords' : moved_coords }
             errmsg = ""
             

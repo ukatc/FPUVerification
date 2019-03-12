@@ -90,10 +90,6 @@ def measure_pupil_alignment(env, vfdb, gd, grid_state, opts, fpuset, fpu_config,
         
             
     
-            unmoved_images = []
-            datumed_images = []
-            moved_images = []
-    
             def capture_image(count, alpha, beta):
     
                 ipath = store_image(pup_aln_cam,
@@ -139,7 +135,7 @@ def eval_pupil_alignment(env, vfdb, gd, grid_state, opts, fpuset, fpu_config,
             coords = dict( (k, analysis_func(v)) for k, v in images.items() )
                     
 
-            pupalnChassisErr, pupalnAlphaErr, pupalnBetaErr,  pupalnTotalErr = evaluate_pupil_alignment(coords)
+            pupalnChassisErr, pupalnAlphaErr, pupalnBetaErr,  pupalnTotalErr, pupalnErrorBars = evaluate_pupil_alignment(coords)
 
             pupil_alignment_has_passed = TestResult.OK if pupil_alignment_mm <= PUPIL_ALN_PASS else TestResult.FAILED
         
