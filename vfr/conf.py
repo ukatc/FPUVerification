@@ -23,6 +23,7 @@ MET_HEIGHT_CAMERA_IP_ADDRESS = "169.254.190.121"
 PUPIL_ALGN_CAMERA_IP_ADDRESS = "169.254.108.113"
 
 
+METROLOGY_CAL_POSITIONS =  [268, 328, 28, 88, 148, 208]
 
 DATUM_REP_MEASUREMENT_PARS = { 'DATUM_REP_ITERATIONS' : 10, #  – the
                                # number of datum operations made for
@@ -34,12 +35,12 @@ DATUM_REP_MEASUREMENT_PARS = { 'DATUM_REP_ITERATIONS' : 10, #  – the
                    'DATUM_REP_EXPOSURE_MS' : 500, # – the exposure
                                # time in milliseconds for a correctly
                                # exposed image
-                   'POS_REP_POSITIONS' : [14 + k * 30 for  k in range(6)],
+                   'DATUM_REP_POSITIONS' : METROLOGY_CAL_POSITIONS,
 }
 
 
 MET_CAL_MEASUREMENT_PARS = {
-    'METROLOGY_CAL_POSITIONS' =  [268, 328, 28, 88, 148, 208],
+    'METROLOGY_CAL_POSITIONS' =  METROLOGY_CAL_POSITIONS,
 
     # rotary stage angle, in degrees, required to place each FPU under
     # the metrology calibration camera

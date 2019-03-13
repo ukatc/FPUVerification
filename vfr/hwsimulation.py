@@ -9,7 +9,8 @@ import warnings
 from vfr.conf import (POS_REP_CAMERA_IP_ADDRESS,
                       MET_CAL_CAMERA_IP_ADDRESS,                      
                       MET_HEIGHT_CAMERA_IP_ADDRESS,
-                      PUPIL_ALGN_CAMERA_IP_ADDRESS)
+                      PUPIL_ALGN_CAMERA_IP_ADDRESS,
+                      MET_CAL_MEASUREMENT_PARS)
 
 import ImageAnalysisFuncs # used to look up images
 
@@ -118,12 +119,21 @@ class GigECamera:
 
         if ip_address == POS_REP_CAMERA_IP_ADDRESS:
             iname == "PT25_posrep_1_001.bmp"
+            
         elif ip_address == MET_CAL_CAMERA_IP_ADDRESS:
-            iname = "PT25_metcal_1_001.bmp"            
+            if self.exporure_time_ms == MET_CAL_MEASUREMENT_PARS['METROLOGY_CAL_FIBRE_EXPOSURE_MS']:
+                warnings.warn("using target image in place of fibre image for met "
+                              "cal picture. This can't work! replace this!!")
+                iname = "PT25_metcal_1_001.bmp"            
+            else:
+                iname = "PT25_metcal_1_001.bmp"
+                
         elif ip_address == MET_HEIGHT_CAMERA_IP_ADDRESS:
             iname = "PT25_metht_1_003.bmp"
+            
         elif ip_address == PUPIL_ALGN_CAMERA_IP_ADDRESS:
-            warnings.warn("setting surrogate image file for hardware simulation. This can't work! replace this!!")
+            warnings.warn("setting surrogate image file for hardware simulation."
+                          " This can't work! replace this!!")
             iname = "PT25_metht_1_003.bmp"
 
         # we look up the folder with the images by referencing

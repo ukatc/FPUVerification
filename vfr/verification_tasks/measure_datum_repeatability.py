@@ -32,7 +32,8 @@ from ImageAnalysisFuncs.analyze_positional_repeatability import (positional_repe
 
     
 
-def measure_datum_repeatability(env, vfdb, gd, grid_state, opts, fpuset, fpu_config, 
+def measure_datum_repeatability(env, vfdb, gd, grid_state, opts, fpuset, fpu_config,
+                                DATUM_REP_POSITIONS=None,
                                 DATUM_REP_ITERATIONS=None,
                                 DATUM_REP_PASS=None,
                                 DATUM_REP_EXPOSURE_MS=None):
@@ -52,7 +53,7 @@ def measure_datum_repeatability(env, vfdb, gd, grid_state, opts, fpuset, fpu_con
     
         # get sorted positions (this is needed because the turntable can only
         # move into one direction)
-        for fpu_id, stage_position  in get_sorted_positions(fpuset, POS_REP_POSITIONS):
+        for fpu_id, stage_position  in get_sorted_positions(fpuset, DATUM_REP_POSITIONS):
     
             if (get_datum_repeatability_passed_p(env, vfdb, opts, fpu_config, fpu_id) and (
                     not opts.repeat_passed_tests)):
@@ -67,11 +68,11 @@ def measure_datum_repeatability(env, vfdb, gd, grid_state, opts, fpuset, fpu_con
         
             # initialize pos_rep camera
             # set pos_rep camera exposure time to DATUM_REP_EXPOSURE milliseconds
-            POS_REP_CAMERA_CONF = { DEVICE_CLASS : BASLER_DEVICE_CLASS,
-                                    IP_ADDRESS : POS_REP_CAMERA_IP_ADDRESS }
+            MET_CAL_CAMERA_CONF = { DEVICE_CLASS : BASLER_DEVICE_CLASS,
+                                    IP_ADDRESS : MET_CAL_CAMERA_IP_ADDRESS }
             
-            pos_rep_cam = hw.GigECamera(POS_REP_CAMERA_CONF)
-            pos_rep_cam.SetExposureTime(DATUM_REP_EXPOSURE_MS)
+            met_cal_cam = hw.GigECamera(MET_CAL_CAMERA_CONF)
+            met_cal_cam.SetExposureTime(DATUM_REP_EXPOSURE_MS)
             
     
             datumed_images = []
