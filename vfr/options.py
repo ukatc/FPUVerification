@@ -115,8 +115,8 @@ def parse_args():
         args.gateway_address = "127.0.0.1"
         args.gateway_port = 4700
 
-    if not (args.fpuset is None):
-        args.fpuset = literal_eval(args.fpuset)
+    if not (args.snset is None):
+        args.snset = literal_eval(args.snset)
 
     if args.output_file is None:
         args.output_file = sys.stdout
@@ -226,16 +226,17 @@ def get_sets(vfdb, fpu_config, opts):
         eval_snset = set(eval_snset)
 
     # check passed serial numbers for validity
-    for sn in eval_snset:
-        if not sn_pat.match(sn):
-            raise ValueError("serial number %r is not valid!" % sn)
         
     if eval_snset is None:
         # both mesured and evaluated sets are exclusively defined by
         # the measurement configuration file
         measure_fpuset = fpu_config.keys()
-        eval_fpuset = fpuset
+        eval_fpuset = measure_fpuset
     else:
+        for sn in eval_snset:
+            if not sn_pat.match(sn):
+                raise ValueError("serial number %r is not valid!" % sn)
+            
         # we restrict the measured FPUs to the serial numbers passed
         # in the command line option, and create a config which has
         # entries for these and the additional requested serial
@@ -262,11 +263,13 @@ def get_sets(vfdb, fpu_config, opts):
         fpu_config.update(measure_config)
 
         eval_fpuset = fpu_config.keys()
+
+    return fpu_config, measure_fpuset, eval_fpuset
                        
             
-def load_config(config_file_name, vfdb):
+def load_config(config_file_name, vfdb, opts):
     print("reading measurement configuratiom from %r..." % config_file_name)
-    cfg_list = ast.literal_eval(''.join(open(config_file_name).readlines()))
+    cfg_list = literal_eval(''.join(open(config_file_name).readlines()))
 
     fconfig = dict([ (entry['fpu_id'], { 'serialnumber' : entry['serialnumber'],
                                      'pos' : entry['pos'],
@@ -281,7 +284,7 @@ def load_config(config_file_name, vfdb):
 
 
     # get sets of measured and evaluated FPUs
-    fpu_config, measure_fpuset, eval_fpuset = get_sets(vfdb, fpu_config, opts)
+    fpu_config, measure_fpuset, eval_fpuset = get_sets(vfdb, fconfig, opts)
         
     return fpu_config, sorted(measure_fpuset), sorted(eval_fpuset)
 

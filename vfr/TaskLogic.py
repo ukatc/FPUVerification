@@ -47,7 +47,7 @@ class T:
     TST_DATUM_ALPHA                = "test_datum_alpha"
     TST_DATUM_BETA                 = "test_datum_beta"
     TST_DATUM_REP                  = "test_datum_repeatability"
-    TST_FLASH                      = "flash_snum"
+    TST_FLASH                      = "flash"
     TST_FUNCTIONAL                 = "test_functional"
     TST_GATEWAY_CONNECTION         = "test_gateway_connection"
     TST_INIT                       = "init"
@@ -55,7 +55,7 @@ class T:
     TST_LIMITS                     = "test_limits"
     TST_MET_CAL                    = "test_met_cal"
     TST_MET_CAL_CAM_CONNECTION     = "test_met_camera_connection"
-    TST_MET_HEIGHT               = "test_met_height"
+    TST_MET_HEIGHT                 = "test_met_height"
     TST_MET_HEIGHT_CAM_CONNECTION  = "test_met_height_camera_connection"
     TST_POS_REP                    = "test_pos_rep"
     TST_POS_REP_CAM_CONNECTION     = "test_pos_reteatability_camera_connection"
@@ -84,7 +84,8 @@ usertasks = set([ T.EVAL_DATUM_REP               ,
                   T.MEASURE_POS_REP              , 
                   T.MEASURE_POS_REP              ,  
                   T.MEASURE_PUPIL_ALGN           , 
-                  T.MEASURE_PUPIL_ALGN           ,  
+                  T.MEASURE_PUPIL_ALGN           ,
+                  T.TST_FLASH                    ,
                   T.TASK_DUMP                    ,
                   T.TASK_MEASURE_ALL             ,
                   T.TASK_REFERENCE               ,
@@ -252,7 +253,7 @@ def all_true(testfun, sequence):
 
     return passed
 
-def expand_tasks(goal, tasks, expansion, delete=False):
+def expand_tasks(tasks, goal, expansion, delete=False):
     if goal in tasks:
         print("[expanding %s to %r] ###" % (goal, expansion))
         

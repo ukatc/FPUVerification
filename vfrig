@@ -15,7 +15,7 @@ from vfr.tests_common import flush
 from protectiondb import open_database_env
 
 from vfr.options import parse_args, load_config
-from vfr.conf import (ALPHA_DATUM_OFFSET, )
+from vfr.conf import (ALPHA_DATUM_OFFSET, IMAGE_ROOT_FOLDER)
 
 from vfr.TaskLogic import T, resolve
 
@@ -56,7 +56,7 @@ if __name__ == '__main__':
     
     vfdb = env.open_db("verification")
     
-    fpu_config, measure_fpuset, eval_fpuset = load_config(opts.setup_file, vfdb)
+    fpu_config, measure_fpuset, eval_fpuset = load_config(opts.setup_file, vfdb, opts)
 
 
     print("measurement config= %r" % fpu_config)
