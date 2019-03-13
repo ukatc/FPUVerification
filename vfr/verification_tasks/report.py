@@ -230,7 +230,7 @@ def print_report_extended(serial_number=None,
                 pupil alignment: coords = {coords!r}
                 pupil alignment: calibration_pars = {calibration_pars!r}""").format(
                 **pupil_alignment_result), file=outfile)
-            print("pupil alignment images: {!r}".format(pupil alignment_images))
+            print("pupil alignment images: {!r}".format(pupil_alignment_images))
         else:
             print("pupil alignment: message = {error_message}, time = {time}".format(
                   **pupil_alignment_result), file=outfile)

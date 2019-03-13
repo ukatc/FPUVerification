@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function, division
-from numpy import nan
+from numpy import NaN, mean, std
+from numpy.linalg import norm
 
 import cv2
 from math import pi, sqrt
 import numpy as np
 
-from numpy.linalg import norm
 from numpy import cross, array
 from matplotlib import pyplot as plt
 

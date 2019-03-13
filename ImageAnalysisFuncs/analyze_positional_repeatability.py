@@ -1,5 +1,7 @@
+# -*- coding: utf-8-unix -*-
 from __future__ import print_function, division
-from numpy import NaN, std, array
+from numpy import NaN, mean, std, array
+from numpy.linalg import norm
 
 import cv2
 from math import pi, sqrt

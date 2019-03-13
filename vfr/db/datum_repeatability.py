@@ -1,6 +1,6 @@
 from __future__ import print_function, division,  absolute_import
 
-from db.base import GIT_VERSION, TestResult, get_test_result, timestamp  
+from vfr.db.base import GIT_VERSION, TestResult, get_test_result, timestamp  
 
 RECORD_TYPE='datum-repeatability'
 
@@ -16,7 +16,7 @@ def  save_datum_repeatability_images(env, vfdb, opts, fpu_config, fpu_id, images
         
                         
         val = repr({'fpuid' : fpu_id,
-                    'images' : images),
+                    'images' : images,
                     'time' : timestamp()})
         return val
 
@@ -73,7 +73,7 @@ def  get_datum_repeatability_result(env, vfdb, opts, fpu_config, fpu_id):
     return get_test_result(env, vfdb, fpuset, keyfunc, verbosity=opts.verbosity)
 
 def  get_datum_repeatability_passed_p(env, vfdb, opts, fpu_config, fpu_id):
-    """returns True if the latest datum repetability test for this FPU
+    """returns True if the latest datum repeatability test for this FPU
     was passed successfully."""
     
     val = get_datum_repeatability_result(env, vfdb, opts, fpu_config, fpu_id)

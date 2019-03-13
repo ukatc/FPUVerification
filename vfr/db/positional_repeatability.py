@@ -1,6 +1,6 @@
 from __future__ import print_function, division,  absolute_import
 
-from db.base import GIT_VERSION, TestResult, get_test_result, timestamp  
+from vfr.db.base import GIT_VERSION, TestResult, get_test_result, timestamp  
 
 RECORD_TYPE='positional-repeatability'
 
@@ -84,7 +84,7 @@ def  get_positional_repeatability_result(env, vfdb, opts, fpu_config, fpu_id):
 
     
 def  get_positional_repeatability_passed_p(env, vfdb, opts, fpu_config, fpu_id):
-    """returns True if the latest positional repetability test for this FPU
+    """returns True if the latest positional repeatability test for this FPU
     was passed successfully."""
     
     val = get_positional_repeatability_result(env, vfdb, opts, fpu_config, fpu_id)

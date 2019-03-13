@@ -36,7 +36,7 @@ def  save_datum_result(env, vfdb, opts, fpu_config, fpuset, dasel, grid_state, r
         val = repr({'result' : fsuccess,
                     'datumed' : (a_ok, b_ok),
                     'fpuid' : fpu_id,
-                    'counter_deviation' : (fpu.alpha_deviation, fpu.alpha_deviation)
+                    'counter_deviation' : (fpu.alpha_deviation, fpu.alpha_deviation),
                     'result_state' : str(fpu.state),
                     'diagnostic' : "OK" if fsuccess else rigstate,
                     'time' : timestamp()})
@@ -46,7 +46,7 @@ def  save_datum_result(env, vfdb, opts, fpu_config, fpuset, dasel, grid_state, r
     save_test_result(env, vfdb, fpuset, keyfunc, valfunc, verbosity=opts.verbosity)
     # we update the set of FPUs which are in the database,
     # so that we can iterate over existing data when generating reports.
-    add_sns_to_set(env, vfdb, fpuset, verbosity==opts.verbosity):
+    add_sns_to_set(env, vfdb, fpuset, verbosity==opts.verbosity)
 
 def  get_datum_result(env, vfdb, opts, fpu_config, fpu_id):
 
@@ -59,7 +59,7 @@ def  get_datum_result(env, vfdb, opts, fpu_config, fpu_id):
     return get_test_result(env, vfdb, fpuset, keyfunc, verbosity=opts.verbosity)
 
 def  get_datum_passed_p(env, vfdb, opts, fpu_config, fpu_id):
-    """returns True if the latest datum repetability test for this FPU
+    """returns True if the latest datum repeatability test for this FPU
     was passed successfully."""
     
     val = get_datum_result(env, vfdb, opts, fpu_config, fpu_id)

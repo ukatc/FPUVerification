@@ -1,6 +1,6 @@
 from __future__ import print_function, division,  absolute_import
 
-from db.base import GIT_VERSION, TestResult, get_test_result, timestamp 
+from vfr.db.base import GIT_VERSION, TestResult, get_test_result, timestamp 
 
 RECORD_TYPE = 'metrology-height'
 
@@ -16,7 +16,7 @@ def  save_metrology_height_images(env, vfdb, opts, fpu_config, fpu_id, images):
         
                         
         val = repr({'fpuid' : fpu_id,
-                    'images' : images),
+                    'images' : images,
                     'time' : timestamp()})
         return val
 
@@ -40,7 +40,7 @@ def save_metrology_height_result(env, vfdb, opts, fpu_config, fpu_id,
                                  metht_large_target_height=None,
                                  test_result=None,
                                  errmsg="",
-                                 analysis_version=None)
+                                 analysis_version=None):
 
     # define two closures - one for the unique key, another for the stored value 
     def keyfunc(fpu_id):
@@ -53,8 +53,8 @@ def save_metrology_height_result(env, vfdb, opts, fpu_config, fpu_id,
                         
         val = repr({'small_target_height' : metht_small_target_height,
                     'large_target_height' : metht_large_target_height,
-                    'test_result'=testResult,
-                    'error_message' = errmsg,
+                    'test_result' : test_result,
+                    'error_message' : errmsg,
                     'algorithm_version' : analysis_version,
                     'git_version' : GIT_VERSION,
                     'time' : timestamp()})

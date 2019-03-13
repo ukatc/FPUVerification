@@ -5,25 +5,14 @@ import sys
 from os import environ
 
 from ast import literal_eval
+import re
+
 
 from fpu_constants import *
 
-from vfr.conf import ( DEFAULT_TASKS,
-                       TST_GATEWAY_CONNECTION, 
-                       TST_CAN_CONNECTION,     
-                       TST_DATUM,              
-                       TST_ALPHA_MIN,          
-                       TST_ALPHA_MAX,
-                       TST_BETA_MAX,           
-                       TST_BETA_MIN,
-                       TST_FUNCTIONAL,
-                       TST_INIT,
-                       TST_FLASH,
-                       TST_INITPOS,
-                       TST_DATUM_REP,
-                       TST_LIMITS)
+from vfr.conf import DEFAULT_TASKS
 
-from vfr.tasks import *
+#from vfr.tasks import *
 
 from vfr.db.snset import get_snset
 
@@ -36,7 +25,7 @@ def parse_args():
         print("VFR_VERBOSITY has invalid value, setting verbosity to one")
         DEFAULT_VERBOSITY = 1
                                      
-    parser = argparse.ArgumentParser(description='test FPUs in verification rig', description=summary)
+    parser = argparse.ArgumentParser(description=summary)
     
     parser.add_argument('tasks',  nargs='*',
                         default=DEFAULT_TASKS, 
@@ -45,7 +34,7 @@ def parse_args():
     parser.add_argument('-f', '--setup-file',   default="fpus_batch0.cfg", type=str,
                         help='set FPU flashing and measurement configuration file')
     
-    parser.add_argument('-F', '--report-format',   default="terse", choices=['terse', 'long', 'extensive']
+    parser.add_argument('-F', '--report-format',   default="terse", choices=['terse', 'long', 'extensive'],
                         help="output format of 'report' task (one of 'terse', 'long', 'extensive', default is 'terse')")
 
     parser.add_argument('-m', '--mockup',   default=False, action='store_true',
@@ -87,7 +76,7 @@ def parse_args():
     parser.add_argument('-w', '--rewind_fpus', default=False, action='store_true',
                         help='rewind FPUs to datum position at start')
 
-    parser.add_argument('-p', '--gateway_port', metavar='GATEWAY_PORT', type=int, default=4700,
+    parser.add_argument('-g', '--gateway_port', metavar='GATEWAY_PORT', type=int, default=4700,
                         help='EtherCAN gateway port number (default: %(default)s)')
 
     parser.add_argument('-a', '--gateway_address', metavar='GATEWAY_ADDRESS', type=str, default="192.168.0.10",

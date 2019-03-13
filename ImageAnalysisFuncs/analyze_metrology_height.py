@@ -1,10 +1,10 @@
 from __future__ import print_function, division
-from numpy import nan, float32, std
-
 import cv2
 from math import pi, sqrt
 from numpy.polynomial import Polynomial
 from matplotlib import pyplot as plt
+from numpy import NaN, float32, mean, std
+from numpy.linalg import norm
 
 
 from ImageAnalysisFuncs.base import ImageAnalysisError

@@ -1,6 +1,6 @@
 from __future__ import print_function, division,  absolute_import
 
-from db.base import GIT_VERSION, TestResult, get_test_result, timestamp  
+from vfr.db.base import GIT_VERSION, TestResult, get_test_result, timestamp  
 
 def  save_positional_verification_images(env, vfdb, opts, fpu_config, fpu_id, images_dict):
 
@@ -14,7 +14,7 @@ def  save_positional_verification_images(env, vfdb, opts, fpu_config, fpu_id, im
         
                         
         val = repr({'fpuid' : fpu_id,
-                    'images' : image_dict),
+                    'images' : image_dict,
                     'time' : timestamp()})
         return val
 

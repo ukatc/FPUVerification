@@ -157,7 +157,7 @@ def eval_pupil_alignment(env, vfdb, gd, grid_state, opts, fpuset, fpu_config,
                                     calibration_pars=PUPALGN_CALIBRATION_PARS,
                                     coords=coords,
                                     pupil_alignment_measures=pupil_alignment_measures,
-                                    pupil_alignment_has_passed=datum_repetability_has_passed,
+                                    pupil_alignment_has_passed=datum_repeatability_has_passed,
                                     ermmsg=errmsg,
                                     analysis_version=PUPIL_ALIGNMENT_ALGORITHM_VERSION)
         

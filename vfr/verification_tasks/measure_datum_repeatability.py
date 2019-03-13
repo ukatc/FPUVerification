@@ -25,7 +25,7 @@ from vfr.tests_common import (timestamp, dirac, goto_position, find_datum, store
                               get_sorted_positions)
 
 
-from ImageAnalysisFuncs.analyze_positional_repeatability import (positional_repeatability_image_analysis,
+from ImageAnalysisFuncs.analyze_positional_repeatability import (posrepCoordinates,
                                                                  evaluate_datum_repeatability,
                                                                  DATUM_REPEATABILITY_ALGORITHM_VERSION)
 
@@ -148,8 +148,8 @@ def eval_datum_repeatability(env, vfdb, gd, grid_state, opts, fpuset, fpu_config
             
 
         save_datum_repeatability_result(env, vfdb, opts, fpu_config, fpu_id, coords=coords,
-                                        datum_repeatability_mm=datum_repetability_mm,
-                                        datum_repeatability_has_passed=datum_repetability_has_passed,
+                                        datum_repeatability_mm=datum_repeatability_mm,
+                                        datum_repeatability_has_passed=datum_repeatability_has_passed,
                                         ermmsg=errmsg,
                                         analysis_version=DATUM_REPEATABILITY_ALGORITHM_VERSION)
         

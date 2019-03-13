@@ -118,7 +118,7 @@ def eval_metrology_calibration(env, vfdb, gd, grid_state, opts, fpuset, fpu_conf
                        'fibre_xy' : fibre_coordinates[0:2],
                        'fibre_q' : fibre_coordinates[2],}
 
-            metcal_fibre_large_target_distance, metcal_fibre_small_target_distance, metcal_target_vector_angle = 
+            metcal_fibre_large_target_distance, metcal_fibre_small_target_distance, metcal_target_vector_angle = \
                fibre_target_distance(target_coordinates[0:2], target_coordinates[3:5], fibre_coordinates[0:2])
             
             errmsg = None
@@ -132,9 +132,9 @@ def eval_metrology_calibration(env, vfdb, gd, grid_state, opts, fpuset, fpu_conf
 
 
         save_metrology_calibration_result(env, vfdb, opts, fpu_config, fpu_id, coords=coords,
-                                          metcal_fibre_large_target_distance = metcal_fibre_large_target_distance 
-                                          metcal_fibre_small_target_distance = metcal_fibre_small_target_distance
-                                          metcal_target_vector_angle = metcal_target_vector_angle
+                                          metcal_fibre_large_target_distance = metcal_fibre_large_target_distance, 
+                                          metcal_fibre_small_target_distance = metcal_fibre_small_target_distance,
+                                          metcal_target_vector_angle = metcal_target_vector_angle,
                                           errmsg=errmsg,
                                           analysis_version=METROLOGY_ANALYSIS_ALGORITHM_VERSION)
         

@@ -2,7 +2,10 @@
 Simple class which encapsulate an APT controller
 """
 from __future__ import absolute_import, division, print_function
-import pylibftdi
+try:
+    import pylibftdi
+except ImportError:
+    print(">>>>>>>>>>> Warning: Import of pylibftdi failed - probably dependency mismatch.")
 import time
 import sys
 import struct as st

@@ -3,6 +3,8 @@ from __future__ import print_function, division
 from textwrap import dedent
 
 summary=dedent("""\
+Test FPUs in verification rig, and evaluate tests.
+
 The program performs a set of measurements and evaluations on
 FPUs. Which measurements and evaluations are done, is defined by the
 "tasks" command line arguments. Tasks can represent bundles of

@@ -1,10 +1,10 @@
 from __future__ import print_function, division
 
-from vrf.db.datum import get_datum_passed_p
-from vrf.db.datum_repeatability import get_datum_repetability_passed_p
-from vrf.db.colldect_limits import get_colldect_passed_p
-from vrf.db.pupil_alignment import get_pupil_alignment_passed_p
-from vrf.db.positional_repetability import get_positional_repeatability_passed_p
+from vfr.db.datum import get_datum_passed_p
+from vfr.db.datum_repeatability import get_datum_repeatability_passed_p
+from vfr.db.colldect_limits import get_colldect_passed_p
+from vfr.db.pupil_alignment import get_pupil_alignment_passed_p
+from vfr.db.positional_repeatability import get_positional_repeatability_passed_p
 
 class T:
     # evaluation of measurements
@@ -14,12 +14,15 @@ class T:
     EVAL_POS_REP                   = "eval_pos_rep"
     EVAL_PUPIL_ALGN                = "eval_pup_align"
     # measurements
+    MEASURE_ALL                    = "measure_all"
     MEASURE_DATUM_REP              = "measure_datum_rep"
     MEASURE_MET_CAL                = "measure_met_cal"
     MEASURE_MET_HEIGHT             = "measure_met_height"
     MEASURE_POS_REP                = "measure_pos_rep"
     MEASURE_PUPIL_ALGN             = "measure_pup_align"
     # conditional dependencies (can be skipped if done once)
+    REQ_DATUM_PASSED               = "req_datum_passed"
+    REQ_COLLDECT_PASSED            = "req_colldect_passed"
     REQ_DATUM_REP_PASSED           = "req_datum_repeatability_passed"
     REQ_FUNCTIONAL_PASSED          = "req_functional_test_passed"
     REQ_POS_REP_PASSED             = "req_positional_repeatability_passed"
@@ -52,18 +55,15 @@ class T:
     TST_LIMITS                     = "test_limits"
     TST_MET_CAL                    = "test_met_cal"
     TST_MET_CAL_CAM_CONNECTION     = "test_met_camera_connection"
+    TST_MET_HEIGHT               = "test_met_height"
     TST_MET_HEIGHT_CAM_CONNECTION  = "test_met_height_camera_connection"
     TST_POS_REP                    = "test_pos_rep"
-    TST_POS_REP_CAM_CONNECTION     = "test_pos_repetability_camera_connection"
+    TST_POS_REP_CAM_CONNECTION     = "test_pos_reteatability_camera_connection"
     TST_POS_VER                    = "test_pos_ver"
     TST_PUPIL_ALGN                 = "test_pup_align"
     TST_PUPIL_ALGN_CAM_CONNECTION  = "test_pup_alignment_camera_connection"
 
 
-DEFAULT_TASKS = [T.TASK_SELFTEST    ,
-                 T.TASK_EVAL_ALL    ,
-                 T.TASK_MEASURE_ALL ,
-                 T.TASK_REPORT      ,]
 
 usertasks = set([ T.EVAL_DATUM_REP               , 
                   T.EVAL_DATUM_REP               ,  
@@ -178,7 +178,7 @@ task_dependencies = [ (T.TST_CAN_CONNECTION, [T.TST_GATEWAY_CONNECTION, T.TASK_I
                                         T.TST_PUPIL_ALGN               , 
                                         T.MEASURE_PUPIL_ALGN           ,    ]),
                       
-                      (TASK_EVAL_ALL, [T.EVAL_DATUM_REP               , 
+                      (T.TASK_EVAL_ALL, [T.EVAL_DATUM_REP               , 
                                        T.EVAL_MET_CAL                 , 
                                        T.EVAL_POS_REP                 , 
                                        T.EVAL_MET_HEIGHT              , 
@@ -190,7 +190,7 @@ task_dependencies = [ (T.TST_CAN_CONNECTION, [T.TST_GATEWAY_CONNECTION, T.TASK_I
 # passed for all FPUs, otherwise the listed tasks are addded.
 conditional_dependencies = [ (T.REQ_DATUM_REP_PASSED, get_datum_repeatability_passed_p, [T.TST_DATUM_REP, ]),
                              (T.REQ_DATUM_PASSED, get_datum_passed_p, [T.TST_DATUM]),
-                             (T.REQ_COLLDECT_PASSED, get_colldect_passed_p, [T.TST_COLLDECT]),
+                             (T.REQ_COLLDECT_PASSED, get_colldect_passed_p, [T.TST_COLLDETECT]),
                              (T.REQ_PUP_ALGN_PASSED, get_pupil_alignment_passed_p, [T.TST_PUPIL_ALGN]),
                              (T.REQ_POS_REP_PASSED, get_positional_repeatability_passed_p, [T.TST_POS_REP]),
 ]
@@ -254,7 +254,8 @@ def all_true(testfun, sequence):
 
 def expand_tasks(goal, tasks, expansion, delete=False):
     if goal in tasks:
-                      print("[expanding %s to %r] ###" % (goal, expansion))
+        print("[expanding %s to %r] ###" % (goal, expansion))
+        
         if delete:
                       tasks.remove(goal)
                       tasks.update(expansion)

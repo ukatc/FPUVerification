@@ -12,7 +12,8 @@ from fpu_constants import *
 
 from vfr.tests_common import flush
 
-from vfr.db import open_database_env
+from protectiondb import open_database_env
+
 from vfr.options import parse_args, load_config
 from vfr.conf import (ALPHA_DATUM_OFFSET, )
 
@@ -21,8 +22,10 @@ from vfr.TaskLogic import T, resolve
 from vfr.connection import check_ping_ok, check_connection, check_can_connection, init_driver
 
 from vfr.posdb import init_position
-from vfr.functional_tests import (test_datum, find_datum,  test_limit,
-                                  DASEL_BOTH, DASEL_ALPHA, DASEL_BETA)
+from vfr.tests_common import find_datum
+
+from vfr.verification_tasks.functional_tests import (test_datum, test_limit,
+                                                     DASEL_BOTH, DASEL_ALPHA, DASEL_BETA)
 
 from vfr.verification_tasks.metrology_calibration import measure_metrology_calibration, eval_metrology_calibration
 
@@ -259,7 +262,7 @@ if __name__ == '__main__':
         eval_pupil_alignment(env, vfdb, gd, grid_state, opts, eval_fpuset, fpu_config,
                              PUPALGN_CALIBRATION_PARS=PUPALGN_CALIBRATION_PARS,
                              PUPALGN_ANALYSIS_PARS=PUPALGN_ANALYSIS_PARS,
-                             PUPALGN_EVALUATION_PARS)
+                             **PUPALGN_EVALUATION_PARS)
         
 
     if T.MEASURE_POS_REP in tasks:

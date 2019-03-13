@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 from numpy import NaN
 
-from vfr.db.datum import env, TestResult, save_datum_result
+from vfr.db.datum import TestResult, save_datum_result
 from vfr.db.colldect_limits import save_angular_limit, set_protection_limit, get_anglimit_passed_p
 
 

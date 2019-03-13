@@ -107,7 +107,7 @@ def eval_metrology_height(env, vfdb, gd, grid_state, opts, fpuset, fpu_config,
 
         save_metrology_height_result(env, vfdb, opts, fpu_config, fpu_id,
                                      metht_small_target_height=metht_small_target_height,
-                                     metht_large_target_height= metht_large_target_height
+                                     metht_large_target_height= metht_large_target_height,
                                      test_result=testResult,
                                      errmsg=errmsg,
                                      analysis_version=METROLOGY_HEIGHT_ANALYSIS_ALGORITHM_VERSION)

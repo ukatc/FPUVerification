@@ -99,7 +99,7 @@ def measure_positional_verification(env, vfdb, gd, grid_state, opts, fpuset, fpu
     
             if not get_positional_repeatability_passed_p(env, vfdb, opts, fpu_config, fpu_id):
                 print("FPU %s: skipping positional verification measurement because"
-                      " there is no passed positional repetability test" % fpu_config['serialnumber'])
+                      " there is no passed positional repeatability test" % fpu_config['serialnumber'])
                 continue
     
             if (get_datum_verification_passed_p(env, vfdb, opts, fpu_config, fpu_id) and (

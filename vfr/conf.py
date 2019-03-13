@@ -1,4 +1,14 @@
+# -*- coding: utf-8-unix -*-
+
 from __future__ import print_function, division
+from math import ceil
+from numpy import NaN
+
+DEFAULT_TASKS = ["selftest",
+                 "measure_all",
+                 "evaluate_all",
+                 "report"]
+
 
 INSTRUMENT_FOCAL_LENGTH = 4101.4 # millimeter (does not change)
 
@@ -25,39 +35,39 @@ PUPIL_ALGN_CAMERA_IP_ADDRESS = "169.254.108.113"
 
 METROLOGY_CAL_POSITIONS =  [268, 328, 28, 88, 148, 208]
 
-DATUM_REP_MEASUREMENT_PARS = { 'DATUM_REP_ITERATIONS' : 10, #  – the
+DATUM_REP_MEASUREMENT_PARS = { 'DATUM_REP_ITERATIONS' : 10, # the
                                # number of datum operations made for
                                # each test
-                   'DATUM_REP_PASS' : 20.0 ,  # – the maximum single
+                               'DATUM_REP_PASS' : 20.0 , # the maximum single
                                # deviation in microns from the
                                # baseline position which represents an
                                # acceptable FPU
-                   'DATUM_REP_EXPOSURE_MS' : 500, # – the exposure
+                               'DATUM_REP_EXPOSURE_MS' : 500, # the exposure
                                # time in milliseconds for a correctly
                                # exposed image
-                   'DATUM_REP_POSITIONS' : METROLOGY_CAL_POSITIONS,
+                               'DATUM_REP_POSITIONS' : METROLOGY_CAL_POSITIONS,
 }
 
 
 MET_CAL_MEASUREMENT_PARS = {
-    'METROLOGY_CAL_POSITIONS' =  METROLOGY_CAL_POSITIONS,
+    'METROLOGY_CAL_POSITIONS' :  METROLOGY_CAL_POSITIONS,
 
     # rotary stage angle, in degrees, required to place each FPU under
     # the metrology calibration camera
     
-    'METROLOGY_CAL_TARGET_EXPOSURE_MS' = 500.0, # he exposure time in
+    'METROLOGY_CAL_TARGET_EXPOSURE_MS' : 500.0, # he exposure time in
                                                 # milliseconds for a
                                                 # correctly exposed
                                                 # image of the
                                                 # illuminated targets
     
-    'METROLOGY_CAL_FIBRE_EXPOSURE_MS' = 0.1, # he exposure time in
+    'METROLOGY_CAL_FIBRE_EXPOSURE_MS' : 0.1, # he exposure time in
                                              # milliseconds for a
                                              # correctly exposed image
                                              # of the illuminated
                                              # targets
     
-    'METROLOGY_CAL_BACKLIGHT_VOLTAGE' = 0.1, # voltage of backlight
+    'METROLOGY_CAL_BACKLIGHT_VOLTAGE' : 0.1, # voltage of backlight
                                              # for fibre measurements
 }
 

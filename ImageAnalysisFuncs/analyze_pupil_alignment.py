@@ -3,12 +3,12 @@ from __future__ import print_function, division
 import cv2
 from math import pi, sqrt
 from matplotlib import pyplot as plt
-from numpy import NaN, mean
-from nunpy.linalg import norm
+from numpy import NaN, mean, std
+from numpy.linalg import norm
 
 from ImageAnalysisFuncs.base import ImageAnalysisError
 from DistortionCorrection import correct
-from vfr.config import INSTRUMENT_FOCAL_LENGTH
+from vfr.conf import INSTRUMENT_FOCAL_LENGTH
 
 
 # exceptions which are raised if image analysis functions fail
@@ -100,7 +100,7 @@ def evaluate_pupil_alignment(dict_of_coordinates,
 
     # ask Steve Watson what the following means - it is from his spec
     warnings.warn("probably rubbish here")
-    pupalnChassisErr = atan((xc / INSTRUMENT_FOCAL_LENGTH)
+    pupalnChassisErr = atan(xc / INSTRUMENT_FOCAL_LENGTH)
 
     pupalnTotalErr = sum([pupalnChassisErr, pupalnAlphaErr, pupalnBetaErr])
 

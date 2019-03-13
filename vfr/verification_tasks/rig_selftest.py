@@ -1,20 +1,11 @@
 from __future__ import print_function, division
 
 
-from vfr.conf import (PUP_ALN_CAMERA_IP_ADDRESS,
+from vfr.conf import (PUPIL_ALGN_CAMERA_IP_ADDRESS,
                       POS_REP_CAMERA_IP_ADDRESS,
                       MET_CAL_CAMERA_IP_ADDRESS,
                       MET_HEIGHT_CAMERA_IP_ADDRESS)
 
-
-
-from vfr.db.pupil_alignment import (env,
-                                    TestResult,
-                                    save_pupil_alignment_images,
-                                    get_pupil_alignment_images,
-                                    save_pupil_alignment_result,
-                                    get_pupil_alignment_result,
-                                    get_pupil_alignment_passed_p)
 
 
 from vfr import hw
@@ -62,11 +53,11 @@ def selftest_pup_algn(env, vfdb, gd, grid_state, opts, fpuset, fpu_config,
     
             # initialize pos_rep camera
             # set pos_rep camera exposure time to DATUM_REP_EXPOSURE milliseconds
-            PUP_ALN_CAMERA_CONF = { DEVICE_CLASS : BASLER_DEVICE_CLASS,
-                                    IP_ADDRESS : PUP_ALN_CAMERA_IP_ADDRESS }
+            PUP_ALGN_CAMERA_CONF = { DEVICE_CLASS : BASLER_DEVICE_CLASS,
+                                    IP_ADDRESS : PUPIL_ALGN_CAMERA_IP_ADDRESS }
             
-            pup_aln_cam = hw.GigECamera(PUP_ALN_CAMERA_CONF)
-            pup_aln_cam.SetExposureTime(PUPIL_ALN_EXPOSURE_MS)
+            pup_aln_cam = hw.GigECamera(PUP_ALGN_CAMERA_CONF)
+            pup_aln_cam.SetExposureTime(PUPIL_ALGN_EXPOSURE_MS)
 
                 
             fpu_id, stage_position =  get_sorted_positions(fpuset, PUP_ALN_POSITIONS)[0]
@@ -150,10 +141,10 @@ def selftest_metrology_calibration(env, vfdb, gd, grid_state, opts, fpuset, fpu_
 
 
 def selftest_metrology_height(env, vfdb, gd, grid_state, opts, fpuset, fpu_config, 
-                             MET_HEIGHT_POSITIONS=None,
-                             MET_HIGHT_TARGET_EXPOSURE_MS=None,
-                             MET_HEIGHT_ANALYSIS_PARS=None,
-                             capture_image=capture_image):
+                              MET_HEIGHT_POSITIONS=None,
+                              MET_HIGHT_TARGET_EXPOSURE_MS=None,
+                              MET_HEIGHT_ANALYSIS_PARS=None,
+                              capture_image=None):
 
     if opts.mockup:
         # replace all hardware functions by mock-up interfaces
@@ -254,9 +245,9 @@ def selftest(env, vfdb, gd, grid_state, opts, fpuset, fpu_config,
     try:
         selftest_pup_algn(env, vfdb, gd, grid_state, opts, fpuset, fpu_config,
                           PUPALGN_ANALYSIS_PARS=PUPALGN_ANALYSIS_PARS,
-                          PUPALGN_CALIBRATION_PARS=PUPALGN_CALIBRATION_PARS,
-                          **PUPALGN_MEASUREMENT_PARS,
-                          capture_image=capture_image)
+                          PUPALGN_CALIBRATION_PARS=PUPALGN_CALIBRATION_PARS,                          
+                          capture_image=capture_image,
+                          **PUPALGN_MEASUREMENT_PARS)
         
     except exception as e:
         print("pupil alignment self-test failed:", str(e))
@@ -266,8 +257,8 @@ def selftest(env, vfdb, gd, grid_state, opts, fpuset, fpu_config,
         selftest_metrology_calibration(env, vfdb, gd, grid_state, opts, fpuset, fpu_config,
                                        METCAL_TARGET_ANALYSIS_PARS=METCAL_TARGET_ANALYSIS_PARS,
                                        METCAL_FIBRE_ANALYSIS_PARS=METCAL_FIBRE_ANALYSIS_PARS,
-                                       **MET_CAL_MEASUREMENT_PARS,
-                                       capture_image=capture_image):
+                                       capture_image=capture_image,
+                                       **MET_CAL_MEASUREMENT_PARS)
     except exception as e:
         print("metrology calibration self-test failed", str(e))
         sys.exit(1)
@@ -276,8 +267,8 @@ def selftest(env, vfdb, gd, grid_state, opts, fpuset, fpu_config,
     try:
         selftest_metrology_height(env, vfdb, gd, grid_state, opts, fpuset, fpu_config, 
                                   MET_HEIGHT_ANALYSIS_PARS=None,
-                                  **MET_HEIGHT_MEASUREMENT_PARS,
-                                  capture_image=capture_image)        
+                                  capture_image=capture_image,
+                                  **MET_HEIGHT_MEASUREMENT_PARS)        
     except exception as e:
         print("metrology height self-test failed", str(e))
         sys.exit(1)
@@ -285,11 +276,11 @@ def selftest(env, vfdb, gd, grid_state, opts, fpuset, fpu_config,
 
 
     try:
-        selftest_positional_repetability(env, vfdb, gd, grid_state, opts, fpuset, fpu_config, 
-                                         POS_REP_ANALYSIS_PARS=POS_REP_ANALYSIS_PARS,
-                                         POS_REP_CALIBRATION_PARS=POS_REP_CALIBRATION_PARS,
-                                         **POS_REP_MEASUREMENT_PARS,
-                                         capture_image=capture_image)        
+        selftest_positional_repeatability(env, vfdb, gd, grid_state, opts, fpuset, fpu_config, 
+                                          POS_REP_ANALYSIS_PARS=POS_REP_ANALYSIS_PARS,
+                                          POS_REP_CALIBRATION_PARS=POS_REP_CALIBRATION_PARS,
+                                          capture_image=capture_image,
+                                          **POS_REP_MEASUREMENT_PARS)        
     except exception as e:
         print("positional repeatability self-test failed", str(e))
         sys.exit(1)

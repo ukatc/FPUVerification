@@ -1,5 +1,13 @@
 from __future__ import absolute_import
-import pylibftdi
+
+try:
+    import pylibftdi
+    
+    _PRODUCT_IDS = pylibftdi.USB_PID_LIST
+    _PRODUCT_IDS[:] = [0xFAF0]
+    
+except ImportError:
+    print(">>>>>>>>>>> Warning: Import of pylibftdi failed - probably dependency mismatch.")
 
 from pyAPT import message, controller, mts50, prm1, cr1z7, nr360s
 
@@ -20,8 +28,6 @@ NR360S = nr360s.NR360S
 
 OutOfRangeError = controller.OutOfRangeError
 
-_PRODUCT_IDS = pylibftdi.USB_PID_LIST
-_PRODUCT_IDS[:] = [0xFAF0]
 
 
 def add_PID(pid):

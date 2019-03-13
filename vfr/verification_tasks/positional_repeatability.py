@@ -22,12 +22,12 @@ from fpu_commands import gen_wf
 
 
 from vfr.tests_common import (flush, timestamp, dirac, goto_position, find_datum, store_image,
-                              get_sorted_positionse)
+                              get_sorted_positions)
 
 
 from ImageAnalysisFuncs.analyze_positional_repeatability import (posrepCoordinates,
                                                                  evaluate_positional_repeatability, 
-                                                                 POSITIONAL_REPEATABILITY_ALGORITHM_VERSION, fit_gearbox_correction)
+                                                                 POSITIONAL_REPEATABILITY_ALGORITHM_VERSION)
 
 
 from Gearbox.gear_correction import GearboxFitError, fit_gearbox_correction
@@ -200,7 +200,7 @@ def eval_positional_repeatability(env, vfdb, gd, grid_state, opts, fpuset, fpu_c
                                              pos_rep_calibration_pars=pos_rep_calibration_pars,
                                              analysis_results=analysis_results,
                                              positional_repeatability_mm=positional_repeatability_mm, 
-                                             positional_repeatability_has_passed=positional_repetability_has_passed,
+                                             positional_repeatability_has_passed=positional_repeatability_has_passed,
                                              gearbox_correction=gearbox_correction,
                                              ermmsg=errmsg,
                                              analysis_version=POSITIONAL_REPEATABILITY_ALGORITHM_VERSION)
