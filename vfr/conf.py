@@ -3,6 +3,7 @@
 from __future__ import print_function, division
 from math import ceil
 from numpy import NaN
+from os import environ
 
 DEFAULT_TASKS = ["selftest",
                  "measure_all",
@@ -22,7 +23,7 @@ NR360_SERIALNUMBER = 40873952
 
 MTS50_SERIALNUMBER = 83822910
 
-IMAGE_ROOT_FOLDER = '/moonsdata/verification/images'
+IMAGE_ROOT_FOLDER = environ.get("IMAGE_ROOT_FOLDER",'/moonsdata/verification/images')
 
 POS_REP_CAMERA_IP_ADDRESS = "169.254.187.121"
 
@@ -36,13 +37,13 @@ PUPIL_ALGN_CAMERA_IP_ADDRESS = "169.254.108.113"
 METROLOGY_CAL_POSITIONS =  [268, 328, 28, 88, 148, 208]
 
 COLLDECT_MEASUREMENT_PARS = {
-    COLDET_ALPHA : -180,
-    COLDET_BETA : 70,
-    COLDET_POSITIONS : [NaN, NaN, NaN, NaN, NaN, NaN],
-    LIMIT_ALPHA_NEG_EXPECT : -182.0,
-    LIMIT_ALPHA_POS_EXPECT : +165.0,
-    LIMIT_BETA_NEG_EXPECT  : -185.0,
-    LIMIT_BETA_POS_EXPECT  : +155.0,
+    'COLDET_ALPHA' : -180,
+    'COLDET_BETA' : 70,
+    'COLDET_POSITIONS' : [NaN, NaN, NaN, NaN, NaN, NaN],
+    'LIMIT_ALPHA_NEG_EXPECT' : -182.0,
+    'LIMIT_ALPHA_POS_EXPECT' : +165.0,
+    'LIMIT_BETA_NEG_EXPECT'  : -185.0,
+    'LIMIT_BETA_POS_EXPECT'  : +155.0,
     
 }
 
@@ -137,7 +138,7 @@ POSREP_MEASUREMENT_PARS = {
     'POSITION_REP_ITERATIONS' : NaN, # the number of times each FPU
                                      # sweeps back and forth
 
-    'POSITION_REP_SAFETY_MARGIN' = 5.0, # safety margin, in degree, for
+    'POSITION_REP_SAFETY_MARGIN' : 5.0, # safety margin, in degree, for
                                      # distance to range limits when testing
     
     'POSITION_REP_WAVEFORM_PARS' :  { 'mode' : 'fast',

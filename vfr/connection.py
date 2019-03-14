@@ -3,7 +3,7 @@ from __future__ import print_function, division
 import os
 
 import FpuGridDriver
-from FpuGridDriver import (TEST_GATEWAY_ADRESS_LIST, GatewayAddress,
+from FpuGridDriver import (TEST_GATEWAY_ADRESS_LIST, GatewayAddress, ProtectionError,
                            SEARCH_CLOCKWISE, SEARCH_ANTI_CLOCKWISE,
                            DEFAULT_WAVEFORM_RULSET_VERSION, DATUM_TIMEOUT_DISABLE)
 
@@ -29,7 +29,12 @@ def check_connection(opts, name, address):
 
 def init_driver(opts, max_id, env=None, protected=True):
     if protected:
-        rd = FpuGridDriver.GridDriver(max_id+1, env=env)
+        try:
+            rd = FpuGridDriver.GridDriver(max_id+1, env=env)
+        except ProtectionError, e:
+            print("protectionError exception raised -- maybe the"
+                  " postion database needs to be initialized with 'init' ?\n\n",
+                  str(e))
     else:
         rd = FpuGridDriver.UnprotectedGridDriver(max_id+1)
 
