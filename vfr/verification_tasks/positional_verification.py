@@ -2,6 +2,8 @@ from __future__ import print_function, division
 
 from numpy import NaN
 
+import warnings
+
 from GigE.GigECamera import DEVICE_CLASS, BASLER_DEVICE_CLASS, IP_ADDRESS
 
 from vfr.conf import POS_REP_CAMERA_IP_ADDRESS
@@ -9,7 +11,8 @@ from vfr.conf import POS_REP_CAMERA_IP_ADDRESS
 from vfr.verification_tasks.measure_datum_repeatability import get_datum_repeatability_passed_p
 
 from vfr.verification_tasks.positional_repeatability import (get_positional_repeatability_result,
-                                                             get_positional_repeatability_passed_p )
+                                                             get_positional_repeatability_passed_p, 
+                                                             POSITIONAL_REPEATABILITY_ALGORITHM_VERSION)
 
 from vfr.db.positional_verification import (TestResult,
                                             save_positional_verification_images,
@@ -38,18 +41,18 @@ from Gearbox.gear_correction import GearboxFitError, apply_gearbox_correction
     
 
 
-def generate_tested_positions(niterations):
+def generate_tested_positions(niterations,
+                              alpha_min=NaN,
+                              alpha_max=NaN,
+                              beta_min=NaN,
+                              beta_max=NaN):
     positions = []
-    ALPHA_MIN = -179.0
-    ALPHA_MAX = +150.0
-    BETA_MIN = -175.0
-    BETA_MAX = +150.0
     
     for k in range(8):
         positions.append((10.0 + k * 45.0, -170.0))
     for r in range(niterations):
-        alpha = random.uniform(ALPHA_MIN, ALPHA_MAX)
-        beta = random.uniform(BETA_MIN, BETA_MAX)
+        alpha = random.uniform(alpha_min, alpha_max)
+        beta = random.uniform(beta_min, beta_max)
         positions.append( (alpha, beta))
 
     return positions
@@ -108,8 +111,17 @@ def measure_positional_verification(env, vfdb, gd, grid_state, opts, fpuset, fpu
                 sn = fpu_config[fpu_id]['serialnumber']
                 print("FPU %s : datum verification test already passed, skipping test" % sn)
                 continue
+
+            alpha_min = get_angular_limit(env, vfdb, fpu_id, sn, "alpha_min")
+            alpha_max = get_angular_limit(env, vfdb, fpu_id, sn, "alpha_max")
+            beta_min = get_angular_limit(env, vfdb, fpu_id, sn, "beta_min")
+            beta_max = get_angular_limit(env, vfdb, fpu_id, sn, "beta_max")
+            
             
             pr_result = get_positional_repeatability_result(env, vfdb, opts, fpu_config, fpu_id)
+            if pr_result['analysis_version'] < POSITIONAL_REPEATABILITY_ALGORITHM_VERSION:
+                warnings.warn("FPU %s: positional repetability data uses old version of image analysis" % sn)
+            
             gearbox_correction = pr_result['gearbox_correction']
             fpu_coeffs = gearbox_correction['coeffs']
             
@@ -135,7 +147,11 @@ def measure_positional_verification(env, vfdb, gd, grid_state, opts, fpuset, fpu
     
                 
             
-            tested_positions = generate_tested_positions(POSITIONAL_VER_ITERATIONS)
+            tested_positions = generate_tested_positions(POSITIONAL_VER_ITERATIONS,
+                                                         alpha_min=alpha_min,
+                                                         alpha_max=alpha_max,
+                                                         beta_min=beta_min,
+                                                         beta_max=beta_max)
             
             gd.findDatum(grid_state, fpuset=[fpu_id])
     

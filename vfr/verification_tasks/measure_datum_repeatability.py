@@ -61,7 +61,7 @@ def measure_datum_repeatability(env, vfdb, gd, grid_state, opts, fpuset, fpu_con
                 sn = fpu_config[fpu_id]['serialnumber']
                 print("FPU %s : datum repeatability test already passed, skipping test" % sn)
                 continue
-    
+
             
             # move rotary stage to POS_REP_POSN_N
             hw.turntable_safe_goto(gd, grid_state, stage_position)            

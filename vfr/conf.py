@@ -131,12 +131,15 @@ POSREP_MEASUREMENT_PARS = {
                                        # milliseconds for a correctly
                                        # exposed image
     
-    'POSITION_REP_NUMINCREMENTS' : NaN, # the number of movements made
+    'POSITION_REP_NUM_INCREMENTS' : NaN, # the number of movements made
                                      # within each positive sweep from
                                      # the starting position
     'POSITION_REP_ITERATIONS' : NaN, # the number of times each FPU
                                      # sweeps back and forth
 
+    'POSITION_REP_SAFETY_MARGIN' = 5.0, # safety margin, in degree, for
+                                     # distance to range limits when testing
+    
     'POSITION_REP_WAVEFORM_PARS' :  { 'mode' : 'fast',
                                       'max_change' : 1.2,
                                       'min_steps' : STEPS_LOWER_LIMIT,

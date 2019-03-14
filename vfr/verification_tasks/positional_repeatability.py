@@ -35,6 +35,7 @@ from Gearbox.gear_correction import GearboxFitError, fit_gearbox_correction
 
     
 def measure_positional_repeatability(env, vfdb, gd, grid_state, opts, fpuset, fpu_config,
+                                     POSITION_REP_SAFETY_MARGIN=NaN,
                                      POSITION_REP_WAVEFORM_PARS=None,
                                      POSITIONAL_REP_ITERATIONS=None,
                                      POSITION_REP_POSITIONS=None,
@@ -82,6 +83,17 @@ def measure_positional_repeatability(env, vfdb, gd, grid_state, opts, fpuset, fp
                 print("FPU %s : positional repeatability test already passed, skipping test" % sn)
                 continue
     
+            alpha_min = get_angular_limit(env, vfdb, fpu_id, sn, "alpha_min")
+            alpha_max = get_angular_limit(env, vfdb, fpu_id, sn, "alpha_max")
+            beta_min = get_angular_limit(env, vfdb, fpu_id, sn, "beta_min")
+            beta_max = get_angular_limit(env, vfdb, fpu_id, sn, "beta_max")
+
+            if ( (alpha_min is None)
+                 or (alpha_max is None)
+                 or (beta_min is None)
+                 or (beta_max is None)):
+                print("FPU %s : limit test value missing, skipping test" % sn)
+                continue
             
             # move rotary stage to POS_REP_POSN_N
             hw.turntable_safe_goto(gd, grid_state, stage_position)            
@@ -109,11 +121,11 @@ def measure_positional_repeatability(env, vfdb, gd, grid_state, opts, fpuset, fp
             for i in range(POSITIONAL_REP_ITERATIONS):
                 gd.findDatum(grid_state, fpuset=[fpu_id])
                 
-                step_a = 320.0 / POSITIONAL_REP_INCREMENTS
-                step_b = 320.0 / POSITIONAL_REP_INCREMENTS
+                step_a = (alpha_max - alpha_min - 2 * POSITION_REP_SAFETY_MARGIN) / POSITIONAL_REP_NUM_INCREMENTS
+                step_b = (beta_max - beta_min - 2 * POSITION_REP_SAFETY_MARGIN) / POSITIONAL_REP_NUM_INCREMENTS
 
-                alpha0 = -170.0
-                beta0 = -170.0
+                alpha0 = alpha_min + POSITION_REP_SAFETY_MARGIN
+                beta0 = beta_min + POSITION_REP_SAFETY_MARGIN
                     
     
                 for j in range(4):
