@@ -81,8 +81,15 @@ def test_limit(env, fpudb, vfdb, gd, grid_state, opts, fpuset, fpu_config,
                LIMIT_ALPHA_NEG_EXPECT=NaN,
                LIMIT_ALPHA_POS_EXPECT=NaN,
                LIMIT_BETA_NEG_EXPECT=NaN,
-               LIMIT_BETA_POS_EXPECT=NaN):
+               LIMIT_BETA_POS_EXPECT=NaN,
+               COLDET_ALPHA=NaN,
+               COLDET_BETA=NaN):
     
+    tstamp=timestamp()
+    if opts.mockup:
+        # replace all hardware functions by mock-up interfaces
+        hw = hwsimulation
+        
     abs_alpha_def = -180.0
     abs_beta_def = 0.0
     goto_position(gd, abs_alpha_def, abs_beta_def, grid_state, fpuset=fpuset)
@@ -106,12 +113,16 @@ def test_limit(env, fpudb, vfdb, gd, grid_state, opts, fpuset, fpu_config,
         dw = -30
         idx = 1
     elif which_limit == "beta_collision":
-        abs_alpha, abs_beta = -180.0, 90.0
+        abs_alpha, abs_beta = COLDET_ALPHA, (COLDET_BETA +5.0)
         free_dir = REQD_CLOCKWISE
         dw = 30
         idx = 1
 
-    for fpu_id in fpuset:
+    if which_limit != "beta_collision":
+        # home turntable
+        hw.safe_home_turntable(gd, grid_state)
+    
+    for fpu_id, stage_position  in get_sorted_positions(fpuset, DATUM_REP_POSITIONS):
         sn = fpu_config[fpu_id]['serialnumber']
         
         if (get_anglimit_passed_p(env, vfdb, fpu_id, sn, which_limit,
@@ -123,13 +134,24 @@ def test_limit(env, fpudb, vfdb, gd, grid_state, opts, fpuset, fpu_config,
             
 
         try:
+            if which_limit == "beta_collision":
+                # home turntable
+                hw.safe_home_turntable(gd, grid_state)
+            
             print("limit test %s: moving fpu %i to position (%6.2f, %6.2f)" % (
                 which_limit, fpu_id, abs_alpha, abs_beta))
 
             if which_limit == "beta_collision":
-                turntable.go_collision_test_pos(fpu_id, opts)
+                # move rotary stage to POS_REP_POSN_N
+                hw.turntable_safe_goto(gd, grid_state, stage_position)            
             
-            goto_position(gd, abs_alpha, abs_beta, grid_state, fpuset=[fpu_id], soft_protection=False)
+            if which_limit == "beta_collision":
+                goto_position(gd, abs_alpha, abs_beta-5.0, grid_state, fpuset=[fpu_id], soft_protection=False)
+                goto_position(gd, abs_alpha, abs_beta+5.0, grid_state, fpuset=[fpu_id], soft_protection=False)
+                
+            else:
+                goto_position(gd, abs_alpha, abs_beta, grid_state, fpuset=[fpu_id], soft_protection=False)
+                
             test_succeeded = False
             test_valid = True
             diagnostic = "detection failed"
@@ -191,6 +213,10 @@ def test_limit(env, fpudb, vfdb, gd, grid_state, opts, fpuset, fpu_config,
                       fpuset=[fpu_id], allow_uninitialized=True)
         print("searching datum for FPU %i, to resolve collision" % fpu_id)
         gd.findDatum(grid_state, fpuset=[fpu_id])
-        
+
+    if which_limit == "beta_collision":
+        # home turntable
+        hw.safe_home_turntable(gd, grid_state)
+
         
             
