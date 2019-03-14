@@ -34,6 +34,8 @@ class T:
     TASK_MEASURE_ALL               = "measure_all"
     TASK_REFERENCE                 = "reference_step_counters"
     TASK_SELFTEST                  = "selftest"
+    TASK_SELFTEST_NONFIBRE         = "selftest_nonfibre"
+    TASK_SELFTEST_FIBRE            = "selftest_fibre"
     TASK_REPORT                    = "report"
     TASK_DUMP                      = "dump"
     # elementary tests
@@ -91,6 +93,8 @@ usertasks = set([ T.EVAL_DATUM_REP               ,
                   T.TASK_REFERENCE               ,
                   T.TASK_REPORT                  ,
                   T.TASK_SELFTEST                ,
+                  T.TASK_SELFTEST_NONFIBRE       ,
+                  T.TASK_SELFTEST_FIBRE          ,
                   T.TST_ALPHA_MAX                , 
                   T.TST_ALPHA_MIN                , 
                   T.TST_BETA_MAX                 , 
@@ -125,6 +129,8 @@ task_dependencies = [ (T.TST_CAN_CONNECTION, [T.TST_GATEWAY_CONNECTION, T.TASK_I
                       
                       (T.TST_INITPOS, []),
                       
+                      (T.TASK_SELFTEST, [T.TASK_SELFTEST_NONFIBRE, T.TASK_SELFTEST_FIBRE]),
+                      
                       (T.TST_DATUM_ALPHA, [T.TASK_INIT_GD, T.TST_CAN_CONNECTION]),
                       
                       (T.TST_DATUM_BETA, [T.TASK_INIT_GD, T.TST_CAN_CONNECTION]),
@@ -139,26 +145,26 @@ task_dependencies = [ (T.TST_CAN_CONNECTION, [T.TST_GATEWAY_CONNECTION, T.TASK_I
 
                       (T.TST_COLLDETECT, [T.REQ_DATUM_PASSED, T.TASK_REFERENCE ]),
                       
-                      (T.MEASURE_DATUM_REP, [T.TASK_SELFTEST, T.TST_POS_REP_CAM_CONNECTION, T.REQ_DATUM_PASSED,
+                      (T.MEASURE_DATUM_REP, [T.TASK_SELFTEST_NONFIBRE, T.TST_POS_REP_CAM_CONNECTION, T.REQ_DATUM_PASSED,
                                              T.REQ_COLLDECT_PASSED, T.TASK_REFERENCE]),
                       
-                      (T.MEASURE_POS_REP, [T.TASK_SELFTEST, T.TST_POS_REP_CAM_CONNECTION, T.TASK_REFERENCE,
+                      (T.MEASURE_POS_REP, [T.TASK_SELFTEST_NONFIBRE, T.TST_POS_REP_CAM_CONNECTION, T.TASK_REFERENCE,
                                            T.REQ_DATUM_PASSED, T.REQ_COLLDECT_PASSED,
                                            # T.REQ_PUP_ALGN_PASSED,
                                            T.REQ_DATUM_REP_PASSED]),
                       
-                      (T.TST_POS_VER, [T.TASK_SELFTEST, T.TST_POS_REP_CAM_CONNECTION,
+                      (T.TST_POS_VER, [T.TASK_SELFTEST_NONFIBRE, T.TST_POS_REP_CAM_CONNECTION,
                                        T.REQ_DATUM_PASSED, T.REQ_COLLDECT_PASSED,
                                        # T.REQ_PUP_ALGN_PASSED,
                                        T.REQ_DATUM_REP_PASSED,
                                        T.REQ_POS_REP_PASSED,
                                        T.TASK_REFERENCE]),
                       
-                      (T.MEASURE_MET_CAL, [T.TASK_SELFTEST, T.TST_MET_CAL_CAM_CONNECTION]),
+                      (T.MEASURE_MET_CAL, [T.TASK_SELFTEST_FIBRE, T.TST_MET_CAL_CAM_CONNECTION]),
                       
-                      (T.MEASURE_MET_HEIGHT, [T.TASK_SELFTEST, T.TST_MET_HEIGHT_CAM_CONNECTION]),
+                      (T.MEASURE_MET_HEIGHT, [T.TASK_SELFTEST_NONFIBRE, T.TST_MET_HEIGHT_CAM_CONNECTION]),
                       
-                      (T.MEASURE_PUPIL_ALGN, [T.TASK_SELFTEST, T.TST_PUPIL_ALGN_CAM_CONNECTION,
+                      (T.MEASURE_PUPIL_ALGN, [T.TASK_SELFTEST_FIBRE, T.TST_PUPIL_ALGN_CAM_CONNECTION,
                                               T.REQ_DATUM_PASSED, T.REQ_COLLDECT_PASSED, T.TASK_REFERENCE]),
                       
                       (T.MEASURE_ALL, [ T.TASK_SELFTEST                ,

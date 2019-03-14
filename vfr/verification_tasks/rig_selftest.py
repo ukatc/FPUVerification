@@ -217,19 +217,56 @@ def selftest_positional_repeatability(env, vfdb, gd, grid_state, opts, fpuset, f
         
         
 
+def selftest_nonfibre(env, vfdb, gd, grid_state, opts, fpuset, fpu_config,
+                      MET_HEIGHT_ANALYSIS_PARS=None,
+                      MET_HEIGHT_MEASUREMENT_PARS=None,
+                      POS_REP_ANALYSIS_PARS=None,
+                      POS_REP_CALIBRATION_PARS=None,
+                      POS_REP_MEASUREMENT_PARS=None,
+                      PUPALGN_MEASUREMENT_PARS=None):
 
-def selftest(env, vfdb, gd, grid_state, opts, fpuset, fpu_config,
-             MET_CAL_MEASUREMENT_PARS=None,
-             METCAL_FIBRE_ANALYSIS_PARS=None,
-             METCAL_TARGET_ANALYSIS_PARS=None,
-             MET_HEIGHT_ANALYSIS_PARS=None,
-             MET_HEIGHT_MEASUREMENT_PARS=None,
-             POS_REP_ANALYSIS_PARS=None,
-             POS_REP_CALIBRATION_PARS=None,
-             POS_REP_MEASUREMENT_PARS=None,
-             PUPALGN_ANALYSIS_PARS=None,
-             PUPALGN_CALIBRATION_PARS=None,
-             PUPALGN_MEASUREMENT_PARS=None):
+    tstamp=timestamp()
+
+
+    def capture_image(cam, subtest):
+    
+        ipath = store_image(cam,
+                            "self-test/{ts}/{stest}.bmp",
+                            ts=tstamp,
+                            stest=subtest)            
+        return ipath
+        
+
+    try:
+        selftest_metrology_height(env, vfdb, gd, grid_state, opts, fpuset, fpu_config, 
+                                  MET_HEIGHT_ANALYSIS_PARS=None,
+                                  capture_image=capture_image,
+                                  **MET_HEIGHT_MEASUREMENT_PARS)        
+    except exception as e:
+        print("metrology height self-test failed", str(e))
+        sys.exit(1)
+
+
+
+    try:
+        selftest_positional_repeatability(env, vfdb, gd, grid_state, opts, fpuset, fpu_config, 
+                                          POS_REP_ANALYSIS_PARS=POS_REP_ANALYSIS_PARS,
+                                          POS_REP_CALIBRATION_PARS=POS_REP_CALIBRATION_PARS,
+                                          capture_image=capture_image,
+                                          **POS_REP_MEASUREMENT_PARS)        
+    except exception as e:
+        print("positional repeatability self-test failed", str(e))
+        sys.exit(1)
+        
+        
+
+def selftest_fibre(env, vfdb, gd, grid_state, opts, fpuset, fpu_config,
+                   MET_CAL_MEASUREMENT_PARS=None,
+                   METCAL_FIBRE_ANALYSIS_PARS=None,
+                   METCAL_TARGET_ANALYSIS_PARS=None,
+                   PUPALGN_ANALYSIS_PARS=None,
+                   PUPALGN_CALIBRATION_PARS=None,
+                   PUPALGN_MEASUREMENT_PARS=None):
 
     tstamp=timestamp()
 
@@ -264,24 +301,4 @@ def selftest(env, vfdb, gd, grid_state, opts, fpuset, fpu_config,
         sys.exit(1)
 
 
-    try:
-        selftest_metrology_height(env, vfdb, gd, grid_state, opts, fpuset, fpu_config, 
-                                  MET_HEIGHT_ANALYSIS_PARS=None,
-                                  capture_image=capture_image,
-                                  **MET_HEIGHT_MEASUREMENT_PARS)        
-    except exception as e:
-        print("metrology height self-test failed", str(e))
-        sys.exit(1)
-
-
-
-    try:
-        selftest_positional_repeatability(env, vfdb, gd, grid_state, opts, fpuset, fpu_config, 
-                                          POS_REP_ANALYSIS_PARS=POS_REP_ANALYSIS_PARS,
-                                          POS_REP_CALIBRATION_PARS=POS_REP_CALIBRATION_PARS,
-                                          capture_image=capture_image,
-                                          **POS_REP_MEASUREMENT_PARS)        
-    except exception as e:
-        print("positional repeatability self-test failed", str(e))
-        sys.exit(1)
         
