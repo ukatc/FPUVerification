@@ -190,7 +190,8 @@ def print_report_extended(serial_number=None,
                 positional repeatability: passed = {result}, repeatability = {repeatability_millimeter:6.2f} mm, 
                 positional repeatability:  time = {time}, version = {algorithm_version}
                 Positional repeatability: calibration_pars = {calibration_pars!r}
-                Positional repeatability: analysis_results = {analysis_results!r}            
+                Positional repeatability: analysis_results_alpha = {analysis_results_alpha!r}            
+                Positional repeatability: analysis_results_beta = {analysis_results_beta!r}            
                 Positional repeatability: gearbox_correction = {gearbox_correction!r}""").format(
                     **positional_repeatability_result), file=outfile)
             print("positional repeatability images: {!r}".format(positional_repeatability_images))

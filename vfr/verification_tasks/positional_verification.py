@@ -195,17 +195,17 @@ def eval_positional_verification(env, vfdb, gd, grid_state, opts, fpuset, fpu_co
 
         
         try:
+            analysis_results_short = {}
             analysis_results = {}
             
             for k, v in images.items():
-                alpha = k[1]
-                beta = k[2]
-                (x_measured_1, y_measured_1, qual1, x_measured_2, y_measured_2, qual2) = analysis_func(v)
-                analysis_results[k] = (x_measured_1, y_measured_1, x_measured_2, y_measured_2)
+                analysis_results[k] = analysis_func(v)
+                (x_measured_1, y_measured_1, qual1, x_measured_2, y_measured_2, qual2) = analysis_results[k]
+                analysis_results_short[k] = (x_measured_1, y_measured_1, x_measured_2, y_measured_2)
                                  
         
         
-            posver_errors, positional_verification_mm = evaluate_positional_verification(analysis_results, **pos_ver_evaluation_pars)
+            posver_errors, positional_verification_mm = evaluate_positional_verification(analysis_results_short, **pos_ver_evaluation_pars)
 
             positional_verification_has_passed = TestResult.OK if positional_verification_mm <= POSITIONAL_VER_PASS else TestResult.FAILED
         

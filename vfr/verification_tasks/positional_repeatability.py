@@ -193,26 +193,30 @@ def eval_positional_repeatability(env, vfdb, gd, grid_state, opts, fpuset, fpu_c
         
         try:
             analysis_results_alpha = {}
+            analysis_results_alpha_short = {}
             
             for k, v in images_alpha.items():
                 alpha_steps, beta_steps, ipath = v
-                (x_measured_small, y_measured_small, qual_small, x_measured_big, y_measured_big, qual_big) = analysis_func(ipath)
+                analysis_results_alpha[k] = analysis_func(ipath)
+                (x_measured_small, y_measured_small, qual_small, x_measured_big, y_measured_big, qual_big) = analysis_results_alpha[k]
                 
-                analysis_results_alpha[k] = (x_measured_small, y_measured_small,
-                                       x_measured_big, y_measured_big)
+                analysis_results_alpha_short[k] = (x_measured_small, y_measured_small,
+                                                   x_measured_big, y_measured_big)
             analysis_results_beta = {}
+            analysis_results_beta_short = {}
             
             for k, v in images_beta.items():
                 alpha_steps, beta_steps, ipath = v
-                (x_measured_small, y_measured_small, qual_small, x_measured_big, y_measured_big, qual_big) = analysis_func(ipath)
+                analysis_results_beta[k] = analysis_func(ipath)
+                (x_measured_small, y_measured_small, qual_small, x_measured_big, y_measured_big, qual_big) = analysis_results_beta[k]
                 
-                analysis_results_beta[k] = (x_measured_small, y_measured_small,
-                                       x_measured_big, y_measured_big)
+                analysis_results_beta_short[k] = (x_measured_small, y_measured_small,
+                                                  x_measured_big, y_measured_big)
                                  
         
         
-            positional_repeatability_mm = evaluate_positional_repeatability(analysis_results_alpha,
-                                                                            analysis_results_beta, **pos_rep_evaluation_pars)
+            positional_repeatability_mm = evaluate_positional_repeatability(analysis_results_alpha_short,
+                                                                            analysis_results_beta_short, **pos_rep_evaluation_pars)
 
             positional_repeatability_has_passed = positional_repeatability_mm <= POSITIONAL_REP_PASS
 
@@ -228,7 +232,8 @@ def eval_positional_repeatability(env, vfdb, gd, grid_state, opts, fpuset, fpu_c
 
         save_positional_repeatability_result(env, vfdb, opts, fpu_config, fpu_id,
                                              pos_rep_calibration_pars=pos_rep_calibration_pars,
-                                             analysis_results=analysis_results,
+                                             analysis_results_alpha=analysis_results_alpha,
+                                             analysis_results_beta=analysis_results_beta,
                                              positional_repeatability_mm=positional_repeatability_mm, 
                                              positional_repeatability_has_passed=positional_repeatability_has_passed,
                                              gearbox_correction=gearbox_correction,

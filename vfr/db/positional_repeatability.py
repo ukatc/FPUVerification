@@ -42,7 +42,8 @@ def  get_positional_repeatability_images(env, vfdb, opts, fpu_config, fpu_id):
     
 def  save_positional_repeatability_result(env, vfdb, opts, fpu_config, fpu_id,
                                           pos_rep_calibration_pars=None,
-                                          analysis_results=None,
+                                          analysis_results_alpha=None,
+                                          analysis_results_beta=None,
                                           positional_repeatability_mm=None,
                                           gearbox_correction={},
                                           analysis_version=None,
@@ -59,7 +60,8 @@ def  save_positional_repeatability_result(env, vfdb, opts, fpu_config, fpu_id,
         
                         
         val = repr({'calibration_pars' : pos_rep_calibration_pars,
-                    'analysis_results' : analysis_results,
+                    'analysis_results_alpha' : analysis_results_alpha,
+                    'analysis_results_beta' : analysis_results_beta,
                     'repeatability_millimeter' : positional_repeatability_mm,
                     'result' : positional_repeatability_has_passed,
                     'gearbox_correction' : gearbox_correction,
