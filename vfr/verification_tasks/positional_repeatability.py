@@ -87,7 +87,8 @@ def measure_positional_repeatability(env, vfdb, gd, grid_state, opts, fpuset, fp
             hw.turntable_safe_goto(gd, grid_state, stage_position)            
                 
     
-            image_dict = {}
+            image_dict_alpha = {}
+            image_dict_beta = {}
     
             def capture_image(iteration, increment, direction, alpha, beta):
     
@@ -144,7 +145,10 @@ def measure_positional_repeatability(env, vfdb, gd, grid_state, opts, fpuset, fp
                         beta_steps = grid_state.FPU[fpu_id].beta_steps
                         
                         ipath = capture_image(i, j, k, alpha_count, beta_count)
-                        image_dict[(abs_alpha, abs_beta, i, j, k)] = (alpha_steps, beta_steps, ipath)
+                        if j in [0, 1]:
+                            image_dict_alpha[(abs_alpha, abs_beta, i, j, k)] = (alpha_steps, beta_steps, ipath)
+                        else:
+                            image_dict_beta[(abs_alpha, abs_beta, i, j, k)] = (alpha_steps, beta_steps, ipath)
                         
     
                             
@@ -152,7 +156,9 @@ def measure_positional_repeatability(env, vfdb, gd, grid_state, opts, fpuset, fp
         
             
     
-            save_positional_repeatability_images(env, vfdb, opts, fpu_config, fpu_id, image_dict,
+            save_positional_repeatability_images(env, vfdb, opts, fpu_config, fpu_id,
+                                                 image_dict_alpha=image_dict_alpha,
+                                                 image_dict_beta=image_dict_beta,
                                                  waveform_pars=POSITION_REP_WAVEFORM_PARS)
     
 
@@ -167,22 +173,34 @@ def eval_positional_repeatability(env, vfdb, gd, grid_state, opts, fpuset, fpu_c
 
     
     for fpu_id in fpuset:
-        images = get_positional_repeatability_images(env, vfdb, opts, fpu_config, fpu_id, images)
+        meaurement = get_positional_repeatability_images(env, vfdb, opts, fpu_config, fpu_id)
+        
+        images_alpha = measurement['images_alpha']
+        images_beta = measurement['images_beta']
 
         
         try:
-            analysis_results = {}
+            analysis_results_alpha = {}
             
-            for k, v in images.items():
+            for k, v in images_alpha.items():
                 alpha_steps, beta_steps, ipath = v
                 (x_measured_small, y_measured_small, qual_small, x_measured_big, y_measured_big, qual_big) = analysis_func(ipath)
                 
-                analysis_results[k] = (x_measured_small, y_measured_small,
+                analysis_results_alpha[k] = (x_measured_small, y_measured_small,
+                                       x_measured_big, y_measured_big)
+            analysis_results_beta = {}
+            
+            for k, v in images_beta.items():
+                alpha_steps, beta_steps, ipath = v
+                (x_measured_small, y_measured_small, qual_small, x_measured_big, y_measured_big, qual_big) = analysis_func(ipath)
+                
+                analysis_results_beta[k] = (x_measured_small, y_measured_small,
                                        x_measured_big, y_measured_big)
                                  
         
         
-            positional_repeatability_mm = evaluate_positional_repeatability(analysis_results, **pos_rep_evaluation_pars)
+            positional_repeatability_mm = evaluate_positional_repeatability(analysis_results_alpha,
+                                                                            analysis_results_beta, **pos_rep_evaluation_pars)
 
             positional_repeatability_has_passed = positional_repeatability_mm <= POSITIONAL_REP_PASS
 

@@ -206,13 +206,37 @@ def evaluate_datum_repeatability(datumed_coords, moved_coords):
             datrep_move_dat_std )
 
 
+def get_angular_error(dict_of_coords, idx):
+    coords_per_angles = {}
+     
+    for k, v in dict_of_coordinates.items():
+        ang = k[idx]
+        if not coords_per_angles.has_key(ang):
+            coords_per_angles[ang] = []
+            
+        coords_per_angles[ang].append(v)
 
 
+    max_err_at_angle = {}
+    for k, v in coords_per_angles:
+        avg = mean(v, axis=0) # this is an average of big and small target coords separately
+        err_small = map(norm, v[:2] - avg[:2])
+        err_big = map(norm, v[2:] - avg[2:])
+        
+        max_err_at_angle[k] = max([err_small, err_big]) # this is a maximum of all errors
 
-def evaluate_positional_repeatability(dict_of_coordinates, POSITION_REP_PASS=None):
-    """Takes a dictionary. The keys of the dictionary
+
+    poserr_max = max(max_err_at_angle.values())
+
+    return max_err_at_angle, poserr_max
+
+
+def evaluate_positional_repeatability(dict_of_coordinates_alpha,
+                                      dict_of_coordinates_beta):
+    """Takes two dictionaries. The keys of each dictionary
     are the (alpha, beta, i,j,k) coordinates  indices of the positional 
-    repeateability measurement.
+    repeateability measurement, with one of the alpha/beta coordinates hold 
+    fixed.
 
     The values of the dictionary are a 4-tuple of the metrology target
     coordinates: 
@@ -244,43 +268,10 @@ def evaluate_positional_repeatability(dict_of_coordinates, POSITION_REP_PASS=Non
 
     # transform to lists of measurements for the same coordinates
 
-    coords_per_angles = {}
-    for k, v in dict_of_coordinates.items():
-        alpha, beta, i, j, k = k
-        if not coords_per_angles.has_key( (alpha, beta)):
-            coords_per_angles[(alpha, beta)] = []
-            
-        coords_per_angles[(alpha, beta)].append(v)
 
-
-    deviations_per_angle = {}
-    for k, v in coords_per_angles:
-        avg = mean(v, axis=0) # this is an average of big and small target coords separately
-        err_small = map(norm, v [:2] - avg[:2])
-        err_big = map(norm, v [2:] - avg[2:])
-        
-        deviations_per_angle[k] = max([err_small, err_big]) # this is a maximum of all errors
-
-    posrep_alpha_max_at_angle = {}
-    posrep_alpha_max_at_angle = {}
-
-    for k, v in deviations_per_angle:
-        alpha, beta = k
-        
-        if not posrep_beta_max_at_angle.has_key(beta):
-            posrep_beta_max_at_angle[beta] = 0.0
-        if not posrep_alpha_max_at_angle.has_key(alpha):
-            posrep_alpha_max_at_angle[alpha] = 0.0
-            
-        posrep_beta_max_at_angle[beta] = max(posrep_beta_max_at_angle[beta], v)
-        posrep_alpha_max_at_angle[alpha] = max(posrep_alpha_max_at_angle[alpha], v)
-
-
-    # that doesn't make sense because both values are the same
+    posrep_alpha_max_at_angle, posrep_alpha_max = get_angular_error(dict_of_coordinates_alpha, 0)
+    posrep_beta_max_at_angle, posrep_beta_max = get_angular_error(dict_of_coordinates_beta, 1)
     
-    posrep_alpha_max = max(posrep_alpha_max_at_angle.values())
-    posrep_beta_max = max(posrep_beta_max_at_angle.values())
-
     posrep_rss = sqrt(posrep_alpha_max ** 2 + posrep_beta_max ** 2)
     
     return (posrep_alpha_max_at_angle,

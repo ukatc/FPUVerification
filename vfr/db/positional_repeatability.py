@@ -5,7 +5,9 @@ from vfr.db.base import GIT_VERSION, TestResult, get_test_result, timestamp
 RECORD_TYPE='positional-repeatability'
 
 def  save_positional_repeatability_images(env, vfdb, opts, fpu_config, fpu_id,
-                                          images_dict, waveform_pars={}):
+                                          images_dict_alpha=None,
+                                          images_dict_beta=None,
+                                          waveform_pars={}):
 
     # define two closures - one for the unique key, another for the stored value 
     def keyfunc(fpu_id):
@@ -17,7 +19,8 @@ def  save_positional_repeatability_images(env, vfdb, opts, fpu_config, fpu_id,
         
                         
         val = repr({'fpuid' : fpu_id,
-                    'images' : image_dict,
+                    'images_alpha' : image_dict_alpha,
+                    'images_beta' : image_dict_beta,
                     'waveform_pars' : waveform_pars,
                     'time' : timestamp()})
         return val
