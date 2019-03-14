@@ -212,22 +212,26 @@ if __name__ == '__main__':
 
     if T.TST_ALPHA_MAX in tasks:
         print("[test_limit_alpha_max] ###")
-        test_limit(env, fpudb, vfdb, gd, grid_state, opts, measure_fpuset, fpu_config, "alpha_max")
+        test_limit(env, fpudb, vfdb, gd, grid_state, opts, measure_fpuset, fpu_config,
+                   "alpha_max", **COLLDECT_MEASUREMENT_PARS)
 
     
     if T.TST_ALPHA_MIN in tasks:
         print("[test_limit_alpha_min] ###")
-        test_limit(env, fpudb, vfdb, gd, grid_state, opts, measure_fpuset, fpu_config, "alpha_min")
+        test_limit(env, fpudb, vfdb, gd, grid_state, opts, measure_fpuset, fpu_config,
+                   "alpha_min", **COLLDECT_MEASUREMENT_PARS)
 
 
     if T.TST_BETA_MAX in tasks:
         print("[test_limit_beta_max] ###")
-        test_limit(env, fpudb, vfdb, gd, grid_state, opts, measure_fpuset, fpu_config, "beta_max")
+        test_limit(env, fpudb, vfdb, gd, grid_state, opts, measure_fpuset, fpu_config,
+                   "beta_max", **COLLDECT_MEASUREMENT_PARS)
 
 
     if T.TST_BETA_MIN in tasks:
         print("[test_limit_beta_min] ###")
-        test_limit(env, fpudb, vfdb, gd, grid_state, opts, measure_fpuset, fpu_config, "beta_min")
+        test_limit(env, fpudb, vfdb, gd, grid_state, opts, measure_fpuset, fpu_config,
+                   "beta_min", **COLLDECT_MEASUREMENT_PARS)
         
     if T.MEASURE_MET_CAL in tasks:
         print("[%s] ###" % T.MEASURE_MET_CAL)

@@ -35,6 +35,14 @@ PUPIL_ALGN_CAMERA_IP_ADDRESS = "169.254.108.113"
 
 METROLOGY_CAL_POSITIONS =  [268, 328, 28, 88, 148, 208]
 
+COLLDECT_MEASUREMENT_PARS = {
+    LIMIT_ALPHA_NEG_EXPECT : -182.0,
+    LIMIT_ALPHA_POS_EXPECT : +165.0,
+    LIMIT_BETA_NEG_EXPECT  : -185.0,
+    LIMIT_BETA_POS_EXPECT  : +155.0,
+    
+}
+
 DATUM_REP_MEASUREMENT_PARS = { 'DATUM_REP_ITERATIONS' : 10, # the
                                # number of datum operations made for
                                # each test

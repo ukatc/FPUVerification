@@ -76,28 +76,34 @@ def test_datum(env, vfdb, gd, grid_state, opts, fpuset, fpu_config, dasel=DASEL_
 
 
     
-def test_limit(env, fpudb, vfdb, gd, grid_state, opts, fpuset, fpu_config, which_limit):
+def test_limit(env, fpudb, vfdb, gd, grid_state, opts, fpuset, fpu_config,
+               which_limit,
+               LIMIT_ALPHA_NEG_EXPECT=NaN,
+               LIMIT_ALPHA_POS_EXPECT=NaN,
+               LIMIT_BETA_NEG_EXPECT=NaN,
+               LIMIT_BETA_POS_EXPECT=NaN):
+    
     abs_alpha_def = -180.0
     abs_beta_def = 0.0
     goto_position(gd, abs_alpha_def, abs_beta_def, grid_state, fpuset=fpuset)
 
-    if which_limit == "alpha_max":
-        abs_alpha, abs_beta = 180.0, 0.0
-        dw = -30
-        idx = 0
-    elif which_limit == "alpha_min":
-        abs_alpha, abs_beta = -190.0, 0.0
+    if which_limit == "alpha_min":
+        abs_alpha, abs_beta = LIMIT_ALPHA_NEG_EXPECT, 0.0
         dw = 30
         idx = 0
-    elif which_limit == "beta_max":
-        abs_alpha, abs_beta = -180.0, 180.0
-        free_dir = REQD_CLOCKWISE
+    elif which_limit == "alpha_max":
+        abs_alpha, abs_beta = LIMIT_ALPHA_POS_EXPECT, 0.0
         dw = -30
-        idx = 1
+        idx = 0
     elif which_limit == "beta_min":
-        abs_alpha, abs_beta = -180.0, -180.0
+        abs_alpha, abs_beta = LIMIT_BETA_NEG_EXPECT, -180.0
         free_dir = REQD_ANTI_CLOCKWISE
         dw = 30
+        idx = 1
+    elif which_limit == "beta_max":
+        abs_alpha, abs_beta = LIMIT_BETA_POS_EXPECT, 180.0
+        free_dir = REQD_CLOCKWISE
+        dw = -30
         idx = 1
     elif which_limit == "beta_collision":
         abs_alpha, abs_beta = -180.0, 90.0
