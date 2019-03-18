@@ -82,7 +82,7 @@ summary = cleandoc(
 
     {TST_POS_VER!r:<20}  - perform positional verification tests
 
-    {TST_PUPIL_ALGN!r:<20}  - perform pupil alignment tests
+    {TST_PUP_ALGN!r:<20}  - perform pupil alignment tests
 
 
     3b) MEASUREMENT ALONE
@@ -104,7 +104,7 @@ summary = cleandoc(
                             verification. Note that this implicitly
                             requires to evaluate the positional repeatability.
 
-    {MEASURE_PUPIL_ALGN!r:<20}  - measure, but don't evaluate pupil alignment
+    {MEASURE_PUP_ALGN!r:<20}  - measure, but don't evaluate pupil alignment
 
     {MEASURE_ALL!r:<20}  - measure, but don't evaluate all specifications
 
@@ -121,7 +121,7 @@ summary = cleandoc(
     {EVAL_MET_HEIGHT!r:<20}  - evaluate metrology height
     {EVAL_POS_REP!r:<20}  - evaluate positional repeatability
     {EVAL_POS_VER!r:<20}  - evaluate positional verification
-    {EVAL_PUPIL_ALGN!r:<20}  - evaluate pupil alignment
+    {EVAL_PUP_ALGN!r:<20}  - evaluate pupil alignment
     {TASK_EVAL_ALL!r:<20}  - evaluate all measurements again (for example,
                             after code updates)
 

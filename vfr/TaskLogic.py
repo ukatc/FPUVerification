@@ -14,7 +14,7 @@ class T:
     EVAL_MET_HEIGHT = "eval_met_height"
     EVAL_POS_REP = "eval_pos_rep"
     EVAL_POS_VER = "eval_pos_ver"
-    EVAL_PUPIL_ALGN = "eval_pup_align"
+    EVAL_PUP_ALGN = "eval_pup_align"
     # measurements
     MEASURE_ALL = "measure_all"
     MEASURE_DATUM_REP = "measure_datum_rep"
@@ -22,7 +22,7 @@ class T:
     MEASURE_MET_HEIGHT = "measure_met_height"
     MEASURE_POS_REP = "measure_pos_rep"
     MEASURE_POS_VER = "measure_pos_ver"
-    MEASURE_PUPIL_ALGN = "measure_pup_align"
+    MEASURE_PUP_ALGN = "measure_pup_align"
     # conditional dependencies (can be skipped if done once)
     REQ_DATUM_PASSED = "req_datum_passed"
     REQ_COLLDECT_PASSED = "req_colldect_passed"
@@ -65,8 +65,8 @@ class T:
     TST_POS_REP = "test_pos_rep"
     TST_POS_REP_CAM_CONNECTION = "test_pos_rep_cam_conn"
     TST_POS_VER = "test_pos_ver"
-    TST_PUPIL_ALGN = "test_pup_align"
-    TST_PUPIL_ALGN_CAM_CONNECTION = "test_pup_algn_cam_conn"
+    TST_PUP_ALGN = "test_pup_align"
+    TST_PUP_ALGN_CAM_CONNECTION = "test_pup_algn_cam_conn"
 
 
 usertasks = set(
@@ -79,8 +79,8 @@ usertasks = set(
         T.EVAL_MET_HEIGHT,
         T.EVAL_POS_REP,
         T.EVAL_POS_REP,
-        T.EVAL_PUPIL_ALGN,
-        T.EVAL_PUPIL_ALGN,
+        T.EVAL_PUP_ALGN,
+        T.EVAL_PUP_ALGN,
         T.MEASURE_DATUM_REP,
         T.MEASURE_DATUM_REP,
         T.MEASURE_MET_CAL,
@@ -89,8 +89,8 @@ usertasks = set(
         T.MEASURE_MET_HEIGHT,
         T.MEASURE_POS_REP,
         T.MEASURE_POS_REP,
-        T.MEASURE_PUPIL_ALGN,
-        T.MEASURE_PUPIL_ALGN,
+        T.MEASURE_PUP_ALGN,
+        T.MEASURE_PUP_ALGN,
         T.TST_FLASH,
         T.TASK_DUMP,
         T.TASK_MEASURE_ALL,
@@ -121,8 +121,8 @@ usertasks = set(
         T.TST_POS_REP,
         T.TST_POS_REP_CAM_CONNECTION,
         T.TST_POS_VER,
-        T.TST_PUPIL_ALGN,
-        T.TST_PUPIL_ALGN_CAM_CONNECTION,
+        T.TST_PUP_ALGN,
+        T.TST_PUP_ALGN_CAM_CONNECTION,
         T.TASK_EVAL_ALL,
     ]
 )
@@ -143,7 +143,7 @@ task_dependencies = [
     ),
     (T.TASK_SELFTEST_FIBRE,
      [
-         T.TST_PUPIL_ALGN_CAM_CONNECTION,
+         T.TST_PUP_ALGN_CAM_CONNECTION,
          T.TST_MET_CAL_CAM_CONNECTION,
          T.TST_GATEWAY_CONNECTION,
      ],
@@ -205,10 +205,10 @@ task_dependencies = [
     (T.MEASURE_MET_CAL, [T.TASK_SELFTEST_FIBRE, T.TST_MET_CAL_CAM_CONNECTION]),
     (T.MEASURE_MET_HEIGHT, [T.TASK_SELFTEST_NONFIBRE, T.TST_MET_HEIGHT_CAM_CONNECTION]),
     (
-        T.MEASURE_PUPIL_ALGN,
+        T.MEASURE_PUP_ALGN,
         [
             T.TASK_SELFTEST_FIBRE,
-            T.TST_PUPIL_ALGN_CAM_CONNECTION,
+            T.TST_PUP_ALGN_CAM_CONNECTION,
             T.REQ_DATUM_PASSED,
             T.REQ_COLLDECT_PASSED,
             T.TASK_REFERENCE,
@@ -223,7 +223,7 @@ task_dependencies = [
             T.TST_POS_REP_CAM_CONNECTION,
             T.TST_MET_CAL_CAM_CONNECTION,
             T.TST_MET_HEIGHT_CAM_CONNECTION,
-            T.TST_PUPIL_ALGN_CAM_CONNECTION,
+            T.TST_PUP_ALGN_CAM_CONNECTION,
             T.TST_DATUM,
             T.MEASURE_DATUM_REP,
             T.TST_MET_CAL,
@@ -232,8 +232,8 @@ task_dependencies = [
             T.MEASURE_POS_REP,
             T.TST_POS_VER,
             T.MEASURE_MET_HEIGHT,
-            T.TST_PUPIL_ALGN,
-            T.MEASURE_PUPIL_ALGN,
+            T.TST_PUP_ALGN,
+            T.MEASURE_PUP_ALGN,
         ],
     ),
     (
@@ -243,7 +243,7 @@ task_dependencies = [
             T.EVAL_MET_CAL,
             T.EVAL_POS_REP,
             T.EVAL_MET_HEIGHT,
-            T.EVAL_PUPIL_ALGN,
+            T.EVAL_PUP_ALGN,
         ],
     ),
 ]
@@ -254,7 +254,7 @@ conditional_dependencies = [
     (T.REQ_DATUM_REP_PASSED, get_datum_repeatability_passed_p, [T.TST_DATUM_REP]),
     (T.REQ_DATUM_PASSED, get_datum_passed_p, [T.TST_DATUM]),
     (T.REQ_COLLDECT_PASSED, get_colldect_passed_p, [T.TST_COLLDETECT]),
-    (T.REQ_PUP_ALGN_PASSED, get_pupil_alignment_passed_p, [T.TST_PUPIL_ALGN]),
+    (T.REQ_PUP_ALGN_PASSED, get_pupil_alignment_passed_p, [T.TST_PUP_ALGN]),
     (T.REQ_POS_REP_PASSED, get_positional_repeatability_passed_p, [T.TST_POS_REP]),
 ]
 
@@ -288,7 +288,7 @@ task_expansions = [
     (T.TST_MET_CAL, [T.MEASURE_MET_CAL, T.EVAL_MET_CAL]),
     (T.TST_MET_HEIGHT, [T.MEASURE_MET_HEIGHT, T.EVAL_MET_HEIGHT]),
     (T.TST_POS_REP, [T.MEASURE_POS_REP, T.EVAL_POS_REP]),
-    (T.TST_PUPIL_ALGN, [T.MEASURE_PUPIL_ALGN, T.EVAL_PUPIL_ALGN]),
+    (T.TST_PUP_ALGN, [T.MEASURE_PUP_ALGN, T.EVAL_PUP_ALGN]),
     (T.TST_LIMITS, [T.TST_DATUM]),
     (T.TST_ALPHA_MAX, [T.TST_DATUM]),
     (T.TST_ALPHA_MIN, [T.TST_DATUM]),

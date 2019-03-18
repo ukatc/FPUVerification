@@ -34,13 +34,13 @@ class MetrologyAnalysisFibreError(ImageAnalysisError):
 def metcalTargetCoordinates(
     image_path,
     # configurable parameters
-    METCAL_PLATESCALE=0.00668,  # mm per pixel
-    METCAL_SMALL_DIAMETER=1.5,  # mm
-    METCAL_LARGE_DIAMETER=2.5,  # mm
-    METCAL_DIAMETER_TOLERANCE=0.1,  # mm
-    METCAL_GAUSS_BLUR=3,  # pixels - MUST BE AN ODD NUMBER
-    METCAL_THRESHOLD=40,  # 0-255
-    METCAL_QUALITY_METRIC=0.8,  # dimensionless
+    MET_CAL_PLATESCALE=0.00668,  # mm per pixel
+    MET_CAL_SMALL_DIAMETER=1.5,  # mm
+    MET_CAL_LARGE_DIAMETER=2.5,  # mm
+    MET_CAL_DIAMETER_TOLERANCE=0.1,  # mm
+    MET_CAL_GAUSS_BLUR=3,  # pixels - MUST BE AN ODD NUMBER
+    MET_CAL_THRESHOLD=40,  # 0-255
+    MET_CAL_QUALITY_METRIC=0.8,  # dimensionless
     verbosity=0,  # a value > 5 will write contour parameters to terminal
     display=False,
 ):  # will display image with contours annotated
@@ -52,16 +52,16 @@ def metcalTargetCoordinates(
     # Johannes Nix (code imported and re-formatted)
 
     smallPerimeterLo = (
-        (METCAL_SMALL_DIAMETER - METCAL_DIAMETER_TOLERANCE) * pi / METCAL_PLATESCALE
+        (MET_CAL_SMALL_DIAMETER - MET_CAL_DIAMETER_TOLERANCE) * pi / MET_CAL_PLATESCALE
     )
     smallPerimeterHi = (
-        (METCAL_SMALL_DIAMETER + METCAL_DIAMETER_TOLERANCE) * pi / METCAL_PLATESCALE
+        (MET_CAL_SMALL_DIAMETER + MET_CAL_DIAMETER_TOLERANCE) * pi / MET_CAL_PLATESCALE
     )
     largePerimeterLo = (
-        (METCAL_LARGE_DIAMETER - METCAL_DIAMETER_TOLERANCE) * pi / METCAL_PLATESCALE
+        (MET_CAL_LARGE_DIAMETER - MET_CAL_DIAMETER_TOLERANCE) * pi / MET_CAL_PLATESCALE
     )
     largePerimeterHi = (
-        (METCAL_LARGE_DIAMETER + METCAL_DIAMETER_TOLERANCE) * pi / METCAL_PLATESCALE
+        (MET_CAL_LARGE_DIAMETER + MET_CAL_DIAMETER_TOLERANCE) * pi / MET_CAL_PLATESCALE
     )
 
     if verbosity > 5:
@@ -76,8 +76,8 @@ def metcalTargetCoordinates(
 
     # image processing
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    blur = cv2.GaussianBlur(gray, (METCAL_GAUSS_BLUR, METCAL_GAUSS_BLUR), 0)
-    thresh = cv2.threshold(blur, METCAL_THRESHOLD, 255, cv2.THRESH_BINARY)[1]
+    blur = cv2.GaussianBlur(gray, (MET_CAL_GAUSS_BLUR, MET_CAL_GAUSS_BLUR), 0)
+    thresh = cv2.threshold(blur, MET_CAL_THRESHOLD, 255, cv2.THRESH_BINARY)[1]
 
     # find contours from thresholded image
     cnts = sorted(
@@ -104,7 +104,7 @@ def metcalTargetCoordinates(
                 "ContourID - %i; perimeter - %.2f; circularity - %.2f"
                 % (i, perimeter, circularity)
             )
-        if circularity > METCAL_QUALITY_METRIC:
+        if circularity > MET_CAL_QUALITY_METRIC:
             if perimeter > smallPerimeterLo and perimeter < smallPerimeterHi:
                 if smallTargetFound == True:
                     multipleSmall = True
@@ -179,11 +179,11 @@ def metcalTargetCoordinates(
             % (centres["Small Target"][3], centres["Large Target"][3])
         )
 
-    metcal_small_target_x = centres["Small Target"][0] * METCAL_PLATESCALE
-    metcal_small_target_y = centres["Small Target"][1] * METCAL_PLATESCALE
+    metcal_small_target_x = centres["Small Target"][0] * MET_CAL_PLATESCALE
+    metcal_small_target_y = centres["Small Target"][1] * MET_CAL_PLATESCALE
     metcal_small_target_quality = centres["Small Target"][2]
-    metcal_large_target_x = centres["Large Target"][0] * METCAL_PLATESCALE
-    metcal_large_target_y = centres["Large Target"][1] * METCAL_PLATESCALE
+    metcal_large_target_x = centres["Large Target"][0] * MET_CAL_PLATESCALE
+    metcal_large_target_y = centres["Large Target"][1] * MET_CAL_PLATESCALE
     metcal_large_target_quality = centres["Large Target"][2]
 
     # target separation check - the values here are not configurable,
@@ -218,8 +218,8 @@ def metcalTargetCoordinates(
 def metcalFibreCoordinates(
     image_path,
     # configurable parameters
-    METCAL_PLATESCALE=0.00668,  # mm per pixel
-    METCAL_QUALITY_METRIC=0.8,  # dimensionless
+    MET_CAL_PLATESCALE=0.00668,  # mm per pixel
+    MET_CAL_QUALITY_METRIC=0.8,  # dimensionless
     verbosity=0,  # a value > 5 will write contour parameters to terminal
     display=False,
 ):  # will display image with contours annotated

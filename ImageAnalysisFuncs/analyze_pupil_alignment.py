@@ -28,10 +28,10 @@ PUPIL_ALIGNMENT_ALGORITHM_VERSION = 0.1
 def pupalnCoordinates(
     image_path,
     # configurable parameters
-    PUPALN_PLATESCALE=0.00668,  # mm per pixel
-    PUPALN_CIRCULARITY_THRESH=0.8,  # dimensionless
-    PUPALN_NOISE_METRIC=0,
-    PUPALN_CALIBRATION_PARS=None,
+    PUP_ALGN_PLATESCALE=0.00668,  # mm per pixel
+    PUP_ALGN_CIRCULARITY_THRESH=0.8,  # dimensionless
+    PUP_ALGN_NOISE_METRIC=0,
+    PUP_ALGN_CALIBRATION_PARS=None,
     verbosity=0,  # a value > 5 will write contour parameters to terminal
     display=False,
 ):  # will display image with contours annotated
@@ -56,21 +56,23 @@ def pupalnCoordinates(
     # exceptions
     # scale and straighten the result coordinates
 
-    if POSREP_CALIBRATION_PARS is None:
-        POSREP_CALIBRATION_PARS = {
+    if PUP_ALGN_CALIBRATION_PARS is None:
+        PUP_ALGN_CALIBRATION_PARS = {
             "algorithm": "scale",
-            "scale_factor": PUPALN_PLATESCALE,
+            "scale_factor": PUP_ALGN_PLATESCALE,
         }
 
     pupaln_spot_x, pupaln_spot_y, = correct(
-        pupaln_spot_x, pupaln_spot_y, calibration_pars=PUPALN_CALIBRATION_PARS
+        pupaln_spot_x, pupaln_spot_y, calibration_pars=PUP_ALGN_CALIBRATION_PARS
     )
 
     return pupaln_spot_x, pupaln_spot_y, pupaln_quality
 
 
 def evaluate_pupil_alignment(
-    dict_of_coordinates, PUPALN_CALIBRATED_CENTRE_X, PUPALN_CALIBRATED_CENTRE_Y
+        dict_of_coordinates,
+        PUP_ALGN_CALIBRATED_CENTRE_X=None,
+        PUP_ALGN_CALIBRATED_CENTRE_Y=None,
 ):
     """
     ...
@@ -103,7 +105,7 @@ def evaluate_pupil_alignment(
 
     xc = norm(
         mean(dict_of_coordinates.values(), axis=0)
-        - array((PUPALN_CALIBRATED_CENTRE_X, PUPALN_CALIBRATED_CENTRE_Y))
+        - array((PUP_ALGN_CALIBRATED_CENTRE_X, PUP_ALGN_CALIBRATED_CENTRE_Y))
     )
 
     # ask Steve Watson what the following means - it is from his spec

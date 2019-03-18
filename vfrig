@@ -38,7 +38,7 @@ from vfr.conf import (
     PUP_ALGN_ANALYSIS_PARS,
     PUP_ALGN_EVALUATION_PARS,
     PUP_ALGN_MEASUREMENT_PARS,
-    PUPIL_ALGN_CAMERA_IP_ADDRESS,
+    PUP_ALGN_CAMERA_IP_ADDRESS,
 )
 
 from vfr.TaskLogic import T, resolve
@@ -147,13 +147,13 @@ if __name__ == "__main__":
                 opts, "metrology height camera", MET_HEIGHT_CAMERA_IP_ADDRESS
             )
 
-    if T.TST_PUPIL_ALGN_CAM_CONNECTION in tasks:
-        print ("[%s] ###" % T.TST_PUPIL_ALGN_CAM_CONNECTION)
+    if T.TST_PUP_ALGN_CAM_CONNECTION in tasks:
+        print ("[%s] ###" % T.TST_PUP_ALGN_CAM_CONNECTION)
         if opts.mockup:
             print ("skipping test...")
         else:
             check_connection(
-                opts, "pupil alignment camera", PUPIL_ALGN_CAMERA_IP_ADDRESS
+                opts, "pupil alignment camera", PUP_ALGN_CAMERA_IP_ADDRESS
             )
 
     if T.TASK_INIT_RD:
@@ -282,7 +282,6 @@ if __name__ == "__main__":
         print ("[%s] ###" % T.TASK_SELFTEST_FIBRE)
         selftest_fibre(
             env,
-            fpudb,
             vfdb,
             gd,
             grid_state,
@@ -293,6 +292,7 @@ if __name__ == "__main__":
             MET_CAL_TARGET_ANALYSIS_PARS=MET_CAL_TARGET_ANALYSIS_PARS,
             MET_CAL_FIBRE_ANALYSIS_PARS=MET_CAL_FIBRE_ANALYSIS_PARS,
             PUP_ALGN_MEASUREMENT_PARS=PUP_ALGN_MEASUREMENT_PARS,
+            PUP_ALGN_ANALYSIS_PARS=PUP_ALGN_ANALYSIS_PARS,
         )
 
     if T.TST_COLLDETECT in tasks:
@@ -370,8 +370,8 @@ if __name__ == "__main__":
             **COLLDECT_MEASUREMENT_PARS
         )
 
-    if T.MEASURE_METCAL in tasks:
-        print ("[%s] ###" % T.MEASURE_METCAL)
+    if T.MEASURE_MET_CAL in tasks:
+        print ("[%s] ###" % T.MEASURE_MET_CAL)
         measure_metrology_calibration(
             env,
             vfdb,
@@ -382,8 +382,8 @@ if __name__ == "__main__":
             fpu_config,
             **MET_CAL_MEASUREMENT_PARS
         )
-    if T.EVAL_METCAL in tasks:
-        print ("[%s] ###" % T.EVAL_METCAL)
+    if T.EVAL_MET_CAL in tasks:
+        print ("[%s] ###" % T.EVAL_MET_CAL)
         eval_metrology_calibration(
             env,
             vfdb,
@@ -447,8 +447,8 @@ if __name__ == "__main__":
             POS_REP_ANALYSIS_PARS,
         )
 
-    if T.MEASURE_PUPIL_ALGN in tasks:
-        print ("[%s] ###" % T.MEASURE_PUPIL_ALGN)
+    if T.MEASURE_PUP_ALGN in tasks:
+        print ("[%s] ###" % T.MEASURE_PUP_ALGN)
         measure_pupil_alignment(
             env,
             vfdb,
@@ -459,8 +459,8 @@ if __name__ == "__main__":
             fpu_config,
             **PUP_ALGN_MEASUREMENT_PARS
         )
-    if T.EVAL_PUPIL_ALGN in tasks:
-        print ("[%s] ###" % T.EVAL_PUPIL_ALGN)
+    if T.EVAL_PUP_ALGN in tasks:
+        print ("[%s] ###" % T.EVAL_PUP_ALGN)
         eval_pupil_alignment(
             env,
             vfdb,

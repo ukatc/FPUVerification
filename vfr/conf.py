@@ -2,7 +2,7 @@
 
 from __future__ import print_function, division
 from math import ceil
-from numpy import NaN
+from numpy import NaN, Inf
 from os import environ
 
 DEFAULT_TASKS = ["selftest", "measure_all", "evaluate_all", "report"]
@@ -28,7 +28,7 @@ MET_CAL_CAMERA_IP_ADDRESS = "169.254.189.121"
 
 MET_HEIGHT_CAMERA_IP_ADDRESS = "169.254.190.121"
 
-PUPIL_ALGN_CAMERA_IP_ADDRESS = "169.254.108.113"
+PUP_ALGN_CAMERA_IP_ADDRESS = "169.254.108.113"
 
 
 METROLOGY_CAL_POSITIONS = [268, 328, 28, 88, 148, 208]
@@ -201,8 +201,8 @@ POS_VER_EVALUATION_PARS = {
 
 
 PUP_ALGN_MEASUREMENT_PARS = {
-    "PUPIL_ALN_POSITIONS": [
-        NaN,
+    "PUP_ALGN_POSITIONS": [
+        0.0,
         NaN,
         NaN,
         NaN,
@@ -211,29 +211,44 @@ PUP_ALGN_MEASUREMENT_PARS = {
     ],  # the rotary stage angle required to
     # place each FPU under the first pupil
     # alignment fold mirror
-    "PUPIL_ALN_LINPOSITIONS": NaN,  # the linear stage positions
+    "PUP_ALGN_LINPOSITIONS": [ # the linear stage positions
+        0.0, # note: bogus values - spec missing FIXME
+        5.0,
+        10.0,
+        15.0,
+        20.0,
+        25.0,        
+    ],  
     # required to illuminate each FPU
     # fibre
-    "PUPIL_ALN_EXPOSURE_MS": NaN,  # the exposure time in milliseconds
+    "PUP_ALGN_EXPOSURE_MS": NaN,  # the exposure time in milliseconds
     # for a correctly exposed image
+}
+
+PUP_ALGN_PLATESCALE = 0.00668
+
+PUP_ALGN_CALIBRATION_PARS = {
+    "algorithm": "scale",
+    "scale_factor" : PUP_ALGN_PLATESCALE,
+    # values below are placeholders
+    "coeffs": [[NaN, NaN, NaN], [NaN, NaN, NaN], [NaN, NaN, NaN]],
 }
 
 
 PUP_ALGN_ANALYSIS_PARS = {
-    "PUPALN_PLATESCALE": 0.00668,  # millimeter per pixel
-    "PUPALN_CIRCULARITY_THRESH": 0.8,  # dimensionless
-    "PUPALN_NOISE_METRIC": 0,
-    "PUPALN_CALIBRATION_PARS": None,
+    "PUP_ALGN_PLATESCALE": PUP_ALGN_PLATESCALE,  # millimeter per pixel
+    "PUP_ALGN_CIRCULARITY_THRESH": 0.8,  # dimensionless
+    "PUP_ALGN_NOISE_METRIC": 0,
+    "PUP_ALGN_CALIBRATION_PARS": PUP_ALGN_CALIBRATION_PARS,
     "display": False,
 }
 
-PUP_ALGN_CALIBRATION_PARS = {
-    "algorithm": "identity",
-    "coeffs": [[NaN, NaN, NaN], [NaN, NaN, NaN], [NaN, NaN, NaN]],
-}
 
 PUP_ALGN_EVALUATION_PARS = {
-    "PUPIL_ALN_PASS": NaN,  # the maximum total deviation in arcmin
+    "PUP_ALGN_CALIBRATED_CENTRE_X" : 0.0,
+    "PUP_ALGN_CALIBRATED_CENTRE_Y" : -.0,
+    
+    "PUPIL_ALN_PASS": Inf,  # the maximum total deviation in arcmin
     # from the calibrated centre point which
     # represents an acceptable FPU
 }

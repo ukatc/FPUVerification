@@ -11,7 +11,7 @@ from vfr.conf import (
     POS_REP_CAMERA_IP_ADDRESS,
     MET_CAL_CAMERA_IP_ADDRESS,
     MET_HEIGHT_CAMERA_IP_ADDRESS,
-    PUPIL_ALGN_CAMERA_IP_ADDRESS,
+    PUP_ALGN_CAMERA_IP_ADDRESS,
     MET_CAL_MEASUREMENT_PARS,
     LAMP_WARMING_TIME_MILLISECONDS,
 )
@@ -54,7 +54,7 @@ def use_silhouettelight(manual_lamp_control=False):
 
 @contextmanager
 def use_backlight(voltage, manual_lamp_control=False):
-    switch_fibre_voltage(voltage, manual_lamp_control=manual_lamp_control)
+    switch_fibre_backlight_voltage(voltage, manual_lamp_control=manual_lamp_control)
     switch_fibre_backlight("on", manual_lamp_control=manual_lamp_control)
     time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
     try:
@@ -129,7 +129,7 @@ class GigECamera:
 
         elif ip_address == MET_CAL_CAMERA_IP_ADDRESS:
             if (
-                self.exporure_time_ms
+                self.exposure_time_ms
                 == MET_CAL_MEASUREMENT_PARS["METROLOGY_CAL_FIBRE_EXPOSURE_MS"]
             ):
                 warnings.warn(
@@ -143,7 +143,7 @@ class GigECamera:
         elif ip_address == MET_HEIGHT_CAMERA_IP_ADDRESS:
             iname = "PT25_metht_1_003.bmp"
 
-        elif ip_address == PUPIL_ALGN_CAMERA_IP_ADDRESS:
+        elif ip_address == PUP_ALGN_CAMERA_IP_ADDRESS:
             warnings.warn(
                 "setting surrogate image file for hardware simulation."
                 " This can't work! replace this!!"

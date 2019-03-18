@@ -51,7 +51,7 @@ def use_silhouettelight(manual_lamp_control=False):
 
 @contextmanager
 def use_backlight(voltage, manual_lamp_control=False):
-    switch_fibre_voltage(voltage, manual_lamp_control=manual_lamp_control)
+    switch_fibre_backlight_voltage(voltage, manual_lamp_control=manual_lamp_control)
     switch_fibre_backlight("on", manual_lamp_control=manual_lamp_control)
     time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
     try:

@@ -3,7 +3,7 @@ from __future__ import print_function, division
 import sys
 
 from vfr.conf import (
-    PUPIL_ALGN_CAMERA_IP_ADDRESS,
+    PUP_ALGN_CAMERA_IP_ADDRESS,
     POS_REP_CAMERA_IP_ADDRESS,
     MET_CAL_CAMERA_IP_ADDRESS,
     MET_HEIGHT_CAMERA_IP_ADDRESS,
@@ -49,14 +49,14 @@ def selftest_pup_algn(
     opts,
     fpuset,
     fpu_config,
-    PUPIL_ALN_POSITIONS=None,
-    PUPIL_ALN_LINPOSITIONS=None,
-    PUPIL_ALN_EXPOSURE_MS=None,
-    PUP_ALGN_CALIBRATION_PARS=None,
+    PUP_ALGN_POSITIONS=None,
+    PUP_ALGN_LINPOSITIONS=None,
+    PUP_ALGN_EXPOSURE_MS=None,
     PUP_ALGN_ANALYSIS_PARS=None,
     capture_image=None,
     **kwargs
 ):
+    print("selftest: pupil alignment")
     if opts.mockup:
         # replace all hardware functions by mock-up interfaces
         hw = hwsimulation
@@ -75,23 +75,22 @@ def selftest_pup_algn(
             # set pos_rep camera exposure time to DATUM_REP_EXPOSURE milliseconds
             PUP_ALGN_CAMERA_CONF = {
                 DEVICE_CLASS: BASLER_DEVICE_CLASS,
-                IP_ADDRESS: PUPIL_ALGN_CAMERA_IP_ADDRESS,
+                IP_ADDRESS: PUP_ALGN_CAMERA_IP_ADDRESS,
             }
 
             pup_aln_cam = hw.GigECamera(PUP_ALGN_CAMERA_CONF)
-            pup_aln_cam.SetExposureTime(PUPIL_ALGN_EXPOSURE_MS)
+            pup_aln_cam.SetExposureTime(PUP_ALGN_EXPOSURE_MS)
 
-            fpu_id, stage_position = get_sorted_positions(fpuset, PUP_ALN_POSITIONS)[0]
+            fpu_id, stage_position = get_sorted_positions(fpuset, PUP_ALGN_POSITIONS)[0]
 
             # move rotary stage to PUP_ALN_POSN_N
             hw.turntable_safe_goto(gd, grid_state, stage_position)
-            hw.linear_stage_goto(PUPIL_ALN_LINPOSITIONS[fpu_id])
+            hw.linear_stage_goto(PUP_ALGN_LINPOSITIONS[fpu_id])
 
             ipath_selftest_pup_algn = capture_image(pup_aln_cam, "pupil-alignment")
 
             result = pupalnCoordinates(
                 ipath_selftest_pup_algn,
-                PUP_ALGN_CALIBRATION_PARS=PUP_ALGN_CALIBRATION_PARS,
                 **PUP_ALGN_ANALYSIS_PARS
             )
     finally:
@@ -116,6 +115,7 @@ def selftest_metrology_calibration(
     capture_image=None,
 ):
 
+    print("selftest: metrology calibration")
     if opts.mockup:
         # replace all hardware functions by mock-up interfaces
         hw = hwsimulation
@@ -163,7 +163,7 @@ def selftest_metrology_calibration(
             METROLOGY_CAL_BACKLIGHT_VOLTAGE,
             manual_lamp_control=opts.manual_lamp_control,
         ):
-            ipath_selftest_met_cal_fibre = capture_image(met_cal_cam, "met-cal-target")
+            ipath_selftest_met_cal_fibre = capture_image(met_cal_cam, "met-cal-fibre")
 
         target_coordinates = metcalTargetCoordinates(
             ipath_selftest_met_cal_target, **MET_CAL_TARGET_ANALYSIS_PARS
@@ -190,6 +190,7 @@ def selftest_metrology_height(
     capture_image=None,
 ):
 
+    print("selftest: metrology height")
     if opts.mockup:
         # replace all hardware functions by mock-up interfaces
         hw = hwsimulation
@@ -244,6 +245,8 @@ def selftest_positional_repeatability(
     **kwargs
 ):
 
+    print("selftest: positional repeatability")
+    
     if opts.mockup:
         # replace all hardware functions by mock-up interfaces
         hw = hwsimulation
@@ -296,6 +299,8 @@ def selftest_nonfibre(
     PUP_ALGN_MEASUREMENT_PARS=None,
 ):
 
+    print("selftest: tests without fibre involved")
+
     tstamp = timestamp()
 
     def capture_image(cam, subtest):
@@ -318,7 +323,7 @@ def selftest_nonfibre(
         )
 
     #except Exception as e:
-    except ValueError as e:
+    except SystemError as e:
         print ("metrology height self-test failed", repr(e))
         sys.exit(1)
 
@@ -335,9 +340,10 @@ def selftest_nonfibre(
             capture_image=capture_image,
             **POS_REP_MEASUREMENT_PARS
         )
-    except ValueError as e:
+    except SystemError as e:
         print ("positional repeatability self-test failed", repr(e))
         sys.exit(1)
+    print(">>>> selftest: tests without fibre succeeded")
 
 
 def selftest_fibre(
@@ -352,10 +358,10 @@ def selftest_fibre(
     MET_CAL_FIBRE_ANALYSIS_PARS=None,
     MET_CAL_TARGET_ANALYSIS_PARS=None,
     PUP_ALGN_ANALYSIS_PARS=None,
-    PUP_ALGN_CALIBRATION_PARS=None,
     PUP_ALGN_MEASUREMENT_PARS=None,
 ):
 
+    print("selftest: tests requiring fibre")
     tstamp = timestamp()
 
     def capture_image(cam, subtest):
@@ -373,12 +379,11 @@ def selftest_fibre(
             fpuset,
             fpu_config,
             PUP_ALGN_ANALYSIS_PARS=PUP_ALGN_ANALYSIS_PARS,
-            PUP_ALGN_CALIBRATION_PARS=PUP_ALGN_CALIBRATION_PARS,
             capture_image=capture_image,
             **PUP_ALGN_MEASUREMENT_PARS
         )
 
-    except Exception as e:
+    except SystemError as e:
         print ("pupil alignment self-test failed:", repr(e))
         sys.exit(1)
 
@@ -396,6 +401,10 @@ def selftest_fibre(
             capture_image=capture_image,
             **MET_CAL_MEASUREMENT_PARS
         )
-    except Exception as e:
+    except SystemError as e:
         print ("metrology calibration self-test failed", repr(e))
         sys.exit(1)
+        
+    print(">>>> selftest: tests requiring fibre succeeded")
+
+        
