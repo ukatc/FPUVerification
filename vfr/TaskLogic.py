@@ -134,19 +134,21 @@ task_dependencies = [
     (T.TST_FLASH, [T.TASK_INIT_RD, T.TST_CAN_CONNECTION]),
     (T.TST_INITPOS, []),
     (T.TASK_SELFTEST, [T.TASK_SELFTEST_NONFIBRE, T.TASK_SELFTEST_FIBRE]),
-    (T.TASK_SELFTEST_NONFIBRE,
-     [
-         T.TST_MET_CAL_CAM_CONNECTION,
-         T.TST_GATEWAY_CONNECTION,
-         T.TST_POS_REP_CAM_CONNECTION,
-     ],
+    (
+        T.TASK_SELFTEST_NONFIBRE,
+        [
+            T.TST_MET_CAL_CAM_CONNECTION,
+            T.TST_GATEWAY_CONNECTION,
+            T.TST_POS_REP_CAM_CONNECTION,
+        ],
     ),
-    (T.TASK_SELFTEST_FIBRE,
-     [
-         T.TST_PUP_ALGN_CAM_CONNECTION,
-         T.TST_MET_CAL_CAM_CONNECTION,
-         T.TST_GATEWAY_CONNECTION,
-     ],
+    (
+        T.TASK_SELFTEST_FIBRE,
+        [
+            T.TST_PUP_ALGN_CAM_CONNECTION,
+            T.TST_MET_CAL_CAM_CONNECTION,
+            T.TST_GATEWAY_CONNECTION,
+        ],
     ),
     (T.TST_DATUM_ALPHA, [T.TASK_INIT_GD, T.TST_CAN_CONNECTION]),
     (T.TST_DATUM_BETA, [T.TASK_INIT_GD, T.TST_CAN_CONNECTION]),
@@ -316,9 +318,9 @@ def expand_tasks(tasks, goal, expansion, delete=False):
         print ("[expanding %s to %r] ###" % (goal, expansion))
 
         if delete:
-            print("deleting %s " % goal)
+            print ("deleting %s " % goal)
             tasks.remove(goal)
-            
+
         tasks.update(expansion)
 
     return tasks
@@ -353,7 +355,7 @@ def resolve(tasks, env, vfdb, opts, fpu_config, fpuset):
 
         # check for equality with last iteration
         # -- if equal, expansion is finished
-        print("tasks = ", tasks)
+        print ("tasks = ", tasks)
         if tasks == last_tasks:
             break
 

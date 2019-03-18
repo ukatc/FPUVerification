@@ -70,9 +70,9 @@ def pupalnCoordinates(
 
 
 def evaluate_pupil_alignment(
-        dict_of_coordinates,
-        PUP_ALGN_CALIBRATED_CENTRE_X=None,
-        PUP_ALGN_CALIBRATED_CENTRE_Y=None,
+    dict_of_coordinates,
+    PUP_ALGN_CALIBRATED_CENTRE_X=None,
+    PUP_ALGN_CALIBRATED_CENTRE_Y=None,
 ):
     """
     ...

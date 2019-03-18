@@ -56,7 +56,7 @@ def selftest_pup_algn(
     capture_image=None,
     **kwargs
 ):
-    print("selftest: pupil alignment")
+    print ("selftest: pupil alignment")
     if opts.mockup:
         # replace all hardware functions by mock-up interfaces
         hw = hwsimulation
@@ -90,8 +90,7 @@ def selftest_pup_algn(
             ipath_selftest_pup_algn = capture_image(pup_aln_cam, "pupil-alignment")
 
             result = pupalnCoordinates(
-                ipath_selftest_pup_algn,
-                **PUP_ALGN_ANALYSIS_PARS
+                ipath_selftest_pup_algn, **PUP_ALGN_ANALYSIS_PARS
             )
     finally:
         hw.safe_home_turntable(gd, grid_state)
@@ -115,7 +114,7 @@ def selftest_metrology_calibration(
     capture_image=None,
 ):
 
-    print("selftest: metrology calibration")
+    print ("selftest: metrology calibration")
     if opts.mockup:
         # replace all hardware functions by mock-up interfaces
         hw = hwsimulation
@@ -139,7 +138,9 @@ def selftest_metrology_calibration(
 
         # get sorted positions (this is needed because the turntable can only
         # move into one direction)
-        fpu_id, stage_position = get_sorted_positions(fpuset, METROLOGY_CAL_POSITIONS)[0]
+        fpu_id, stage_position = get_sorted_positions(fpuset, METROLOGY_CAL_POSITIONS)[
+            0
+        ]
 
         # move rotary stage to POS_REP_POSN_0
         hw.turntable_safe_goto(gd, grid_state, stage_position)
@@ -190,7 +191,7 @@ def selftest_metrology_height(
     capture_image=None,
 ):
 
-    print("selftest: metrology height")
+    print ("selftest: metrology height")
     if opts.mockup:
         # replace all hardware functions by mock-up interfaces
         hw = hwsimulation
@@ -212,12 +213,14 @@ def selftest_metrology_height(
         met_height_cam = hw.GigECamera(MET_HEIGHT_CAMERA_CONF)
 
         fpu_id, stage_position = get_sorted_positions(fpuset, MET_HEIGHT_POSITIONS)[0]
-        
+
         # move rotary stage to POS_REP_POSN_N
         hw.turntable_safe_goto(gd, grid_state, stage_position)
 
         with hw.use_silhouettelight(manual_lamp_control=opts.manual_lamp_control):
-            ipath_selftest_met_height = capture_image(met_height_cam, "metrology-height")
+            ipath_selftest_met_height = capture_image(
+                met_height_cam, "metrology-height"
+            )
 
         metht_small_target_height, metht_large_target_height = methtHeight(
             ipath_selftest_met_height, **MET_HEIGHT_ANALYSIS_PARS
@@ -245,8 +248,8 @@ def selftest_positional_repeatability(
     **kwargs
 ):
 
-    print("selftest: positional repeatability")
-    
+    print ("selftest: positional repeatability")
+
     if opts.mockup:
         # replace all hardware functions by mock-up interfaces
         hw = hwsimulation
@@ -273,12 +276,11 @@ def selftest_positional_repeatability(
 
         with hw.use_ambientlight(manual_lamp_control=opts.manual_lamp_control):
 
-            selftest_ipath_pos_rep = capture_image(pos_rep_cam, "positional-repeatability")
+            selftest_ipath_pos_rep = capture_image(
+                pos_rep_cam, "positional-repeatability"
+            )
 
-        coords = posrepCoordinates(
-            selftest_ipath_pos_rep,
-            **POS_REP_ANALYSIS_PARS
-        )
+        coords = posrepCoordinates(selftest_ipath_pos_rep, **POS_REP_ANALYSIS_PARS)
 
     finally:
         hw.safe_home_turntable(gd, grid_state)
@@ -299,7 +301,7 @@ def selftest_nonfibre(
     PUP_ALGN_MEASUREMENT_PARS=None,
 ):
 
-    print("selftest: tests without fibre involved")
+    print ("selftest: tests without fibre involved")
 
     tstamp = timestamp()
 
@@ -322,7 +324,7 @@ def selftest_nonfibre(
             **MET_HEIGHT_MEASUREMENT_PARS
         )
 
-    #except Exception as e:
+    # except Exception as e:
     except SystemError as e:
         print ("metrology height self-test failed", repr(e))
         sys.exit(1)
@@ -343,7 +345,7 @@ def selftest_nonfibre(
     except SystemError as e:
         print ("positional repeatability self-test failed", repr(e))
         sys.exit(1)
-    print(">>>> selftest: tests without fibre succeeded")
+    print (">>>> selftest: tests without fibre succeeded")
 
 
 def selftest_fibre(
@@ -361,7 +363,7 @@ def selftest_fibre(
     PUP_ALGN_MEASUREMENT_PARS=None,
 ):
 
-    print("selftest: tests requiring fibre")
+    print ("selftest: tests requiring fibre")
     tstamp = timestamp()
 
     def capture_image(cam, subtest):
@@ -404,7 +406,5 @@ def selftest_fibre(
     except SystemError as e:
         print ("metrology calibration self-test failed", repr(e))
         sys.exit(1)
-        
-    print(">>>> selftest: tests requiring fibre succeeded")
 
-        
+    print (">>>> selftest: tests requiring fibre succeeded")

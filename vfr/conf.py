@@ -76,18 +76,18 @@ MET_CAL_MEASUREMENT_PARS = {
     # for fibre measurements
 }
 
-POS_REP_PLATESCALE = 0.02361 # millimeter per pixel
+POS_REP_PLATESCALE = 0.02361  # millimeter per pixel
 
 POS_REP_CALIBRATION_PARS = {
     "algorithm": "scale",
-    "scale_factor" : POS_REP_PLATESCALE,
+    "scale_factor": POS_REP_PLATESCALE,
     # values below are placeholders
     "coeffs": [[NaN, NaN, NaN], [NaN, NaN, NaN], [NaN, NaN, NaN]],
 }
 
 
 POS_REP_ANALYSIS_PARS = {
-    "POS_REP_PLATESCALE": POS_REP_PLATESCALE,  
+    "POS_REP_PLATESCALE": POS_REP_PLATESCALE,
     "POS_REP_SMALL_DIAMETER": 1.5,  # millimeter
     "POS_REP_LARGE_DIAMETER": 2.5,  # millimeter
     "POS_REP_DIAMETER_TOLERANCE": 0.1,  # millimeter
@@ -169,7 +169,6 @@ POS_REP_MEASUREMENT_PARS = {
 }
 
 
-
 POS_REP_EVALUATION_PARS = {
     "POS_REP_PASS": NaN,  # the maximum angular deviation, in
     # degrees, from an average position of
@@ -211,14 +210,14 @@ PUP_ALGN_MEASUREMENT_PARS = {
     ],  # the rotary stage angle required to
     # place each FPU under the first pupil
     # alignment fold mirror
-    "PUP_ALGN_LINPOSITIONS": [ # the linear stage positions
-        0.0, # note: bogus values - spec missing FIXME
+    "PUP_ALGN_LINPOSITIONS": [  # the linear stage positions
+        0.0,  # note: bogus values - spec missing FIXME
         5.0,
         10.0,
         15.0,
         20.0,
-        25.0,        
-    ],  
+        25.0,
+    ],
     # required to illuminate each FPU
     # fibre
     "PUP_ALGN_EXPOSURE_MS": NaN,  # the exposure time in milliseconds
@@ -229,7 +228,7 @@ PUP_ALGN_PLATESCALE = 0.00668
 
 PUP_ALGN_CALIBRATION_PARS = {
     "algorithm": "scale",
-    "scale_factor" : PUP_ALGN_PLATESCALE,
+    "scale_factor": PUP_ALGN_PLATESCALE,
     # values below are placeholders
     "coeffs": [[NaN, NaN, NaN], [NaN, NaN, NaN], [NaN, NaN, NaN]],
 }
@@ -245,9 +244,8 @@ PUP_ALGN_ANALYSIS_PARS = {
 
 
 PUP_ALGN_EVALUATION_PARS = {
-    "PUP_ALGN_CALIBRATED_CENTRE_X" : 0.0,
-    "PUP_ALGN_CALIBRATED_CENTRE_Y" : -.0,
-    
+    "PUP_ALGN_CALIBRATED_CENTRE_X": 0.0,
+    "PUP_ALGN_CALIBRATED_CENTRE_Y": -0.0,
     "PUPIL_ALN_PASS": Inf,  # the maximum total deviation in arcmin
     # from the calibrated centre point which
     # represents an acceptable FPU
