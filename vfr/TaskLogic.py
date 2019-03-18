@@ -12,6 +12,7 @@ class T:
     EVAL_MET_CAL                   = "eval_met_cal"
     EVAL_MET_HEIGHT                = "eval_met_height"
     EVAL_POS_REP                   = "eval_pos_rep"
+    EVAL_POS_VER                   = "eval_pos_ver"
     EVAL_PUPIL_ALGN                = "eval_pup_align"
     # measurements
     MEASURE_ALL                    = "measure_all"
@@ -19,6 +20,7 @@ class T:
     MEASURE_MET_CAL                = "measure_met_cal"
     MEASURE_MET_HEIGHT             = "measure_met_height"
     MEASURE_POS_REP                = "measure_pos_rep"
+    MEASURE_POS_VER                = "measure_pos_ver"
     MEASURE_PUPIL_ALGN             = "measure_pup_align"
     # conditional dependencies (can be skipped if done once)
     REQ_DATUM_PASSED               = "req_datum_passed"
