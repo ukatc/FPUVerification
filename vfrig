@@ -30,14 +30,12 @@ from vfr.conf import (
     MET_HEIGHT_EVALUATION_PARS,
     MET_HEIGHT_MEASUREMENT_PARS,
     POS_REP_ANALYSIS_PARS,
-    POS_REP_CALIBRATION_PARS,
     POS_REP_EVALUATION_PARS,
     POS_REP_MEASUREMENT_PARS,
     POS_VER_EVALUATION_PARS,
     POS_VER_MEASUREMENT_PARS,
     POS_REP_CAMERA_IP_ADDRESS,
     PUP_ALGN_ANALYSIS_PARS,
-    PUP_ALGN_CALIBRATION_PARS,
     PUP_ALGN_EVALUATION_PARS,
     PUP_ALGN_MEASUREMENT_PARS,
     PUPIL_ALGN_CAMERA_IP_ADDRESS,
@@ -278,7 +276,6 @@ if __name__ == "__main__":
             MET_HEIGHT_MEASUREMENT_PARS=MET_HEIGHT_MEASUREMENT_PARS,
             MET_HEIGHT_ANALYSIS_PARS=MET_HEIGHT_ANALYSIS_PARS,
             POS_REP_ANALYSIS_PARS=POS_REP_ANALYSIS_PARS,
-            POS_REP_CALIBRATION_PARS=POS_REP_CALIBRATION_PARS,
         )
 
     if T.TASK_SELFTEST_FIBRE in tasks:
@@ -472,7 +469,6 @@ if __name__ == "__main__":
             opts,
             eval_fpuset,
             fpu_config,
-            PUP_ALGN_CALIBRATION_PARS=PUP_ALGN_CALIBRATION_PARS,
             PUP_ALGN_ANALYSIS_PARS=PUP_ALGN_ANALYSIS_PARS,
             **PUP_ALGN_EVALUATION_PARS
         )
@@ -500,7 +496,6 @@ if __name__ == "__main__":
             opts,
             eval_fpuset,
             fpu_config,
-            POS_REP_CALIBRATION_PARS,
             POS_REP_ANALYSIS_PARS,
             POS_REP_EVALUATION_PARS,
         )
@@ -528,7 +523,6 @@ if __name__ == "__main__":
             opts,
             eval_fpuset,
             fpu_config,
-            POS_REP_CALIBRATION_PARS,
             POS_VER_ANALYSIS_PARS,
             POS_VER_EVALUATION_PARS,
         )

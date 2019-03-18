@@ -29,13 +29,13 @@ DATUM_REPEATABILITY_ALGORITHM_VERSION = 0.1
 def posrepCoordinates(
     image_path,
     # configurable parameters
-    POSREP_PLATESCALE=0.02361,  # mm per pixel
-    POSREP_SMALL_DIAMETER=1.5,  # mm
-    POSREP_LARGE_DIAMETER=2.5,  # mm
-    POSREP_DIAMETER_TOLERANCE=0.1,  # mm
-    POSREP_THRESHOLD=40,  # 0-255
-    POSREP_QUALITY_METRIC=0.8,  # dimensionless
-    POSREP_CALIBRATION_PARS=None,
+    POS_REP_PLATESCALE=0.02361,  # mm per pixel
+    POS_REP_SMALL_DIAMETER=1.5,  # mm
+    POS_REP_LARGE_DIAMETER=2.5,  # mm
+    POS_REP_DIAMETER_TOLERANCE=0.1,  # mm
+    POS_REP_THRESHOLD=40,  # 0-255
+    POS_REP_QUALITY_METRIC=0.8,  # dimensionless
+    POS_REP_CALIBRATION_PARS=None,
     verbosity=0,  # a value > 5 will write contour parameters to terminal
     display=False,
 ):  # will display image with contours annotated
@@ -54,16 +54,16 @@ def posrepCoordinates(
     # number and an angle, not a pixel number and a distance.)
 
     smallPerimeterLo = (
-        (POSREP_SMALL_DIAMETER - POSREP_DIAMETER_TOLERANCE) * pi / POSREP_PLATESCALE
+        (POS_REP_SMALL_DIAMETER - POS_REP_DIAMETER_TOLERANCE) * pi / POS_REP_PLATESCALE
     )
     smallPerimeterHi = (
-        (POSREP_SMALL_DIAMETER + POSREP_DIAMETER_TOLERANCE) * pi / POSREP_PLATESCALE
+        (POS_REP_SMALL_DIAMETER + POS_REP_DIAMETER_TOLERANCE) * pi / POS_REP_PLATESCALE
     )
     largePerimeterLo = (
-        (POSREP_LARGE_DIAMETER - POSREP_DIAMETER_TOLERANCE) * pi / POSREP_PLATESCALE
+        (POS_REP_LARGE_DIAMETER - POS_REP_DIAMETER_TOLERANCE) * pi / POS_REP_PLATESCALE
     )
     largePerimeterHi = (
-        (POSREP_LARGE_DIAMETER + POSREP_DIAMETER_TOLERANCE) * pi / POSREP_PLATESCALE
+        (POS_REP_LARGE_DIAMETER + POS_REP_DIAMETER_TOLERANCE) * pi / POS_REP_PLATESCALE
     )
 
     if verbosity > 5:
@@ -80,7 +80,7 @@ def posrepCoordinates(
     # image processing
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     blur = cv2.GaussianBlur(gray, (9, 9), 0)
-    thresh = cv2.threshold(blur, POSREP_THRESHOLD, 255, cv2.THRESH_BINARY)[1]
+    thresh = cv2.threshold(blur, POS_REP_THRESHOLD, 255, cv2.THRESH_BINARY)[1]
 
     # find contours from thresholded image
     cnts = sorted(
@@ -107,7 +107,7 @@ def posrepCoordinates(
                 "ContourID - %i; perimeter - %.2f; circularity - %.2f"
                 % (i, perimeter, circularity)
             )
-        if circularity > POSREP_QUALITY_METRIC:
+        if circularity > POS_REP_QUALITY_METRIC:
             if perimeter > smallPerimeterLo and perimeter < smallPerimeterHi:
                 if smallTargetFound == True:
                     multipleSmall = True
@@ -193,22 +193,22 @@ def posrepCoordinates(
     # scale and straighten the result coordinates
     # the distortion correction is applied here, using the 'correct' function
     # from the distortion correction module
-    if POSREP_CALIBRATION_PARS is None:
-        POSREP_CALIBRATION_PARS = {
+    if POS_REP_CALIBRATION_PARS is None:
+        POS_REP_CALIBRATION_PARS = {
             "algorithm": "scale",
-            "scale_factor": POSREP_PLATESCALE,
+            "scale_factor": POS_REP_PLATESCALE,
         }
 
     posrep_small_target_x, posrep_small_target_y = correct(
         pixels_posrep_small_target_x,
         pixels_posrep_small_target_y,
-        calibration_pars=POSREP_CALIBRATION_PARS,
+        calibration_pars=POS_REP_CALIBRATION_PARS,
     )
 
     posrep_large_target_x, posrep_large_target_y = correct(
         pixels_posrep_large_target_x,
         pixels_posrep_large_target_y,
-        calibration_pars=POSREP_CALIBRATION_PARS,
+        calibration_pars=POS_REP_CALIBRATION_PARS,
     )
 
     # target separation check - the values here are not configurable, as
@@ -333,7 +333,7 @@ def evaluate_positional_repeatability(
 
     posrep_beta_max – maximum beta positional error at any angle
 
-    posrep_rss – RSS (Root sum of squares) of POSREP_ALPHA_MAX and POSREP_BETA_MAX    
+    posrep_rss – RSS (Root sum of squares) of POS_REP_ALPHA_MAX and POS_REP_BETA_MAX    
 
     Any error should be signalled by throwing an Exception of class
     ImageAnalysisError, with a string member which describes the problem.

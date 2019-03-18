@@ -54,11 +54,11 @@ def measure_positional_repeatability(
     opts,
     fpuset,
     fpu_config,
-    POSITION_REP_SAFETY_MARGIN=NaN,
-    POSITION_REP_WAVEFORM_PARS=None,
+    POS_REP_SAFETY_MARGIN=NaN,
+    POS_REP_WAVEFORM_PARS=None,
     POSITIONAL_REP_ITERATIONS=None,
-    POSITION_REP_POSITIONS=None,
-    POSITION_REP_NUMINCREMENTS=None,
+    POS_REP_POSITIONS=None,
+    POS_REP_NUMINCREMENTS=None,
     POSITIONAL_REP_EXPOSURE_MS=None,
 ):
 
@@ -156,14 +156,14 @@ def measure_positional_repeatability(
                 gd.findDatum(grid_state, fpuset=[fpu_id])
 
                 step_a = (
-                    alpha_max - alpha_min - 2 * POSITION_REP_SAFETY_MARGIN
+                    alpha_max - alpha_min - 2 * POS_REP_SAFETY_MARGIN
                 ) / POSITIONAL_REP_NUM_INCREMENTS
                 step_b = (
-                    beta_max - beta_min - 2 * POSITION_REP_SAFETY_MARGIN
+                    beta_max - beta_min - 2 * POS_REP_SAFETY_MARGIN
                 ) / POSITIONAL_REP_NUM_INCREMENTS
 
-                alpha0 = alpha_min + POSITION_REP_SAFETY_MARGIN
-                beta0 = beta_min + POSITION_REP_SAFETY_MARGIN
+                alpha0 = alpha_min + POS_REP_SAFETY_MARGIN
+                beta0 = beta_min + POS_REP_SAFETY_MARGIN
 
                 for j in range(4):
 
@@ -216,7 +216,7 @@ def measure_positional_repeatability(
                 fpu_id,
                 image_dict_alpha=image_dict_alpha,
                 image_dict_beta=image_dict_beta,
-                waveform_pars=POSITION_REP_WAVEFORM_PARS,
+                waveform_pars=POS_REP_WAVEFORM_PARS,
             )
 
 

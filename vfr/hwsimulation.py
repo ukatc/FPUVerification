@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 from contextlib import contextmanager
 
+import time
 import inspect
 import os
 import os.path
@@ -12,6 +13,7 @@ from vfr.conf import (
     MET_HEIGHT_CAMERA_IP_ADDRESS,
     PUPIL_ALGN_CAMERA_IP_ADDRESS,
     MET_CAL_MEASUREMENT_PARS,
+    LAMP_WARMING_TIME_MILLISECONDS,
 )
 
 import ImageAnalysisFuncs  # used to look up images
@@ -108,7 +110,7 @@ class GigECamera:
     def __init__(self, conf):
         self.conf = conf
 
-    def SetExposureTime(exposure_time_ms):
+    def SetExposureTime(self, exposure_time_ms):
         self.exposure_time_ms = exposure_time_ms
 
     def saveImage(self, image_path):
@@ -123,7 +125,7 @@ class GigECamera:
         ip_address = self.conf["IpAddress"]
 
         if ip_address == POS_REP_CAMERA_IP_ADDRESS:
-            iname == "PT25_posrep_1_001.bmp"
+            iname = "PT25_posrep_1_001.bmp"
 
         elif ip_address == MET_CAL_CAMERA_IP_ADDRESS:
             if (

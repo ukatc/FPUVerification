@@ -3,6 +3,9 @@ from __future__ import print_function, division
 import sys
 import time
 
+from os import path
+import os
+import errno
 
 from numpy import zeros, nan, array
 
@@ -118,7 +121,13 @@ def store_image(camera, format_string, **kwargs):
     image_filename = format_string.format(**kwargs)
     ipath = path.join(IMAGE_ROOT_FOLDER, image_filename)
 
-    os.makedirs(os.dirname(ipath))
+    try:
+        os.makedirs(path.dirname(ipath))
+    except OSError as e:
+        if e.errno == errno.EEXIST:
+            pass
+        else:
+            raise
     camera.saveImage(ipath)
 
     return ipath

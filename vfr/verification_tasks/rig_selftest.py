@@ -139,9 +139,7 @@ def selftest_metrology_calibration(
 
         # get sorted positions (this is needed because the turntable can only
         # move into one direction)
-        fpu_id, stage_position in get_sorted_positions(fpuset, METROLOGY_CAL_POSITIONS)[
-            0
-        ]
+        fpu_id, stage_position = get_sorted_positions(fpuset, METROLOGY_CAL_POSITIONS)[0]
 
         # move rotary stage to POS_REP_POSN_0
         hw.turntable_safe_goto(gd, grid_state, stage_position)
@@ -156,7 +154,7 @@ def selftest_metrology_calibration(
         # and guarantee it is switched off after the
         # measurement (even if exceptions occur)
         with hw.use_ambientlight(manual_lamp_control=opts.manual_lamp_control):
-            ipath_selftest_met_cal_target = capture_image(met_cal_cam, "met_cal_target")
+            ipath_selftest_met_cal_target = capture_image(met_cal_cam, "met-cal-target")
 
         met_cal_cam.SetExposureTime(METROLOGY_CAL_FIBRE_EXPOSURE_MS)
         hw.switch_ambientlight("off", manual_lamp_control=opts.manual_lamp_control)
@@ -165,7 +163,7 @@ def selftest_metrology_calibration(
             METROLOGY_CAL_BACKLIGHT_VOLTAGE,
             manual_lamp_control=opts.manual_lamp_control,
         ):
-            ipath_selftest_met_cal_fibre = capture_image(met_cal_cam, "met_cal_target")
+            ipath_selftest_met_cal_fibre = capture_image(met_cal_cam, "met-cal-target")
 
         target_coordinates = metcalTargetCoordinates(
             ipath_selftest_met_cal_target, **MET_CAL_TARGET_ANALYSIS_PARS
@@ -212,14 +210,13 @@ def selftest_metrology_height(
 
         met_height_cam = hw.GigECamera(MET_HEIGHT_CAMERA_CONF)
 
-        fpu_id, stage_position in get_sorted_positions(
-            fpuset, METROLOGY_HEIGHT_POSITIONS
-        )[0]
+        fpu_id, stage_position = get_sorted_positions(fpuset, MET_HEIGHT_POSITIONS)[0]
+        
         # move rotary stage to POS_REP_POSN_N
         hw.turntable_safe_goto(gd, grid_state, stage_position)
 
         with hw.use_silhouettelight(manual_lamp_control=opts.manual_lamp_control):
-            ipath_selftest_met_height = capture_image(met_height_cam)
+            ipath_selftest_met_height = capture_image(met_height_cam, "metrology-height")
 
         metht_small_target_height, metht_large_target_height = methtHeight(
             ipath_selftest_met_height, **MET_HEIGHT_ANALYSIS_PARS
@@ -237,13 +234,14 @@ def selftest_positional_repeatability(
     opts,
     fpuset,
     fpu_config,
-    POSITION_REP_WAVEFORM_PARS=None,
-    POSITIONAL_REP_ITERATIONS=None,
-    POSITION_REP_POSITIONS=None,
-    POSITION_REP_NUMINCREMENTS=None,
-    POSITIONAL_REP_EXPOSURE_MS=None,
-    POS_REP_CALIBRATION_PARS=None,
+    POS_REP_WAVEFORM_PARS=None,
+    POS_REP_ITERATIONS=None,
+    POS_REP_POSITIONS=None,
+    POS_REP_NUMINCREMENTS=None,
+    POS_REP_EXPOSURE_MS=None,
     POS_REP_ANALYSIS_PARS=None,
+    capture_image=None,
+    **kwargs
 ):
 
     if opts.mockup:
@@ -264,7 +262,7 @@ def selftest_positional_repeatability(
         }
 
         pos_rep_cam = hw.GigECamera(POS_REP_CAMERA_CONF)
-        pos_rep_cam.SetExposureTime(POSITIONAL_REP_EXPOSURE_MS)
+        pos_rep_cam.SetExposureTime(POS_REP_EXPOSURE_MS)
 
         fpu_id, stage_position = get_sorted_positions(fpuset, POS_REP_POSITIONS)[0]
 
@@ -272,11 +270,10 @@ def selftest_positional_repeatability(
 
         with hw.use_ambientlight(manual_lamp_control=opts.manual_lamp_control):
 
-            selftest_ipath_pos_rep = capture_image("positional_repeatability")
+            selftest_ipath_pos_rep = capture_image(pos_rep_cam, "positional-repeatability")
 
         coords = posrepCoordinates(
             selftest_ipath_pos_rep,
-            POS_REP_CALIBRATION_PARS=POS_REP_CALIBRATION_PARS,
             **POS_REP_ANALYSIS_PARS
         )
 
@@ -295,7 +292,6 @@ def selftest_nonfibre(
     MET_HEIGHT_ANALYSIS_PARS=None,
     MET_HEIGHT_MEASUREMENT_PARS=None,
     POS_REP_ANALYSIS_PARS=None,
-    POS_REP_CALIBRATION_PARS=None,
     POS_REP_MEASUREMENT_PARS=None,
     PUP_ALGN_MEASUREMENT_PARS=None,
 ):
@@ -316,7 +312,7 @@ def selftest_nonfibre(
             opts,
             fpuset,
             fpu_config,
-            MET_HEIGHT_ANALYSIS_PARS=None,
+            MET_HEIGHT_ANALYSIS_PARS=MET_HEIGHT_ANALYSIS_PARS,
             capture_image=capture_image,
             **MET_HEIGHT_MEASUREMENT_PARS
         )
@@ -336,11 +332,10 @@ def selftest_nonfibre(
             fpuset,
             fpu_config,
             POS_REP_ANALYSIS_PARS=POS_REP_ANALYSIS_PARS,
-            POS_REP_CALIBRATION_PARS=POS_REP_CALIBRATION_PARS,
             capture_image=capture_image,
             **POS_REP_MEASUREMENT_PARS
         )
-    except Exception as e:
+    except ValueError as e:
         print ("positional repeatability self-test failed", repr(e))
         sys.exit(1)
 

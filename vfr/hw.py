@@ -4,6 +4,7 @@ from __future__ import print_function, division
 """this module simply bundles all real hardware access functions
 so that they can be easily swapped out by mock-up functions."""
 
+import time
 
 from Lamps.lctrl import (
     switch_fibre_backlight,

@@ -77,7 +77,7 @@ def measure_positional_verification(
     fpuset,
     fpu_config,
     POSITIONAL_VER_ITERATIONS=None,
-    POSITION_REP_POSITIONS=None,
+    POS_REP_POSITIONS=None,
     POSITIONAL_VER_EXPOSURE_MS=None,
 ):
 
