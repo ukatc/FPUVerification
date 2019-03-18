@@ -7,6 +7,7 @@ from os import environ
 from ast import literal_eval
 import re
 
+from vfr.TaskLogic import T
 
 from fpu_constants import *
 
@@ -26,7 +27,10 @@ def parse_args():
         print ("VFR_VERBOSITY has invalid value, setting verbosity to one")
         DEFAULT_VERBOSITY = 1
 
-    parser = argparse.ArgumentParser(description=summary)
+    parser = argparse.ArgumentParser(
+        description=summary.format(**T.__dict__),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
 
     parser.add_argument(
         "tasks",

@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 
-from textwrap import dedent
+from inspect import cleandoc
 
 from vfr.db.datum import get_datum_result, get_datum_passed_p
 
@@ -132,14 +132,14 @@ def print_report_extended(
         print("Datum test: n/a", file=outfile)
     else:
         print(
-            dedent(
-                """\
-            Datum test: alpha datumed = {datumed[0]}
-            Datum test: beta datumed = {datumed[1]}
-            Datum test: fpu_id/FPU state = {fpu_id} / {result_state}
-            Datum test: counter deviations = {counter_deviation!r}
-            Datum test: time = {time}
-            Datum test: result = {diagnostic}"""
+            cleandoc(
+                """
+                Datum test: alpha datumed = {datumed[0]}
+                Datum test: beta datumed = {datumed[1]}
+                Datum test: fpu_id/FPU state = {fpu_id} / {result_state}
+                Datum test: counter deviations = {counter_deviation!r}
+                Datum test: time = {time}
+                Datum test: result = {diagnostic}"""
             ).format(**datum_result),
             file=outfile,
         )
@@ -268,14 +268,14 @@ def print_report_extended(
         err_msg = positional_repeatability_result["error_message"]
         if len(err_msg) == 0:
             print(
-                dedent(
-                    """\
-                positional repeatability: passed = {result}, repeatability = {repeatability_millimeter:6.2f} mm, 
-                positional repeatability:  time = {time}, version = {algorithm_version}
-                Positional repeatability: calibration_pars = {calibration_pars!r}
-                Positional repeatability: analysis_results_alpha = {analysis_results_alpha!r}            
-                Positional repeatability: analysis_results_beta = {analysis_results_beta!r}            
-                Positional repeatability: gearbox_correction = {gearbox_correction!r}"""
+                cleandoc(
+                    """
+                    positional repeatability: passed = {result}, repeatability = {repeatability_millimeter:6.2f} mm, 
+                    positional repeatability:  time = {time}, version = {algorithm_version}
+                    Positional repeatability: calibration_pars = {calibration_pars!r}
+                    Positional repeatability: analysis_results_alpha = {analysis_results_alpha!r}            
+                    Positional repeatability: analysis_results_beta = {analysis_results_beta!r}            
+                    Positional repeatability: gearbox_correction = {gearbox_correction!r}"""
                 ).format(**positional_repeatability_result),
                 file=outfile,
             )
@@ -299,14 +299,14 @@ def print_report_extended(
         err_msg = positional_verification_result["error_message"]
         if len(err_msg) == 0:
             print(
-                dedent(
-                    """\
-                  positional verification: passed = {result}, verification_delta = {verification_millimeter:6.3f} mm,
-                  positional verification: time = {time}, version = {algorithm_version}                  
-                  Positional verification: calibration_pars = {calibration_pars}                  
-                  Positional verification: analysis_results = {analysis_results}
-                  Positional verification: gearbox_correction = {gearbox_correction!r}
-                  Positional verification: posver_errors = {posver_errors}"""
+                cleandoc(
+                    """
+                    positional verification: passed = {result}, verification_delta = {verification_millimeter:6.3f} mm,
+                    positional verification: time = {time}, version = {algorithm_version}                  
+                    Positional verification: calibration_pars = {calibration_pars}                  
+                    Positional verification: analysis_results = {analysis_results}
+                    Positional verification: gearbox_correction = {gearbox_correction!r}
+                    Positional verification: posver_errors = {posver_errors}"""
                 ).format(**positional_verification_result),
                 file=outfile,
             )
@@ -330,11 +330,11 @@ def print_report_extended(
         err_msg = pupil_alignment_result["error_message"]
         if len(err_msg) == 0:
             print(
-                dedent(
-                    """\
-                pupil alignment: passed = %result, measures= {measures}, time = {time}
-                pupil alignment: coords = {coords!r}
-                pupil alignment: calibration_pars = {calibration_pars!r}"""
+                cleandoc(
+                    """
+                    pupil alignment: passed = %result, measures= {measures}, time = {time}
+                    pupil alignment: coords = {coords!r}
+                    pupil alignment: calibration_pars = {calibration_pars!r}"""
                 ).format(**pupil_alignment_result),
                 file=outfile,
             )
