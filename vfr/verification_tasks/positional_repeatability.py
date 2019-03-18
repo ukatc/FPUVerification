@@ -70,7 +70,7 @@ def measure_positional_repeatability(
     # home turntable
     hw.safe_home_turntable(gd, grid_state)
 
-    hw.switch_backlight("off", manual_lamp_control=opts.manual_lamp_control)
+    hw.switch_fibre_backlight("off", manual_lamp_control=opts.manual_lamp_control)
     hw.switch_fibre_backlight_voltage(0.0, manual_lamp_control=opts.manual_lamp_control)
 
     with use_ambientlight(manual_lamp_control=opts.manual_lamp_control):
@@ -235,7 +235,7 @@ def eval_positional_repeatability(
     def analysis_func(ipath):
         return posrepCoordinates(
             ipath,
-            POSREP_CALIBRATION_PARS=pos_rep_calibration_pars,
+            POS_REP_CALIBRATION_PARS=pos_rep_calibration_pars,
             **pos_rep_analysis_pars
         )
 

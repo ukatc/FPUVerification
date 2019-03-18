@@ -146,8 +146,8 @@ def eval_pupil_alignment(
     opts,
     fpuset,
     fpu_config,
-    PUPALGN_CALIBRATION_PARS=None,
-    PUPALGN_ANALYSIS_PARS=None,
+    PUP_ALGN_CALIBRATION_PARS=None,
+    PUP_ALGN_ANALYSIS_PARS=None,
     PUPIL_ALN_PASS=NaN,
 ):
 
@@ -157,8 +157,8 @@ def eval_pupil_alignment(
         def analysis_func(ipath):
             return pupalnCoordinates(
                 ipath,
-                PUPALGN_CALIBRATION_PARS=PUPALGN_CALIBRATION_PARS,
-                **PUPALGN_ANALYSIS_PARS
+                PUP_ALGN_CALIBRATION_PARS=PUP_ALGN_CALIBRATION_PARS,
+                **PUP_ALGN_ANALYSIS_PARS
             )
 
         try:
@@ -195,7 +195,7 @@ def eval_pupil_alignment(
             opts,
             fpu_config,
             fpu_id,
-            calibration_pars=PUPALGN_CALIBRATION_PARS,
+            calibration_pars=PUP_ALGN_CALIBRATION_PARS,
             coords=coords,
             pupil_alignment_measures=pupil_alignment_measures,
             pupil_alignment_has_passed=datum_repeatability_has_passed,

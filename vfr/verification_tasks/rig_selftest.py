@@ -1,5 +1,6 @@
 from __future__ import print_function, division
 
+import sys
 
 from vfr.conf import (
     PUPIL_ALGN_CAMERA_IP_ADDRESS,
@@ -51,8 +52,8 @@ def selftest_pup_algn(
     PUPIL_ALN_POSITIONS=None,
     PUPIL_ALN_LINPOSITIONS=None,
     PUPIL_ALN_EXPOSURE_MS=None,
-    PUPALGN_CALIBRATION_PARS=None,
-    PUPALGN_ANALYSIS_PARS=None,
+    PUP_ALGN_CALIBRATION_PARS=None,
+    PUP_ALGN_ANALYSIS_PARS=None,
     capture_image=None,
     **kwargs
 ):
@@ -90,8 +91,8 @@ def selftest_pup_algn(
 
             result = pupalnCoordinates(
                 ipath_selftest_pup_algn,
-                PUPALGN_CALIBRATION_PARS=PUPALGN_CALIBRATION_PARS,
-                **PUPALGN_ANALYSIS_PARS
+                PUP_ALGN_CALIBRATION_PARS=PUP_ALGN_CALIBRATION_PARS,
+                **PUP_ALGN_ANALYSIS_PARS
             )
     finally:
         hw.safe_home_turntable(gd, grid_state)
@@ -110,8 +111,8 @@ def selftest_metrology_calibration(
     METROLOGY_CAL_BACKLIGHT_VOLTAGE=None,
     METROLOGY_CAL_TARGET_EXPOSURE_MS=None,
     METROLOGY_CAL_FIBRE_EXPOSURE_MS=None,
-    METCAL_TARGET_ANALYSIS_PARS=None,
-    METCAL_FIBRE_ANALYSIS_PARS=None,
+    MET_CAL_TARGET_ANALYSIS_PARS=None,
+    MET_CAL_FIBRE_ANALYSIS_PARS=None,
     capture_image=None,
 ):
 
@@ -123,7 +124,7 @@ def selftest_metrology_calibration(
         # home turntable
         hw.safe_home_turntable(gd, grid_state)
 
-        hw.switch_backlight("off", manual_lamp_control=opts.manual_lamp_control)
+        hw.switch_fibre_backlight("off", manual_lamp_control=opts.manual_lamp_control)
         hw.switch_ambientlight("off", manual_lamp_control=opts.manual_lamp_control)
         hw.switch_fibre_backlight_voltage(
             0.0, manual_lamp_control=opts.manual_lamp_control
@@ -146,7 +147,7 @@ def selftest_metrology_calibration(
         hw.turntable_safe_goto(gd, grid_state, stage_position)
 
         met_cal_cam.SetExposureTime(METROLOGY_CAL_TARGET_EXPOSURE_MS)
-        hw.switch_backlight("off", manual_lamp_control=opts.manual_lamp_control)
+        hw.switch_fibre_backlight("off", manual_lamp_control=opts.manual_lamp_control)
         hw.switch_fibre_backlight_voltage(
             0.0, manual_lamp_control=opts.manual_lamp_control
         )
@@ -167,10 +168,10 @@ def selftest_metrology_calibration(
             ipath_selftest_met_cal_fibre = capture_image(met_cal_cam, "met_cal_target")
 
         target_coordinates = metcalTargetCoordinates(
-            ipath_selftest_met_cal_target, **METCAL_TARGET_ANALYSIS_PARS
+            ipath_selftest_met_cal_target, **MET_CAL_TARGET_ANALYSIS_PARS
         )
         fibre_coordinates = metcalFibreCoordinates(
-            ipath_selftest_met_cal_fibre, **METCAL_FIBRE_ANALYSIS_PARS
+            ipath_selftest_met_cal_fibre, **MET_CAL_FIBRE_ANALYSIS_PARS
         )
 
     finally:
@@ -185,9 +186,9 @@ def selftest_metrology_height(
     opts,
     fpuset,
     fpu_config,
-    MET_HEIGHT_POSITIONS=None,
-    MET_HIGHT_TARGET_EXPOSURE_MS=None,
     MET_HEIGHT_ANALYSIS_PARS=None,
+    MET_HEIGHT_POSITIONS=None,
+    MET_HEIGHT_TARGET_EXPOSURE_MS=None,
     capture_image=None,
 ):
 
@@ -198,7 +199,7 @@ def selftest_metrology_height(
     try:
         hw.safe_home_turntable(gd, grid_state)
 
-        hw.switch_backlight("off", manual_lamp_control=opts.manual_lamp_control)
+        hw.switch_fibre_backlight("off", manual_lamp_control=opts.manual_lamp_control)
         hw.switch_ambientlight("off", manual_lamp_control=opts.manual_lamp_control)
         hw.switch_fibre_backlight_voltage(
             0.0, manual_lamp_control=opts.manual_lamp_control
@@ -252,7 +253,7 @@ def selftest_positional_repeatability(
     try:
         hw.safe_home_turntable(gd, grid_state)
 
-        hw.switch_backlight("off", manual_lamp_control=opts.manual_lamp_control)
+        hw.switch_fibre_backlight("off", manual_lamp_control=opts.manual_lamp_control)
         hw.switch_fibre_backlight_voltage(
             0.0, manual_lamp_control=opts.manual_lamp_control
         )
@@ -275,7 +276,7 @@ def selftest_positional_repeatability(
 
         coords = posrepCoordinates(
             selftest_ipath_pos_rep,
-            POSREP_CALIBRATION_PARS=POS_REP_CALIBRATION_PARS,
+            POS_REP_CALIBRATION_PARS=POS_REP_CALIBRATION_PARS,
             **POS_REP_ANALYSIS_PARS
         )
 
@@ -296,7 +297,7 @@ def selftest_nonfibre(
     POS_REP_ANALYSIS_PARS=None,
     POS_REP_CALIBRATION_PARS=None,
     POS_REP_MEASUREMENT_PARS=None,
-    PUPALGN_MEASUREMENT_PARS=None,
+    PUP_ALGN_MEASUREMENT_PARS=None,
 ):
 
     tstamp = timestamp()
@@ -319,8 +320,10 @@ def selftest_nonfibre(
             capture_image=capture_image,
             **MET_HEIGHT_MEASUREMENT_PARS
         )
-    except exception as e:
-        print ("metrology height self-test failed", str(e))
+
+    #except Exception as e:
+    except ValueError as e:
+        print ("metrology height self-test failed", repr(e))
         sys.exit(1)
 
     try:
@@ -337,8 +340,8 @@ def selftest_nonfibre(
             capture_image=capture_image,
             **POS_REP_MEASUREMENT_PARS
         )
-    except exception as e:
-        print ("positional repeatability self-test failed", str(e))
+    except Exception as e:
+        print ("positional repeatability self-test failed", repr(e))
         sys.exit(1)
 
 
@@ -351,11 +354,11 @@ def selftest_fibre(
     fpuset,
     fpu_config,
     MET_CAL_MEASUREMENT_PARS=None,
-    METCAL_FIBRE_ANALYSIS_PARS=None,
-    METCAL_TARGET_ANALYSIS_PARS=None,
-    PUPALGN_ANALYSIS_PARS=None,
-    PUPALGN_CALIBRATION_PARS=None,
-    PUPALGN_MEASUREMENT_PARS=None,
+    MET_CAL_FIBRE_ANALYSIS_PARS=None,
+    MET_CAL_TARGET_ANALYSIS_PARS=None,
+    PUP_ALGN_ANALYSIS_PARS=None,
+    PUP_ALGN_CALIBRATION_PARS=None,
+    PUP_ALGN_MEASUREMENT_PARS=None,
 ):
 
     tstamp = timestamp()
@@ -374,14 +377,14 @@ def selftest_fibre(
             opts,
             fpuset,
             fpu_config,
-            PUPALGN_ANALYSIS_PARS=PUPALGN_ANALYSIS_PARS,
-            PUPALGN_CALIBRATION_PARS=PUPALGN_CALIBRATION_PARS,
+            PUP_ALGN_ANALYSIS_PARS=PUP_ALGN_ANALYSIS_PARS,
+            PUP_ALGN_CALIBRATION_PARS=PUP_ALGN_CALIBRATION_PARS,
             capture_image=capture_image,
-            **PUPALGN_MEASUREMENT_PARS
+            **PUP_ALGN_MEASUREMENT_PARS
         )
 
-    except exception as e:
-        print ("pupil alignment self-test failed:", str(e))
+    except Exception as e:
+        print ("pupil alignment self-test failed:", repr(e))
         sys.exit(1)
 
     try:
@@ -393,11 +396,11 @@ def selftest_fibre(
             opts,
             fpuset,
             fpu_config,
-            METCAL_TARGET_ANALYSIS_PARS=METCAL_TARGET_ANALYSIS_PARS,
-            METCAL_FIBRE_ANALYSIS_PARS=METCAL_FIBRE_ANALYSIS_PARS,
+            MET_CAL_TARGET_ANALYSIS_PARS=MET_CAL_TARGET_ANALYSIS_PARS,
+            MET_CAL_FIBRE_ANALYSIS_PARS=MET_CAL_FIBRE_ANALYSIS_PARS,
             capture_image=capture_image,
             **MET_CAL_MEASUREMENT_PARS
         )
-    except exception as e:
-        print ("metrology calibration self-test failed", str(e))
+    except Exception as e:
+        print ("metrology calibration self-test failed", repr(e))
         sys.exit(1)

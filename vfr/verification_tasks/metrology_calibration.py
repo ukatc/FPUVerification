@@ -59,7 +59,7 @@ def measure_metrology_calibration(
     # home turntable
     hw.safe_home_turntable(gd, grid_state)
 
-    hw.switch_backlight("off", manual_lamp_control=opts.manual_lamp_control)
+    hw.switch_fibre_backlight("off", manual_lamp_control=opts.manual_lamp_control)
     hw.switch_ambientlight("off", manual_lamp_control=opts.manual_lamp_control)
     hw.switch_fibre_backlight_voltage(0.0, manual_lamp_control=opts.manual_lamp_control)
 
@@ -93,7 +93,7 @@ def measure_metrology_calibration(
             return ipath
 
         met_cal_cam.SetExposureTime(METROLOGY_CAL_TARGET_EXPOSURE_MS)
-        hw.switch_backlight("off", manual_lamp_control=opts.manual_lamp_control)
+        hw.switch_fibre_backlight("off", manual_lamp_control=opts.manual_lamp_control)
         hw.switch_fibre_backlight_voltage(
             0.0, manual_lamp_control=opts.manual_lamp_control
         )
