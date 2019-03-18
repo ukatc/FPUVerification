@@ -54,19 +54,19 @@ class T:
     TST_DATUM_REP = "test_datum_rep"
     TST_FLASH = "flash"
     TST_FUNCTIONAL = "test_functional"
-    TST_GATEWAY_CONNECTION = "test_gateway_conne"
+    TST_GATEWAY_CONNECTION = "test_gateway_conn"
     TST_INIT = "init"
     TST_INITPOS = "init_positions"
     TST_LIMITS = "test_limits"
     TST_MET_CAL = "test_met_cal"
-    TST_MET_CAL_CAM_CONNECTION = "test_met_camera_connection"
+    TST_MET_CAL_CAM_CONNECTION = "test_met_cam_conn"
     TST_MET_HEIGHT = "test_met_height"
-    TST_MET_HEIGHT_CAM_CONNECTION = "test_met_height_camera_connection"
+    TST_MET_HEIGHT_CAM_CONNECTION = "test_met_hght_cam_conn"
     TST_POS_REP = "test_pos_rep"
-    TST_POS_REP_CAM_CONNECTION = "test_pos_reteatability_camera_connection"
+    TST_POS_REP_CAM_CONNECTION = "test_pos_rep_cam_conn"
     TST_POS_VER = "test_pos_ver"
     TST_PUPIL_ALGN = "test_pup_align"
-    TST_PUPIL_ALGN_CAM_CONNECTION = "test_pup_alignment_camera_connection"
+    TST_PUPIL_ALGN_CAM_CONNECTION = "test_pup_algn_cam_conn"
 
 
 usertasks = set(
@@ -134,6 +134,20 @@ task_dependencies = [
     (T.TST_FLASH, [T.TASK_INIT_RD, T.TST_CAN_CONNECTION]),
     (T.TST_INITPOS, []),
     (T.TASK_SELFTEST, [T.TASK_SELFTEST_NONFIBRE, T.TASK_SELFTEST_FIBRE]),
+    (T.TASK_SELFTEST_NONFIBRE,
+     [
+         T.TST_MET_CAL_CAM_CONNECTION,
+         T.TST_GATEWAY_CONNECTION,
+         T.TST_POS_REP_CAM_CONNECTION,
+     ],
+    ),
+    (T.TASK_SELFTEST_FIBRE,
+     [
+         T.TST_PUPIL_ALGN_CAM_CONNECTION,
+         T.TST_MET_CAL_CAM_CONNECTION,
+         T.TST_GATEWAY_CONNECTION,
+     ],
+    ),
     (T.TST_DATUM_ALPHA, [T.TASK_INIT_GD, T.TST_CAN_CONNECTION]),
     (T.TST_DATUM_BETA, [T.TASK_INIT_GD, T.TST_CAN_CONNECTION]),
     (
@@ -302,8 +316,10 @@ def expand_tasks(tasks, goal, expansion, delete=False):
         print ("[expanding %s to %r] ###" % (goal, expansion))
 
         if delete:
+            print("deleting %s " % goal)
             tasks.remove(goal)
-            tasks.update(expansion)
+            
+        tasks.update(expansion)
 
     return tasks
 
@@ -337,6 +353,7 @@ def resolve(tasks, env, vfdb, opts, fpu_config, fpuset):
 
         # check for equality with last iteration
         # -- if equal, expansion is finished
+        print("tasks = ", tasks)
         if tasks == last_tasks:
             break
 

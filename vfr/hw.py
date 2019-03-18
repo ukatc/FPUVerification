@@ -19,6 +19,8 @@ from GigE.GigECamera import GigECamera
 
 import pyAPT
 
+from FpuGridDriver import DATUM_TIMEOUT_DISABLE
+
 
 def safe_home_turntable(gd, grid_state):
     gd.findDatum(grid_state, timeout=DATUM_TIMEOUT_DISABLE)

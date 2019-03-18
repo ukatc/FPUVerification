@@ -77,31 +77,31 @@ MET_CAL_MEASUREMENT_PARS = {
 }
 
 
-POSREP_ANALYSIS_PARS = {
-    "POSREP_PLATESCALE": 0.02361,  # millimeter per pixel
-    "POSREP_SMALL_DIAMETER": 1.5,  # millimeter
-    "POSREP_LARGE_DIAMETER": 2.5,  # millimeter
-    "POSREP_DIAMETER_TOLERANCE": 0.1,  # millimeter
-    "POSREP_THRESHOLD": 40,  # 0-255
-    "POSREP_QUALITY_METRIC": 0.8,  # dimensionless
-    "POSREP_CALIBRATION_PARS": None,
+POS_REP_ANALYSIS_PARS = {
+    "POS_REP_PLATESCALE": 0.02361,  # millimeter per pixel
+    "POS_REP_SMALL_DIAMETER": 1.5,  # millimeter
+    "POS_REP_LARGE_DIAMETER": 2.5,  # millimeter
+    "POS_REP_DIAMETER_TOLERANCE": 0.1,  # millimeter
+    "POS_REP_THRESHOLD": 40,  # 0-255
+    "POS_REP_QUALITY_METRIC": 0.8,  # dimensionless
+    "POS_REP_CALIBRATION_PARS": None,
     "display": False,
 }
 
-METCAL_TARGET_ANALYSIS_PARS = {
-    "METCAL_PLATESCALE": 0.00668,  # millimeter per pixel
-    "METCAL_SMALL_DIAMETER": 1.5,  # millimeter
-    "METCAL_LARGE_DIAMETER": 2.5,  # millimeter
-    "METCAL_DIAMETER_TOLERANCE": 0.1,  # millimeter
-    "METCAL_GAUSS_BLUR": 3,  # pixels - MUST BE AN ODD NUMBER
-    "METCAL_THRESHOLD": 40,  # 0-255
-    "METCAL_QUALITY_METRIC": 0.8,  # dimensionless
+MET_CAL_TARGET_ANALYSIS_PARS = {
+    "MET_CAL_PLATESCALE": 0.00668,  # millimeter per pixel
+    "MET_CAL_SMALL_DIAMETER": 1.5,  # millimeter
+    "MET_CAL_LARGE_DIAMETER": 2.5,  # millimeter
+    "MET_CAL_DIAMETER_TOLERANCE": 0.1,  # millimeter
+    "MET_CAL_GAUSS_BLUR": 3,  # pixels - MUST BE AN ODD NUMBER
+    "MET_CAL_THRESHOLD": 40,  # 0-255
+    "MET_CAL_QUALITY_METRIC": 0.8,  # dimensionless
     "display": False,  # will display image with contours annotated
 }
 
-METCAL_FIBRE_ANALYSIS_PARS = {
-    "METCAL_PLATESCALE": 0.00668,  # millimeter per pixel
-    "METCAL_QUALITY_METRIC": 0.8,  # dimensionless
+MET_CAL_FIBRE_ANALYSIS_PARS = {
+    "MET_CAL_PLATESCALE": 0.00668,  # millimeter per pixel
+    "MET_CAL_QUALITY_METRIC": 0.8,  # dimensionless
     "display": False,  # will display image with contours annotated
 }
 
@@ -119,7 +119,7 @@ STEPS_UPPER_LIMIT = int(
 )
 
 
-POSREP_MEASUREMENT_PARS = {
+POS_REP_MEASUREMENT_PARS = {
     "POSITION_REP_POSITIONS": POSITION_REP_POSITIONS,  # the rotary stage angle required to
     # place each FPU under the positional
     # repeatability camera
@@ -160,13 +160,13 @@ POSREP_MEASUREMENT_PARS = {
 }
 
 
-POSREP_CALIBRATION_PARS = {
+POS_REP_CALIBRATION_PARS = {
     "algorithm": "identity",
     "coeffs": [[NaN, NaN, NaN], [NaN, NaN, NaN], [NaN, NaN, NaN]],
 }
 
 
-POSREP_EVALUATION_PARS = {
+POS_REP_EVALUATION_PARS = {
     "POSITION_REP_PASS": NaN,  # the maximum angular deviation, in
     # degrees, from an average position of
     # a grouping of measured points at a
@@ -175,7 +175,7 @@ POSREP_EVALUATION_PARS = {
 }
 
 
-POSVER_MEASUREMENT_PARS = {
+POS_VER_MEASUREMENT_PARS = {
     "POSITION_REP_POSITIONS": POSITION_REP_POSITIONS,  # the rotary stage angle required to
     # place each FPU under the positional
     # repeatability camera
@@ -187,7 +187,7 @@ POSVER_MEASUREMENT_PARS = {
 }
 
 
-POSVER_EVALUATION_PARS = {
+POS_VER_EVALUATION_PARS = {
     "POSITION_VER_PASS": NaN,  # the maximum angular deviation, in
     # degrees, from an average position of
     # a grouping of measured points at a
@@ -196,7 +196,7 @@ POSVER_EVALUATION_PARS = {
 }
 
 
-PUPALGN_MEASUREMENT_PARS = {
+PUP_ALGN_MEASUREMENT_PARS = {
     "PUPIL_ALN_POSITIONS": [
         NaN,
         NaN,
@@ -215,7 +215,7 @@ PUPALGN_MEASUREMENT_PARS = {
 }
 
 
-PUPALGN_ANALYSIS_PARS = {
+PUP_ALGN_ANALYSIS_PARS = {
     "PUPALN_PLATESCALE": 0.00668,  # millimeter per pixel
     "PUPALN_CIRCULARITY_THRESH": 0.8,  # dimensionless
     "PUPALN_NOISE_METRIC": 0,
@@ -223,12 +223,12 @@ PUPALGN_ANALYSIS_PARS = {
     "display": False,
 }
 
-PUPALGN_CALIBRATION_PARS = {
+PUP_ALGN_CALIBRATION_PARS = {
     "algorithm": "identity",
     "coeffs": [[NaN, NaN, NaN], [NaN, NaN, NaN], [NaN, NaN, NaN]],
 }
 
-PUPALGN_EVALUATION_PARS = {
+PUP_ALGN_EVALUATION_PARS = {
     "PUPIL_ALN_PASS": NaN,  # the maximum total deviation in arcmin
     # from the calibrated centre point which
     # represents an acceptable FPU

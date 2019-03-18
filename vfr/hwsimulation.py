@@ -16,6 +16,8 @@ from vfr.conf import (
 
 import ImageAnalysisFuncs  # used to look up images
 
+from FpuGridDriver import DATUM_TIMEOUT_DISABLE
+
 # here a nice explanation how the context managers work:
 # https://jeffknupp.com/blog/2016/03/07/python-with-context-managers/
 
@@ -75,7 +77,8 @@ def use_ambientlight(manual_lamp_control=False):
 
 def turntable_safe_goto(gd, grid_state, stage_position):
     print ("issuing findDatum:")
-    gd.findDatum(grid_state, timeout=DATUM_TIMEOUT_DISABLE)
+    #gd.findDatum(grid_state, timeout=DATUM_TIMEOUT_DISABLE)
+    gd.findDatum(grid_state)
     print ("findDatum finished")
 
     print ("moving turntable to position %5.2f" % stage_position)
@@ -83,7 +86,8 @@ def turntable_safe_goto(gd, grid_state, stage_position):
 
 def safe_home_turntable(gd, grid_state):
     print ("issuing findDatum:")
-    gd.findDatum(grid_state, timeout=DATUM_TIMEOUT_DISABLE)
+    #gd.findDatum(grid_state, timeout=DATUM_TIMEOUT_DISABLE)
+    gd.findDatum(grid_state)
     print ("findDatum finished")
 
     print ("moving turntable to home position")
