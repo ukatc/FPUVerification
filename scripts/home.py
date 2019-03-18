@@ -12,16 +12,18 @@ import pyAPT
 
 from runner import runner_serial
 
+
 @runner_serial
 def home(serial):
-  with pyAPT.MTS50(serial_number=serial) as con:
-#  with pyAPT.NR360S(serial_number=serial) as con:
-#  with pyAPT.CR1Z7(serial_number=serial) as con:
-    print('\tHoming stage...', end=' ')
-    con.home(velocity = 10)
-    print('OK')
+    with pyAPT.MTS50(serial_number=serial) as con:
+        #  with pyAPT.NR360S(serial_number=serial) as con:
+        #  with pyAPT.CR1Z7(serial_number=serial) as con:
+        print ("\tHoming stage...", end=" ")  
+        con.home(velocity=10)
+        print ("OK")
 
-if __name__ == '__main__':
-  import sys
-  sys.exit(home())
 
+if __name__ == "__main__":
+    import sys
+
+    sys.exit(home())

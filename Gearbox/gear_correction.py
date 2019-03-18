@@ -5,8 +5,10 @@ from fpu_constants import StepsPerDegreeAlpha, StepsPerDegreeBeta
 
 # exceptions which are raised if image analysis functions fail
 
+
 class GearboxFitError(Exception):
     pass
+
 
 # version number for gearbox correction algorithm
 # (each different result for the same data
@@ -39,15 +41,16 @@ def fit_gearbox_correction(dict_of_coordinates):
     and millimeter (for x_measured and y_measured).
 
     """
-    return {'coeffs' : [0.0, 0.0, 0.0, 0.0, 0.0],
-            'version' : GEARBOX_CORRECTION_VERSION,
-            'algo' : 'unimplemented'}
+    return {
+        "coeffs": [0.0, 0.0, 0.0, 0.0, 0.0],
+        "version": GEARBOX_CORRECTION_VERSION,
+        "algo": "unimplemented",
+    }
 
 
 def apply_gearbox_correction(incoords, coeffs=None):
     alpha, beta = incoords
     alpha_steps = alpha * StepsPerDegreeAlpha
     beta_steps = beta * StepsPerDegreeBeta
-    
-    return incoords
 
+    return incoords

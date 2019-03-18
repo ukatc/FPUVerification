@@ -2,7 +2,8 @@ from __future__ import print_function, division
 
 from textwrap import dedent
 
-summary=dedent("""\
+summary = dedent(
+    """\
 Test FPUs in verification rig, and evaluate tests.
 
 The program performs a set of measurements and evaluations on
@@ -24,4 +25,5 @@ A third type of task is the "report" task, which by default prints a
 terse summary of the evaluated results.
 
 
-""")
+"""
+)

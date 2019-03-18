@@ -2,10 +2,13 @@
 Simple class which encapsulate an APT controller
 """
 from __future__ import absolute_import, division, print_function
+
 try:
     import pylibftdi
 except ImportError:
-    print(">>>>>>>>>>> Warning: Import of pylibftdi failed - probably dependency mismatch.")
+    print (
+        ">>>>>>>>>>> Warning: Import of pylibftdi failed - probably dependency mismatch."
+    )
 import time
 import sys
 import struct as st
@@ -15,129 +18,140 @@ from .message import Message
 from . import message
 from warnings import warn
 
-class OutOfRangeError(Exception):
-  def __init__(self, requested, allowed):
-    val = '%f requested, but allowed range is %.2f..%.2f'%(requested, allowed[0], allowed[1])
-    super(OutOfRangeError, self).__init__(val)
 
-DeviceInfo = collections.namedtuple("DeviceInfo",
-                                    ["serialnumber",
-                                     "model",
-                                     "hwtype",
-                                     "firmware_version",
-                                     "notes",
-                                     "hardware_version",
-                                     "mod_state",
-                                     "num_channels"])
+class OutOfRangeError(Exception):
+    def __init__(self, requested, allowed):
+        val = "%f requested, but allowed range is %.2f..%.2f" % (
+            requested,
+            allowed[0],
+            allowed[1],
+        )
+        super(OutOfRangeError, self).__init__(val)
+
+
+DeviceInfo = collections.namedtuple(
+    "DeviceInfo",
+    [
+        "serialnumber",
+        "model",
+        "hwtype",
+        "firmware_version",
+        "notes",
+        "hardware_version",
+        "mod_state",
+        "num_channels",
+    ],
+)
+
 
 class Controller(object):
-  def __init__(self, serial_number=None, label=None):
-    super(Controller, self).__init__()
+    def __init__(self, serial_number=None, label=None):
+        super(Controller, self).__init__()
 
-    if type(serial_number) == bytes:
-      serial_number = serial_number.decode()
-    else:
-      serial_number = str(serial_number)
+        if type(serial_number) == bytes:
+            serial_number = serial_number.decode()
+        else:
+            serial_number = str(serial_number)
 
-    # this takes up to 2-3s:
-    dev = pylibftdi.Device(mode='b', device_id=serial_number)
-    dev.baudrate = 115200
+        # this takes up to 2-3s:
+        dev = pylibftdi.Device(mode="b", device_id=serial_number)
+        dev.baudrate = 115200
 
-    def _checked_c(ret):
-      if not ret == 0:
-        raise Exception(dev.ftdi_fn.ftdi_get_error_string())
+        def _checked_c(ret):
+            if not ret == 0:
+                raise Exception(dev.ftdi_fn.ftdi_get_error_string())
 
-    _checked_c(dev.ftdi_fn.ftdi_set_line_property(  8,   # number of bits
-                                                    1,   # number of stop bits
-                                                    0   # no parity
-                                                    ))
-    time.sleep(50.0/1000)
+        _checked_c(
+            dev.ftdi_fn.ftdi_set_line_property(
+                8, 1, 0  # number of bits  # number of stop bits  # no parity
+            )
+        )
+        time.sleep(50.0 / 1000)
 
-    dev.flush(pylibftdi.FLUSH_BOTH)
+        dev.flush(pylibftdi.FLUSH_BOTH)
 
-    time.sleep(50.0/1000)
+        time.sleep(50.0 / 1000)
 
-    # skipping reset part since it looks like pylibftdi does it already
+        # skipping reset part since it looks like pylibftdi does it already
 
-    # this is pulled from ftdi.h
-    SIO_RTS_CTS_HS = (0x1 << 8)
-    _checked_c(dev.ftdi_fn.ftdi_setflowctrl(SIO_RTS_CTS_HS))
+        # this is pulled from ftdi.h
+        SIO_RTS_CTS_HS = 0x1 << 8
+        _checked_c(dev.ftdi_fn.ftdi_setflowctrl(SIO_RTS_CTS_HS))
 
-    _checked_c(dev.ftdi_fn.ftdi_setrts(1))
+        _checked_c(dev.ftdi_fn.ftdi_setrts(1))
 
-    self.serial_number = serial_number
-    self.label = label
-    self._device = dev
+        self.serial_number = serial_number
+        self.label = label
+        self._device = dev
 
-    self.unit = "mm"
-    # some conservative limits
-    # velocity is in mm/s
-    # acceleration is in mm^2/s
-    self.max_velocity = 0.3
-    self.max_acceleration = 0.3
+        self.unit = "mm"
+        # some conservative limits
+        # velocity is in mm/s
+        # acceleration is in mm^2/s
+        self.max_velocity = 0.3
+        self.max_acceleration = 0.3
 
-    # these define how encode count translates into position, velocity
-    # and acceleration. e.g. 1 mm is equal to 1 * self.position_scale
+        # these define how encode count translates into position, velocity
+        # and acceleration. e.g. 1 mm is equal to 1 * self.position_scale
 
-    # these are set to None on purpose - you should never use this class
-    # as is.
-    self.position_scale = None
-    self.velocity_scale = None
-    self.acceleration_scale = None
-    self.provides_status = True
+        # these are set to None on purpose - you should never use this class
+        # as is.
+        self.position_scale = None
+        self.velocity_scale = None
+        self.acceleration_scale = None
+        self.provides_status = True
 
-    # defines the linear, i.e. distance, range of the controller
-    # unit is in mm
-    self.linear_range = (0,50)
+        # defines the linear, i.e. distance, range of the controller
+        # unit is in mm
+        self.linear_range = (0, 50)
 
-    # whether or not sofware limit in position is applied
-    self.soft_limits = True
+        # whether or not sofware limit in position is applied
+        self.soft_limits = True
 
-    # the message queue are messages that are sent asynchronously. For example
-    # if we performed a move, and are waiting for move completed message,
-    # any other message received in the mean time are place in the queue.
-    self.message_queue = []
-    # retrieve the model information
-    self.modelinfo = self.info()
+        # the message queue are messages that are sent asynchronously. For example
+        # if we performed a move, and are waiting for move completed message,
+        # any other message received in the mean time are place in the queue.
+        self.message_queue = []
+        # retrieve the model information
+        self.modelinfo = self.info()
 
-    # perform self-check whether model information matches.
-    # this is intended to be sub-classed
-    self.checkmodel()
+        # perform self-check whether model information matches.
+        # this is intended to be sub-classed
+        self.checkmodel()
 
+    # this is intended to be sub-classed, to protect
+    # the hardware from invalid limits and commands
+    def checkmodel(self):
+        pass
 
-  # this is intended to be sub-classed, to protect
-  # the hardware from invalid limits and commands
-  def checkmodel(self):
-    pass
-      
-  def __enter__(self):
-    return self
+    def __enter__(self):
+        return self
 
-  def __exit__(self, type_, value, traceback):
-    self.close()
+    def __exit__(self, type_, value, traceback):
+        self.close()
 
-  def __del__(self):
-    self.close()
+    def __del__(self):
+        self.close()
 
-  def close(self):
-    if not self._device.closed:
-      # print 'Closing connnection to controller',self.serial_number
-      self.stop(wait=False)
-      # XXX we might want a timeout here, or this will block forever
-      self._device.close()
+    def close(self):
+        if not self._device.closed:
+            # print 'Closing connnection to controller',self.serial_number
+            self.stop(wait=False)
+            # XXX we might want a timeout here, or this will block forever
+            self._device.close()
 
-  def _send_message(self, m, verbose=False):
-    """
+    def _send_message(self, m, verbose=False):
+        """
     m should be an instance of Message, or has a pack() method which returns
     bytes to be sent to the controller
     """
-    if verbose:
-      print("sending:", message.strhex(m.pack()))
-      
-    self._device.write(m.pack())
+        if verbose:
+            print ("sending:", message.strhex(m.pack()))
 
-  def _read(self, length, block=True, verbose=False):
-    """
+        self._device.write(m.pack())
+
+    def _read(self, length, block=True, verbose=False):
+        """
     If block is True, then we will return only when have have length number of
     bytes. Otherwise we will perform a read, then immediately return with
     however many bytes we managed to read.
@@ -145,116 +159,121 @@ class Controller(object):
     Note that if no data is available, then an empty byte string will be
     returned.
     """
-    data = bytes()
-    while len(data) < length:
-      diff = length - len(data)
-      data += self._device.read(diff)
-      if not block:
-        break
+        data = bytes()
+        while len(data) < length:
+            diff = length - len(data)
+            data += self._device.read(diff)
+            if not block:
+                break
 
-      time.sleep(0.001)
+            time.sleep(0.001)
 
-    if verbose:
-      print("received:", message.strhex(data))
-            
-    return data
-
-  def _read_message(self):
-    data = self._read(message.MGMSG_HEADER_SIZE)
-    msg = Message.unpack(data, header_only=True)
-    if msg.hasdata:
-      data = self._read(msg.datalength)
-      msglist = list(msg)
-      msglist[-1] = data
-      return Message._make(msglist)
-    return msg
-
-  def _wait_message(self, expected_messageID, verbose=False):
-    if verbose:
-      print("waiting for message ID 0x%0x..." % expected_messageID, end="")
-    sys.stdout.flush()
-    found = False
-    while not found:
-      m = self._read_message()
-      found = m.messageID == expected_messageID
-      if found:
         if verbose:
-          print("ok")
-        return m
-      else:
-        if verbose:
-          print("Warning: extra message received with ID", m.messageID,
-                "param1 = ", m.param1,
-                "param2 = ", m.param2,
-                "data = ", m.data)
-        else:
-          warn("extra message received with ID %i,"
-               " param1=%i, param2= %i, data = %r" % (
-                 m.messageID,
-                 m.param1,
-                 m.param2,
-                 m.data))
-          
-        self.message_queue.append(m)
+            print ("received:", message.strhex(data))
 
-  def _position_in_range(self, absolute_pos_mm):
-    """
+        return data
+
+    def _read_message(self):
+        data = self._read(message.MGMSG_HEADER_SIZE)
+        msg = Message.unpack(data, header_only=True)
+        if msg.hasdata:
+            data = self._read(msg.datalength)
+            msglist = list(msg)
+            msglist[-1] = data
+            return Message._make(msglist)
+        return msg
+
+    def _wait_message(self, expected_messageID, verbose=False):
+        if verbose:
+            print ("waiting for message ID 0x%0x..." % expected_messageID, end="") 
+        sys.stdout.flush()
+        found = False
+        while not found:
+            m = self._read_message()
+            found = m.messageID == expected_messageID
+            if found:
+                if verbose:
+                    print ("ok")
+                return m
+            else:
+                if verbose:
+                    print (
+                        "Warning: extra message received with ID",
+                        m.messageID,
+                        "param1 = ",
+                        m.param1,
+                        "param2 = ",
+                        m.param2,
+                        "data = ",
+                        m.data,
+                    )
+                else:
+                    warn(
+                        "extra message received with ID %i,"
+                        " param1=%i, param2= %i, data = %r"
+                        % (m.messageID, m.param1, m.param2, m.data)
+                    )
+
+                self.message_queue.append(m)
+
+    def _position_in_range(self, absolute_pos_mm):
+        """
     Returns True if requested absolute position is within range, False
     otherwise
     """
-    # get rid of floating point artifacts below our resolution
-    enccnt = int(absolute_pos_mm * self.position_scale)
-    absolute_pos_mm = enccnt / self.position_scale
+        # get rid of floating point artifacts below our resolution
+        enccnt = int(absolute_pos_mm * self.position_scale)
+        absolute_pos_mm = enccnt / self.position_scale
 
-    if absolute_pos_mm < self.linear_range[0]:
-      return False
+        if absolute_pos_mm < self.linear_range[0]:
+            return False
 
-    if absolute_pos_mm > self.linear_range[1]:
-      return False
+        if absolute_pos_mm > self.linear_range[1]:
+            return False
 
-    return True
+        return True
 
-  def status(self, channel=1):
-    """
+    def status(self, channel=1):
+        """
     Returns the status of the controller, which is its position, velocity, and
     statusbits
 
     Position and velocity will be in mm and mm/s respectively.
     """
-    reqmsg = Message(message.MGMSG_MOT_REQ_DCSTATUSUPDATE, param1=channel)
-    self._send_message(reqmsg)
+        reqmsg = Message(message.MGMSG_MOT_REQ_DCSTATUSUPDATE, param1=channel)
+        self._send_message(reqmsg)
 
-    getmsg = self._wait_message(message.MGMSG_MOT_GET_DCSTATUSUPDATE)
-    return ControllerStatus(self, getmsg.datastring)
+        getmsg = self._wait_message(message.MGMSG_MOT_GET_DCSTATUSUPDATE)
+        return ControllerStatus(self, getmsg.datastring)
 
-  def identify(self):
-    """
+    def identify(self):
+        """
     Flashes the controller's activity LED
     """
-    idmsg = Message(message.MGMSG_MOD_IDENTIFY)
-    self._send_message(idmsg)
+        idmsg = Message(message.MGMSG_MOD_IDENTIFY)
+        self._send_message(idmsg)
 
-  def reset_parameters(self):
-    """
+    def reset_parameters(self):
+        """
     Resets all parameters to their EEPROM default values.
 
     IMPORTANT: only one class of controller appear to support this at the
     moment, that being the BPC30x series.
     """
-    resetmsg = Message(message.MGMSG_MOT_SET_PZSTAGEPARAMDEFAULTS)
-    self._send_message(resetmsg)
+        resetmsg = Message(message.MGMSG_MOT_SET_PZSTAGEPARAMDEFAULTS)
+        self._send_message(resetmsg)
 
-  # the following method can be overriden by child classes which
-  # evaluate optional parameters like speed and direction and set
-  # defaults, if needed.
-  def request_home_params(self, channel=1, **args):
-    reqmsg = Message(message.MGMSG_MOT_REQ_HOMEPARAMS, param1=channel)
-    self._send_message(reqmsg)
+    # the following method can be overriden by child classes which
+    # evaluate optional parameters like speed and direction and set
+    # defaults, if needed.
+    def request_home_params(self, channel=1, **args):
+        reqmsg = Message(message.MGMSG_MOT_REQ_HOMEPARAMS, param1=channel)
+        self._send_message(reqmsg)
 
-    getmsg = self._wait_message(message.MGMSG_MOT_GET_HOMEPARAMS)
-    dstr = getmsg.datastring
+        getmsg = self._wait_message(message.MGMSG_MOT_GET_HOMEPARAMS)
+        dstr = getmsg.datastring
 
-    """
+        """
     <: little endian
     H: 2 bytes for channel id
     H: 2 bytes for home direction
@@ -262,20 +281,26 @@ class Controller(object):
     i: 4 bytes for homing velocity
     i: 4 bytes for offset distance
     """
-    return st.unpack('<HHHii', dstr)
+        return st.unpack("<HHHii", dstr)
 
-  def suspend_end_of_move_messages(self):
-      suspendmsg = Message(message.MGMSG_MOT_SUSPEND_ENDOFMOVEMSGS)
-      self._send_message(suspendmsg)
+    def suspend_end_of_move_messages(self):
+        suspendmsg = Message(message.MGMSG_MOT_SUSPEND_ENDOFMOVEMSGS)
+        self._send_message(suspendmsg)
 
-  def resume_end_of_move_messages(self):
-      resumemsg = Message(message.MGMSG_MOT_RESUME_ENDOFMOVEMSGS)
-      self._send_message(resumemsg)
+    def resume_end_of_move_messages(self):
+        resumemsg = Message(message.MGMSG_MOT_RESUME_ENDOFMOVEMSGS)
+        self._send_message(resumemsg)
 
-  def home(self, wait=True, velocity=None, offset=0, channel=1,
-           return_status=False,
-           **extra_params):
-    """
+    def home(
+        self,
+        wait=True,
+        velocity=None,
+        offset=0,
+        channel=1,
+        return_status=False,
+        **extra_params
+    ):
+        """
     When velocity is not None, homing parameters will be set so homing velocity
     will be as given, in mm per second.
 
@@ -290,33 +315,39 @@ class Controller(object):
     otherwise.
     """
 
-    # first get the current settings for homing. We do this because despite
-    # the fact that the protocol spec says home direction, limit switch,
-    # and offset distance parameters are not used, they are in fact 
-    # significant. If I just pass in 0s for those parameters when setting
-    # homing parameter the stage goes the wrong way and runs itself into
-    # the other end, causing an error condition.
-    #
-    # To get around this, and the fact the correct values don't seem to be
-    # documented, we get the current parameters, assuming they are correct,
-    # and then modify only the velocity and offset component, then send it 
-    # back to the controller.
+        # first get the current settings for homing. We do this because despite
+        # the fact that the protocol spec says home direction, limit switch,
+        # and offset distance parameters are not used, they are in fact
+        # significant. If I just pass in 0s for those parameters when setting
+        # homing parameter the stage goes the wrong way and runs itself into
+        # the other end, causing an error condition.
+        #
+        # To get around this, and the fact the correct values don't seem to be
+        # documented, we get the current parameters, assuming they are correct,
+        # and then modify only the velocity and offset component, then send it
+        # back to the controller.
 
-    # the called method evaluates directional parameters, if given.
-    # Passing the velocity allows to set a suitable default by
-    # child classes.
-    # make sure we never exceed the limits of our stage
-    offset = max(0, min(offset, self.linear_range[1]))
+        # the called method evaluates directional parameters, if given.
+        # Passing the velocity allows to set a suitable default by
+        # child classes.
+        # make sure we never exceed the limits of our stage
+        offset = max(0, min(offset, self.linear_range[1]))
 
-    if velocity != None:
-      # this should cap for the minimum velocity, too
-      velocity = max(0, min(velocity, self.max_velocity))
-    
-    (channel_id, homing_direction, lswitch, homing_velocity,
-     offset_distance) = self.request_home_params(velocity=velocity, offset=offset, channel=channel, **extra_params)
+        if velocity != None:
+            # this should cap for the minimum velocity, too
+            velocity = max(0, min(velocity, self.max_velocity))
 
+        (
+            channel_id,
+            homing_direction,
+            lswitch,
+            homing_velocity,
+            offset_distance,
+        ) = self.request_home_params(
+            velocity=velocity, offset=offset, channel=channel, **extra_params
+        )
 
-    """
+        """
     <: little endian
     H: 2 bytes for channel id
     H: 2 bytes for home direction
@@ -324,55 +355,60 @@ class Controller(object):
     i: 4 bytes for homing velocity
     i: 4 bytes for offset distance
     """
-    assert((channel >= 0) and (channel <= 0xff))
-    
-    if (homing_velocity == 0) and (velocity != None):
-      homing_velocity = int(velocity * self.velocity_scale)
+        assert (channel >= 0) and (channel <= 0xFF)
 
+        if (homing_velocity == 0) and (velocity != None):
+            homing_velocity = int(velocity * self.velocity_scale)
 
-    #print("velocity check:", homing_velocity / self.velocity_scale)
-    newparams= st.pack( '<HHHii', channel_id, homing_direction, lswitch,
-                        homing_velocity, offset_distance)
+        # print("velocity check:", homing_velocity / self.velocity_scale)
+        newparams = st.pack(
+            "<HHHii",
+            channel_id,
+            homing_direction,
+            lswitch,
+            homing_velocity,
+            offset_distance,
+        )
 
-    homeparamsmsg = Message(message.MGMSG_MOT_SET_HOMEPARAMS, data=newparams)
-    msgbytes = st.unpack("<BBBBBBBBBBBBBB", newparams)
-    self._send_message(homeparamsmsg, verbose=False)
+        homeparamsmsg = Message(message.MGMSG_MOT_SET_HOMEPARAMS, data=newparams)
+        msgbytes = st.unpack("<BBBBBBBBBBBBBB", newparams)
+        self._send_message(homeparamsmsg, verbose=False)
 
-    if wait:
-      self.resume_end_of_move_messages()
-    else:
-      self.suspend_end_of_move_messages()
+        if wait:
+            self.resume_end_of_move_messages()
+        else:
+            self.suspend_end_of_move_messages()
 
-    homemsg = Message(message.MGMSG_MOT_MOVE_HOME, param1=channel)
-    self._send_message(homemsg, verbose=False)
+        homemsg = Message(message.MGMSG_MOT_MOVE_HOME, param1=channel)
+        self._send_message(homemsg, verbose=False)
 
-    if wait:
-      self._wait_message(message.MGMSG_MOT_MOVE_HOMED)
-      if return_status and self.provides_status:
-        return self.status()
+        if wait:
+            self._wait_message(message.MGMSG_MOT_MOVE_HOMED)
+            if return_status and self.provides_status:
+                return self.status()
 
-  def position(self, channel=1, raw=False):
-    reqmsg = Message(message.MGMSG_MOT_REQ_POSCOUNTER, param1=channel)
-    self._send_message(reqmsg)
+    def position(self, channel=1, raw=False):
+        reqmsg = Message(message.MGMSG_MOT_REQ_POSCOUNTER, param1=channel)
+        self._send_message(reqmsg)
 
-    getmsg = self._wait_message(message.MGMSG_MOT_GET_POSCOUNTER)
-    dstr = getmsg.datastring
+        getmsg = self._wait_message(message.MGMSG_MOT_GET_POSCOUNTER)
+        dstr = getmsg.datastring
 
-    """
+        """
     <: little endian
     H: 2 bytes for channel id
     i: 4 bytes for position
     """
-    chanid,pos_apt=st.unpack('<Hi', dstr)
+        chanid, pos_apt = st.unpack("<Hi", dstr)
 
-    if not raw:
-      # convert position from POS_apt to POS using _position_scale
-      return 1.0*pos_apt / self.position_scale
-    else:
-      return pos_apt
+        if not raw:
+            # convert position from POS_apt to POS using _position_scale
+            return 1.0 * pos_apt / self.position_scale
+        else:
+            return pos_apt
 
-  def goto(self, abs_pos_mm, channel=1, wait=True):
-    """
+    def goto(self, abs_pos_mm, channel=1, wait=True):
+        """
     Tells the stage to goto the specified absolute position, in mm.
 
     abs_pos_mm will be clamped to self.linear_range
@@ -391,41 +427,41 @@ class Controller(object):
     self.linear_range, and OutOfRangeError will be thrown.
     """
 
-    if self.soft_limits and not self._position_in_range(abs_pos_mm):
-      raise OutOfRangeError(abs_pos_mm, self.linear_range)
+        if self.soft_limits and not self._position_in_range(abs_pos_mm):
+            raise OutOfRangeError(abs_pos_mm, self.linear_range)
 
-    abs_pos_apt = int(abs_pos_mm * self.position_scale)
+        abs_pos_apt = int(abs_pos_mm * self.position_scale)
 
-    """
+        """
     <: little endian
     H: 2 bytes for channel id
     i: 4 bytes for absolute position
     """
-    params = st.pack( '<Hi', channel, abs_pos_apt)
+        params = st.pack("<Hi", channel, abs_pos_apt)
 
-    if wait:
-      self.resume_end_of_move_messages()
-    else:
-      self.suspend_end_of_move_messages()
+        if wait:
+            self.resume_end_of_move_messages()
+        else:
+            self.suspend_end_of_move_messages()
 
-    movemsg = Message(message.MGMSG_MOT_MOVE_ABSOLUTE,data=params)
-    self._send_message(movemsg)
+        movemsg = Message(message.MGMSG_MOT_MOVE_ABSOLUTE, data=params)
+        self._send_message(movemsg)
 
-    if wait:
-      msg = self._wait_message(message.MGMSG_MOT_MOVE_COMPLETED)
-      sts = ControllerStatus(self, msg.datastring)
-      # I find sometimes that after the move completed message there is still
-      # some jittering. This aims to wait out the jittering so we are
-      # stationary when we return
-      while sts.velocity_apt:
-        time.sleep(0.01)
-        sts = self.status()
-      return sts
-    else:
-      return None
+        if wait:
+            msg = self._wait_message(message.MGMSG_MOT_MOVE_COMPLETED)
+            sts = ControllerStatus(self, msg.datastring)
+            # I find sometimes that after the move completed message there is still
+            # some jittering. This aims to wait out the jittering so we are
+            # stationary when we return
+            while sts.velocity_apt:
+                time.sleep(0.01)
+                sts = self.status()
+            return sts
+        else:
+            return None
 
-  def move_old(self, dist_mm, channel=1, wait=True):
-    """
+    def move_old(self, dist_mm, channel=1, wait=True):
+        """
     Tells the stage to move from its current position the specified
     distance, in mm
 
@@ -434,75 +470,73 @@ class Controller(object):
     goto() and returns it returns. Check documentation for goto() for return
     values and such.
     """
-    curpos = self.position()
-    newpos = curpos + dist_mm
+        curpos = self.position()
+        newpos = curpos + dist_mm
 
-    # We could implement MGMSG_MOT_MOVE_RELATIVE, or we can use goto again
-    # because we calculate the new absolute position anyway.
-    #
-    # The advantage of implementing MGMSG_MOT_MOVE_RELATIVE is that things
-    # will be a little faster, because we don't need to get the current
-    # position first. The advantage of reusing self.goto is that it is easier
-    # to implement initially.
-    #
-    # Of course by the time I have finished writing this comment, I could have
-    # just implemented MGMSG_MOT_MOVE_RELATIVE.
-    return self.goto(newpos, channel=channel, wait=wait)
+        # We could implement MGMSG_MOT_MOVE_RELATIVE, or we can use goto again
+        # because we calculate the new absolute position anyway.
+        #
+        # The advantage of implementing MGMSG_MOT_MOVE_RELATIVE is that things
+        # will be a little faster, because we don't need to get the current
+        # position first. The advantage of reusing self.goto is that it is easier
+        # to implement initially.
+        #
+        # Of course by the time I have finished writing this comment, I could have
+        # just implemented MGMSG_MOT_MOVE_RELATIVE.
+        return self.goto(newpos, channel=channel, wait=wait)
 
-
-  def move(self, dist_mm, channel=1, wait=True):
-    """
+    def move(self, dist_mm, channel=1, wait=True):
+        """
     Tells the stage to move from its current position the specified
     distance, in mm
 
     This is checked by getting the current position, then
     computing a new absolute position using dist_mm.
     """
-    curpos = self.position()
-    newpos_mm = curpos + dist_mm
+        curpos = self.position()
+        newpos_mm = curpos + dist_mm
 
-    if self.soft_limits and not self._position_in_range(newpos_mm):
-      raise OutOfRangeError(abs_pos_mm, self.linear_range)
+        if self.soft_limits and not self._position_in_range(newpos_mm):
+            raise OutOfRangeError(abs_pos_mm, self.linear_range)
 
-    dist_apt = int(dist_mm * self.position_scale)
+        dist_apt = int(dist_mm * self.position_scale)
 
-    """
+        """
     <: little endian
     H: 2 bytes for channel id
     i: 4 bytes for absolute position
     """
-    params = st.pack( '<Hi', channel, dist_apt)
+        params = st.pack("<Hi", channel, dist_apt)
 
-    if wait:
-      self.resume_end_of_move_messages()
-    else:
-      self.suspend_end_of_move_messages()
+        if wait:
+            self.resume_end_of_move_messages()
+        else:
+            self.suspend_end_of_move_messages()
 
-    movemsg = Message(message.MGMSG_MOT_MOVE_RELATIVE,data=params)
-    self._send_message(movemsg)
+        movemsg = Message(message.MGMSG_MOT_MOVE_RELATIVE, data=params)
+        self._send_message(movemsg)
 
-    if wait:
-      msg = self._wait_message(message.MGMSG_MOT_MOVE_COMPLETED)
-      sts = ControllerStatus(self, msg.datastring)
-      # I find sometimes that after the move completed message there is still
-      # some jittering. This aims to wait out the jittering so we are
-      # stationary when we return
-      while sts.velocity_apt:
-        time.sleep(0.01)
-        sts = self.status()
-      return sts
-    else:
-      return None
+        if wait:
+            msg = self._wait_message(message.MGMSG_MOT_MOVE_COMPLETED)
+            sts = ControllerStatus(self, msg.datastring)
+            # I find sometimes that after the move completed message there is still
+            # some jittering. This aims to wait out the jittering so we are
+            # stationary when we return
+            while sts.velocity_apt:
+                time.sleep(0.01)
+                sts = self.status()
+            return sts
+        else:
+            return None
 
-  
-  def set_soft_limits(self, soft_limits):
-    """
+    def set_soft_limits(self, soft_limits):
+        """
     Sets whether range limits are observed in software.
     """
-    self.soft_limits = soft_limits
+        self.soft_limits = soft_limits
 
-  def set_velocity_parameters(self, acceleration=None, max_velocity=None, channel=1):
-    """
+    def set_velocity_parameters(self, acceleration=None, max_velocity=None, channel=1):
+        """
     Sets the trapezoidal velocity parameters of the controller. Note that
     minimum velocity cannot be set, because protocol demands it is always
     zero.
@@ -510,32 +544,32 @@ class Controller(object):
     When called without arguments, max acceleration and max velocity will
     be set to self.max_acceleration and self.max_velocity
     """
-    if acceleration == None:
-      acceleration = self.max_acceleration
+        if acceleration == None:
+            acceleration = self.max_acceleration
 
-    if max_velocity == None:
-      max_velocity = self.max_velocity
+        if max_velocity == None:
+            max_velocity = self.max_velocity
 
-    # software limiting again for extra safety
-    acceleration = min(acceleration, self.max_acceleration)
-    max_velocity = min(max_velocity, self.max_velocity)
+        # software limiting again for extra safety
+        acceleration = min(acceleration, self.max_acceleration)
+        max_velocity = min(max_velocity, self.max_velocity)
 
-    acc_apt = acceleration * self.acceleration_scale
-    max_vel_apt = max_velocity * self.velocity_scale
+        acc_apt = acceleration * self.acceleration_scale
+        max_vel_apt = max_velocity * self.velocity_scale
 
-    """
+        """
     <: small endian
     H: 2 bytes for channel
     i: 4 bytes for min velocity
     i: 4 bytes for acceleration
     i: 4 bytes for max velocity
     """
-    params = st.pack('<Hiii',channel,0,acc_apt, max_vel_apt)
-    setmsg = Message(message.MGMSG_MOT_SET_VELPARAMS, data=params)
-    self._send_message(setmsg)
+        params = st.pack("<Hiii", channel, 0, acc_apt, max_vel_apt)
+        setmsg = Message(message.MGMSG_MOT_SET_VELPARAMS, data=params)
+        self._send_message(setmsg)
 
-  def velocity_parameters(self, channel=1, raw=False):
-    """
+    def velocity_parameters(self, channel=1, raw=False):
+        """
     Returns the trapezoidal velocity parameters of the controller, that is
     minimum start velocity, acceleration, and maximum velocity. All of which
     are returned in realworld units.
@@ -548,29 +582,29 @@ class Controller(object):
     Example:
       min_vel, acc, max_vel = con.velocity_parameters()
     """
-    reqmsg = Message(message.MGMSG_MOT_REQ_VELPARAMS, param1=channel)
-    self._send_message(reqmsg)
+        reqmsg = Message(message.MGMSG_MOT_REQ_VELPARAMS, param1=channel)
+        self._send_message(reqmsg)
 
-    getmsg = self._wait_message(message.MGMSG_MOT_GET_VELPARAMS)
+        getmsg = self._wait_message(message.MGMSG_MOT_GET_VELPARAMS)
 
-    """
+        """
     <: small endian
     H: 2 bytes for channel
     i: 4 bytes for min velocity
     i: 4 bytes for acceleration
     i: 4 bytes for max velocity
     """
-    ch,min_vel,acc,max_vel = st.unpack('<Hiii',getmsg.datastring)
+        ch, min_vel, acc, max_vel = st.unpack("<Hiii", getmsg.datastring)
 
-    if not raw:
-      min_vel /= self.velocity_scale
-      max_vel /= self.velocity_scale
-      acc /= self.acceleration_scale
+        if not raw:
+            min_vel /= self.velocity_scale
+            max_vel /= self.velocity_scale
+            acc /= self.acceleration_scale
 
-    return min_vel, acc, max_vel
+        return min_vel, acc, max_vel
 
-  def info(self):
-    """
+    def info(self):
+        """
     Gets hardware info of the controller, returned as a tuple containing:
       - serial number
       - model number
@@ -583,11 +617,11 @@ class Controller(object):
       - number of channels
     """
 
-    reqmsg = Message(message.MGMSG_HW_REQ_INFO)
-    self._send_message(reqmsg)
+        reqmsg = Message(message.MGMSG_HW_REQ_INFO)
+        self._send_message(reqmsg)
 
-    getmsg = self._wait_message(message.MGMSG_HW_GET_INFO)
-    """
+        getmsg = self._wait_message(message.MGMSG_HW_GET_INFO)
+        """
     <: small endian
     I:    4 bytes for serial number
     8s:   8 bytes for model number
@@ -599,23 +633,25 @@ class Controller(object):
     H:    2 bytes for modificiation state
     H:    2 bytes for number of channels
     """
-    info = st.unpack('<I8sH4s48s12sHHH', getmsg.datastring)
+        info = st.unpack("<I8sH4s48s12sHHH", getmsg.datastring)
 
-    sn,model,hwtype,fwver,notes,_,hwver,modstate,numchan = info
+        sn, model, hwtype, fwver, notes, _, hwver, modstate, numchan = info
 
-    fwverminor = ord(fwver[0])
-    fwverinterim = ord(fwver[1])
-    fwvermajor = ord(fwver[2])
+        fwverminor = ord(fwver[0])
+        fwverinterim = ord(fwver[1])
+        fwvermajor = ord(fwver[2])
 
-    fwver = '%d.%d.%d'%(fwvermajor,fwverinterim, fwverminor)
+        fwver = "%d.%d.%d" % (fwvermajor, fwverinterim, fwverminor)
 
-    # we need to get rid of the Null bytes
-    strp = lambda s : s.strip(chr(0))
+        # we need to get rid of the Null bytes
+        strp = lambda s: s.strip(chr(0))
 
-    return DeviceInfo(sn, strp(model),hwtype, strp(fwver), strp(notes),hwver,modstate,numchan)
+        return DeviceInfo(
+            sn, strp(model), hwtype, strp(fwver), strp(notes), hwver, modstate, numchan
+        )
 
-  def stop(self, channel=1, immediate=False, wait=True):
-    """
+    def stop(self, channel=1, immediate=False, wait=True):
+        """
     Stops the motor on the specified channel. If immediate is True, then the
     motor stops immediately, otherwise it stops in a profiled manner, i.e.
     decelerates accoding to max acceleration from current velocity down to zero
@@ -627,28 +663,28 @@ class Controller(object):
     otherwise.
     """
 
-    if wait:
-      self.resume_end_of_move_messages()
-    else:
-      self.suspend_end_of_move_messages()
+        if wait:
+            self.resume_end_of_move_messages()
+        else:
+            self.suspend_end_of_move_messages()
 
-    stopmsg = Message(message.MGMSG_MOT_MOVE_STOP,
-                      param1=channel,
-                      param2=int(immediate))
-    self._send_message(stopmsg)
+        stopmsg = Message(
+            message.MGMSG_MOT_MOVE_STOP, param1=channel, param2=int(immediate)
+        )
+        self._send_message(stopmsg)
 
-    if wait:
-      self._wait_message(message.MGMSG_MOT_MOVE_STOPPED)
-      sts = self.status()
-      while sts.velocity_apt:
-        time.sleep(0.001)
-        sts = self.status()
-      return sts
-    else:
-      return None
+        if wait:
+            self._wait_message(message.MGMSG_MOT_MOVE_STOPPED)
+            sts = self.status()
+            while sts.velocity_apt:
+                time.sleep(0.001)
+                sts = self.status()
+            return sts
+        else:
+            return None
 
-  def keepalive(self):
-    """
+    def keepalive(self):
+        """
     This sends MGMSG_MOT_ACK_DCSTATUSUPDATE to the controller to keep it
     from going dark.
 
@@ -659,30 +695,32 @@ class Controller(object):
       Chris Miller at UKATC tells that this is needed only
       if the server is receiving notifications.
     """
-    msg = Message(message.MGMSG_MOT_ACK_DCSTATUSUPDATE)
-    self._send_message(msg)
+        msg = Message(message.MGMSG_MOT_ACK_DCSTATUSUPDATE)
+        self._send_message(msg)
 
-  def __repr__(self):
-    return 'Controller(serial=%s, device=%s)'%(self.serial_number, self._device)
+    def __repr__(self):
+        return "Controller(serial=%s, device=%s)" % (self.serial_number, self._device)
+
 
 class ControllerStatus(object):
-  """
+    """
   This class encapsulate the controller status, which includes its position,
   velocity, and various flags.
 
   The position and velocity properties will return realworld values of 
   mm and mm/s respectively.
   """
-  def __init__(self, controller, statusbytestring):
-    """
+
+    def __init__(self, controller, statusbytestring):
+        """
     Construct an instance of ControllerStatus from the 14 byte status sent by
     the controller which contains the current position encoder count, the
     actual velocity, scaled, and statusbits.
     """
 
-    super(ControllerStatus, self).__init__()
+        super(ControllerStatus, self).__init__()
 
-    """
+        """
     <: little endian
     H: 2 bytes for channel ID
     i: 4 bytes for position counter
@@ -693,96 +731,95 @@ class ControllerStatus(object):
     Note that velocity in the docs is stated as a unsigned word, by in reality
     it looks like it is signed.
     """
-    channel, pos_apt, vel_apt, _, statusbits = st.unpack( '<HihHI',
-                                                          statusbytestring)
+        channel, pos_apt, vel_apt, _, statusbits = st.unpack("<HihHI", statusbytestring)
 
-    self.channel = channel
-    if pos_apt:
-      self.position = float(pos_apt) / controller.position_scale
-    else:
-      self.position = 0
+        self.channel = channel
+        if pos_apt:
+            self.position = float(pos_apt) / controller.position_scale
+        else:
+            self.position = 0
 
-    # XXX the protocol document, revision 7, is explicit about the scaling
-    # Note that I don't trust this value, because the measured velocity
-    # does not correspond to the value from the scaling. The value used here
-    # is derived from trial and error
-    if vel_apt:
-      self.velocity = float(vel_apt) / 10
-    else:
-      self.velocity = 0
+        # XXX the protocol document, revision 7, is explicit about the scaling
+        # Note that I don't trust this value, because the measured velocity
+        # does not correspond to the value from the scaling. The value used here
+        # is derived from trial and error
+        if vel_apt:
+            self.velocity = float(vel_apt) / 10
+        else:
+            self.velocity = 0
 
-    self.statusbits = statusbits
+        self.statusbits = statusbits
 
-    # save the "raw" controller values since they are convenient for
-    # zero-checking
-    self.position_apt = pos_apt
-    self.position_scale = controller.position_scale
-    self.velocity_apt = vel_apt
+        # save the "raw" controller values since they are convenient for
+        # zero-checking
+        self.position_apt = pos_apt
+        self.position_scale = controller.position_scale
+        self.velocity_apt = vel_apt
 
-  @property
-  def forward_hardware_limit_switch_active(self):
-    return self.statusbits & 0x01
+    @property
+    def forward_hardware_limit_switch_active(self):
+        return self.statusbits & 0x01
 
-  @property
-  def reverse_hardware_limit_switch_active(self):
-    return self.statusbits & 0x02
+    @property
+    def reverse_hardware_limit_switch_active(self):
+        return self.statusbits & 0x02
 
-  @property
-  def moving(self):
-    return self.moving_forward or self.moving_reverse
-  @property
-  def moving_forward(self):
-    return self.statusbits & 0x10
+    @property
+    def moving(self):
+        return self.moving_forward or self.moving_reverse
 
-  @property
-  def moving_reverse(self):
-    return self.statusbits & 0x20
+    @property
+    def moving_forward(self):
+        return self.statusbits & 0x10
 
-  @property
-  def jogging_forward(self):
-    return self.statusbits & 0x40
+    @property
+    def moving_reverse(self):
+        return self.statusbits & 0x20
 
-  @property
-  def jogging_reverse(self):
-    return self.statusbits & 0x80
+    @property
+    def jogging_forward(self):
+        return self.statusbits & 0x40
 
-  @property
-  def homing(self):
-    return self.statusbits & 0x200
+    @property
+    def jogging_reverse(self):
+        return self.statusbits & 0x80
 
-  @property
-  def homed(self):
-    return self.statusbits & 0x400
+    @property
+    def homing(self):
+        return self.statusbits & 0x200
 
-  @property
-  def tracking(self):
-    return self.statusbits & 0x1000
+    @property
+    def homed(self):
+        return self.statusbits & 0x400
 
-  @property
-  def settled(self):
-    return self.statusbits & 0x2000
+    @property
+    def tracking(self):
+        return self.statusbits & 0x1000
 
-  @property
-  def excessive_position_error(self):
-    """
+    @property
+    def settled(self):
+        return self.statusbits & 0x2000
+
+    @property
+    def excessive_position_error(self):
+        """
     This flag means that there is excessive positioning error, and
     the stage should be re-homed. This happens if while moving the stage
     is impeded, and where it thinks it is isn't where it is
     """
-    return self.statusbits & 0x4000
+        return self.statusbits & 0x4000
 
-  @property
-  def motor_current_limit_reached(self):
-    return self.statusbits & 0x01000000
+    @property
+    def motor_current_limit_reached(self):
+        return self.statusbits & 0x01000000
 
-  @property
-  def channel_enabled(self):
-    return self.statusbits & 0x80000000
+    @property
+    def channel_enabled(self):
+        return self.statusbits & 0x80000000
 
-
-  @property
-  def shortstatus(self):
-    """
+    @property
+    def shortstatus(self):
+        """
     Returns a short, fixed width, status line that shows whether the
     controller is moving, the direction, whether it has been homed, and
     whether excessive position error is present.
@@ -809,58 +846,63 @@ class ControllerStatus(object):
     "H M-- ---" means homed, moving
     "H M-- --E" means homed, moving reverse, excessive position error
     """
-    shortstat = []
-    def add(flag, letter):
-      if flag:
-        shortstat.append(letter)
-      else:
-        shortstat.append('-')
+        shortstat = []
 
-    sep = ' '
-    add(self.homed, 'H')
+        def add(flag, letter):
+            if flag:
+                shortstat.append(letter)
+            else:
+                shortstat.append("-")
 
-    shortstat.append(sep)
+        sep = " "
+        add(self.homed, "H")
 
-    add(self.moving, 'M')
-    add(self.tracking, 'T')
-    add(self.settled, 'S')
+        shortstat.append(sep)
 
-    shortstat.append(sep)
+        add(self.moving, "M")
+        add(self.tracking, "T")
+        add(self.settled, "S")
 
-    add(self.forward_hardware_limit_switch_active, 'F')
-    add(self.reverse_hardware_limit_switch_active, 'R')
-    add(self.excessive_position_error, 'E')
+        shortstat.append(sep)
 
-    return ''.join(shortstat)
+        add(self.forward_hardware_limit_switch_active, "F")
+        add(self.reverse_hardware_limit_switch_active, "R")
+        add(self.excessive_position_error, "E")
 
-  def flag_strings(self):
-    """
+        return "".join(shortstat)
+
+    def flag_strings(self):
+        """
     Returns the various flags as user readable strings
     """
-    """
+        """
     XXX Breaking the DRY principle here, but this is so much more compact!
     """
-    masks={ 0x01:       'Forward hardware limit switch active',
-            0x02:       'Reverse hardware limit switch active',
-            0x10:       'In motion, moving forward',
-            0x20:       'In motion, moving backward',
-            0x40:       'In motion, jogging forward',
-            0x80:       'In motion, jogging backward',
-            0x200:      'In motion, homing',
-            0x400:      'Homed',
-            0x1000:     'Tracking',
-            0x2000:     'Settled',
-            0x4000:     'Excessive position error',
-            0x01000000: 'Motor current limit reached',
-            0x80000000: 'Channel enabled'
-            }
-    statuslist = []
-    for bitmask in masks:
-      if self.statusbits & bitmask:
-        statuslist.append(masks[bitmask])
+        masks = {
+            0x01: "Forward hardware limit switch active",
+            0x02: "Reverse hardware limit switch active",
+            0x10: "In motion, moving forward",
+            0x20: "In motion, moving backward",
+            0x40: "In motion, jogging forward",
+            0x80: "In motion, jogging backward",
+            0x200: "In motion, homing",
+            0x400: "Homed",
+            0x1000: "Tracking",
+            0x2000: "Settled",
+            0x4000: "Excessive position error",
+            0x01000000: "Motor current limit reached",
+            0x80000000: "Channel enabled",
+        }
+        statuslist = []
+        for bitmask in masks:
+            if self.statusbits & bitmask:
+                statuslist.append(masks[bitmask])
 
-    return statuslist
+        return statuslist
 
-  def __str__(self):
-    return 'pos=%.2fmm vel=%.2fmm/s, flags=%s'%(self.position, self.velocity, self.flag_strings())
-
+    def __str__(self):
+        return "pos=%.2fmm vel=%.2fmm/s, flags=%s" % (
+            self.position,
+            self.velocity,
+            self.flag_strings(),
+        )

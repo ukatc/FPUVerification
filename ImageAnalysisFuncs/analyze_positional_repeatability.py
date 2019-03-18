@@ -13,8 +13,10 @@ from ImageAnalysisFuncs.base import ImageAnalysisError
 
 # exceptions which are raised if image analysis functions fail
 
+
 class RepeatabilityAnalysisError(ImageAnalysisError):
     pass
+
 
 # version number for analysis algorithm
 # (each different result for the same data
@@ -23,150 +25,217 @@ class RepeatabilityAnalysisError(ImageAnalysisError):
 POSITIONAL_REPEATABILITY_ALGORITHM_VERSION = 0.1
 DATUM_REPEATABILITY_ALGORITHM_VERSION = 0.1
 
-def posrepCoordinates(image_path,
-	              #configurable parameters
-	              POSREP_PLATESCALE=0.02361, #mm per pixel
-	              POSREP_SMALL_DIAMETER=1.5, #mm 
-	              POSREP_LARGE_DIAMETER=2.5, #mm 
-	              POSREP_DIAMETER_TOLERANCE=0.1, #mm 
-	              POSREP_THRESHOLD=40, #0-255
-	              POSREP_QUALITY_METRIC=0.8, #dimensionless
-	              POSREP_CALIBRATION_PARS=None,
-	              verbosity=0, # a value > 5 will write contour parameters to terminal
-	              display=False): #will display image with contours annotated
-        
-        """reads an image from the positional repeatability camera and returns 
+
+def posrepCoordinates(
+    image_path,
+    # configurable parameters
+    POSREP_PLATESCALE=0.02361,  # mm per pixel
+    POSREP_SMALL_DIAMETER=1.5,  # mm
+    POSREP_LARGE_DIAMETER=2.5,  # mm
+    POSREP_DIAMETER_TOLERANCE=0.1,  # mm
+    POSREP_THRESHOLD=40,  # 0-255
+    POSREP_QUALITY_METRIC=0.8,  # dimensionless
+    POSREP_CALIBRATION_PARS=None,
+    verbosity=0,  # a value > 5 will write contour parameters to terminal
+    display=False,
+):  # will display image with contours annotated
+
+    """reads an image from the positional repeatability camera and returns 
         the XY coordinates and circularity of the two targets in mm"""
 
-        # Authors: Stephen Watson (initial algorithm March 4, 2019)
-        # Johannes Nix (code imported and re-formatted)
+    # Authors: Stephen Watson (initial algorithm March 4, 2019)
+    # Johannes Nix (code imported and re-formatted)
 
+    # using the 'PLATESCALE' parameter here has the problem that
+    # it does not account for non-linear distortion of the image,
+    # and it is also overlapping with the image correction
+    # function.  (Also, 'PLATESCALE' means normally something
+    # different, it normally thescribes the ratio between a ppixel
+    # number and an angle, not a pixel number and a distance.)
 
-        # using the 'PLATESCALE' parameter here has the problem that
-        # it does not account for non-linear distortion of the image,
-        # and it is also overlapping with the image correction
-        # function.  (Also, 'PLATESCALE' means normally something
-        # different, it normally thescribes the ratio between a ppixel
-        # number and an angle, not a pixel number and a distance.)
-        
-	smallPerimeterLo = (POSREP_SMALL_DIAMETER - POSREP_DIAMETER_TOLERANCE) * pi / POSREP_PLATESCALE
-	smallPerimeterHi = (POSREP_SMALL_DIAMETER + POSREP_DIAMETER_TOLERANCE) * pi / POSREP_PLATESCALE
-	largePerimeterLo = (POSREP_LARGE_DIAMETER - POSREP_DIAMETER_TOLERANCE) * pi / POSREP_PLATESCALE
-	largePerimeterHi = (POSREP_LARGE_DIAMETER + POSREP_DIAMETER_TOLERANCE) * pi / POSREP_PLATESCALE
+    smallPerimeterLo = (
+        (POSREP_SMALL_DIAMETER - POSREP_DIAMETER_TOLERANCE) * pi / POSREP_PLATESCALE
+    )
+    smallPerimeterHi = (
+        (POSREP_SMALL_DIAMETER + POSREP_DIAMETER_TOLERANCE) * pi / POSREP_PLATESCALE
+    )
+    largePerimeterLo = (
+        (POSREP_LARGE_DIAMETER - POSREP_DIAMETER_TOLERANCE) * pi / POSREP_PLATESCALE
+    )
+    largePerimeterHi = (
+        (POSREP_LARGE_DIAMETER + POSREP_DIAMETER_TOLERANCE) * pi / POSREP_PLATESCALE
+    )
 
-	if verbosity > 5:
-		print ("Lower/upper perimeter limits of small & large "
-                       "targets in mm: %.2f / %.2f ; %.2f / %.2f" % (
-                               smallPerimeterLo, smallPerimeterHi, largePerimeterLo, largePerimeterHi))
+    if verbosity > 5:
+        print (
+            "Lower/upper perimeter limits of small & large "
+            "targets in mm: %.2f / %.2f ; %.2f / %.2f"
+            % (smallPerimeterLo, smallPerimeterHi, largePerimeterLo, largePerimeterHi)
+        )
 
-	centres = {}
+    centres = {}
 
-	image = cv2.imread(image_path)
+    image = cv2.imread(image_path)
 
+    # image processing
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    blur = cv2.GaussianBlur(gray, (9, 9), 0)
+    thresh = cv2.threshold(blur, POSREP_THRESHOLD, 255, cv2.THRESH_BINARY)[1]
 
-	#image processing
-	gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-	blur = cv2.GaussianBlur(gray, (9, 9), 0)
-	thresh = cv2.threshold(blur, POSREP_THRESHOLD, 255, cv2.THRESH_BINARY)[1] 
-	
-	#find contours from thresholded image
-	cnts = sorted(cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[1],
-                      key=cv2.contourArea, reverse=True)[:15]
-	
-	largeTargetFound, smallTargetFound, multipleSmall, multipleLarge = False, False, False, False
+    # find contours from thresholded image
+    cnts = sorted(
+        cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[1],
+        key=cv2.contourArea,
+        reverse=True,
+    )[:15]
 
-	# filter through contours on size and circularity	
-	for i, c in enumerate(cnts):
-		perimeter = cv2.arcLength(c, True)
-		area = cv2.contourArea(c)
-		if area > 0 and perimeter > 0:
-			circularity = 4 * pi * (area / (perimeter * perimeter))
-		if verbosity > 5:
-			print ("ContourID - %i; perimeter - %.2f; circularity - %.2f" % (i, perimeter, circularity))		
-		if circularity > POSREP_QUALITY_METRIC:
-			if perimeter > smallPerimeterLo and perimeter < smallPerimeterHi:	
-				if smallTargetFound == True: multipleSmall = True	
-				circle = 'Small Target'
-				smallTargetFound = True
-			elif perimeter > largePerimeterLo and perimeter < largePerimeterHi:
-				if largeTargetFound == True: multipleLarge = True
-				circle = 'Large Target'
-				largeTargetFound = True
-			else:
-				circle = "N" + str(i)
-			
-			#finds contour momenIA.posrepCoordinates("./PT25_posrep_1_001.bmp")ts,
-                        # which can be used to derive centre of mass		
-			M = cv2.moments(c)
-			cX = M["m10"] / M["m00"]
-			cY = M["m01"] / M["m00"]
-			centres[circle] = (cX, cY, circularity, i)
+    largeTargetFound, smallTargetFound, multipleSmall, multipleLarge = (
+        False,
+        False,
+        False,
+        False,
+    )
 
-			#superimpose contours and labels onto original image, user prompt required in terminal to progress
-			if display == True:
-				cv2.drawContours(image, cnts, -1, (0, 255, 0), 2)
-				label = str(i) + ", " + str(round(perimeter,1)) + ", " + str(round(circularity,2)) + " = " + circle
-				cv2.putText(image,label,(int(cX),int(cY)),cv2.FONT_HERSHEY_SIMPLEX ,2,(255,255,255),2,1)
-				cv2.imshow('image', cv2.resize(image, (0,0), fx=0.3, fy=0.3))
-				cv2.waitKey(100)
-				raw_input("Press enter to continue")
+    # filter through contours on size and circularity
+    for i, c in enumerate(cnts):
+        perimeter = cv2.arcLength(c, True)
+        area = cv2.contourArea(c)
+        if area > 0 and perimeter > 0:
+            circularity = 4 * pi * (area / (perimeter * perimeter))
+        if verbosity > 5:
+            print (
+                "ContourID - %i; perimeter - %.2f; circularity - %.2f"
+                % (i, perimeter, circularity)
+            )
+        if circularity > POSREP_QUALITY_METRIC:
+            if perimeter > smallPerimeterLo and perimeter < smallPerimeterHi:
+                if smallTargetFound == True:
+                    multipleSmall = True
+                circle = "Small Target"
+                smallTargetFound = True
+            elif perimeter > largePerimeterLo and perimeter < largePerimeterHi:
+                if largeTargetFound == True:
+                    multipleLarge = True
+                circle = "Large Target"
+                largeTargetFound = True
+            else:
+                circle = "N" + str(i)
 
-	if multipleSmall == True:
-		raise RepeatabilityAnalysisError("Multiple small targets found - tighten parameters or use "
-                                "display option to investigate images for contamination")
-	if multipleLarge == True: 
-		raise RepeatabilityAnalysisError("Multiple large targets found - tighten parameters or"
-                                " use display option to investigate images for contamination")
-        
-	if smallTargetFound == False:
-		raise RepeatabilityAnalysisError("Small target not found - "
-                                                 "loosen diameter tolerance or change image thresholding")
-        
-	if largeTargetFound == False:
-		raise RepeatabilityAnalysisError("Large target not found - "
-                                                 "loosen diameter tolerance or change image thresholding")
+            # finds contour momenIA.posrepCoordinates("./PT25_posrep_1_001.bmp")ts,
+            # which can be used to derive centre of mass
+            M = cv2.moments(c)
+            cX = M["m10"] / M["m00"]
+            cY = M["m01"] / M["m00"]
+            centres[circle] = (cX, cY, circularity, i)
 
-	if verbosity > 5:
-                print("Contour %i = small target, contour %i = large target" %(
-                        centres['Small Target'][3], centres['Large Target'][3]))
+            # superimpose contours and labels onto original image, user prompt required in terminal to progress
+            if display == True:
+                cv2.drawContours(image, cnts, -1, (0, 255, 0), 2)
+                label = (
+                    str(i)
+                    + ", "
+                    + str(round(perimeter, 1))
+                    + ", "
+                    + str(round(circularity, 2))
+                    + " = "
+                    + circle
+                )
+                cv2.putText(
+                    image,
+                    label,
+                    (int(cX), int(cY)),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    2,
+                    (255, 255, 255),
+                    2,
+                    1,
+                )
+                cv2.imshow("image", cv2.resize(image, (0, 0), fx=0.3, fy=0.3))
+                cv2.waitKey(100)
+                raw_input("Press enter to continue")
 
-	pixels_posrep_small_target_x = centres['Small Target'][0]
-	pixels_posrep_small_target_y = centres['Small Target'][1]
-	posrep_small_target_quality = centres['Small Target'][2]
-	pixels_posrep_large_target_x = centres['Large Target'][0]
-	pixels_posrep_large_target_y = centres['Large Target'][1]
-	posrep_large_target_quality = centres['Large Target'][2]
+    if multipleSmall == True:
+        raise RepeatabilityAnalysisError(
+            "Multiple small targets found - tighten parameters or use "
+            "display option to investigate images for contamination"
+        )
+    if multipleLarge == True:
+        raise RepeatabilityAnalysisError(
+            "Multiple large targets found - tighten parameters or"
+            " use display option to investigate images for contamination"
+        )
 
-        # scale and straighten the result coordinates
-        # the distortion correction is applied here, using the 'correct' function
-        # from the distortion correction module
-        if POSREP_CALIBRATION_PARS is None:
-            POSREP_CALIBRATION_PARS = { 'algorithm' : 'scale',
-                                        'scale_factor' : POSREP_PLATESCALE }
+    if smallTargetFound == False:
+        raise RepeatabilityAnalysisError(
+            "Small target not found - "
+            "loosen diameter tolerance or change image thresholding"
+        )
 
-        posrep_small_target_x, posrep_small_target_y = correct(pixels_posrep_small_target_x, pixels_posrep_small_target_y,
-                                                                calibration_pars=POSREP_CALIBRATION_PARS)
+    if largeTargetFound == False:
+        raise RepeatabilityAnalysisError(
+            "Large target not found - "
+            "loosen diameter tolerance or change image thresholding"
+        )
 
-        posrep_large_target_x, posrep_large_target_y = correct(pixels_posrep_large_target_x, pixels_posrep_large_target_y,
-                                                              calibration_pars=POSREP_CALIBRATION_PARS)
-        
-	#target separation check - the values here are not configurable, as
-        # they represent real mechanical tolerances
-	targetSeparation = sqrt((posrep_small_target_x - posrep_large_target_x)**2 +
-                                (posrep_small_target_y - posrep_large_target_y)**2)
-	if verbosity > 5:
-                print("Target separation is %.3f mm.  Specification is 2.375 +/- 0.1 mm." % targetSeparation)
-	if targetSeparation > 2.475 or targetSeparation < 2.275:
-		raise RepeatabilityAnalysisError("Target separation is out of spec - "
-                                "use display option to check for target-like reflections")
-        
-	return (posrep_small_target_x,
-                posrep_small_target_y,
-                posrep_small_target_quality,
-                posrep_large_target_x,
-                posrep_large_target_y,
-                posrep_large_target_quality)
+    if verbosity > 5:
+        print (
+            "Contour %i = small target, contour %i = large target"
+            % (centres["Small Target"][3], centres["Large Target"][3])
+        )
 
+    pixels_posrep_small_target_x = centres["Small Target"][0]
+    pixels_posrep_small_target_y = centres["Small Target"][1]
+    posrep_small_target_quality = centres["Small Target"][2]
+    pixels_posrep_large_target_x = centres["Large Target"][0]
+    pixels_posrep_large_target_y = centres["Large Target"][1]
+    posrep_large_target_quality = centres["Large Target"][2]
+
+    # scale and straighten the result coordinates
+    # the distortion correction is applied here, using the 'correct' function
+    # from the distortion correction module
+    if POSREP_CALIBRATION_PARS is None:
+        POSREP_CALIBRATION_PARS = {
+            "algorithm": "scale",
+            "scale_factor": POSREP_PLATESCALE,
+        }
+
+    posrep_small_target_x, posrep_small_target_y = correct(
+        pixels_posrep_small_target_x,
+        pixels_posrep_small_target_y,
+        calibration_pars=POSREP_CALIBRATION_PARS,
+    )
+
+    posrep_large_target_x, posrep_large_target_y = correct(
+        pixels_posrep_large_target_x,
+        pixels_posrep_large_target_y,
+        calibration_pars=POSREP_CALIBRATION_PARS,
+    )
+
+    # target separation check - the values here are not configurable, as
+    # they represent real mechanical tolerances
+    targetSeparation = sqrt(
+        (posrep_small_target_x - posrep_large_target_x) ** 2
+        + (posrep_small_target_y - posrep_large_target_y) ** 2
+    )
+    if verbosity > 5:
+        print (
+            "Target separation is %.3f mm.  Specification is 2.375 +/- 0.1 mm."
+            % targetSeparation
+        )
+    if targetSeparation > 2.475 or targetSeparation < 2.275:
+        raise RepeatabilityAnalysisError(
+            "Target separation is out of spec - "
+            "use display option to check for target-like reflections"
+        )
+
+    return (
+        posrep_small_target_x,
+        posrep_small_target_y,
+        posrep_small_target_quality,
+        posrep_large_target_x,
+        posrep_large_target_y,
+        posrep_large_target_quality,
+    )
 
 
 def evaluate_datum_repeatability(datumed_coords, moved_coords):
@@ -194,45 +263,50 @@ def evaluate_datum_repeatability(datumed_coords, moved_coords):
     datumed_errors_big = map(norm, xy_datumed[2:] - datumed_mean[2:])
     moved_errors_small = map(norm, xy_moved[:2] - moved_mean[:2])
     moved_errors_big = map(norm, xy_moved[2:] - moved_mean[2:])
-    
+
     datrep_dat_only_max = max([datumed_errors_big, datumed_errors_small])
     datrep_dat_only_std = std([datumed_errors_big, datumed_errors_small])
     datrep_move_dat_max = max([moved_errors_big, moved_errors_small])
     datrep_move_dat_std = std([moved_errors_big, moved_errors_small])
-    
-    return (datrep_dat_only_max,
-            datrep_dat_only_std,
-            datrep_move_dat_max,
-            datrep_move_dat_std )
+
+    return (
+        datrep_dat_only_max,
+        datrep_dat_only_std,
+        datrep_move_dat_max,
+        datrep_move_dat_std,
+    )
 
 
 def get_angular_error(dict_of_coords, idx):
     coords_per_angles = {}
-     
+
     for k, v in dict_of_coordinates.items():
         ang = k[idx]
         if not coords_per_angles.has_key(ang):
             coords_per_angles[ang] = []
-            
-        coords_per_angles[ang].append(v)
 
+        coords_per_angles[ang].append(v)
 
     max_err_at_angle = {}
     for k, v in coords_per_angles:
-        avg = mean(v, axis=0) # this is an average of big and small target coords separately
+        avg = mean(
+            v, axis=0
+        )  # this is an average of big and small target coords separately
         err_small = map(norm, v[:2] - avg[:2])
         err_big = map(norm, v[2:] - avg[2:])
-        
-        max_err_at_angle[k] = max([err_small, err_big]) # this is a maximum of all errors
 
+        max_err_at_angle[k] = max(
+            [err_small, err_big]
+        )  # this is a maximum of all errors
 
     poserr_max = max(max_err_at_angle.values())
 
     return max_err_at_angle, poserr_max
 
 
-def evaluate_positional_repeatability(dict_of_coordinates_alpha,
-                                      dict_of_coordinates_beta):
+def evaluate_positional_repeatability(
+    dict_of_coordinates_alpha, dict_of_coordinates_beta
+):
     """Takes two dictionaries. The keys of each dictionary
     are the (alpha, beta, i,j,k) coordinates  indices of the positional 
     repeateability measurement, with one of the alpha/beta coordinates hold 
@@ -268,18 +342,22 @@ def evaluate_positional_repeatability(dict_of_coordinates_alpha,
 
     # transform to lists of measurements for the same coordinates
 
+    posrep_alpha_max_at_angle, posrep_alpha_max = get_angular_error(
+        dict_of_coordinates_alpha, 0
+    )
+    posrep_beta_max_at_angle, posrep_beta_max = get_angular_error(
+        dict_of_coordinates_beta, 1
+    )
 
-    posrep_alpha_max_at_angle, posrep_alpha_max = get_angular_error(dict_of_coordinates_alpha, 0)
-    posrep_beta_max_at_angle, posrep_beta_max = get_angular_error(dict_of_coordinates_beta, 1)
-    
     posrep_rss = sqrt(posrep_alpha_max ** 2 + posrep_beta_max ** 2)
-    
-    return (posrep_alpha_max_at_angle,
-            posrep_beta_max_at_angle,
-            posrep_alpha_max,
-            posrep_beta_max,
-            posrep_rss)
- 
+
+    return (
+        posrep_alpha_max_at_angle,
+        posrep_beta_max_at_angle,
+        posrep_alpha_max,
+        posrep_beta_max,
+        posrep_rss,
+    )
 
 
 def evaluate_positional_verification(dict_of_coordinates, POSITION_VER_PASS=None):
@@ -309,6 +387,3 @@ def evaluate_positional_verification(dict_of_coordinates, POSITION_VER_PASS=None
     """
 
     return 0.005
-
-
-

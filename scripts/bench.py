@@ -13,35 +13,37 @@ import pylibftdi
 import pyAPT
 import time
 
+
 def main(args):
-  print('Looking for APT controllers')
-  drv = pylibftdi.Driver()
+    print ("Looking for APT controllers")
+    drv = pylibftdi.Driver()
 
-  st = time.time()
-  controllers = drv.list_devices()
-  print('\tlist_devices:',time.time()-st)
+    st = time.time()
+    controllers = drv.list_devices()
+    print ("\tlist_devices:", time.time() - st)
 
-  if controllers:
-    for con in controllers:
-      print('Found %s %s S/N: %s'%con)
-      st = time.time()
-      with pyAPT.MTS50(serial_number=con[2]) as con:
-        print('\topen:',time.time()-st)
-        st = time.time()
-        status = con.status()
-        print('\tstatus:',time.time()-st)
+    if controllers:
+        for con in controllers:
+            print ("Found %s %s S/N: %s" % con)
+            st = time.time()
+            with pyAPT.MTS50(serial_number=con[2]) as con:
+                print ("\topen:", time.time() - st)
+                st = time.time()
+                status = con.status()
+                print ("\tstatus:", time.time() - st)
 
-        print('\tController status:')
-        print('\t\tPosition: %.2fmm'%(status.position))
-        print('\t\tVelocity: %.2fmm'%(status.velocity))
-        print('\t\tStatus:',status.flag_strings())
+                print ("\tController status:")
+                print ("\t\tPosition: %.2fmm" % (status.position))
+                print ("\t\tVelocity: %.2fmm" % (status.velocity))
+                print ("\t\tStatus:", status.flag_strings())
 
-      return 0
-  else:
-    print('\tNo APT controllers found. Maybe you need to specify a PID')
-    return 1
+            return 0
+    else:
+        print ("\tNo APT controllers found. Maybe you need to specify a PID")
+        return 1
 
 
-if __name__ == '__main__':
-  import sys
-  sys.exit(main(sys.argv))
+if __name__ == "__main__":
+    import sys
+
+    sys.exit(main(sys.argv))
