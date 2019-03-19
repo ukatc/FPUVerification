@@ -9,6 +9,8 @@ from ImageAnalysisFuncs.analyze_metrology_calibration import (
 
 import unittest
 
+from vfr.conf import MET_CAL_TARGET_ANALYSIS_PARS
+
 
 class TestMetCalImageAnalysis(unittest.TestCase):
     def test_expected(self):
@@ -54,7 +56,9 @@ class TestMetCalImageAnalysis(unittest.TestCase):
         for (test_image, small_x, small_y, small_q, large_x, large_y, large_q) in cases:
             print ("Testing metcalTargetCoordinates with image %s.." % test_image)
 
-            (sx, sy, sq, lx, ly, lq) = metcalTargetCoordinates(test_image)
+            (sx, sy, sq, lx, ly, lq) = metcalTargetCoordinates(
+                test_image, pars=MET_CAL_TARGET_ANALYSIS_PARS
+            )
 
             pos_limit = 0.01  # millimeter
             q_limit = 0.05  # dimensionless
@@ -75,7 +79,9 @@ class TestMetCalImageAnalysis(unittest.TestCase):
 
                 print ("Testing metcalTargetCoordinates with image %s.." % test_image)
 
-                (sx, sy, sq, lx, ly, lq) = metcalTargetCoordinates(test_image)
+                (sx, sy, sq, lx, ly, lq) = metcalTargetCoordinates(
+                    test_image, pars=MET_CAL_TARGET_ANALYSIS_PARS
+                )
 
 
 if __name__ == "__main__":

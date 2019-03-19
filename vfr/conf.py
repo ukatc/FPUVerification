@@ -1,9 +1,10 @@
 # -*- coding: utf-8-unix -*-
 
 from __future__ import print_function, division
+from os import environ
+from argparse import Namespace
 from math import ceil
 from numpy import NaN, Inf
-from os import environ
 
 DEFAULT_TASKS = ["selftest", "measure_all", "evaluate_all", "report"]
 
@@ -33,48 +34,48 @@ PUP_ALGN_CAMERA_IP_ADDRESS = "169.254.108.113"
 
 METROLOGY_CAL_POSITIONS = [268, 328, 28, 88, 148, 208]
 
-COLLDECT_MEASUREMENT_PARS = {
-    "COLDET_ALPHA": -180,
-    "COLDET_BETA": 70,
-    "COLDET_POSITIONS": [NaN, NaN, NaN, NaN, NaN, NaN],
-    "LIMIT_ALPHA_NEG_EXPECT": -182.0,
-    "LIMIT_ALPHA_POS_EXPECT": +165.0,
-    "LIMIT_BETA_NEG_EXPECT": -185.0,
-    "LIMIT_BETA_POS_EXPECT": +155.0,
-}
+COLLDECT_MEASUREMENT_PARS = Namespace(
+    COLDET_ALPHA=-180,
+    COLDET_BETA=70,
+    COLDET_POSITIONS=[NaN, NaN, NaN, NaN, NaN, NaN],
+    LIMIT_ALPHA_NEG_EXPECT=-182.0,
+    LIMIT_ALPHA_POS_EXPECT=+165.0,
+    LIMIT_BETA_NEG_EXPECT=-185.0,
+    LIMIT_BETA_POS_EXPECT=+155.0,
+)
 
-DATUM_REP_MEASUREMENT_PARS = {
-    "DATUM_REP_ITERATIONS": 10,  # the
+DATUM_REP_MEASUREMENT_PARS = Namespace(
+    DATUM_REP_ITERATIONS=10,  # the
     # number of datum operations made for
     # each test
-    "DATUM_REP_PASS": 20.0,  # the maximum single
+    DATUM_REP_PASS=20.0,  # the maximum single
     # deviation in microns from the
     # baseline position which represents an
     # acceptable FPU
-    "DATUM_REP_EXPOSURE_MS": 500,  # the exposure
+    DATUM_REP_EXPOSURE_MS=500,  # the exposure
     # time in milliseconds for a correctly
     # exposed image
-    "DATUM_REP_POSITIONS": METROLOGY_CAL_POSITIONS,
-}
+    DATUM_REP_POSITIONS=METROLOGY_CAL_POSITIONS,
+)
 
 
-MET_CAL_MEASUREMENT_PARS = {
-    "METROLOGY_CAL_POSITIONS": METROLOGY_CAL_POSITIONS,
+MET_CAL_MEASUREMENT_PARS = Namespace(
+    METROLOGY_CAL_POSITIONS=METROLOGY_CAL_POSITIONS,
     # rotary stage angle, in degrees, required to place each FPU under
     # the metrology calibration camera
-    "METROLOGY_CAL_TARGET_EXPOSURE_MS": 500.0,  # he exposure time in
+    METROLOGY_CAL_TARGET_EXPOSURE_MS=500.0,  # he exposure time in
     # milliseconds for a
     # correctly exposed
     # image of the
     # illuminated targets
-    "METROLOGY_CAL_FIBRE_EXPOSURE_MS": 0.1,  # he exposure time in
+    METROLOGY_CAL_FIBRE_EXPOSURE_MS=0.1,  # he exposure time in
     # milliseconds for a
     # correctly exposed image
     # of the illuminated
     # targets
-    "METROLOGY_CAL_BACKLIGHT_VOLTAGE": 0.1,  # voltage of backlight
+    METROLOGY_CAL_BACKLIGHT_VOLTAGE=0.1,  # voltage of backlight
     # for fibre measurements
-}
+)
 
 POS_REP_PLATESCALE = 0.02361  # millimeter per pixel
 
@@ -86,33 +87,36 @@ POS_REP_CALIBRATION_PARS = {
 }
 
 
-POS_REP_ANALYSIS_PARS = {
-    "POS_REP_PLATESCALE": POS_REP_PLATESCALE,
-    "POS_REP_SMALL_DIAMETER": 1.5,  # millimeter
-    "POS_REP_LARGE_DIAMETER": 2.5,  # millimeter
-    "POS_REP_DIAMETER_TOLERANCE": 0.1,  # millimeter
-    "POS_REP_THRESHOLD": 40,  # 0-255
-    "POS_REP_QUALITY_METRIC": 0.8,  # dimensionless
-    "POS_REP_CALIBRATION_PARS": POS_REP_CALIBRATION_PARS,
-    "display": False,
-}
+POS_REP_ANALYSIS_PARS = Namespace(
+    POS_REP_PLATESCALE=POS_REP_PLATESCALE,
+    POS_REP_SMALL_DIAMETER=1.5,  # millimeter
+    POS_REP_LARGE_DIAMETER=2.5,  # millimeter
+    POS_REP_DIAMETER_TOLERANCE=0.1,  # millimeter
+    POS_REP_THRESHOLD=40,  # 0-255
+    POS_REP_QUALITY_METRIC=0.8,  # dimensionless
+    POS_REP_CALIBRATION_PARS=POS_REP_CALIBRATION_PARS,
+    display=False,
+    verbosity=0,
+)
 
-MET_CAL_TARGET_ANALYSIS_PARS = {
-    "MET_CAL_PLATESCALE": 0.00668,  # millimeter per pixel
-    "MET_CAL_SMALL_DIAMETER": 1.5,  # millimeter
-    "MET_CAL_LARGE_DIAMETER": 2.5,  # millimeter
-    "MET_CAL_DIAMETER_TOLERANCE": 0.1,  # millimeter
-    "MET_CAL_GAUSS_BLUR": 3,  # pixels - MUST BE AN ODD NUMBER
-    "MET_CAL_THRESHOLD": 40,  # 0-255
-    "MET_CAL_QUALITY_METRIC": 0.8,  # dimensionless
-    "display": False,  # will display image with contours annotated
-}
+MET_CAL_TARGET_ANALYSIS_PARS = Namespace(
+    MET_CAL_PLATESCALE=0.00668,  # millimeter per pixel
+    MET_CAL_SMALL_DIAMETER=1.5,  # millimeter
+    MET_CAL_LARGE_DIAMETER=2.5,  # millimeter
+    MET_CAL_DIAMETER_TOLERANCE=0.1,  # millimeter
+    MET_CAL_GAUSS_BLUR=3,  # pixels - MUST BE AN ODD NUMBER
+    MET_CAL_THRESHOLD=40,  # 0-255
+    MET_CAL_QUALITY_METRIC=0.8,  # dimensionless
+    display=False,  # will display image with contours annotated
+    verbosity=0,
+)
 
-MET_CAL_FIBRE_ANALYSIS_PARS = {
-    "MET_CAL_PLATESCALE": 0.00668,  # millimeter per pixel
-    "MET_CAL_QUALITY_METRIC": 0.8,  # dimensionless
-    "display": False,  # will display image with contours annotated
-}
+MET_CAL_FIBRE_ANALYSIS_PARS = Namespace(
+    MET_CAL_PLATESCALE=0.00668,  # millimeter per pixel
+    MET_CAL_QUALITY_METRIC=0.8,  # dimensionless
+    display=False,  # will display image with contours annotated
+    verbosity=0,
+)
 
 
 POS_REP_POSITIONS = [132, 192, 252, 312, 12, 72]
@@ -128,21 +132,21 @@ STEPS_UPPER_LIMIT = int(
 )
 
 
-POS_REP_MEASUREMENT_PARS = {
-    "POS_REP_POSITIONS": POS_REP_POSITIONS,  # the rotary stage angle required to
+POS_REP_MEASUREMENT_PARS = Namespace(
+    POS_REP_POSITIONS=POS_REP_POSITIONS,  # the rotary stage angle required to
     # place each FPU under the positional
     # repeatability camera
-    "POS_REP_EXPOSURE_MS": NaN,  # the exposure time in
+    POS_REP_EXPOSURE_MS=NaN,  # the exposure time in
     # milliseconds for a correctly
     # exposed image
-    "POS_REP_NUM_INCREMENTS": NaN,  # the number of movements made
+    POS_REP_NUM_INCREMENTS=NaN,  # the number of movements made
     # within each positive sweep from
     # the starting position
-    "POS_REP_ITERATIONS": NaN,  # the number of times each FPU
+    POS_REP_ITERATIONS=NaN,  # the number of times each FPU
     # sweeps back and forth
-    "POS_REP_SAFETY_MARGIN": 5.0,  # safety margin, in degree, for
+    POS_REP_SAFETY_MARGIN=5.0,  # safety margin, in degree, for
     # distance to range limits when testing
-    "POS_REP_WAVEFORM_PARS": {
+    POS_REP_WAVEFORM_PARS={
         "mode": "fast",
         "max_change": 1.2,
         "min_steps": STEPS_LOWER_LIMIT,
@@ -166,41 +170,41 @@ POS_REP_MEASUREMENT_PARS = {
         "min_stop_steps": None,
         "max_steps": STEPS_UPPER_LIMIT,
     },
-}
+)
 
 
-POS_REP_EVALUATION_PARS = {
-    "POS_REP_PASS": NaN,  # the maximum angular deviation, in
+POS_REP_EVALUATION_PARS = Namespace(
+    POS_REP_PASS=NaN,  # the maximum angular deviation, in
     # degrees, from an average position of
     # a grouping of measured points at a
     # given nominal position which
     # represents an acceptable FPU
-}
+)
 
 
-POS_VER_MEASUREMENT_PARS = {
-    "POS_REP_POSITIONS": POS_REP_POSITIONS,  # the rotary stage angle required to
+POS_VER_MEASUREMENT_PARS = Namespace(
+    POS_REP_POSITIONS=POS_REP_POSITIONS,  # the rotary stage angle required to
     # place each FPU under the positional
     # repeatability camera
-    "POSITION_VER_EXPOSURE_MS": NaN,  # the exposure time in
+    POSITION_VER_EXPOSURE_MS=NaN,  # the exposure time in
     # milliseconds for a correctly
     # exposed image
-    "POSITION_VER_ITERATIONS": NaN,  # the number of times each FPU
+    POSITION_VER_ITERATIONS=NaN,  # the number of times each FPU
     # sweeps back and forth
-}
+)
 
 
-POS_VER_EVALUATION_PARS = {
-    "POSITION_VER_PASS": NaN,  # the maximum angular deviation, in
+POS_VER_EVALUATION_PARS = Namespace(
+    POSITION_VER_PASS=NaN,  # the maximum angular deviation, in
     # degrees, from an average position of
     # a grouping of measured points at a
     # given nominal position which
     # represents an acceptable FPU
-}
+)
 
 
-PUP_ALGN_MEASUREMENT_PARS = {
-    "PUP_ALGN_POSITIONS": [
+PUP_ALGN_MEASUREMENT_PARS = Namespace(
+    PUP_ALGN_POSITIONS=[
         0.0,
         NaN,
         NaN,
@@ -210,8 +214,8 @@ PUP_ALGN_MEASUREMENT_PARS = {
     ],  # the rotary stage angle required to
     # place each FPU under the first pupil
     # alignment fold mirror
-    "PUP_ALGN_LINPOSITIONS": [  # the linear stage positions
-        0.0,  # note: bogus values - spec missing FIXME
+    PUP_ALGN_LINPOSITIONS=[  # the linear stage positions
+        0.0,  # note= bogus values - spec missing FIXME
         5.0,
         10.0,
         15.0,
@@ -220,9 +224,9 @@ PUP_ALGN_MEASUREMENT_PARS = {
     ],
     # required to illuminate each FPU
     # fibre
-    "PUP_ALGN_EXPOSURE_MS": NaN,  # the exposure time in milliseconds
+    PUP_ALGN_EXPOSURE_MS=NaN,  # the exposure time in milliseconds
     # for a correctly exposed image
-}
+)
 
 PUP_ALGN_PLATESCALE = 0.00668
 
@@ -234,26 +238,27 @@ PUP_ALGN_CALIBRATION_PARS = {
 }
 
 
-PUP_ALGN_ANALYSIS_PARS = {
-    "PUP_ALGN_PLATESCALE": PUP_ALGN_PLATESCALE,  # millimeter per pixel
-    "PUP_ALGN_CIRCULARITY_THRESH": 0.8,  # dimensionless
-    "PUP_ALGN_NOISE_METRIC": 0,
-    "PUP_ALGN_CALIBRATION_PARS": PUP_ALGN_CALIBRATION_PARS,
-    "display": False,
-}
+PUP_ALGN_ANALYSIS_PARS = Namespace(
+    PUP_ALGN_PLATESCALE=PUP_ALGN_PLATESCALE,  # millimeter per pixel
+    PUP_ALGN_CIRCULARITY_THRESH=0.8,  # dimensionless
+    PUP_ALGN_NOISE_METRIC=0,
+    PUP_ALGN_CALIBRATION_PARS=PUP_ALGN_CALIBRATION_PARS,
+    display=False,
+    verbosity=0,
+)
 
 
-PUP_ALGN_EVALUATION_PARS = {
-    "PUP_ALGN_CALIBRATED_CENTRE_X": 0.0,
-    "PUP_ALGN_CALIBRATED_CENTRE_Y": -0.0,
-    "PUPIL_ALN_PASS": Inf,  # the maximum total deviation in arcmin
+PUP_ALGN_EVALUATION_PARS = Namespace(
+    PUP_ALGN_CALIBRATED_CENTRE_X=0.0,
+    PUP_ALGN_CALIBRATED_CENTRE_Y=-0.0,
+    PUPIL_ALN_PASS=Inf,  # the maximum total deviation in arcmin
     # from the calibrated centre point which
     # represents an acceptable FPU
-}
+)
 
 
-MET_HEIGHT_MEASUREMENT_PARS = {
-    "MET_HEIGHT_POSITIONS": [
+MET_HEIGHT_MEASUREMENT_PARS = Namespace(
+    MET_HEIGHT_POSITIONS=[
         268,
         328,
         28,
@@ -262,24 +267,25 @@ MET_HEIGHT_MEASUREMENT_PARS = {
         208,
     ],  # the rotary stage angle required to place each FPU
     #                                                        in front of the metrology height camera
-    "MET_HEIGHT_TARGET_EXPOSURE_MS": NaN,  # the exposure time in
+    MET_HEIGHT_TARGET_EXPOSURE_MS=NaN,  # the exposure time in
     # milliseconds for a
     # correctly exposed image
     # of the illuminated
     # targets
-}
+)
 
 
-MET_HEIGHT_ANALYSIS_PARS = {
-    "METHT_PLATESCALE": 0.00668,  # millimeter per pixel
-    "METHT_THRESHOLD": 150,  # 0-255
-    "METHT_SCAN_HEIGHT": 2000,  # pixels
-    "METHT_GAUSS_BLUR": 1,  # pixels - MUST BE AN ODD NUMBER
-    "METHT_STANDARD_DEV": 0.04,  # millimeter
-    "METHT_NOISE_METRIC": 0.25,  # dimensionless
-    "display": False,
-}
+MET_HEIGHT_ANALYSIS_PARS = Namespace(
+    METHT_PLATESCALE=0.00668,  # millimeter per pixel
+    METHT_THRESHOLD=150,  # 0-255
+    METHT_SCAN_HEIGHT=2000,  # pixels
+    METHT_GAUSS_BLUR=1,  # pixels - MUST BE AN ODD NUMBER
+    METHT_STANDARD_DEV=0.04,  # millimeter
+    METHT_NOISE_METRIC=0.25,  # dimensionless
+    display=False,
+    verbosity=0,
+)
 
-MET_HEIGHT_EVALUATION_PARS = {
-    "METHT_HEIGHT_TOLERANCE": NaN  # maximum allowable height of both targets, in millimeter
-}
+MET_HEIGHT_EVALUATION_PARS = Namespace(
+    METHT_HEIGHT_TOLERANCE=NaN  # maximum allowable height of both targets, in millimeter
+)

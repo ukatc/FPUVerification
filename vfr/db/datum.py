@@ -6,22 +6,22 @@ from vfr.db.snset import add_sns_to_set
 RECORD_TYPE = "findDatum"
 
 
-def save_datum_result(env, vfdb, opts, fpu_config, fpuset, dasel, grid_state, rigstate):
+def save_datum_result(ctx, dasel, rigstate):
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
-        serialnumber = fpu_config[fpu_id]["serialnumber"]
+        serialnumber = ctx.fpu_config[fpu_id]["serialnumber"]
         keybase = (serialnumber, RECORD_TYPE, str(dasel))
         return keybase
 
     def valfunc(fpu_id):
 
         if CAN_PROTOCOL_VERSION == 1:
-            a_ok = grid_state.FPU[fpu_id].alpha_was_zeroed
-            b_ok = grid_state.FPU[fpu_id].beta_was_zeroed
+            a_ok = ctx.grid_state.FPU[fpu_id].alpha_was_zeroed
+            b_ok = ctx.grid_state.FPU[fpu_id].beta_was_zeroed
         else:
-            a_ok = grid_state.FPU[fpu_id].alpha_was_calibrated
-            b_ok = grid_state.FPU[fpu_id].beta_was_calibrated
+            a_ok = ctx.grid_state.FPU[fpu_id].alpha_was_calibrated
+            b_ok = ctx.grid_state.FPU[fpu_id].beta_was_calibrated
 
         print ("%i : (alpha datumed=%s, beta datumed = %s)" % (fpu_id, a_ok, b_ok))
 
@@ -35,7 +35,7 @@ def save_datum_result(env, vfdb, opts, fpu_config, fpuset, dasel, grid_state, ri
         else:
             fsuccess = TestResult.FAILED
 
-        fpu = grid_state.FPU[fpu_id]
+        fpu = ctx.grid_state.FPU[fpu_id]
         val = repr(
             {
                 "result": fsuccess,
@@ -49,28 +49,28 @@ def save_datum_result(env, vfdb, opts, fpu_config, fpuset, dasel, grid_state, ri
         )
         return val
 
-    save_test_result(env, vfdb, fpuset, keyfunc, valfunc, verbosity=opts.verbosity)
+    save_test_result(ctx, ctx.measure_fpuset, keyfunc, valfunc)
     # we update the set of FPUs which are in the database,
     # so that we can iterate over existing data when generating reports.
-    add_sns_to_set(env, vfdb, fpuset, verbosity == opts.verbosity)
+    add_sns_to_set(ctx, ctx.measure_fpuset)
 
 
-def get_datum_result(env, vfdb, opts, fpu_config, fpu_id):
+def get_datum_result(ctx, fpu_id):
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
-        serialnumber = fpu_config[fpu_id]["serialnumber"]
+        serialnumber = ctx.fpu_config[fpu_id]["serialnumber"]
         keybase = (serialnumber, RECORD_TYPE, "result")
         return keybase
 
-    return get_test_result(env, vfdb, fpuset, keyfunc, verbosity=opts.verbosity)
+    return get_test_result(ctx, [fpu_id], keyfunc, verbosity=opts.verbosity)
 
 
-def get_datum_passed_p(env, vfdb, opts, fpu_config, fpu_id):
+def get_datum_passed_p(ctx, fpu_id):
     """returns True if the latest datum repeatability test for this FPU
     was passed successfully."""
 
-    val = get_datum_result(env, vfdb, opts, fpu_config, fpu_id)
+    val = get_datum_result(ctx, fpu_id)
 
     if val is None:
         return False

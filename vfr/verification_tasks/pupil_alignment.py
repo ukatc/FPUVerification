@@ -52,34 +52,25 @@ def generate_positions():
     yield (ALPHA_DATUM_OFFSET + a_near, 0 + b_near)
 
 
-def measure_pupil_alignment(
-    env,
-    vfdb,
-    gd,
-    grid_state,
-    opts,
-    fpuset,
-    fpu_config,
-    PUPIL_ALN_POSITIONS=None,
-    PUPIL_ALN_LINPOSITIONS=None,
-    PUPIL_ALN_EXPOSURE_MS=None,
-):
+def measure_pupil_alignment(ctx, pars=None):
 
     tstamp = timestamp()
 
-    if opts.mockup:
+    if ctx.opts.mockup:
         # replace all hardware functions by mock-up interfaces
         hw = hwsimulation
 
     # home turntable
-    hw.safe_home_turntable(gd, grid_state)
+    hw.safe_home_turntable(ctx.gd, ctx.grid_state)
     hw.home_linear_stage()
 
-    hw.switch_ambientlight("off", manual_lamp_control=opts.manual_lamp_control)
-    hw.switch_silhouettelight("off", manual_lamp_control=opts.manual_lamp_control)
-    hw.switch_fibre_backlight_voltage(5.0, manual_lamp_control=opts.manual_lamp_control)
+    hw.switch_ambientlight("off", manual_lamp_control=ctx.opts.manual_lamp_control)
+    hw.switch_silhouettelight("off", manual_lamp_control=ctx.opts.manual_lamp_control)
+    hw.switch_fibre_backlight_voltage(
+        5.0, manual_lamp_control=ctx.opts.manual_lamp_control
+    )
 
-    with hw.use_backlight("on", manual_lamp_control=opts.manual_lamp_control):
+    with hw.use_backlight("on", manual_lamp_control=ctx.opts.manual_lamp_control):
 
         # initialize pos_rep camera
         # set pos_rep camera exposure time to DATUM_REP_EXPOSURE milliseconds
@@ -89,25 +80,27 @@ def measure_pupil_alignment(
         }
 
         pup_aln_cam = hw.GigECamera(PUP_ALN_CAMERA_CONF)
-        pup_aln_cam.SetExposureTime(PUPIL_ALN_EXPOSURE_MS)
+        pup_aln_cam.SetExposureTime(pars.PUPIL_ALN_EXPOSURE_MS)
 
         # get sorted positions (this is needed because the turntable can only
         # move into one direction)
-        for fpu_id, stage_position in get_sorted_positions(fpuset, PUP_ALN_POSITIONS):
+        for fpu_id, stage_position in get_sorted_positions(
+            ctx.measure_fpuset, pars.PUP_ALN_POSITIONS
+        ):
 
-            if get_pupil_alignment_passed_p(env, vfdb, opts, fpu_config, fpu_id) and (
-                not opts.repeat_passed_tests
+            if get_pupil_alignment_passed_p(cts, fpu_id) and (
+                not ctx.opts.repeat_passed_tests
             ):
 
-                sn = fpu_config[fpu_id]["serialnumber"]
+                sn = ctx.fpu_config[fpu_id]["serialnumber"]
                 print (
                     "FPU %s : pupil alignment test already passed, skipping test" % sn
                 )
                 continue
 
             # move rotary stage to PUP_ALN_POSN_N
-            hw.turntable_safe_goto(gd, grid_state, stage_position)
-            hw.linear_stage__goto(PUPIL_ALN_LINPOSITIONS[fpu_id])
+            hw.turntable_safe_goto(ctx.gd, ctx.grid_state, stage_position)
+            hw.linear_stage__goto(pars.PUPIL_ALN_LINPOSITIONS[fpu_id])
 
             def capture_image(count, alpha, beta):
 
@@ -127,38 +120,31 @@ def measure_pupil_alignment(
             images = {}
             for count, coords in enumerate(generate_positions()):
                 abs_alpha, abs_beta = coords
-                goto_position(gd, abs_alpha, abs_beta, grid_state, fpuset=[fpu_id])
+                goto_position(
+                    ctx.gd, abs_alpha, abs_beta, ctx.grid_state, fpuset=[fpu_id]
+                )
 
                 if count < 16:
                     ipath = capture_image(count, alpha, beta)
                     images[(alpha, beta)] = ipath
 
-            gd.findDatum(grid_state, fpuset=[fpu_id])
+            ctx.gd.findDatum(ctx.grid_state, fpuset=[fpu_id])
 
-            save_pupil_alignment_images(env, vfdb, opts, fpu_config, fpu_id, images)
+            save_pupil_alignment_images(ctx, fpu_id, images)
 
 
 def eval_pupil_alignment(
-    env,
-    vfdb,
-    gd,
-    grid_state,
-    opts,
-    fpuset,
-    fpu_config,
-    PUP_ALGN_CALIBRATION_PARS=None,
-    PUP_ALGN_ANALYSIS_PARS=None,
-    PUPIL_ALN_PASS=NaN,
+    ctx, PUP_ALGN_CALIBRATION_PARS=None, PUP_ALGN_ANALYSIS_PARS=None, PUPIL_ALN_PASS=NaN
 ):
 
-    for fpu_id in fpuset:
-        images = get_pupil_alignment_images(env, vfdb, opts, fpu_config, fpu_id, images)
+    for fpu_id in ctx.eval_fpuset:
+        images = get_pupil_alignment_images(ctx, fpu_id, images)
 
         def analysis_func(ipath):
             return pupalnCoordinates(
                 ipath,
                 PUP_ALGN_CALIBRATION_PARS=PUP_ALGN_CALIBRATION_PARS,
-                **PUP_ALGN_ANALYSIS_PARS
+                pars=PUP_ALGN_ANALYSIS_PARS,
             )
 
         try:
@@ -190,10 +176,7 @@ def eval_pupil_alignment(
         }
 
         save_pupil_alignment_result(
-            env,
-            vfdb,
-            opts,
-            fpu_config,
+            ctx,
             fpu_id,
             calibration_pars=PUP_ALGN_CALIBRATION_PARS,
             coords=coords,

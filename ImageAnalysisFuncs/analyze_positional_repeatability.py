@@ -29,18 +29,10 @@ DATUM_REPEATABILITY_ALGORITHM_VERSION = 0.1
 def posrepCoordinates(
     image_path,
     # configurable parameters
-    POS_REP_PLATESCALE=0.02361,  # mm per pixel
-    POS_REP_SMALL_DIAMETER=1.5,  # mm
-    POS_REP_LARGE_DIAMETER=2.5,  # mm
-    POS_REP_DIAMETER_TOLERANCE=0.1,  # mm
-    POS_REP_THRESHOLD=40,  # 0-255
-    POS_REP_QUALITY_METRIC=0.8,  # dimensionless
-    POS_REP_CALIBRATION_PARS=None,
-    verbosity=0,  # a value > 5 will write contour parameters to terminal
-    display=False,
+    pars=None,
 ):  # will display image with contours annotated
 
-    """reads an image from the positional repeatability camera and returns 
+    """reads an image from the positional repeatability camera and returns
         the XY coordinates and circularity of the two targets in mm"""
 
     # Authors: Stephen Watson (initial algorithm March 4, 2019)
@@ -54,19 +46,27 @@ def posrepCoordinates(
     # number and an angle, not a pixel number and a distance.)
 
     smallPerimeterLo = (
-        (POS_REP_SMALL_DIAMETER - POS_REP_DIAMETER_TOLERANCE) * pi / POS_REP_PLATESCALE
+        (pars.POS_REP_SMALL_DIAMETER - pars.POS_REP_DIAMETER_TOLERANCE)
+        * pi
+        / pars.POS_REP_PLATESCALE
     )
     smallPerimeterHi = (
-        (POS_REP_SMALL_DIAMETER + POS_REP_DIAMETER_TOLERANCE) * pi / POS_REP_PLATESCALE
+        (pars.POS_REP_SMALL_DIAMETER + pars.POS_REP_DIAMETER_TOLERANCE)
+        * pi
+        / pars.POS_REP_PLATESCALE
     )
     largePerimeterLo = (
-        (POS_REP_LARGE_DIAMETER - POS_REP_DIAMETER_TOLERANCE) * pi / POS_REP_PLATESCALE
+        (pars.POS_REP_LARGE_DIAMETER - pars.POS_REP_DIAMETER_TOLERANCE)
+        * pi
+        / pars.POS_REP_PLATESCALE
     )
     largePerimeterHi = (
-        (POS_REP_LARGE_DIAMETER + POS_REP_DIAMETER_TOLERANCE) * pi / POS_REP_PLATESCALE
+        (pars.POS_REP_LARGE_DIAMETER + pars.POS_REP_DIAMETER_TOLERANCE)
+        * pi
+        / pars.POS_REP_PLATESCALE
     )
 
-    if verbosity > 5:
+    if pars.verbosity > 5:
         print (
             "Lower/upper perimeter limits of small & large "
             "targets in mm: %.2f / %.2f ; %.2f / %.2f"
@@ -80,7 +80,7 @@ def posrepCoordinates(
     # image processing
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     blur = cv2.GaussianBlur(gray, (9, 9), 0)
-    thresh = cv2.threshold(blur, POS_REP_THRESHOLD, 255, cv2.THRESH_BINARY)[1]
+    thresh = cv2.threshold(blur, pars.POS_REP_THRESHOLD, 255, cv2.THRESH_BINARY)[1]
 
     # find contours from thresholded image
     cnts = sorted(
@@ -102,12 +102,12 @@ def posrepCoordinates(
         area = cv2.contourArea(c)
         if area > 0 and perimeter > 0:
             circularity = 4 * pi * (area / (perimeter * perimeter))
-        if verbosity > 5:
+        if pars.verbosity > 5:
             print (
                 "ContourID - %i; perimeter - %.2f; circularity - %.2f"
                 % (i, perimeter, circularity)
             )
-        if circularity > POS_REP_QUALITY_METRIC:
+        if circularity > pars.POS_REP_QUALITY_METRIC:
             if perimeter > smallPerimeterLo and perimeter < smallPerimeterHi:
                 if smallTargetFound == True:
                     multipleSmall = True
@@ -129,7 +129,7 @@ def posrepCoordinates(
             centres[circle] = (cX, cY, circularity, i)
 
             # superimpose contours and labels onto original image, user prompt required in terminal to progress
-            if display == True:
+            if pars.display == True:
                 cv2.drawContours(image, cnts, -1, (0, 255, 0), 2)
                 label = (
                     str(i)
@@ -177,7 +177,7 @@ def posrepCoordinates(
             "loosen diameter tolerance or change image thresholding"
         )
 
-    if verbosity > 5:
+    if pars.verbosity > 5:
         print (
             "Contour %i = small target, contour %i = large target"
             % (centres["Small Target"][3], centres["Large Target"][3])
@@ -193,22 +193,22 @@ def posrepCoordinates(
     # scale and straighten the result coordinates
     # the distortion correction is applied here, using the 'correct' function
     # from the distortion correction module
-    if POS_REP_CALIBRATION_PARS is None:
-        POS_REP_CALIBRATION_PARS = {
+    if pars.POS_REP_CALIBRATION_PARS is None:
+        pars.POS_REP_CALIBRATION_PARS = {
             "algorithm": "scale",
-            "scale_factor": POS_REP_PLATESCALE,
+            "scale_factor": pars.POS_REP_PLATESCALE,
         }
 
     posrep_small_target_x, posrep_small_target_y = correct(
         pixels_posrep_small_target_x,
         pixels_posrep_small_target_y,
-        calibration_pars=POS_REP_CALIBRATION_PARS,
+        calibration_pars=pars.POS_REP_CALIBRATION_PARS,
     )
 
     posrep_large_target_x, posrep_large_target_y = correct(
         pixels_posrep_large_target_x,
         pixels_posrep_large_target_y,
-        calibration_pars=POS_REP_CALIBRATION_PARS,
+        calibration_pars=pars.POS_REP_CALIBRATION_PARS,
     )
 
     # target separation check - the values here are not configurable, as
@@ -217,7 +217,7 @@ def posrepCoordinates(
         (posrep_small_target_x - posrep_large_target_x) ** 2
         + (posrep_small_target_y - posrep_large_target_y) ** 2
     )
-    if verbosity > 5:
+    if pars.verbosity > 5:
         print (
             "Target separation is %.3f mm.  Specification is 2.375 +/- 0.1 mm."
             % targetSeparation
@@ -249,7 +249,7 @@ def evaluate_datum_repeatability(datumed_coords, moved_coords):
 
     Any error should be signalled by throwing an Exception of class
     ImageAnalysisError, with a string member which describes the problem.
-    
+
     """
 
     # get data, omitting quality factors
@@ -308,12 +308,12 @@ def evaluate_positional_repeatability(
     dict_of_coordinates_alpha, dict_of_coordinates_beta
 ):
     """Takes two dictionaries. The keys of each dictionary
-    are the (alpha, beta, i,j,k) coordinates  indices of the positional 
-    repeateability measurement, with one of the alpha/beta coordinates hold 
+    are the (alpha, beta, i,j,k) coordinates  indices of the positional
+    repeateability measurement, with one of the alpha/beta coordinates hold
     fixed.
 
     The values of the dictionary are a 4-tuple of the metrology target
-    coordinates: 
+    coordinates:
 
     (x_small_tgt, y_small_tgt, x_big_tgt, y_big_tgt).
 
@@ -333,7 +333,7 @@ def evaluate_positional_repeatability(
 
     posrep_beta_max – maximum beta positional error at any angle
 
-    posrep_rss – RSS (Root sum of squares) of POS_REP_ALPHA_MAX and POS_REP_BETA_MAX    
+    posrep_rss – RSS (Root sum of squares) of POS_REP_ALPHA_MAX and POS_REP_BETA_MAX
 
     Any error should be signalled by throwing an Exception of class
     ImageAnalysisError, with a string member which describes the problem.
@@ -364,7 +364,7 @@ def evaluate_positional_verification(dict_of_coordinates, POSITION_VER_PASS=None
     """Takes a dictionary. The keys of the dictionary
     are the i,j,k indices of the positional repeteability measurement.
     Equal i and k mean equal step counts, and j indicates
-    the arm and movement direction of the corresponding arm 
+    the arm and movement direction of the corresponding arm
     during measurement.
 
     The values of the dictionary are a 4-tuple
@@ -376,7 +376,7 @@ def evaluate_positional_verification(dict_of_coordinates, POSITION_VER_PASS=None
     the small (index 2) target measured from the images taken.
 
 
-    The units are in dimensionless counts (for alpha_steps and beta_steps) 
+    The units are in dimensionless counts (for alpha_steps and beta_steps)
     and millimeter (for x_measured and y_measured).
 
     The returned value is the repeatability value in millimeter.

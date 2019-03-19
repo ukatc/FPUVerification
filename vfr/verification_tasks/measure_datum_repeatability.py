@@ -41,42 +41,34 @@ from ImageAnalysisFuncs.analyze_positional_repeatability import (
 )
 
 
-def measure_datum_repeatability(
-    env,
-    vfdb,
-    gd,
-    grid_state,
-    opts,
-    fpuset,
-    fpu_config,
-    DATUM_REP_POSITIONS=None,
-    DATUM_REP_ITERATIONS=None,
-    DATUM_REP_PASS=None,
-    DATUM_REP_EXPOSURE_MS=None,
-):
+def measure_datum_repeatability(ctx, pars=None):
 
     tstamp = timestamp()
-    if opts.mockup:
+    if ctx.opts.mockup:
         # replace all hardware functions by mock-up interfaces
         hw = hwsimulation
 
     # home turntable
-    hw.safe_home_turntable(gd, grid_state)
+    hw.safe_home_turntable(ctx.gd, ctx.grid_state)
 
-    hw.switch_fibre_backlight("off", manual_lamp_control=opts.manual_lamp_control)
-    hw.switch_fibre_backlight_voltage(0.0, manual_lamp_control=opts.manual_lamp_control)
+    hw.switch_fibre_backlight("off", manual_lamp_control=ctx.opts.manual_lamp_control)
+    hw.switch_fibre_backlight_voltage(
+        0.0, manual_lamp_control=ctx.opts.manual_lamp_control
+    )
 
-    with hw.use_ambientlight(manual_lamp_control=opts.manual_lamp_control):
+    with hw.use_ambientlight(manual_lamp_control=ctx.opts.manual_lamp_control):
 
         # get sorted positions (this is needed because the turntable can only
         # move into one direction)
-        for fpu_id, stage_position in get_sorted_positions(fpuset, DATUM_REP_POSITIONS):
+        for fpu_id, stage_position in get_sorted_positions(
+            ctx.measure_fpuset, pars.DATUM_REP_POSITIONS
+        ):
 
-            if get_datum_repeatability_passed_p(
-                env, vfdb, opts, fpu_config, fpu_id
-            ) and (not opts.repeat_passed_tests):
+            if get_datum_repeatability_passed_p(ctx, fpu_id) and (
+                not ctx.opts.repeat_passed_tests
+            ):
 
-                sn = fpu_config[fpu_id]["serialnumber"]
+                sn = ctx.fpu_config[fpu_id]["serialnumber"]
                 print (
                     "FPU %s : datum repeatability test already passed, skipping test"
                     % sn
@@ -84,7 +76,7 @@ def measure_datum_repeatability(
                 continue
 
             # move rotary stage to POS_REP_POSN_N
-            hw.turntable_safe_goto(gd, grid_state, stage_position)
+            hw.turntable_safe_goto(ctx.gd, ctx.grid_state, stage_position)
 
             # initialize pos_rep camera
             # set pos_rep camera exposure time to DATUM_REP_EXPOSURE milliseconds
@@ -94,7 +86,7 @@ def measure_datum_repeatability(
             }
 
             met_cal_cam = hw.GigECamera(MET_CAL_CAMERA_CONF)
-            met_cal_cam.SetExposureTime(DATUM_REP_EXPOSURE_MS)
+            met_cal_cam.SetExposureTime(pars.DATUM_REP_EXPOSURE_MS)
 
             datumed_images = []
             moved_images = []
@@ -114,38 +106,34 @@ def measure_datum_repeatability(
 
                 return ipath
 
-            for k in range(DATUM_REP_ITERATIONS):
-                gd.findDatum(grid_state, fpuset=[fpu_id])
+            for k in range(pars.DATUM_REP_ITERATIONS):
+                ctx.gd.findDatum(ctx.grid_state, fpuset=[fpu_id])
                 ipath = capture_image("datumed", count)
                 datumed_images.append(ipath)
 
-            gd.findDatum(grid_state)
-            for k in range(DATUM_REP_ITERATIONS):
+            ctx.gd.findDatum(ctx.grid_state)
+            for k in range(pars.DATUM_REP_ITERATIONS):
                 wf = gen_wf(30 * dirac(fpu_id), 30)
-                gd.configMottion(wf, grid_state)
-                gd.executeMotion(grid_state, fpuset=[fpu_id])
-                gd.reverseMotion(grid_state, fpuset=[fpu_id])
-                gd.executeMotion(grid_state, fpuset=[fpu_id])
-                gd.findDatum(grid_state, fpuset=[fpu_id])
+                ctx.gd.configMottion(wf, ctx.grid_state)
+                ctx.gd.executeMotion(ctx.grid_state, fpuset=[fpu_id])
+                ctx.gd.reverseMotion(ctx.grid_state, fpuset=[fpu_id])
+                ctx.gd.executeMotion(ctx.grid_state, fpuset=[fpu_id])
+                ctx.gd.findDatum(ctx.grid_state, fpuset=[fpu_id])
                 ipath, coords = capture_image("moved+datumed", count)
                 moved_images.append(ipath)
 
             images = {"datumed_images": datumed_images, "moved_images": moved_images}
 
-            save_datum_repeatability_images(env, vfdb, opts, fpu_config, fpu_id, images)
+            save_datum_repeatability_images(ctx, fpu_id, images)
 
 
-def eval_datum_repeatability(
-    env, vfdb, gd, grid_state, opts, fpuset, fpu_config, pos_rep_analysis_pars
-):
+def eval_datum_repeatability(ctx, pos_rep_analysis_pars):
 
-    for fpu_id in fpuset:
-        images = get_datum_repeatability_images(
-            env, vfdb, opts, fpu_config, fpu_id, images
-        )
+    for fpu_id in ctx.eval_fpuset:
+        images = get_datum_repeatability_images(ctx, fpu_id, images)
 
         def analysis_func(ipath):
-            return posrepCoordinates(ipath, **pos_rep_analysis_pars)
+            return posrepCoordinates(ipath, pars=pos_rep_analysis_pars)
 
         try:
 
@@ -172,10 +160,7 @@ def eval_datum_repeatability(
             datum_repeatability_has_passed = TestResult.NA
 
         save_datum_repeatability_result(
-            env,
-            vfdb,
-            opts,
-            fpu_config,
+            ctx,
             fpu_id,
             coords=coords,
             datum_repeatability_mm=datum_repeatability_mm,

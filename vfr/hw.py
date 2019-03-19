@@ -27,7 +27,7 @@ def safe_home_turntable(gd, grid_state):
     gd.findDatum(grid_state, timeout=DATUM_TIMEOUT_DISABLE)
 
     with pyAPT.NR360S(serial_number=NR360_SERIALNUMBER) as con:
-        print ("\tHoming stage...", end=" ")
+        print ("\tHoming stage...", "end=' '")
         con.home(clockwise=True)
         print ("homed")
 
@@ -43,7 +43,7 @@ def turntable_safe_goto(gd, grid_state, stage_position):
 
 def home_linear_stage():
     with pyAPT.MTS50(serial_number=MTS50_SERIALNUMBER) as con:
-        print ("\tHoming linear stage...", end=" ")
+        print ("\tHoming linear stage...", "end=' '")
         con.home(clockwise=True)
         print ("homed")
 

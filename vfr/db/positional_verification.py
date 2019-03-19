@@ -3,13 +3,11 @@ from __future__ import print_function, division, absolute_import
 from vfr.db.base import GIT_VERSION, TestResult, get_test_result, timestamp
 
 
-def save_positional_verification_images(
-    env, vfdb, opts, fpu_config, fpu_id, images_dict
-):
+def save_positional_verification_images(ctx, fpu_id, images_dict):
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
-        serialnumber = fpu_config[fpu_id]["serialnumber"]
+        serialnumber = ctx.fpu_config[fpu_id]["serialnumber"]
         keybase = (serialnumber, "positional-verification", "images")
         return keybase
 
@@ -18,25 +16,22 @@ def save_positional_verification_images(
         val = repr({"fpuid": fpu_id, "images": image_dict, "time": timestamp()})
         return val
 
-    save_test_result(env, vfdb, fpuset, keyfunc, valfunc, verbosity=opts.verbosity)
+    save_test_result(ctx, [fpu_id], keyfunc, valfunc)
 
 
-def get_positional_verification_images(env, vfdb, opts, fpu_config, fpu_id):
+def get_positional_verification_images(ctx, fpu_id):
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
-        serialnumber = fpu_config[fpu_id]["serialnumber"]
+        serialnumber = ctx.fpu_config[fpu_id]["serialnumber"]
         keybase = (serialnumber, "positional-verification", "images")
         return keybase
 
-    return get_test_result(env, vfdb, fpuset, keyfunc, verbosity=opts.verbosity)
+    return get_test_result(ctx, [fpu_id], keyfunc)
 
 
 def save_positional_verification_result(
-    env,
-    vfdb,
-    opts,
-    fpu_config,
+    ctx,
     fpu_id,
     pos_rep_calibration_pars=None,
     analysis_results=None,
@@ -49,7 +44,7 @@ def save_positional_verification_result(
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
-        serialnumber = fpu_config[fpu_id]["serialnumber"]
+        serialnumber = ctx.fpu_config[fpu_id]["serialnumber"]
         keybase = (serialnumber, "positional-verification", "result")
         return keybase
 
@@ -71,13 +66,13 @@ def save_positional_verification_result(
         )
         return val
 
-    save_test_result(env, vfdb, fpuset, keyfunc, valfunc, verbosity=opts.verbosity)
+    save_test_result(ctx, [fpu_id], keyfunc, valfunc)
 
 
-def get_positional_verification_result(env, vfdb, opts, fpu_config, fpu_id):
+def get_positional_verification_result(ctx, fpu_id):
     def keyfunc(fpu_id):
         serialnumber = fpu_config[fpu_id]["serialnumber"]
         keybase = (serialnumber, "positional-verification", "result")
         return keybase
 
-    return get_test_result(env, vfdb, fpuset, keyfunc, verbosity=opts.verbosity)
+    return get_test_result(ctx, [fpu_id], keyfunc)

@@ -22,10 +22,7 @@ def check_ping_ok(ipaddr):
 
 
 def check_connection(opts, name, address):
-    print (
-        "testing connection to %s .." % name,
-        end=''
-    )
+    print ("testing connection to %s .." % name, "end=''")
     flush()
 
     pok = check_ping_ok(address)
@@ -62,10 +59,7 @@ def init_driver(opts, max_id, env=None, protected=True):
 
 
 def check_can_connection(rd, grid_state, opts, fpu_id):
-    print (
-        "checking CAN connection to FPU %i ..." % fpu_id,
-        end=''
-    )
+    print ("checking CAN connection to FPU %i ..." % fpu_id, "end=''")
     flush()
 
     rv = rd.pingFPUs(grid_state, fpuset=[fpu_id])

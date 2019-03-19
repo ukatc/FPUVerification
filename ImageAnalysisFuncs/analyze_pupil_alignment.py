@@ -28,13 +28,8 @@ PUPIL_ALIGNMENT_ALGORITHM_VERSION = 0.1
 def pupalnCoordinates(
     image_path,
     # configurable parameters
-    PUP_ALGN_PLATESCALE=0.00668,  # mm per pixel
-    PUP_ALGN_CIRCULARITY_THRESH=0.8,  # dimensionless
-    PUP_ALGN_NOISE_METRIC=0,
-    PUP_ALGN_CALIBRATION_PARS=None,
-    verbosity=0,  # a value > 5 will write contour parameters to terminal
-    display=False,
-):  # will display image with contours annotated
+    pars=None,
+):
 
     """reads an image from the pupil alignment camera and returns the
         XY coordinates and circularity of the projected dot in mm
@@ -56,24 +51,20 @@ def pupalnCoordinates(
     # exceptions
     # scale and straighten the result coordinates
 
-    if PUP_ALGN_CALIBRATION_PARS is None:
-        PUP_ALGN_CALIBRATION_PARS = {
+    if pars.PUP_ALGN_CALIBRATION_PARS is None:
+        pars.PUP_ALGN_CALIBRATION_PARS = {
             "algorithm": "scale",
-            "scale_factor": PUP_ALGN_PLATESCALE,
+            "scale_factor": pars.PUP_ALGN_PLATESCALE,
         }
 
     pupaln_spot_x, pupaln_spot_y, = correct(
-        pupaln_spot_x, pupaln_spot_y, calibration_pars=PUP_ALGN_CALIBRATION_PARS
+        pupaln_spot_x, pupaln_spot_y, calibration_pars=pars.PUP_ALGN_CALIBRATION_PARS
     )
 
     return pupaln_spot_x, pupaln_spot_y, pupaln_quality
 
 
-def evaluate_pupil_alignment(
-    dict_of_coordinates,
-    PUP_ALGN_CALIBRATED_CENTRE_X=None,
-    PUP_ALGN_CALIBRATED_CENTRE_Y=None,
-):
+def evaluate_pupil_alignment(dict_of_coordinates, pars=None):
     """
     ...
 
@@ -105,7 +96,7 @@ def evaluate_pupil_alignment(
 
     xc = norm(
         mean(dict_of_coordinates.values(), axis=0)
-        - array((PUP_ALGN_CALIBRATED_CENTRE_X, PUP_ALGN_CALIBRATED_CENTRE_Y))
+        - array((pars.PUP_ALGN_CALIBRATED_CENTRE_X, pars.PUP_ALGN_CALIBRATED_CENTRE_Y))
     )
 
     # ask Steve Watson what the following means - it is from his spec

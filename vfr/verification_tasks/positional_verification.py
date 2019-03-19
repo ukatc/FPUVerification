@@ -68,33 +68,24 @@ def generate_tested_positions(
     return positions
 
 
-def measure_positional_verification(
-    env,
-    vfdb,
-    gd,
-    grid_state,
-    opts,
-    fpuset,
-    fpu_config,
-    POSITIONAL_VER_ITERATIONS=None,
-    POS_REP_POSITIONS=None,
-    POSITIONAL_VER_EXPOSURE_MS=None,
-):
+def measure_positional_verification(ctx, pars=None):
 
     # home turntable
     tstamp = timestamp()
 
-    if opts.mockup:
+    if ctx.opts.mockup:
         # replace all hardware functions by mock-up interfaces
         hw = hwsimulation
 
-    hw.safe_home_turntable(gd, grid_state)
+    hw.safe_home_turntable(ctx.gd, grid_state)
 
-    hw.switch_fibre_backlight("off", manual_lamp_control=opts.manual_lamp_control)
-    hw.switch_ambientlight("on", manual_lamp_control=opts.manual_lamp_control)
-    hw.switch_fibre_backlight_voltage(0.0, manual_lamp_control=opts.manual_lamp_control)
+    hw.switch_fibre_backlight("off", manual_lamp_control=ctx.opts.manual_lamp_control)
+    hw.switch_ambientlight("on", manual_lamp_control=ctx.opts.manual_lamp_control)
+    hw.switch_fibre_backlight_voltage(
+        0.0, manual_lamp_control=ctx.opts.manual_lamp_control
+    )
 
-    with hw.use_ambientlight(manual_lamp_control=opts.manual_lamp_control):
+    with hw.use_ambientlight(manual_lamp_control=ctx.opts.manual_lamp_control):
         # initialize pos_rep camera
         # set pos_rep camera exposure time to POSITIONAL_VER_EXPOSURE milliseconds
         POS_VER_CAMERA_CONF = {
@@ -103,13 +94,15 @@ def measure_positional_verification(
         }
 
         pos_rep_cam = hw.GigECamera(POS_VER_CAMERA_CONF)
-        pos_rep_cam.SetExposureTime(POSITIONAL_VER_EXPOSURE_MS)
+        pos_rep_cam.SetExposureTime(pars.POSITIONAL_VER_EXPOSURE_MS)
 
         # get sorted positions (this is needed because the turntable can only
         # move into one direction)
-        for fpu_id, stage_position in get_sorted_positions(fpuset, POS_REP_POSITIONS):
+        for fpu_id, stage_position in get_sorted_positions(
+            ctx.measure_fpuset, pars.POS_REP_POSITIONS
+        ):
 
-            if not get_datum_verification_passed_p(env, vfdb, opts, fpu_config, fpu_id):
+            if not get_datum_verification_passed_p(ctx, fpu_id):
                 print (
                     "FPU %s: skipping positional verification measurement because"
                     " there is no passed datum verification test"
@@ -117,7 +110,7 @@ def measure_positional_verification(
                 )
                 continue
 
-            if not get_pupil_alignment_passed_p(env, vfdb, opts, fpu_config, fpu_id):
+            if not get_pupil_alignment_passed_p(ctx, fpu_id):
                 print (
                     "FPU %s: skipping positional verification measurement because"
                     " there is no passed pupil alignment test"
@@ -125,9 +118,7 @@ def measure_positional_verification(
                 )
                 continue
 
-            if not get_positional_repeatability_passed_p(
-                env, vfdb, opts, fpu_config, fpu_id
-            ):
+            if not get_positional_repeatability_passed_p(ctx, fpu_id):
                 print (
                     "FPU %s: skipping positional verification measurement because"
                     " there is no passed positional repeatability test"
@@ -135,31 +126,29 @@ def measure_positional_verification(
                 )
                 continue
 
-            if get_datum_verification_passed_p(
-                env, vfdb, opts, fpu_config, fpu_id
-            ) and (not opts.repeat_passed_tests):
+            if get_datum_verification_passed_p(ctx, fpu_id) and (
+                not ctx.opts.repeat_passed_tests
+            ):
 
-                sn = fpu_config[fpu_id]["serialnumber"]
+                sn = ctx.fpu_config[fpu_id]["serialnumber"]
                 print (
                     "FPU %s : datum verification test already passed, skipping test"
                     % sn
                 )
                 continue
 
-            alpha_min = get_angular_limit(env, vfdb, fpu_id, sn, "alpha_min")
-            alpha_max = get_angular_limit(env, vfdb, fpu_id, sn, "alpha_max")
-            beta_min = get_angular_limit(env, vfdb, fpu_id, sn, "beta_min")
-            beta_max = get_angular_limit(env, vfdb, fpu_id, sn, "beta_max")
+            alpha_min = get_angular_limit(ctx, fpu_id, sn, "alpha_min")
+            alpha_max = get_angular_limit(ctx, fpu_id, sn, "alpha_max")
+            beta_min = get_angular_limit(ctx, fpu_id, sn, "beta_min")
+            beta_max = get_angular_limit(ctx, fpu_id, sn, "beta_max")
 
-            pr_result = get_positional_repeatability_result(
-                env, vfdb, opts, fpu_config, fpu_id
-            )
+            pr_result = get_positional_repeatability_result(ctx, fpu_id)
             if (
                 pr_result["analysis_version"]
                 < POSITIONAL_REPEATABILITY_ALGORITHM_VERSION
             ):
                 warnings.warn(
-                    "FPU %s: positional repetability data uses old version of image analysis"
+                    "FPU %s: positional repeatability data uses old version of image analysis"
                     % sn
                 )
 
@@ -167,7 +156,7 @@ def measure_positional_verification(
             fpu_coeffs = gearbox_correction["coeffs"]
 
             # move rotary stage to POS_VER_POSN_N
-            hw.turntable_safe_goto(gd, grid_state, stage_position)
+            hw.turntable_safe_goto(ctx.gd, grid_state, stage_position)
 
             image_dict = {}
 
@@ -176,7 +165,7 @@ def measure_positional_verification(
                 ipath = store_image(
                     pos_rep_cam,
                     "{sn}/{tn}/{ts}/{idx:04d}-{alpha:+08.3f}-{beta:+08.3f}.bmp",
-                    sn=fpu_config[fpu_id]["serialnumber"],
+                    sn=ctx.fpu_config[fpu_id]["serialnumber"],
                     tn="positional-verification",
                     alpha=alpha,
                     beta=beta,
@@ -194,13 +183,13 @@ def measure_positional_verification(
                 beta_max=beta_max,
             )
 
-            gd.findDatum(grid_state, fpuset=[fpu_id])
+            ctx.gd.findDatum(grid_state, fpuset=[fpu_id])
 
             image_dict = {}
             for k, (alpha, beta) in enumerate(tested_positions):
                 # get current step count
-                alpha_cursteps = grid_state.FPU[fpu_id].alpha_steps
-                beta_cursteps = grid_state.FPU[fpu_id].beta_steps
+                alpha_cursteps = ctx.grid_state.FPU[fpu_id].alpha_steps
+                beta_cursteps = ctx.grid_state.FPU[fpu_id].beta_steps
 
                 # get absolute corrected step count from desired absolute angle
                 asteps_target, bsteps_target = apply_gearbox_correction(
@@ -216,37 +205,25 @@ def measure_positional_verification(
                     dirac(fpu_id) * adelta, dirac(fpu_id) * bdelta, units="steps"
                 )
 
-                gd.configMotion(wf, grid_state)
-                gd.executeMotion(grid_state)
+                ctx.gd.configMotion(wf, ctx.grid_state)
+                ctx.gd.executeMotion(ctx.grid_state)
 
                 ipath = capture_image(k, alpha, beta)
 
                 image_dict[(k, alpha, beta)] = ipath
 
             # store dict of image paths
-            save_positional_verification_images(
-                env, vfdb, opts, fpu_config, fpu_id, image_dict
-            )
+            save_positional_verification_images(ctx, fpu_id, image_dict)
 
 
-def eval_positional_verification(
-    env,
-    vfdb,
-    gd,
-    grid_state,
-    opts,
-    fpuset,
-    fpu_config,
-    pos_rep_analysis_pars,
-    pos_ver_evaluation_pars,
-):
+def eval_positional_verification(ctx, pos_rep_analysis_pars, pos_ver_evaluation_pars):
     def analysis_func(ipath):
-        return positional_repeatability_image_analysis(ipath, **pos_rep_analysis_pars)
+        return positional_repeatability_image_analysis(
+            ipath, pars=pos_rep_analysis_pars
+        )
 
     for fpu_id in fpuset:
-        image_dict = get_positional_verification_images(
-            env, vfdb, opts, fpu_config, fpu_id
-        )
+        image_dict = get_positional_verification_images(ctx, fpu_id)
 
         try:
             analysis_results_short = {}
@@ -287,10 +264,7 @@ def eval_positional_verification(
             positional_verification_has_passed = TestResult.NA
 
         save_positional_verification_result(
-            env,
-            vfdb,
-            opts,
-            fpu_config,
+            ctx,
             fpu_id,
             analysis_results=analysis_results,
             posver_errors=posver_errors,

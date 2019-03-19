@@ -48,39 +48,41 @@ from fpu_commands import gen_wf
 from vfr.tests_common import flush, timestamp, dirac, goto_position
 
 
-def test_datum(env, vfdb, gd, grid_state, opts, fpuset, fpu_config, dasel=DASEL_BOTH):
+def test_datum(ctx, dasel=DASEL_BOTH):
 
-    gd.pingFPUs(grid_state, fpuset=fpuset)
+    gd.pingFPUs(ctx.grid_state, fpuset=ctx.measure_fpuset)
 
     # depending on options, we reset & rewind the FPUs
-    if opts.alwaysResetFPUs:
-        print (
-            "resetting FPUs.... ",
-            end="",
-        )
+    if ctx.opts.alwaysResetFPUs:
+        print ("resetting FPUs.... ", "end=' '")
         flush()
-        gd.resetFPUs(grid_state, fpuset=fpuset)
+        gd.resetFPUs(ctx.grid_state, fpuset=ctx.measure_fpuset)
         print ("OK")
 
     abs_alpha = -180.0 + 1.5
     abs_beta = 1.5
-    if opts.rewind_fpus:
+    if ctx.opts.rewind_fpus:
         goto_position(
-            gd, abs_alpha, abs_beta, grid_state, fpuset=fpuset, allow_uninitialized=True
+            ctx.gd,
+            abs_alpha,
+            abs_beta,
+            ctx.grid_state,
+            fpuset=ctx.measure_fpuset,
+            allow_uninitialized=True,
         )
 
     # Now, we issue a findDatum method. In order to know when and how
-    # this command finished, we pass the grid_state variable.
+    # this command finished, we pass the ctx.grid_state variable.
 
-    modes = {fpu_id: SEARCH_CLOCKWISE for fpu_id in fpuset}
+    modes = {fpu_id: SEARCH_CLOCKWISE for fpu_id in ctx.measure_fpuset}
     print ("issuing findDatum (%s):" % dasel)
     try:
         gd.findDatum(
-            grid_state,
+            ctx.grid_state,
             timeout=DATUM_TIMEOUT_DISABLE,
             search_modes=modes,
             selected_arm=dasel,
-            fpuset=fpuset,
+            fpuset=ctx.measure_fpuset,
         )
         success = True
         valid = True
@@ -96,72 +98,58 @@ def test_datum(env, vfdb, gd, grid_state, opts, fpuset, fpu_config, dasel=DASEL_
     print ("findDatum finished, success=%s, rigstate=%s" % (success, rigstate))
 
     if valid:
-        save_datum_result(
-            env, vfdb, opts, fpu_config, fpuset, dasel, grid_state, rigstate
-        )
+        save_datum_result(ctx, dasel, rigstate)
 
 
-def test_limit(
-    env,
-    fpudb,
-    vfdb,
-    gd,
-    grid_state,
-    opts,
-    fpuset,
-    fpu_config,
-    which_limit,
-    LIMIT_ALPHA_NEG_EXPECT=NaN,
-    LIMIT_ALPHA_POS_EXPECT=NaN,
-    LIMIT_BETA_NEG_EXPECT=NaN,
-    LIMIT_BETA_POS_EXPECT=NaN,
-    COLDET_ALPHA=NaN,
-    COLDET_BETA=NaN,
-):
+def test_limit(ctx, which_limit, pars=None):
 
     tstamp = timestamp()
-    if opts.mockup:
+    if ctx.opts.mockup:
         # replace all hardware functions by mock-up interfaces
         hw = hwsimulation
 
     abs_alpha_def = -180.0
     abs_beta_def = 0.0
-    goto_position(gd, abs_alpha_def, abs_beta_def, grid_state, fpuset=fpuset)
+    goto_position(
+        ctx.gd, abs_alpha_def, abs_beta_def, grid_state, fpuset=ctx.measure_fpuset
+    )
 
     if which_limit == "alpha_min":
-        abs_alpha, abs_beta = LIMIT_ALPHA_NEG_EXPECT, 0.0
+        abs_alpha, abs_beta = pars.LIMIT_ALPHA_NEG_EXPECT, 0.0
         dw = 30
         idx = 0
     elif which_limit == "alpha_max":
-        abs_alpha, abs_beta = LIMIT_ALPHA_POS_EXPECT, 0.0
+        abs_alpha, abs_beta = pars.LIMIT_ALPHA_POS_EXPECT, 0.0
         dw = -30
         idx = 0
     elif which_limit == "beta_min":
-        abs_alpha, abs_beta = LIMIT_BETA_NEG_EXPECT, -180.0
+        abs_alpha, abs_beta = pars.LIMIT_BETA_NEG_EXPECT, -180.0
         free_dir = REQD_ANTI_CLOCKWISE
         dw = 30
         idx = 1
     elif which_limit == "beta_max":
-        abs_alpha, abs_beta = LIMIT_BETA_POS_EXPECT, 180.0
+        abs_alpha, abs_beta = pars.LIMIT_BETA_POS_EXPECT, 180.0
         free_dir = REQD_CLOCKWISE
         dw = -30
         idx = 1
     elif which_limit == "beta_collision":
-        abs_alpha, abs_beta = COLDET_ALPHA, (COLDET_BETA + 5.0)
+        abs_alpha, abs_beta = pars.COLDET_ALPHA, (pars.COLDET_BETA + 5.0)
         free_dir = REQD_CLOCKWISE
         dw = 30
         idx = 1
 
     if which_limit != "beta_collision":
         # home turntable
-        hw.safe_home_turntable(gd, grid_state)
+        hw.safe_home_turntable(ctx.gd, ctx.grid_state)
 
-    for fpu_id, stage_position in get_sorted_positions(fpuset, DATUM_REP_POSITIONS):
+    for fpu_id, stage_position in get_sorted_positions(
+        ctx.measure_fpuset, DATUM_REP_POSITIONS
+    ):
         sn = fpu_config[fpu_id]["serialnumber"]
 
         if get_anglimit_passed_p(
-            env, vfdb, fpu_id, sn, which_limit, verbosity=opts.verbosity
-        ) and (not opts.repeat_passed_tests):
+            ctx.env, ctx.vfdb, fpu_id, sn, which_limit, verbosity=ctx.opts.verbosity
+        ) and (not ctx.opts.repeat_passed_tests):
 
             print (
                 "FPU %s : limit test %r already passed, skipping test"
@@ -172,7 +160,7 @@ def test_limit(
         try:
             if which_limit == "beta_collision":
                 # home turntable
-                hw.safe_home_turntable(gd, grid_state)
+                hw.safe_home_turntable(ctx.gd, ctx.grid_state)
 
             print (
                 "limit test %s: moving fpu %i to position (%6.2f, %6.2f)"
@@ -181,32 +169,32 @@ def test_limit(
 
             if which_limit == "beta_collision":
                 # move rotary stage to POS_REP_POSN_N
-                hw.turntable_safe_goto(gd, grid_state, stage_position)
+                hw.turntable_safe_goto(ctx.gd, ctx.grid_state, stage_position)
 
             if which_limit == "beta_collision":
                 goto_position(
-                    gd,
+                    ctx.gd,
                     abs_alpha,
                     abs_beta - 5.0,
-                    grid_state,
+                    ctx.grid_state,
                     fpuset=[fpu_id],
                     soft_protection=False,
                 )
                 goto_position(
-                    gd,
+                    ctx.gd,
                     abs_alpha,
                     abs_beta + 5.0,
-                    grid_state,
+                    ctx.grid_state,
                     fpuset=[fpu_id],
                     soft_protection=False,
                 )
 
             else:
                 goto_position(
-                    gd,
+                    ctx.gd,
                     abs_alpha,
                     abs_beta,
-                    grid_state,
+                    ctx.grid_state,
                     fpuset=[fpu_id],
                     soft_protection=False,
                 )
@@ -232,9 +220,9 @@ def test_limit(
         )
 
         if test_succeeded:
-            gd.pingFPUs(grid_state, fpuset=[fpu_id])
+            ctx.gd.pingFPUs(ctx.grid_state, fpuset=[fpu_id])
             limit_val = (
-                gd.trackedAngles(grid_state, retrieve=True)[fpu_id][idx]
+                ctx.gd.trackedAngles(ctx.grid_state, retrieve=True)[fpu_id][idx]
             ).as_scalar()
             print ("%s limit hit at position %f" % (which_limit, limit_val))
         else:
@@ -242,8 +230,7 @@ def test_limit(
 
         if test_valid:
             save_angular_limit(
-                env,
-                vfdb,
+                ctx,
                 fpu_id,
                 sn,
                 which_limit,
@@ -254,62 +241,53 @@ def test_limit(
             )
 
         if test_valid and test_succeeded and (which_limit != "beta_collision"):
-            set_protection_limit(
-                env,
-                fpudb,
-                grid_state.FPU[fpu_id],
-                sn,
-                which_limit,
-                limit_val,
-                opts.protection_tolerance,
-                opts.update_protection_limits,
-            )
+            set_protection_limit(ctx, fpu_id, which_limit, limit_val)
 
         if test_succeeded:
             # bring FPU back into valid range and protected state
-            N = opts.N
+            N = ctx.opts.N
             if which_limit in ["alpha_max", "alpha_min"]:
                 print ("moving fpu %i back by %i degree" % (fpu_id, dw))
-                gd.resetFPUs(grid_state, [fpu_id])
+                ctx.gd.resetFPUs(ctx.grid_state, [fpu_id])
                 wf = gen_wf(dw * dirac(fpu_id, N), 0)
-                gd.configMotion(
+                ctx.gd.configMotion(
                     wf,
-                    grid_state,
+                    ctx.grid_state,
                     soft_protection=False,
                     warn_unsafe=False,
                     allow_uninitialized=True,
                 )
-                gd.executeMotion(grid_state, fpuset=[fpu_id])
+                ctx.gd.executeMotion(ctx.grid_state, fpuset=[fpu_id])
             else:
                 print ("moving fpu %i back by %i steps" % (fpu_id, 10))
                 for k in range(3):
-                    gd.freeBetaCollision(
-                        fpu_id, free_dir, grid_state, soft_protection=False
+                    ctx.gd.freeBetaCollision(
+                        fpu_id, free_dir, ctx.grid_state, soft_protection=False
                     )
-                    gd.pingFPUs(grid_state, [fpu_id])
-                gd.enableBetaCollisionProtection(grid_state)
+                    ctx.gd.pingFPUs(ctx.grid_state, [fpu_id])
+                ctx.gd.enableBetaCollisionProtection(ctx.grid_state)
                 wf = gen_wf(0, dw * dirac(fpu_id, N))
-                gd.configMotion(
+                ctx.gd.configMotion(
                     wf,
-                    grid_state,
+                    ctx.grid_state,
                     soft_protection=False,
                     warn_unsafe=False,
                     allow_uninitialized=True,
                 )
-                gd.executeMotion(grid_state, fpuset=[fpu_id])
+                ctx.gd.executeMotion(ctx.grid_state, fpuset=[fpu_id])
 
         # bring fpu back to default position
         goto_position(
-            gd,
+            ctx.gd,
             abs_alpha_def,
             abs_beta_def,
-            grid_state,
+            ctx.grid_state,
             fpuset=[fpu_id],
             allow_uninitialized=True,
         )
         print ("searching datum for FPU %i, to resolve collision" % fpu_id)
-        gd.findDatum(grid_state, fpuset=[fpu_id])
+        ctx.gd.findDatum(ctx.grid_state, fpuset=[fpu_id])
 
     if which_limit == "beta_collision":
         # home turntable
-        hw.safe_home_turntable(gd, grid_state)
+        hw.safe_home_turntable(ctx.gd, ctx.grid_state)

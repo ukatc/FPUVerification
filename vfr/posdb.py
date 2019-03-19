@@ -19,9 +19,7 @@ from vfr.conf import ALPHA_DATUM_OFFSET
 from vfr.tests_common import flush
 
 
-def init_position(
-    env, fpudb, fpu_id, serialnumber, alpha_start, beta_start, re_initialize=True
-):
+def init_position(ctx, fpu_id, serialnumber, alpha_start, beta_start):
     sn = serialnumber
 
     aint = Interval(alpha_start)
@@ -34,12 +32,12 @@ def init_position(
     print (
         "setting FPU #%i, sn=%s to starting position (%r, %r) ... "
         % (fpu_id, serialnumber, alpha_start, beta_start),
-        end="",
+        "end=' '",
     )
     flush()
 
-    with env.begin(write=True, db=fpudb) as txn:
-        if re_initialize:
+    with ctx.env.begin(write=True, db=ctx.fpudb) as txn:
+        if ctx.opts.re_initialize:
             counters = None
         else:
             counters = pdb.getRawField(txn, sn, pdb.counters)

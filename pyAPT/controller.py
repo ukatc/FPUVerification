@@ -185,7 +185,7 @@ class Controller(object):
 
     def _wait_message(self, expected_messageID, verbose=False):
         if verbose:
-            print ("waiting for message ID 0x%0x..." % expected_messageID, end="") 
+            print ("waiting for message ID 0x%0x..." % expected_messageID, "end=' '")
         sys.stdout.flush()
         found = False
         while not found:
@@ -707,7 +707,7 @@ class ControllerStatus(object):
   This class encapsulate the controller status, which includes its position,
   velocity, and various flags.
 
-  The position and velocity properties will return realworld values of 
+  The position and velocity properties will return realworld values of
   mm and mm/s respectively.
   """
 

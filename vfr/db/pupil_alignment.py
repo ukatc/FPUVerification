@@ -5,11 +5,11 @@ from vfr.db.base import GIT_VERSION, TestResult, get_test_result, timestamp
 RECORD_TYPE = "pupil-alignment"
 
 
-def save_pupil_alignment_images(env, vfdb, opts, fpu_config, fpu_id, images):
+def save_pupil_alignment_images(ctx, fpu_id, images):
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
-        serialnumber = fpu_config[fpu_id]["serialnumber"]
+        serialnumber = ctx.fpu_config[fpu_id]["serialnumber"]
         keybase = (serialnumber, RECORD_TYPE, "images")
         return keybase
 
@@ -18,25 +18,22 @@ def save_pupil_alignment_images(env, vfdb, opts, fpu_config, fpu_id, images):
         val = repr({"fpuid": fpu_id, "images": images, "time": timestamp()})
         return val
 
-    save_test_result(env, vfdb, fpuset, keyfunc, valfunc, verbosity=opts.verbosity)
+    save_test_result(ctx, [fpu_id], keyfunc, valfunc)
 
 
-def get_pupil_alignment_images(env, vfdb, opts, fpu_config, fpu_id):
+def get_pupil_alignment_images(ctx, fpu_id):
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
-        serialnumber = fpu_config[fpu_id]["serialnumber"]
+        serialnumber = ctx.fpu_config[fpu_id]["serialnumber"]
         keybase = (serialnumber, RECORD_TYPE, "images")
         return keybase
 
-    return get_test_result(env, vfdb, fpuset, keyfunc, verbosity=opts.verbosity)
+    return get_test_result(ctx, [fpu_id], keyfunc)
 
 
 def save_pupil_alignment_result(
-    env,
-    vfdb,
-    opts,
-    fpu_config,
+    ctx,
     fpu_id,
     calibration_pars=None,
     coords=None,
@@ -48,7 +45,7 @@ def save_pupil_alignment_result(
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
-        serialnumber = fpu_config[fpu_id]["serialnumber"]
+        serialnumber = ctx.fpu_config[fpu_id]["serialnumber"]
         keybase = (serialnumber, RECORD_TYPE, "result")
         return keybase
 
@@ -67,25 +64,25 @@ def save_pupil_alignment_result(
         )
         return val
 
-    save_test_result(env, vfdb, fpuset, keyfunc, valfunc, verbosity=opts.verbosity)
+    save_test_result(ctx, [fpu_id], keyfunc, valfunc)
 
 
-def get_pupil_alignment_result(env, vfdb, opts, fpu_config, fpu_id):
+def get_pupil_alignment_result(ctx, fpu_id):
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
-        serialnumber = fpu_config[fpu_id]["serialnumber"]
+        serialnumber = ctx.fpu_config[fpu_id]["serialnumber"]
         keybase = (serialnumber, RECORD_TYPE, "result")
         return keybase
 
-    return get_test_result(env, vfdb, fpuset, keyfunc, verbosity=opts.verbosity)
+    return get_test_result(ctx, [fpu_id], keyfunc)
 
 
-def get_pupil_alignment_passed_p(env, vfdb, opts, fpu_config, fpu_id):
+def get_pupil_alignment_passed_p(ctx, fpu_id):
     """returns True if the latest datum repeatability test for this FPU
     was passed successfully."""
 
-    val = get_pupil_alignment_result(env, vfdb, opts, fpu_config, fpu_id)
+    val = get_pupil_alignment_result(ctx, fpu_id)
 
     if val is None:
         return False

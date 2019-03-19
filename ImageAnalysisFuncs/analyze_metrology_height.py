@@ -24,18 +24,10 @@ class MetrologyHeightAnalysisError(ImageAnalysisError):
 
 
 def methtHeight(
-    image_path,  # configurable parameters
-    METHT_PLATESCALE=0.00668,  # mm per pixel
-    METHT_THRESHOLD=150,  # 0-255
-    METHT_SCAN_HEIGHT=2000,  # pixels
-    METHT_GAUSS_BLUR=1,  # pixels - MUST BE AN ODD NUMBER
-    METHT_STANDARD_DEV=0.04,  # mm
-    METHT_NOISE_METRIC=0.25,  # dimensionless
-    verbosity=0,  # a value > 5 will write relevant parameters to the terminal
-    display=False,
+    image_path, pars=None  # configurable parameters
 ):  # will thresholded image
 
-    """reads an image from the metrology height camera and 
+    """reads an image from the metrology height camera and
         returns the heights and quality metric of the two targets in mm"""
 
     # Authors: Stephen Watson (initial algorithm March 4, 2019)
@@ -43,19 +35,19 @@ def methtHeight(
 
     # image processing
     image = cv2.imread(image_path)
-    blur = cv2.GaussianBlur(image, (METHT_GAUSS_BLUR, METHT_GAUSS_BLUR), 0)
+    blur = cv2.GaussianBlur(image, (pars.METHT_GAUSS_BLUR, pars.METHT_GAUSS_BLUR), 0)
     gray = cv2.cvtColor(blur, cv2.COLOR_BGR2GRAY)
     gray = float32(gray)
 
-    tval, thresh = cv2.threshold(gray, METHT_THRESHOLD, 255, 0, cv2.THRESH_BINARY)
+    tval, thresh = cv2.threshold(gray, pars.METHT_THRESHOLD, 255, 0, cv2.THRESH_BINARY)
 
     # find location of beta arm
-    betaScan = thresh[METHT_SCAN_HEIGHT, :]
+    betaScan = thresh[pars.METHT_SCAN_HEIGHT, :]
     betaSide = 0
     for i in range(0, len(betaScan) - 1):
         if (betaScan[i + 1] - betaScan[i]) < 0:
             betaSide = i
-            if verbosity > 5:
+            if pars.verbosity > 5:
                 print ("Beta arm side is at x-coordinate %i" % betaSide)
 
     if betaSide == 0:
@@ -64,7 +56,7 @@ def methtHeight(
         )
 
     threshcrop = thresh[1750:2700, betaSide - 100 : betaSide + 1500]
-    if display == True:
+    if pars.display == True:
         plt.imshow(threshcrop)
         plt.title("Thresholded image, thresholdVal = %i" % thresholdVal)
         plt.show()
@@ -75,7 +67,7 @@ def methtHeight(
     threshblurave, threshblurstd = cv2.meanStdDev(threshblur)
     noiseMetric = (threshstd - threshblurstd) / threshblurstd * 100
 
-    if verbosity > 5:
+    if pars.verbosity > 5:
         print ("Noise metric in thresholded image is %.2f" % noiseMetric)
 
     # pixel distances from side of beta arm to measurement points
@@ -110,7 +102,7 @@ def methtHeight(
                 largeTargetY[i] = p
                 break
 
-    if verbosity > 5:
+    if pars.verbosity > 5:
         print ("Arm surface points found - x:%s y:%s" % (armSurfaceX, armSurfaceY))
         print ("Small target points found - x:%s y:%s" % (smallTargetX, smallTargetY))
         print ("Large target points found - x:%s y:%s" % (largeTargetX, largeTargetY))
@@ -134,50 +126,50 @@ def methtHeight(
         )
 
     # calculates standard deviation of heights to see how level the targets are
-    stdSmallTarget = std(smallTargetHeights) * METHT_PLATESCALE
-    stdLargeTarget = std(largeTargetHeights) * METHT_PLATESCALE
-    if verbosity > 5:
+    stdSmallTarget = std(smallTargetHeights) * pars.METHT_PLATESCALE
+    stdLargeTarget = std(largeTargetHeights) * pars.METHT_PLATESCALE
+    if pars.verbosity > 5:
         print (
             "Standard deviations of small/large target heights are %.3f and %.3f"
             % (stdSmallTarget, stdLargeTarget)
         )
 
     # exceptions
-    if stdSmallTarget > METHT_STANDARD_DEV:
+    if stdSmallTarget > pars.METHT_STANDARD_DEV:
         raise MetrologyHeightAnalysisError(
             "Small target points have high standard deviation"
             " - target may not be sitting flat"
         )
 
-    if stdLargeTarget > METHT_STANDARD_DEV:
+    if stdLargeTarget > pars.METHT_STANDARD_DEV:
         raise MetrologyHeightAnalysisError(
             "Large target points have high standard deviation"
             " - target may not be sitting flat"
         )
 
-    if noiseMetric > METHT_NOISE_METRIC:
+    if noiseMetric > pars.METHT_NOISE_METRIC:
         raise MetrologyHeightAnalysisError(
             "Image noise excessive - consider " "changing Gaussian blur value"
         )
 
     metht_small_target_height = (
-        sum(smallTargetHeights) / len(smallTargetHeights) * METHT_PLATESCALE
+        sum(smallTargetHeights) / len(smallTargetHeights) * pars.METHT_PLATESCALE
     )
     metht_large_target_height = (
-        sum(largeTargetHeights) / len(largeTargetHeights) * METHT_PLATESCALE
+        sum(largeTargetHeights) / len(largeTargetHeights) * pars.METHT_PLATESCALE
     )
 
     return metht_small_target_height, metht_large_target_height
 
 
 def eval_met_height_inspec(
-    metht_small_target_height, metht_large_target_height, METHT_HEIGHT_TOLERANCE=0.01
+    metht_small_target_height, metht_large_target_height, pars=None
 ):
     if (
         (metht_small_target_height > 0)
-        and (metht_small_target_height <= MET_HEIGHT_TOLERANCE)
+        and (metht_small_target_height <= pars.MET_HEIGHT_TOLERANCE)
         and (metht_large_target_height > 0)
-        and (metht_large_target_height <= MET_HEIGHT_TOLERANCE)
+        and (metht_large_target_height <= pars.MET_HEIGHT_TOLERANCE)
     ):
 
         return True

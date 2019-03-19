@@ -6,19 +6,12 @@ RECORD_TYPE = "positional-repeatability"
 
 
 def save_positional_repeatability_images(
-    env,
-    vfdb,
-    opts,
-    fpu_config,
-    fpu_id,
-    images_dict_alpha=None,
-    images_dict_beta=None,
-    waveform_pars={},
+    ctx, fpu_id, images_dict_alpha=None, images_dict_beta=None, waveform_pars={}
 ):
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
-        serialnumber = fpu_config[fpu_id]["serialnumber"]
+        serialnumber = ctx.fpu_config[fpu_id]["serialnumber"]
         keybase = (serialnumber, RECORD_TYPE, "images")
         return keybase
 
@@ -35,25 +28,22 @@ def save_positional_repeatability_images(
         )
         return val
 
-    save_test_result(env, vfdb, fpuset, keyfunc, valfunc, verbosity=opts.verbosity)
+    save_test_result(ctx, [fpu_id], keyfunc, valfunc)
 
 
-def get_positional_repeatability_images(env, vfdb, opts, fpu_config, fpu_id):
+def get_positional_repeatability_images(ctx, fpu_id):
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
-        serialnumber = fpu_config[fpu_id]["serialnumber"]
+        serialnumber = ctx.fpu_config[fpu_id]["serialnumber"]
         keybase = (serialnumber, RECORD_TYPE, "images")
         return keybase
 
-    return get_test_result(env, vfdb, fpuset, keyfunc, verbosity=opts.verbosity)
+    return get_test_result(ctx, [fpu_id], keyfunc)
 
 
 def save_positional_repeatability_result(
-    env,
-    vfdb,
-    opts,
-    fpu_config,
+    ctx,
     fpu_id,
     pos_rep_calibration_pars=None,
     analysis_results_alpha=None,
@@ -67,7 +57,7 @@ def save_positional_repeatability_result(
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
-        serialnumber = fpu_config[fpu_id]["serialnumber"]
+        serialnumber = ctx.fpu_config[fpu_id]["serialnumber"]
         keybase = (serialnumber, RECORD_TYPE, "result")
         return keybase
 
@@ -89,25 +79,25 @@ def save_positional_repeatability_result(
         )
         return val
 
-    save_test_result(env, vfdb, fpuset, keyfunc, valfunc, verbosity=opts.verbosity)
+    save_test_result(ctx, [fpu_id], keyfunc, valfunc)
 
 
-def get_positional_repeatability_result(env, vfdb, opts, fpu_config, fpu_id):
+def get_positional_repeatability_result(ctx, fpu_id):
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
-        serialnumber = fpu_config[fpu_id]["serialnumber"]
+        serialnumber = ctx.fpu_config[fpu_id]["serialnumber"]
         keybase = (serialnumber, RECORD_TYPE, "result")
         return keybase
 
-    return get_test_result(env, vfdb, fpuset, keyfunc, verbosity=opts.verbosity)
+    return get_test_result(ctx, [fpu_id], keyfunc)
 
 
-def get_positional_repeatability_passed_p(env, vfdb, opts, fpu_config, fpu_id):
+def get_positional_repeatability_passed_p(ctx, fpu_id):
     """returns True if the latest positional repeatability test for this FPU
     was passed successfully."""
 
-    val = get_positional_repeatability_result(env, vfdb, opts, fpu_config, fpu_id)
+    val = get_positional_repeatability_result(ctx, fpu_id)
 
     if val is None:
         return False

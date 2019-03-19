@@ -15,14 +15,16 @@ def _get_set(txn, key):
     existing_serial_numbers = set(literal_eval(val))
 
 
-def add_sns_to_set(env, vfdb, new_serialnumbers, verbosity=0):
+def add_sns_to_set(ctx, new_serialnumbers):
     """Adds a serial number to the set of FPUs in the database.
 
     This is needed so that we can iterate over the records for all
     processed FPUs.
 
     """
-    with env.begin(write=True, db=vfdb) as txn:
+    verbosity = ctx.opts.verbosity
+
+    with ctx.env.begin(write=True, db=ctx.vfdb) as txn:
         existing_serial_numbers = _get_set(txn, KEY)
 
         new_set = set(new_serialnumbers)
@@ -39,10 +41,12 @@ def add_sns_to_set(env, vfdb, new_serialnumbers, verbosity=0):
                 )
 
 
-def get_snset(env, vfdb, verbosity=0):
+def get_snset(ctx):
     """Gets the set of processed FPU serial numbers from the database.
     """
-    with env.begin(db=vfdb) as txn:
+    verbosity = ctx.opts.verbosity
+
+    with env.begin(db=ctx.vfdb) as txn:
         existing_serial_numbers = _get_set(txn, KEY)
 
     return existing_serial_numbers

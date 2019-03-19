@@ -3,6 +3,8 @@ from ImageAnalysisFuncs.analyze_metrology_height import methtHeight
 
 import unittest
 
+from vfr.conf import MET_HEIGHT_ANALYSIS_PARS
+
 
 class TestMetHeightImageAnalysis(unittest.TestCase):
     def test_expected(self):
@@ -17,7 +19,7 @@ class TestMetHeightImageAnalysis(unittest.TestCase):
         for (test_image, small_ht, large_ht) in cases:
             print ("Testing methtHeight with image %s.." % test_image)
 
-            (sh, lh) = methtHeight(test_image)
+            (sh, lh) = methtHeight(test_image, pars=MET_HEIGHT_ANALYSIS_PARS)
 
             ht_limit = 0.01  # millimeter
 

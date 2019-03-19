@@ -35,31 +35,23 @@ from ImageAnalysisFuncs.analyze_metrology_height import (
 )
 
 
-def measure_metrology_height(
-    env,
-    vfdb,
-    gd,
-    grid_state,
-    opts,
-    fpuset,
-    fpu_config,
-    MET_HEIGHT_POSITIONS=None,
-    MET_HIGHT_TARGET_EXPOSURE_MS=None,
-):
+def measure_metrology_height(ctx, parse=None):
 
     tstamp = timestamp()
-    if opts.mockup:
+    if ctx.opts.mockup:
         # replace all hardware functions by mock-up interfaces
         hw = hwsimulation
 
     # home turntable
-    hw.safe_home_turntable(gd, grid_state)
+    hw.safe_home_turntable(ctx.gd, ctx.grid_state)
 
-    hw.switch_fibre_backlight("off", manual_lamp_control=opts.manual_lamp_control)
-    hw.switch_ambientlight("off", manual_lamp_control=opts.manual_lamp_control)
-    hw.switch_fibre_backlight_voltage(0.0, manual_lamp_control=opts.manual_lamp_control)
+    hw.switch_fibre_backlight("off", manual_lamp_control=ctx.opts.manual_lamp_control)
+    hw.switch_ambientlight("off", manual_lamp_control=ctx.opts.manual_lamp_control)
+    hw.switch_fibre_backlight_voltage(
+        0.0, manual_lamp_control=ctx.opts.manual_lamp_control
+    )
 
-    with hw.use_silhouettelight(manual_lamp_control=opts.manual_lamp_control):
+    with hw.use_silhouettelight(manual_lamp_control=ctx.opts.manual_lamp_control):
 
         MET_HEIGHT_CAMERA_CONF = {
             DEVICE_CLASS: BASLER_DEVICE_CLASS,
@@ -71,10 +63,10 @@ def measure_metrology_height(
         # get sorted positions (this is needed because the turntable can only
         # move into one direction)
         for fpu_id, stage_position in get_sorted_positions(
-            fpuset, METROLOGY_HEIGHT_POSITIONS
+            ctx.measure_fpuset, pars.METROLOGY_HEIGHT_POSITIONS
         ):
             # move rotary stage to POS_REP_POSN_N
-            hw.turntable_safe_goto(gd, grid_state, stage_position)
+            hw.turntable_safe_goto(ctx.gd, ctx.grid_state, stage_position)
 
             # initialize pos_rep camera
             # set pos_rep camera exposure time to DATUM_REP_EXPOSURE milliseconds
@@ -93,34 +85,24 @@ def measure_metrology_height(
 
             images = capture_image(met_height_cam)
 
-            save_metrology_height_images(env, vfdb, opts, fpu_config, fpu_id, images)
+            save_metrology_height_images(ctx, fpu_id, images)
 
 
-def eval_metrology_height(
-    env,
-    vfdb,
-    gd,
-    grid_state,
-    opts,
-    fpuset,
-    fpu_config,
-    met_height_analysis_pars,
-    met_height_evaluation_pars,
-):
+def eval_metrology_height(ctx, met_height_analysis_pars, met_height_evaluation_pars):
 
-    for fpu_id in fpuset:
-        image = get_metrology_height_images(env, vfdb, opts, fpu_config, fpu_id)
+    for fpu_id in ctx.eval_fpuset:
+        image = get_metrology_height_images(ctx, fpu_id)
 
         try:
 
             metht_small_target_height, metht_large_target_height = methtHeight(
-                image, **met_height_analysis_pars
+                image, pars=met_height_analysis_pars
             )
 
             result_in_spec = eval_met_height_inspec(
                 metht_small_target_height,
                 metht_large_target_height,
-                **met_height_evaluation_pars
+                pars=met_height_evaluation_pars,
             )
 
             result = TestResult.OK if result_in_spec else TestResult.FAILED
@@ -134,10 +116,7 @@ def eval_metrology_height(
             result = TestResult.NA
 
         save_metrology_height_result(
-            env,
-            vfdb,
-            opts,
-            fpu_config,
+            ctx,
             fpu_id,
             metht_small_target_height=metht_small_target_height,
             metht_large_target_height=metht_large_target_height,

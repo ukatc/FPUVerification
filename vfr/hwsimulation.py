@@ -79,7 +79,7 @@ def use_ambientlight(manual_lamp_control=False):
 
 def turntable_safe_goto(gd, grid_state, stage_position):
     print ("issuing findDatum:")
-    #gd.findDatum(grid_state, timeout=DATUM_TIMEOUT_DISABLE)
+    # gd.findDatum(grid_state, timeout=DATUM_TIMEOUT_DISABLE)
     gd.findDatum(grid_state)
     print ("findDatum finished")
 
@@ -88,7 +88,7 @@ def turntable_safe_goto(gd, grid_state, stage_position):
 
 def safe_home_turntable(gd, grid_state):
     print ("issuing findDatum:")
-    #gd.findDatum(grid_state, timeout=DATUM_TIMEOUT_DISABLE)
+    # gd.findDatum(grid_state, timeout=DATUM_TIMEOUT_DISABLE)
     gd.findDatum(grid_state)
     print ("findDatum finished")
 
@@ -96,7 +96,7 @@ def safe_home_turntable(gd, grid_state):
 
 
 def home_linear_stage():
-    print ("\tHoming linear stage...", end=" ")
+    print ("\tHoming linear stage...", "end=' '")
     print ("homed")
 
 
@@ -117,10 +117,10 @@ class GigECamera:
         """This simulates the camera capturing an image and
         saving it to image_path, by creating a symbolic link
         from a matching test image to the requested path.
-        
+
         The linked image is selected according to
         the IP address of the 'camera'.
-        
+
         """
         ip_address = self.conf["IpAddress"]
 
@@ -130,7 +130,7 @@ class GigECamera:
         elif ip_address == MET_CAL_CAMERA_IP_ADDRESS:
             if (
                 self.exposure_time_ms
-                == MET_CAL_MEASUREMENT_PARS["METROLOGY_CAL_FIBRE_EXPOSURE_MS"]
+                == MET_CAL_MEASUREMENT_PARS.METROLOGY_CAL_FIBRE_EXPOSURE_MS
             ):
                 warnings.warn(
                     "using target image in place of fibre image for met "

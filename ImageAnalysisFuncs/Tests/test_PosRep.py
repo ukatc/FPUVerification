@@ -4,6 +4,8 @@ from ImageAnalysisFuncs.analyze_positional_repeatability import posrepCoordinate
 
 import unittest
 
+from vfr.conf import POS_REP_ANALYSIS_PARS
+
 
 class TestPosRepImageAnalysis(unittest.TestCase):
     def test_expected(self):
@@ -58,7 +60,9 @@ class TestPosRepImageAnalysis(unittest.TestCase):
         for (test_image, small_x, small_y, small_q, large_x, large_y, large_q) in cases:
             print ("Testing posrepCoordinates with image %s.." % test_image)
 
-            (sx, sy, sq, lx, ly, lq) = posrepCoordinates(test_image)
+            (sx, sy, sq, lx, ly, lq) = posrepCoordinates(
+                test_image, pars=POS_REP_ANALYSIS_PARS
+            )
 
             pos_limit = 0.01  # millimeter
             q_limit = 0.05  # dimensionless

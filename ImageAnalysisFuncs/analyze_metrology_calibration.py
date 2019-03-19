@@ -31,40 +31,36 @@ class MetrologyAnalysisFibreError(ImageAnalysisError):
     pass
 
 
-def metcalTargetCoordinates(
-    image_path,
-    # configurable parameters
-    MET_CAL_PLATESCALE=0.00668,  # mm per pixel
-    MET_CAL_SMALL_DIAMETER=1.5,  # mm
-    MET_CAL_LARGE_DIAMETER=2.5,  # mm
-    MET_CAL_DIAMETER_TOLERANCE=0.1,  # mm
-    MET_CAL_GAUSS_BLUR=3,  # pixels - MUST BE AN ODD NUMBER
-    MET_CAL_THRESHOLD=40,  # 0-255
-    MET_CAL_QUALITY_METRIC=0.8,  # dimensionless
-    verbosity=0,  # a value > 5 will write contour parameters to terminal
-    display=False,
-):  # will display image with contours annotated
+def metcalTargetCoordinates(image_path, pars=None):
 
-    """reads an image from the metrology calibration camera and returns 
+    """reads an image from the metrology calibration camera and returns
         the XY coordinates and circularity of the two targets in mm"""
 
     # Authors: Stephen Watson (initial algorithm March 4, 2019)
     # Johannes Nix (code imported and re-formatted)
 
     smallPerimeterLo = (
-        (MET_CAL_SMALL_DIAMETER - MET_CAL_DIAMETER_TOLERANCE) * pi / MET_CAL_PLATESCALE
+        (pars.MET_CAL_SMALL_DIAMETER - pars.MET_CAL_DIAMETER_TOLERANCE)
+        * pi
+        / pars.MET_CAL_PLATESCALE
     )
     smallPerimeterHi = (
-        (MET_CAL_SMALL_DIAMETER + MET_CAL_DIAMETER_TOLERANCE) * pi / MET_CAL_PLATESCALE
+        (pars.MET_CAL_SMALL_DIAMETER + pars.MET_CAL_DIAMETER_TOLERANCE)
+        * pi
+        / pars.MET_CAL_PLATESCALE
     )
     largePerimeterLo = (
-        (MET_CAL_LARGE_DIAMETER - MET_CAL_DIAMETER_TOLERANCE) * pi / MET_CAL_PLATESCALE
+        (pars.MET_CAL_LARGE_DIAMETER - pars.MET_CAL_DIAMETER_TOLERANCE)
+        * pi
+        / pars.MET_CAL_PLATESCALE
     )
     largePerimeterHi = (
-        (MET_CAL_LARGE_DIAMETER + MET_CAL_DIAMETER_TOLERANCE) * pi / MET_CAL_PLATESCALE
+        (pars.MET_CAL_LARGE_DIAMETER + pars.MET_CAL_DIAMETER_TOLERANCE)
+        * pi
+        / pars.MET_CAL_PLATESCALE
     )
 
-    if verbosity > 5:
+    if pars.verbosity > 5:
         print (
             "Lower/upper perimeter limits of small & large targets in mm: %.2f / %.2f ; %.2f / %.2f"
             % (smallPerimeterLo, smallPerimeterHi, largePerimeterLo, largePerimeterHi)
@@ -76,8 +72,8 @@ def metcalTargetCoordinates(
 
     # image processing
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    blur = cv2.GaussianBlur(gray, (MET_CAL_GAUSS_BLUR, MET_CAL_GAUSS_BLUR), 0)
-    thresh = cv2.threshold(blur, MET_CAL_THRESHOLD, 255, cv2.THRESH_BINARY)[1]
+    blur = cv2.GaussianBlur(gray, (pars.MET_CAL_GAUSS_BLUR, pars.MET_CAL_GAUSS_BLUR), 0)
+    thresh = cv2.threshold(blur, pars.MET_CAL_THRESHOLD, 255, cv2.THRESH_BINARY)[1]
 
     # find contours from thresholded image
     cnts = sorted(
@@ -99,12 +95,12 @@ def metcalTargetCoordinates(
         area = cv2.contourArea(c)
         if area > 0 and perimeter > 0:
             circularity = 4 * pi * (area / (perimeter * perimeter))
-        if verbosity > 5:
+        if pars.verbosity > 5:
             print (
                 "ContourID - %i; perimeter - %.2f; circularity - %.2f"
                 % (i, perimeter, circularity)
             )
-        if circularity > MET_CAL_QUALITY_METRIC:
+        if circularity > pars.MET_CAL_QUALITY_METRIC:
             if perimeter > smallPerimeterLo and perimeter < smallPerimeterHi:
                 if smallTargetFound == True:
                     multipleSmall = True
@@ -124,7 +120,7 @@ def metcalTargetCoordinates(
             cY = M["m01"] / M["m00"]
             centres[circle] = (cX, cY, circularity, i)
 
-            if display == True:
+            if pars.display == True:
                 cv2.drawContours(image, cnts, -1, (0, 255, 0), 2)
                 label = (
                     str(i)
@@ -173,17 +169,17 @@ def metcalTargetCoordinates(
             " tolerance or change image thresholding"
         )
 
-    if verbosity > 5:
+    if pars.verbosity > 5:
         print (
             "Contour %i = small target, contour %i = large target"
             % (centres["Small Target"][3], centres["Large Target"][3])
         )
 
-    metcal_small_target_x = centres["Small Target"][0] * MET_CAL_PLATESCALE
-    metcal_small_target_y = centres["Small Target"][1] * MET_CAL_PLATESCALE
+    metcal_small_target_x = centres["Small Target"][0] * pars.MET_CAL_PLATESCALE
+    metcal_small_target_y = centres["Small Target"][1] * pars.MET_CAL_PLATESCALE
     metcal_small_target_quality = centres["Small Target"][2]
-    metcal_large_target_x = centres["Large Target"][0] * MET_CAL_PLATESCALE
-    metcal_large_target_y = centres["Large Target"][1] * MET_CAL_PLATESCALE
+    metcal_large_target_x = centres["Large Target"][0] * pars.MET_CAL_PLATESCALE
+    metcal_large_target_y = centres["Large Target"][1] * pars.MET_CAL_PLATESCALE
     metcal_large_target_quality = centres["Large Target"][2]
 
     # target separation check - the values here are not configurable,
@@ -193,7 +189,7 @@ def metcalTargetCoordinates(
         + (metcal_small_target_y - metcal_large_target_y) ** 2
     )
 
-    if verbosity > 5:
+    if pars.verbosity > 5:
         print (
             "Target separation is %.3f mm.  Specification is 2.375 +/- 0.1 mm."
             % targetSeparation
@@ -215,16 +211,14 @@ def metcalTargetCoordinates(
     )
 
 
-def metcalFibreCoordinates(
-    image_path,
-    # configurable parameters
-    MET_CAL_PLATESCALE=0.00668,  # mm per pixel
-    MET_CAL_QUALITY_METRIC=0.8,  # dimensionless
-    verbosity=0,  # a value > 5 will write contour parameters to terminal
-    display=False,
-):  # will display image with contours annotated
+def metcalFibreCoordinates(image_path, pars=None):  # configurable parameters
 
-    """reads an image from the metrology calibration camera and returns the 
+    MET_CAL_PLATESCALE = pars.MET_CAL_PLATESCALE
+    MET_CAL_QUALITY_METRIC = pars.MET_CAL_QUALITY_METRIC
+    verbosity = pars.verbosity
+    display = pars.display
+
+    """reads an image from the metrology calibration camera and returns the
         XY coordinates and Gaussian fit quality of the backlit fibre in mm"""
 
     # Authors: Stephen Watson (initial algorithm March 4, 2019)
@@ -247,7 +241,7 @@ def metcalFibreCoordinates(
 def fibre_target_distance(big_target_coords, small_target_coords, fibre_coords):
     """
     takes coordinates of the big metrology target, the small metrology target,
-    and the distance in millimeter, and returns 
+    and the distance in millimeter, and returns
 
     1) the distance between the large  metrology target and the fibre aperture in millimeter.
     2) the distance between the small  metrology target and the fibre aperture in millimeter.

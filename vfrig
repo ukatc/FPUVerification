@@ -7,6 +7,8 @@ import re
 import os
 import ast
 
+from argparse import Namespace
+
 from fpu_constants import *
 
 
@@ -116,6 +118,17 @@ if __name__ == "__main__":
     os.chdir(IMAGE_ROOT_FOLDER)
     # check connections to cameras and EtherCAN gateway
 
+    context = Namespace(            env=env,
+                                    fpudb=None,
+                                    vfdb=vfdb,
+                                    gd=None,
+                                    grid_state=None,
+                                    measure_fpuset=measure_fpuset,
+                                    eval_fpuset=eval_fpuset,
+                                    fpu_config=fpu_config,
+                                    opts=opts,
+    )
+
     if T.TST_GATEWAY_CONNECTION in tasks:
         print ("[%s] ###" % T.TST_GATEWAY_CONNECTION)
         check_connection(opts, "gateway", opts.gateway_address)
@@ -162,6 +175,8 @@ if __name__ == "__main__":
 
         rd, grid_state = init_driver(opts, max(measure_fpuset), protected=False)
 
+        context.grid_state = grid_state
+
     if T.TST_CAN_CONNECTION in tasks:
         print ("[test_can_connection] ###")
         for fpu_id in measure_fpuset:
@@ -181,7 +196,8 @@ if __name__ == "__main__":
             print (rval)
             rd.readSerialNumbers(grid_state)
 
-    fpudb = env.open_db("fpu")
+
+    context.fpudb = env.open_db("fpu")
 
     if T.TST_INITPOS in tasks:
         print ("[init_positions] ###")
@@ -191,13 +207,11 @@ if __name__ == "__main__":
             serialnumber = fpu_config[fpu_id]["serialnumber"]
 
             init_position(
-                env,
-                fpudb,
+                context,
                 fpu_id,
                 serialnumber,
                 alpha_start,
                 beta_start,
-                re_initialize=opts.re_initialize,
             )
 
     # switch to protected driver instance, if needed
@@ -209,6 +223,9 @@ if __name__ == "__main__":
 
         print ("[initialize protected driver] ###")
         gd, grid_state = init_driver(opts, max(measure_fpuset), env=env, protected=True)
+
+        context.gd = gd
+        context.grid_state = grid_state
 
         gd.readSerialNumbers(grid_state)
         for fpu_id in measure_fpuset:
@@ -235,7 +252,7 @@ if __name__ == "__main__":
             gd.trackedAngles(grid_state, retrieve=True),
         )
         test_datum(
-            env, vfdb, gd, grid_state, opts, measure_fpuset, fpu_config, DASEL_ALPHA
+            context, DASEL_ALPHA
         )
 
     if T.TST_DATUM_BETA in tasks:
@@ -247,7 +264,7 @@ if __name__ == "__main__":
             gd.trackedAngles(grid_state, retrieve=True),
         )
         test_datum(
-            env, vfdb, gd, grid_state, opts, measure_fpuset, fpu_config, DASEL_BETA
+            context, DASEL_BETA
         )
 
     if T.TASK_REFERENCE in tasks:
@@ -264,14 +281,7 @@ if __name__ == "__main__":
 
     if T.TASK_SELFTEST_NONFIBRE in tasks:
         print ("[%s] ###" % T.TASK_SELFTEST_NONFIBRE)
-        selftest_nonfibre(
-            env,
-            vfdb,
-            gd,
-            grid_state,
-            opts,
-            measure_fpuset,
-            fpu_config,
+        selftest_nonfibre(context,
             POS_REP_MEASUREMENT_PARS=POS_REP_MEASUREMENT_PARS,
             MET_HEIGHT_MEASUREMENT_PARS=MET_HEIGHT_MEASUREMENT_PARS,
             MET_HEIGHT_ANALYSIS_PARS=MET_HEIGHT_ANALYSIS_PARS,
@@ -281,13 +291,7 @@ if __name__ == "__main__":
     if T.TASK_SELFTEST_FIBRE in tasks:
         print ("[%s] ###" % T.TASK_SELFTEST_FIBRE)
         selftest_fibre(
-            env,
-            vfdb,
-            gd,
-            grid_state,
-            opts,
-            measure_fpuset,
-            fpu_config,
+            context,
             MET_CAL_MEASUREMENT_PARS=MET_CAL_MEASUREMENT_PARS,
             MET_CAL_TARGET_ANALYSIS_PARS=MET_CAL_TARGET_ANALYSIS_PARS,
             MET_CAL_FIBRE_ANALYSIS_PARS=MET_CAL_FIBRE_ANALYSIS_PARS,
@@ -298,100 +302,53 @@ if __name__ == "__main__":
     if T.TST_COLLDETECT in tasks:
         print ("[test_collision_detection] ###")
         test_limit(
-            env,
-            fpudb,
-            vfdb,
-            gd,
-            grid_state,
-            opts,
-            measure_fpuset,
-            fpu_config,
+            context,
             "beta_collision",
-            **COLLDECT_MEASUREMENT_PARS
+            pars=COLLDECT_MEASUREMENT_PARS
         )
 
     if T.TST_ALPHA_MIN in tasks:
         print ("[test_limit_alpha_min] ###")
         test_limit(
-            env,
-            fpudb,
-            vfdb,
-            gd,
-            grid_state,
-            opts,
-            measure_fpuset,
-            fpu_config,
+            context,
             "alpha_min",
-            **COLLDECT_MEASUREMENT_PARS
+            pars=COLLDECT_MEASUREMENT_PARS
         )
 
     if T.TST_ALPHA_MAX in tasks:
         print ("[test_limit_alpha_max] ###")
         test_limit(
-            env,
-            fpudb,
-            vfdb,
-            gd,
-            grid_state,
-            opts,
-            measure_fpuset,
-            fpu_config,
+            context,
             "alpha_max",
-            **COLLDECT_MEASUREMENT_PARS
+            pars=COLLDECT_MEASUREMENT_PARS
         )
 
     if T.TST_BETA_MAX in tasks:
         print ("[test_limit_beta_max] ###")
         test_limit(
-            env,
-            fpudb,
-            vfdb,
-            gd,
-            grid_state,
-            opts,
-            measure_fpuset,
-            fpu_config,
+            context,
             "beta_max",
-            **COLLDECT_MEASUREMENT_PARS
+            pars=COLLDECT_MEASUREMENT_PARS
         )
 
     if T.TST_BETA_MIN in tasks:
         print ("[test_limit_beta_min] ###")
         test_limit(
-            env,
-            fpudb,
-            vfdb,
-            gd,
-            grid_state,
-            opts,
-            measure_fpuset,
-            fpu_config,
+            context,
             "beta_min",
-            **COLLDECT_MEASUREMENT_PARS
+            pars=COLLDECT_MEASUREMENT_PARS
         )
 
     if T.MEASURE_MET_CAL in tasks:
         print ("[%s] ###" % T.MEASURE_MET_CAL)
         measure_metrology_calibration(
-            env,
-            vfdb,
-            gd,
-            grid_state,
-            opts,
-            measure_fpuset,
-            fpu_config,
-            **MET_CAL_MEASUREMENT_PARS
+            context,
+            pars=MET_CAL_MEASUREMENT_PARS
         )
     if T.EVAL_MET_CAL in tasks:
         print ("[%s] ###" % T.EVAL_MET_CAL)
         eval_metrology_calibration(
-            env,
-            vfdb,
-            gd,
-            grid_state,
-            opts,
-            eval_fpuset,
-            fpu_config,
+            context,
             MET_CAL_TARGET_ANALYSIS_PARS,
             MET_CAL_FIBRE_ANALYSIS_PARS,
         )
@@ -399,25 +356,14 @@ if __name__ == "__main__":
     if T.MEASURE_MET_HEIGHT in tasks:
         print ("[%s] ###" % T.MEASURE_MET_HEIGHT)
         measure_metrology_height(
-            env,
-            vfdb,
-            gd,
-            grid_state,
-            opts,
-            measure_fpuset,
-            fpu_config,
-            **MET_HEIGHT_MEASUREMENT_PARS
+            context,
+            pars=MET_HEIGHT_MEASUREMENT_PARS
         )
+
     if T.EVAL_MET_HEIGHT in tasks:
         print ("[%s] ###" % T.EVAL_MET_HEIGHT)
         eval_metrology_height(
-            env,
-            vfdb,
-            gd,
-            grid_state,
-            opts,
-            eval_fpuset,
-            fpu_config,
+            context,
             MET_HEIGHT_ANALYSIS_PARS,
             MET_HEIGHT_EVALUATION_PARS,
         )
@@ -425,77 +371,42 @@ if __name__ == "__main__":
     if T.MEASURE_DATUM_REP in tasks:
         print ("[%s] ###" % T.MEASURE_DATUM_REP)
         measure_datum_repeatability(
-            env,
-            vfdb,
-            gd,
-            grid_state,
-            opts,
-            measure_fpuset,
-            fpu_config,
-            **DATUM_REP_MEASUREMENT_PARS
+            context,
+            pars=DATUM_REP_MEASUREMENT_PARS
         )
+
     if T.EVAL_DATUM_REP in tasks:
         print ("[%s] ###" % T.EVAL_DATUM_REP)
         eval_datum_repeatability(
-            env,
-            vfdb,
-            gd,
-            grid_state,
-            opts,
-            eval_fpuset,
-            fpu_config,
+            context,
             POS_REP_ANALYSIS_PARS,
         )
 
     if T.MEASURE_PUP_ALGN in tasks:
         print ("[%s] ###" % T.MEASURE_PUP_ALGN)
         measure_pupil_alignment(
-            env,
-            vfdb,
-            gd,
-            grid_state,
-            opts,
-            measure_fpuset,
-            fpu_config,
-            **PUP_ALGN_MEASUREMENT_PARS
+            context,
+            pars=PUP_ALGN_MEASUREMENT_PARS
         )
     if T.EVAL_PUP_ALGN in tasks:
         print ("[%s] ###" % T.EVAL_PUP_ALGN)
         eval_pupil_alignment(
-            env,
-            vfdb,
-            gd,
-            grid_state,
-            opts,
-            eval_fpuset,
-            fpu_config,
+            context,
             PUP_ALGN_ANALYSIS_PARS=PUP_ALGN_ANALYSIS_PARS,
-            **PUP_ALGN_EVALUATION_PARS
+            pars=PUP_ALGN_EVALUATION_PARS
         )
 
     if T.MEASURE_POS_REP_ in tasks:
         print ("[%s] ###" % T.MEASURE_POS_REP_)
         measure_positional_repeatability(
-            env,
-            vfdb,
-            gd,
-            grid_state,
-            opts,
-            measure_fpuset,
-            fpu_config,
-            **POS_REP_MEASUREMENT_PARS
+            context,
+            pars=POS_REP_MEASUREMENT_PARS
         )
 
     if T.EVAL_POS_REP_ in tasks:
         print ("[%s] ###" % T.EVAL_POS_REP_)
         eval_positional_repeatability(
-            env,
-            vfdb,
-            gd,
-            grid_state,
-            opts,
-            eval_fpuset,
-            fpu_config,
+            context,
             POS_REP_ANALYSIS_PARS,
             POS_REP_EVALUATION_PARS,
         )
@@ -503,34 +414,22 @@ if __name__ == "__main__":
     if T.MEASURE_POS_VER in tasks:
         print ("[%s] ###" % T.MEASURE_POS_VER)
         measure_positional_verification(
-            env,
-            vfdb,
-            gd,
-            grid_state,
-            opts,
-            measure_fpuset,
-            fpu_config,
-            **POS_VER_MEASUREMENT_PARS
+            context,
+            pars=POS_VER_MEASUREMENT_PARS
         )
 
     if T.EVAL_POS_VER in tasks:
         print ("[%s] ###" % T.EVAL_POS_VER)
         eval_positional_verification(
-            env,
-            vfdb,
-            gd,
-            grid_state,
-            opts,
-            eval_fpuset,
-            fpu_config,
+            context,
             POS_VER_ANALYSIS_PARS,
             POS_VER_EVALUATION_PARS,
         )
 
     if T.TASK_REPORT in tasks:
         print ("[%s] ###" % T.TASK_REPORT)
-        report(env, vfdb, gd, grid_state, opts, eval_fpuset, fpu_config)
+        report(context)
 
     if T.TASK_DUMP in tasks:
         print ("[%s] ###" % T.TASK_DUMP)
-        dump_data(env, vfdb, gd, grid_state, opts, eval_fpuset, fpu_config)
+        dump_data(context)
