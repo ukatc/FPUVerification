@@ -396,15 +396,15 @@ if __name__ == "__main__":
             pars=PUP_ALGN_EVALUATION_PARS
         )
 
-    if T.MEASURE_POS_REP_ in tasks:
-        print ("[%s] ###" % T.MEASURE_POS_REP_)
+    if T.MEASURE_POS_REP in tasks:
+        print ("[%s] ###" % T.MEASURE_POS_REP)
         measure_positional_repeatability(
             context,
             pars=POS_REP_MEASUREMENT_PARS
         )
 
-    if T.EVAL_POS_REP_ in tasks:
-        print ("[%s] ###" % T.EVAL_POS_REP_)
+    if T.EVAL_POS_REP in tasks:
+        print ("[%s] ###" % T.EVAL_POS_REP)
         eval_positional_repeatability(
             context,
             POS_REP_ANALYSIS_PARS,

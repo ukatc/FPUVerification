@@ -6,44 +6,60 @@ from inspect import cleandoc
 summary = cleandoc(
     """
     Test FPUs in verification rig, and evaluate tests.
-    
+
     The program performs a set of measurements and evaluations on
     FPUs. Which measurements and evaluations are done, is defined by the
     "tasks" command line arguments. Tasks can represent bundles of
     activities, or can identify specific individual steps which can be
     repeated.
-    
-    Measurements access the FPUs physically. For these, the serial numbers
-    of FPUs in relation to their logical ID are defined in a configuration
-    file. The result of each measurement is stored in the database,
-    regardless whether its evaluation is carried immediately now or later.
-    
+
+    Measurements access the FPUs physically. For these, the serial
+    numbers of FPUs in relation to their logical ID in the EtherCAN
+    driver are defined in a configuration file. The logical id is one
+    less than the CAN ID configured by the DIP switch. The result of
+    each measurement is stored in the database, regardless whether its
+    evaluation is carried immediately now or later.
+
     By default, the evaluations are carried out on all measured FPUs, but
     it is possible to define a subset of present FPUs, or to re-evaluate
-    previous measurements.
+    previous measurements, by passing the desired serial numbers.
 
-    A third type of task is the "report" task, which by default prints a
+    It is important to understand that all measured data is associated
+    with an FPUs serial number. This means that losing the serial number
+    equals loss of the verification and calibration data. Care should
+    be taken that serial numbers are not accidentally overwritten.
+    Data in the database is never deleted, but always appended to. This
+    includes repeated measurements.
+
+    A third type of task is the {TASK_REPORT!r} task, which by default prints a
     terse summary of the evaluated results.
-    
+
+    The tasks which are carried out by default are the following:
+
+    {DEFAULT_TASKS!r}
+
     Overview on tasks & operations:
-    
+
 
     1) INITIALIZATION & SET-UP
     ==========================
-    
-    {TST_INIT!r:<20}  - Initialize the position database with the position
+
+
+    {TST_INITPOS!r:<20}  - Initialize the position database with the position
                             given in the initialization config file.
                             This task should only be done once.
 
     {TST_FLASH!r:<20}  - flash the serial numbers given in the initialization
                             config file to the FPUs according to the
-                            given logical FPU ids. 
+                            given logical FPU ids.
                             Note that re-using a serial number will fail unless
-                            the command line option "reuse-sn" is explicitly 
+                            the command line option "reuse-sn" is explicitly
                             passed. This is a safety measure to prevent overwriting
                             and destroying existing test data.
-    
-    {TST_GATEWAY_CONNECTION!r:<20}  - test connection to EtherCAN gateway (and, 
+
+    {TST_INIT!r:<20}  - Initialize the position database _and_ flash the FPUs.
+
+    {TST_GATEWAY_CONNECTION!r:<20}  - test connection to EtherCAN gateway (and,
                             implicitly, to the Ethernet switch).
 
 
@@ -91,7 +107,7 @@ summary = cleandoc(
     These tests perform measurements on the hardware, while
     the image analysis and evaluation steps can be done later.
 
-    {MEASURE_DATUM_REP!r:<20}  - measure, but don't evaluate datum 
+    {MEASURE_DATUM_REP!r:<20}  - measure, but don't evaluate datum
                             repeatability
 
     {MEASURE_MET_CAL!r:<20}  - measure, but don't evaluate metrology ca;ibration
@@ -100,7 +116,7 @@ summary = cleandoc(
 
     {MEASURE_POS_REP!r:<20}  - measure, but don't evaluate positional repeatability
 
-    {MEASURE_POS_VER!r:<20}  - measure, but don't evaluate positional 
+    {MEASURE_POS_VER!r:<20}  - measure, but don't evaluate positional
                             verification. Note that this implicitly
                             requires to evaluate the positional repeatability.
 
@@ -112,7 +128,7 @@ summary = cleandoc(
     3c) EVALUATION ALONE
     --------------------
 
-    These evaluations operate on stored data and can be done 
+    These evaluations operate on stored data and can be done
     without the hardware being present. They are provided
     so that it is possible to update and redo evaluations.
 
@@ -131,7 +147,7 @@ summary = cleandoc(
     ==========
 
     {TASK_REPORT!r:<20}  - report results of all performed tests
-    {TASK_DUMP!r:<20}  - dump content of last database entry for 
+    {TASK_DUMP!r:<20}  - dump content of last database entry for
                             each FPU and test
 
 

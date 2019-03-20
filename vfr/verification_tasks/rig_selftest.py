@@ -206,7 +206,7 @@ def selftest_metrology_height(
         )
 
     finally:
-        hw.safe_home_turntable(ctx.gd, grid_state)
+        hw.safe_home_turntable(ctx.gd, ctx.grid_state)
 
 
 def selftest_positional_repeatability(
@@ -220,7 +220,7 @@ def selftest_positional_repeatability(
         hw = hwsimulation
 
     try:
-        hw.safe_home_turntable(ctx.gd, grid_state)
+        hw.safe_home_turntable(ctx.gd, ctx.grid_state)
 
         hw.switch_fibre_backlight(
             "off", manual_lamp_control=ctx.opts.manual_lamp_control

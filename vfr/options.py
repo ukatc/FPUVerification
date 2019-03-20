@@ -28,7 +28,7 @@ def parse_args():
         DEFAULT_VERBOSITY = 1
 
     parser = argparse.ArgumentParser(
-        description=summary.format(**T.__dict__),
+        description=summary.format(DEFAULT_TASKS=DEFAULT_TASKS, **T.__dict__),
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
@@ -265,8 +265,8 @@ def get_sets(vfdb, fpu_config, opts):
     command line parameter so that we can select a subset of all
     stored FPUs to be displayed.
 
-    This allows also to restrict a new measurement to FPUs which are 
-    explicityly listed, for example because the need to be selectively 
+    This allows also to restrict a new measurement to FPUs which are
+    explicityly listed, for example because the need to be selectively
     repeated.
 
     """
@@ -339,8 +339,8 @@ def get_sets(vfdb, fpu_config, opts):
     command line parameter so that we can select a subset of all
     stored FPUs to be displayed.
 
-    This allows also to restrict a new measurement to FPUs which are 
-    explicityly listed, for example because the need to be selectively 
+    This allows also to restrict a new measurement to FPUs which are
+    explicityly listed, for example because the need to be selectively
     repeated.
 
     """
