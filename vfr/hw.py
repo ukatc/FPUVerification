@@ -21,10 +21,11 @@ from GigE.GigECamera import GigECamera
 import pyAPT
 
 from FpuGridDriver import DATUM_TIMEOUT_DISABLE
+from vfr.tests_common import find_datum
 
 
-def safe_home_turntable(gd, grid_state):
-    gd.findDatum(grid_state, timeout=DATUM_TIMEOUT_DISABLE)
+def safe_home_turntable(gd, grid_state, opts=None):
+    find_datum(gd, grid_state, opts=opts)
 
     with pyAPT.NR360S(serial_number=NR360_SERIALNUMBER) as con:
         print ("\tHoming stage...", "end=' '")

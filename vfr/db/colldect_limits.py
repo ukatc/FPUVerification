@@ -1,6 +1,20 @@
 from __future__ import print_function, division, absolute_import
 
-from vfr.db.base import GIT_VERSION, TestResult, get_test_result, timestamp
+from fpu_constants import (
+    ALPHA_DATUM_OFFSET,
+    ALPHA_MIN_DEGREE,
+    ALPHA_MAX_DEGREE,
+    BETA_MIN_DEGREE,
+    BETA_MAX_DEGREE,
+)
+
+from protectiondb import ProtectionDB
+
+from interval import Interval
+
+from vfr.conf import PROTECTION_TOLERANCE
+
+from vfr.db.base import GIT_VERSION, TestResult, save_test_result, get_test_result, timestamp
 
 
 def save_angular_limit(
@@ -44,7 +58,7 @@ def get_angular_limit(ctx, fpu_id, serialnumber, which_limit):
             keybase = (serialnumber, "limit", which_limit)
         return keybase
 
-    return get_test_result(ctx, [fpu_id], keyfunc)
+    return get_test_result(ctx, fpu_id, keyfunc)
 
 
 def get_anglimit_passed_p(ctx, fpu_id, serialnumber, which_limit):
@@ -66,11 +80,11 @@ def set_protection_limit(ctx, fpu_id, which_limit, measured_val):
     either the update flag is True, or the current entry is the default value.
     """
     if which_limit in ["alpha_max", "alpha_min"]:
-        subkey = pdb.alpha_limits
+        subkey = ProtectionDB.alpha_limits
         offset = ALPHA_DATUM_OFFSET
         default_min, default_max = ALPHA_MIN_DEGREE, ALPHA_MAX_DEGREE
     else:
-        subkey = pdb.beta_limits
+        subkey = ProtectionDB.beta_limits
         offset = 0.0
         default_min, default_max = BETA_MIN_DEGREE, BETA_MAX_DEGREE
 
@@ -84,17 +98,17 @@ def set_protection_limit(ctx, fpu_id, which_limit, measured_val):
     fpu = ctx.grid_state.FPU[fpu_id]
     serialnumber = ctx.fpu_config[fpu_id]["serialnumber"]
     with ctx.env.begin(write=True, db=ctx.fpudb) as txn:
-        val = pdb.getField(txn, fpu, subkey) + offset
+        val = ProtectionDB.getField(txn, fpu, subkey) + offset
 
         val_min = val.min()
         val_max = val.max()
         if is_min:
             if (val_min == default_val) or ctx.opts.update:
-                val_min = measured_val + protection_tolerance
+                val_min = measured_val + PROTECTION_TOLERANCE
         else:
             if (val_max == default_val) or ctx.opts.update:
-                val_max = measured_val - protection_tolerance
+                val_max = measured_val - PROTECTION_TOLERANCE
 
         new_val = Interval(val_min, val_max)
         print ("limit %s: replacing %r by %r" % (which_limit, val, new_val))
-        pdb.putInterval(txn, serialnumber, subkey, new_val, offset)
+        ProtectionDB.putInterval(txn, serialnumber, subkey, new_val, offset)

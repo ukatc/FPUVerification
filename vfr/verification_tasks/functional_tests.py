@@ -2,14 +2,6 @@ from __future__ import print_function, division
 
 from numpy import NaN
 
-from vfr.db.datum import TestResult, save_datum_result
-from vfr.db.colldect_limits import (
-    save_angular_limit,
-    set_protection_limit,
-    get_anglimit_passed_p,
-)
-
-
 from FpuGridDriver import (
     CAN_PROTOCOL_VERSION,
     SEARCH_CLOCKWISE,
@@ -45,18 +37,32 @@ from FpuGridDriver import (
 from fpu_commands import gen_wf
 
 
-from vfr.tests_common import flush, timestamp, dirac, goto_position
+from vfr.db.datum import TestResult, save_datum_result
+from vfr.db.colldect_limits import (
+    save_angular_limit,
+    set_protection_limit,
+    get_anglimit_passed_p,
+)
+
+
+
+from vfr.tests_common import flush, timestamp, dirac, goto_position, get_sorted_positions
+
+from vfr import hw
+from vfr import hwsimulation as hws
+
+from vfr.turntable import go_collision_test_pos
 
 
 def test_datum(ctx, dasel=DASEL_BOTH):
 
-    gd.pingFPUs(ctx.grid_state, fpuset=ctx.measure_fpuset)
+    ctx.gd.pingFPUs(ctx.grid_state, fpuset=ctx.measure_fpuset)
 
     # depending on options, we reset & rewind the FPUs
     if ctx.opts.alwaysResetFPUs:
         print ("resetting FPUs.... ", "end=' '")
         flush()
-        gd.resetFPUs(ctx.grid_state, fpuset=ctx.measure_fpuset)
+        ctx.gd.resetFPUs(ctx.grid_state, fpuset=ctx.measure_fpuset)
         print ("OK")
 
     abs_alpha = -180.0 + 1.5
@@ -77,7 +83,7 @@ def test_datum(ctx, dasel=DASEL_BOTH):
     modes = {fpu_id: SEARCH_CLOCKWISE for fpu_id in ctx.measure_fpuset}
     print ("issuing findDatum (%s):" % dasel)
     try:
-        gd.findDatum(
+        ctx.gd.findDatum(
             ctx.grid_state,
             timeout=DATUM_TIMEOUT_DISABLE,
             search_modes=modes,
@@ -106,12 +112,12 @@ def test_limit(ctx, which_limit, pars=None):
     tstamp = timestamp()
     if ctx.opts.mockup:
         # replace all hardware functions by mock-up interfaces
-        hw = hwsimulation
+        hw = hws
 
     abs_alpha_def = -180.0
     abs_beta_def = 0.0
     goto_position(
-        ctx.gd, abs_alpha_def, abs_beta_def, grid_state, fpuset=ctx.measure_fpuset
+        ctx.gd, abs_alpha_def, abs_beta_def, ctx.grid_state, fpuset=ctx.measure_fpuset
     )
 
     if which_limit == "alpha_min":
@@ -133,7 +139,7 @@ def test_limit(ctx, which_limit, pars=None):
         dw = -30
         idx = 1
     elif which_limit == "beta_collision":
-        abs_alpha, abs_beta = pars.COLDET_ALPHA, (pars.COLDET_BETA + 5.0)
+        abs_alpha, abs_beta = pars.COLDECT_ALPHA, (pars.COLDECT_BETA + 5.0)
         free_dir = REQD_CLOCKWISE
         dw = 30
         idx = 1
@@ -142,13 +148,14 @@ def test_limit(ctx, which_limit, pars=None):
         # home turntable
         hw.safe_home_turntable(ctx.gd, ctx.grid_state)
 
+
     for fpu_id, stage_position in get_sorted_positions(
-        ctx.measure_fpuset, DATUM_REP_POSITIONS
+        ctx.measure_fpuset, pars.COLDECT_POSITIONS
     ):
-        sn = fpu_config[fpu_id]["serialnumber"]
+        sn = ctx.fpu_config[fpu_id]["serialnumber"]
 
         if get_anglimit_passed_p(
-            ctx.env, ctx.vfdb, fpu_id, sn, which_limit, verbosity=ctx.opts.verbosity
+            ctx, fpu_id, sn, which_limit,
         ) and (not ctx.opts.repeat_passed_tests):
 
             print (
@@ -161,6 +168,7 @@ def test_limit(ctx, which_limit, pars=None):
             if which_limit == "beta_collision":
                 # home turntable
                 hw.safe_home_turntable(ctx.gd, ctx.grid_state)
+                go_collision_test_pos(fpu_id, ctx.opts)
 
             print (
                 "limit test %s: moving fpu %i to position (%6.2f, %6.2f)"
@@ -237,7 +245,6 @@ def test_limit(ctx, which_limit, pars=None):
                 test_succeeded,
                 limit_val,
                 diagnostic,
-                verbosity=3,
             )
 
         if test_valid and test_succeeded and (which_limit != "beta_collision"):

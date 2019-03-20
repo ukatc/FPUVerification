@@ -16,6 +16,8 @@ from vfr.conf import (
     LAMP_WARMING_TIME_MILLISECONDS,
 )
 
+from vfr.tests_common import find_datum
+
 import ImageAnalysisFuncs  # used to look up images
 
 from FpuGridDriver import DATUM_TIMEOUT_DISABLE
@@ -77,19 +79,16 @@ def use_ambientlight(manual_lamp_control=False):
         time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
 
 
-def turntable_safe_goto(gd, grid_state, stage_position):
-    print ("issuing findDatum:")
-    # gd.findDatum(grid_state, timeout=DATUM_TIMEOUT_DISABLE)
-    gd.findDatum(grid_state)
-    print ("findDatum finished")
+def turntable_safe_goto(gd, grid_state, stage_position, opts=None):
+    find_datum(gd, grid_state, opts=opts)
 
     print ("moving turntable to position %5.2f" % stage_position)
 
 
-def safe_home_turntable(gd, grid_state):
+def safe_home_turntable(gd, grid_state, opts=None):
     print ("issuing findDatum:")
     # gd.findDatum(grid_state, timeout=DATUM_TIMEOUT_DISABLE)
-    gd.findDatum(grid_state)
+    find_datum(gd, grid_state, opts=opts)
     print ("findDatum finished")
 
     print ("moving turntable to home position")

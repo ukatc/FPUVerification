@@ -13,7 +13,10 @@ INSTRUMENT_FOCAL_LENGTH = 4101.4  # millimeter (does not change)
 
 ALPHA_DATUM_OFFSET = -180
 
-DB_TIME_FORMAT = "%Y-%m-%dT%H:%M:%S%Z"
+PROTECTION_TOLERANCE = 0.15 # degrees of protection between measured
+                            # limit and soft protection range
+
+DB_TIME_FORMAT = "%Y-%m-%dT%H:%M:%S.~%Z" # "~" means number of milliseconds
 
 LAMP_WARMING_TIME_MILLISECONDS = 1000.0
 
@@ -35,11 +38,11 @@ PUP_ALGN_CAMERA_IP_ADDRESS = "169.254.108.113"
 METROLOGY_CAL_POSITIONS = [268, 328, 28, 88, 148, 208]
 
 COLLDECT_MEASUREMENT_PARS = Namespace(
-    COLDET_ALPHA=-180,
-    COLDET_BETA=70,
-    COLDET_POSITIONS=[NaN, NaN, NaN, NaN, NaN, NaN],
+    COLDECT_ALPHA=-180,
+    COLDECT_BETA=70,
+    COLDECT_POSITIONS=[NaN, NaN, NaN, NaN, NaN, NaN],
     LIMIT_ALPHA_NEG_EXPECT=-182.0,
-    LIMIT_ALPHA_POS_EXPECT=+165.0,
+    LIMIT_ALPHA_POS_EXPECT=+175.0,
     LIMIT_BETA_NEG_EXPECT=-185.0,
     LIMIT_BETA_POS_EXPECT=+155.0,
 )

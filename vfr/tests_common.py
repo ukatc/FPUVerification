@@ -6,16 +6,22 @@ import time
 from os import path
 import os
 import errno
+import time
+from math import floor
 
 from numpy import zeros, nan, array
 
-from fpu_commands import gen_wf
+from fpu_commands import gen_wf, list_states
+
+from fpu_constants import ALPHA_DATUM_OFFSET, BETA_DATUM_OFFSET
 
 from FpuGridDriver import (
     CAN_PROTOCOL_VERSION,
+    FPST_AT_DATUM,
     SEARCH_CLOCKWISE,
     SEARCH_ANTI_CLOCKWISE,
     DEFAULT_WAVEFORM_RULSET_VERSION,
+    DATUM_TIMEOUT_ENABLE,
     DATUM_TIMEOUT_DISABLE,
     DASEL_BOTH,
     DASEL_ALPHA,
@@ -56,7 +62,13 @@ def flush():
 
 
 def timestamp():
-    return time.strftime(DB_TIME_FORMAT)
+    ti = time.strftime(DB_TIME_FORMAT)
+    # get milliseconds
+    fs = time.time()
+    ms = "%03i" % int((fs - floor(fs)) * 1000)
+    # replace
+    return ti.replace("~", ms)
+
 
 
 def dirac(n, L):
@@ -86,9 +98,9 @@ def goto_position(
         print ("moving to (%6.2f,%6.2f)" % (abs_alpha, abs_beta))
 
     wf = gen_wf(-current_alpha + abs_alpha, -current_beta + abs_beta)
-    wf = {k: v for k, v in wf.items() if k in fpuset}
+    wf2 = {k: v for k, v in wf.items() if k in fpuset}
     gd.configMotion(
-        wf,
+        wf2,
         grid_state,
         allow_uninitialized=allow_uninitialized,
         soft_protection=soft_protection,
@@ -101,11 +113,38 @@ def goto_position(
         gd.pingFPUs(grid_state)
 
 
-def find_datum(gd, grid_state, opts):
+def find_datum(gd, grid_state, opts=None, disable_timeout=False):
 
-    print ("issuing findDatum:")
-    gd.findDatum(grid_state, timeout=DATUM_TIMEOUT_DISABLE)
-    print ("findDatum finished")
+    time.sleep(0.1)
+    gd.pingFPUs(grid_state)
+    print("pre datum:")
+    gd.trackedAngles(grid_state)
+    print("states=", list_states(grid_state))
+
+    unreferenced = []
+    for fpu_id, fpu in enumerate(grid_state.FPU):
+        if fpu.state != FPST_AT_DATUM:
+            unreferenced.append(fpu_id)
+
+    if unreferenced:
+        goto_position(
+            gd,
+            ALPHA_DATUM_OFFSET + 1.0,
+            BETA_DATUM_OFFSET + 1.0,
+            grid_state,
+            fpuset=unreferenced,
+            allow_uninitialized=True,
+            soft_protection=True,
+            verbosity=opts.verbosity if opts else 0,
+        )
+        timeout = DATUM_TIMEOUT_DISABLE if disable_timeout else DATUM_TIMEOUT_ENABLE
+        print ("issuing findDatum (%i FPUs, timeout=%r):" % (len(unreferenced), timeout))
+        gd.findDatum(grid_state, fpuset=unreferenced, timeout=timeout)
+        print ("findDatum finished, states=", list_states(grid_state))
+    else:
+        print("all FPUs already at datum")
+
+
 
     # We can use grid_state to display the starting position
     print (
@@ -134,7 +173,7 @@ def store_image(camera, format_string, **kwargs):
 
 
 def get_sorted_positions(fpuset, positions):
-    """we need to sort the turntable angles because 
+    """we need to sort the turntable angles because
     we can only move it in rising order"""
 
     return [(fid, pos) for pos, fid in sorted((positions[fid], fid) for fid in fpuset)]

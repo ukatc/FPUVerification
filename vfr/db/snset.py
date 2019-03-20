@@ -14,6 +14,8 @@ def _get_set(txn, key):
 
     existing_serial_numbers = set(literal_eval(val))
 
+    return existing_serial_numbers
+
 
 def add_sns_to_set(ctx, new_serialnumbers):
     """Adds a serial number to the set of FPUs in the database.

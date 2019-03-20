@@ -21,7 +21,7 @@ def save_test_result(ctx, fpuset, keyfunc, valfunc):
 
     verbosity = ctx.opts
 
-    with env.begin(write=True, db=vfdb) as txn:
+    with ctx.env.begin(write=True, db=ctx.vfdb) as txn:
 
         for fpu_id in fpuset:
 
@@ -50,7 +50,7 @@ def get_test_result(ctx, fpu_id, keyfunc, count=None):
 
     verbosity = ctx.opts.verbosity
 
-    with env.begin(write=False, db=vfdb) as txn:
+    with ctx.env.begin(write=False, db=ctx.vfdb) as txn:
 
         keybase = keyfunc(fpu_id)
 
@@ -59,11 +59,12 @@ def get_test_result(ctx, fpu_id, keyfunc, count=None):
 
             count = txn.get(key1)
 
-        assert count is not None
+        if count is None:
+            return None
 
         key2 = repr(keybase + ("data", count))
 
-        val = txn.get(key2, val)
+        val = txn.get(key2)
 
         if val is not None:
             val = ast.literal_eval(val)

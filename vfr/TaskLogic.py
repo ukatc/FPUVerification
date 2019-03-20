@@ -266,17 +266,6 @@ task_expansions = [
     (T.TST_INIT, [T.TST_FLASH, T.TST_INITPOS]),
     (T.TST_DATUM, [T.TST_DATUM_ALPHA, T.TST_DATUM_BETA]),
     (
-        T.TST_FUNCTIONAL,
-        [
-            T.TST_GATEWAY_CONNECTION,
-            T.TST_CAN_CONNECTION,
-            T.TST_DATUM,
-            T.TST_ALPHA_MAX,
-            T.TST_BETA_MAX,
-            T.TST_BETA_MIN,
-        ],
-    ),
-    (
         T.TST_LIMITS,
         [
             T.TST_COLLDETECT,
@@ -286,16 +275,20 @@ task_expansions = [
             T.TST_BETA_MIN,
         ],
     ),
+    (
+        T.TST_FUNCTIONAL,
+        [
+            T.TST_GATEWAY_CONNECTION,
+            T.TST_CAN_CONNECTION,
+            T.TST_DATUM,
+            T.TST_LIMITS,
+        ],
+    ),
     (T.TST_DATUM_REP, [T.MEASURE_DATUM_REP, T.EVAL_DATUM_REP]),
     (T.TST_MET_CAL, [T.MEASURE_MET_CAL, T.EVAL_MET_CAL]),
     (T.TST_MET_HEIGHT, [T.MEASURE_MET_HEIGHT, T.EVAL_MET_HEIGHT]),
     (T.TST_POS_REP, [T.MEASURE_POS_REP, T.EVAL_POS_REP]),
     (T.TST_PUP_ALGN, [T.MEASURE_PUP_ALGN, T.EVAL_PUP_ALGN]),
-    (T.TST_LIMITS, [T.TST_DATUM]),
-    (T.TST_ALPHA_MAX, [T.TST_DATUM]),
-    (T.TST_ALPHA_MIN, [T.TST_DATUM]),
-    (T.TST_BETA_MAX, [T.TST_DATUM]),
-    (T.TST_BETA_MIN, [T.TST_DATUM]),
 ]
 
 
@@ -326,8 +319,11 @@ def expand_tasks(tasks, goal, expansion, delete=False):
     return tasks
 
 
-def resolve(tasks, env, vfdb, opts, fpu_config, fpuset):
+def resolve(tasks, ctx):
     tasks = set(tasks)
+
+    fpuset = set(ctx.measure_fpuset) | set(ctx.eval_fpuset)
+
 
     for tsk in tasks:
         if tsk not in usertasks:
@@ -349,7 +345,7 @@ def resolve(tasks, env, vfdb, opts, fpu_config, fpuset):
         # and are not already passed by all FPUs)
         for tsk, testfun, cond_expansion in conditional_dependencies:
             if tsk in tasks:
-                tfun = lambda fpu_id: testfun(env, vfdb, opts, fpu_config, fpu_id)
+                tfun = lambda fpu_id: testfun(ctx, fpu_id)
                 if (not all_true(tfun, fpuset)) or opts.repeat_passed_tests:
                     tasks = expand_tasks(tasks, tsk, cond_expansion, delete=True)
 

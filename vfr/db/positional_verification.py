@@ -1,6 +1,6 @@
 from __future__ import print_function, division, absolute_import
 
-from vfr.db.base import GIT_VERSION, TestResult, get_test_result, timestamp
+from vfr.db.base import GIT_VERSION, TestResult, save_test_result, get_test_result, timestamp
 
 
 def save_positional_verification_images(ctx, fpu_id, images_dict):
@@ -27,7 +27,7 @@ def get_positional_verification_images(ctx, fpu_id):
         keybase = (serialnumber, "positional-verification", "images")
         return keybase
 
-    return get_test_result(ctx, [fpu_id], keyfunc)
+    return get_test_result(ctx, fpu_id, keyfunc)
 
 
 def save_positional_verification_result(
@@ -75,4 +75,4 @@ def get_positional_verification_result(ctx, fpu_id):
         keybase = (serialnumber, "positional-verification", "result")
         return keybase
 
-    return get_test_result(ctx, [fpu_id], keyfunc)
+    return get_test_result(ctx, fpu_id, keyfunc)

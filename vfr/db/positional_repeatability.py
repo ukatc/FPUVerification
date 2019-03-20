@@ -1,6 +1,6 @@
 from __future__ import print_function, division, absolute_import
 
-from vfr.db.base import GIT_VERSION, TestResult, get_test_result, timestamp
+from vfr.db.base import GIT_VERSION, TestResult, save_test_result, get_test_result, timestamp
 
 RECORD_TYPE = "positional-repeatability"
 
@@ -39,7 +39,7 @@ def get_positional_repeatability_images(ctx, fpu_id):
         keybase = (serialnumber, RECORD_TYPE, "images")
         return keybase
 
-    return get_test_result(ctx, [fpu_id], keyfunc)
+    return get_test_result(ctx, fpu_id, keyfunc)
 
 
 def save_positional_repeatability_result(
@@ -90,7 +90,7 @@ def get_positional_repeatability_result(ctx, fpu_id):
         keybase = (serialnumber, RECORD_TYPE, "result")
         return keybase
 
-    return get_test_result(ctx, [fpu_id], keyfunc)
+    return get_test_result(ctx, fpu_id, keyfunc)
 
 
 def get_positional_repeatability_passed_p(ctx, fpu_id):

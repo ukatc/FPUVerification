@@ -9,10 +9,11 @@ import ast
 
 from argparse import Namespace
 
-from fpu_constants import *
+from FpuGridDriver import FPST_AT_DATUM
+from fpu_constants import ALPHA_DATUM_OFFSET, BETA_DATUM_OFFSET
 
 
-from vfr.tests_common import flush
+from vfr.tests_common import flush, goto_position, find_datum
 
 from protectiondb import open_database_env
 
@@ -109,9 +110,6 @@ if __name__ == "__main__":
 
     print ("fpu_ids = %r" % measure_fpuset)
 
-    # resolve high-level tasks and dependent checks and measurements into
-    # low-level actions
-    tasks = resolve(opts.tasks, env, vfdb, opts, fpu_config, measure_fpuset)
 
     # change current directory to image root folder, so that
     # we can use relative image paths
@@ -128,6 +126,10 @@ if __name__ == "__main__":
                                     fpu_config=fpu_config,
                                     opts=opts,
     )
+
+    # resolve high-level tasks and dependent checks and measurements into
+    # low-level actions
+    tasks = resolve(opts.tasks, context)
 
     if T.TST_GATEWAY_CONNECTION in tasks:
         print ("[%s] ###" % T.TST_GATEWAY_CONNECTION)
@@ -271,13 +273,8 @@ if __name__ == "__main__":
         print ("[%s] ###" % T.TASK_REFERENCE)
         # move all fpus to datum which are not there
         # (this is needed to operate the turntable)
-        unreferenced = []
-        for fpu_id, fpu in grid_state.FPUs:
-            if fpu.state != FPST_AT_DATUM:
-                unreferenced.append(fpu_id)
 
-        if len(unreferenced) > 0:
-            gd.findDatum(grid_state, fpuset=unreferenced, timeout=DATUM_TIMEOUT_DISABLE)
+        find_datum(gd, grid_state, opts=opts)
 
     if T.TASK_SELFTEST_NONFIBRE in tasks:
         print ("[%s] ###" % T.TASK_SELFTEST_NONFIBRE)

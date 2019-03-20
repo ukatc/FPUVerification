@@ -1,6 +1,8 @@
 from __future__ import print_function, division, absolute_import
 
-from vfr.db.base import GIT_VERSION, TestResult, get_test_result, timestamp
+from FpuGridDriver import CAN_PROTOCOL_VERSION, DASEL_ALPHA, DASEL_BETA, DASEL_BOTH
+
+from vfr.db.base import GIT_VERSION, TestResult, save_test_result, get_test_result, timestamp
 from vfr.db.snset import add_sns_to_set
 
 RECORD_TYPE = "findDatum"
@@ -63,7 +65,7 @@ def get_datum_result(ctx, fpu_id):
         keybase = (serialnumber, RECORD_TYPE, "result")
         return keybase
 
-    return get_test_result(ctx, [fpu_id], keyfunc, verbosity=opts.verbosity)
+    return get_test_result(ctx, fpu_id, keyfunc)
 
 
 def get_datum_passed_p(ctx, fpu_id):
