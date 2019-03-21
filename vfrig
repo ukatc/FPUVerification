@@ -269,12 +269,24 @@ if __name__ == "__main__":
             context, DASEL_BETA
         )
 
+    if T.TST_DATUM_BOTH in tasks:
+        print ("[%s] ###" % T.TST_DATUM_BOTH)
+
+        # We can use grid_state to display the starting position
+        print (
+            "the starting position (in degrees) is:",
+            gd.trackedAngles(grid_state, retrieve=True),
+        )
+        test_datum(
+            context, DASEL_BOTH
+        )
+
     if T.TASK_REFERENCE in tasks:
         print ("[%s] ###" % T.TASK_REFERENCE)
         # move all fpus to datum which are not there
         # (this is needed to operate the turntable)
 
-        find_datum(gd, grid_state, opts=opts)
+        find_datum(gd, grid_state, opts=opts, uninitialized=True)
 
     if T.TASK_SELFTEST_NONFIBRE in tasks:
         print ("[%s] ###" % T.TASK_SELFTEST_NONFIBRE)

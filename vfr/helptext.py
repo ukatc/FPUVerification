@@ -74,6 +74,11 @@ summary = cleandoc(
 
     {TST_LIMITS!r:<20}  - test limit switch functionality
 
+    {TST_ALPHA_MAX!r:<20}  - search alpha max limit
+    {TST_ALPHA_MIN!r:<20}  - search alpha min limit
+    {TST_BETA_MAX!r:<20}  - search beta max limit
+    {TST_BETA_MIN!r:<20}  - search beta min limit
+
     {TASK_SELFTEST!r:<20}  - self-test of verification rig (including fibre backlight illumination)
 
     {TASK_SELFTEST_NONFIBRE!r:<20}  - self-test of rig (without fibre)

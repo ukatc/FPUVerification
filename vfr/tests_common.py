@@ -112,14 +112,23 @@ def goto_position(
     if CAN_PROTOCOL_VERSION == 1:
         gd.pingFPUs(grid_state)
 
+    if verbosity > 2:
+        print("FPU states=", list_states(grid_state))
 
-def find_datum(gd, grid_state, opts=None, disable_timeout=False):
 
-    time.sleep(0.1)
+def find_datum(gd, grid_state, opts=None, uninitialized=False):
+
+    verbosity = opts.verbosity if opts else 0
     gd.pingFPUs(grid_state)
-    print("pre datum:")
+    if verbosity > 9:
+        print("pre datum:")
     gd.trackedAngles(grid_state)
-    print("states=", list_states(grid_state))
+    if verbosity > 9:
+        print("states=", list_states(grid_state))
+    if verbosity > 8:
+        for fpu_id, fpu in enumerate(grid_state.FPU):
+            print("FPU %i (alpha_initalized, beta_initialized) = (%s, %s)"
+                  % (fpu_id, fpu.alpha_was_zeroed, fpu.beta_was_zeroed))
 
     unreferenced = []
     for fpu_id, fpu in enumerate(grid_state.FPU):
@@ -135,22 +144,46 @@ def find_datum(gd, grid_state, opts=None, disable_timeout=False):
             fpuset=unreferenced,
             allow_uninitialized=True,
             soft_protection=True,
-            verbosity=opts.verbosity if opts else 0,
+            verbosity=verbosity,
         )
-        timeout = DATUM_TIMEOUT_DISABLE if disable_timeout else DATUM_TIMEOUT_ENABLE
-        print ("issuing findDatum (%i FPUs, timeout=%r):" % (len(unreferenced), timeout))
-        gd.findDatum(grid_state, fpuset=unreferenced, timeout=timeout)
-        print ("findDatum finished, states=", list_states(grid_state))
+
+
+        if uninitialized:
+            if verbosity > 0:
+                print ("issuing initial findDatum (%i FPUs):" % len(unreferenced))
+
+            modes = {fpu_id: SEARCH_CLOCKWISE for fpu_id in unreferenced}
+
+            gd.findDatum(
+                grid_state,
+                timeout=DATUM_TIMEOUT_DISABLE,
+                search_modes=modes,
+                selected_arm=DASEL_BOTH,
+                fpuset=unreferenced,
+            )
+
+        else:
+            if verbosity > 2:
+                print ("issuing findDatum (%i FPUs, timeout=%r):" % (len(unreferenced), timeout))
+            gd.findDatum(grid_state, fpuset=unreferenced, timeout=DATUM_TIMEOUT_ENABLE)
+
+
+        if verbosity > 5:
+            print ("findDatum finished, states=", list_states(grid_state))
     else:
-        print("all FPUs already at datum")
+        if verbosity > 1:
+            print("find_datum(): all FPUs already at datum")
 
 
 
     # We can use grid_state to display the starting position
-    print (
-        "the starting position (in degrees) is:",
-        gd.trackedAngles(grid_state, retrieve=True),
-    )
+    if verbosity > 9:
+        print (
+            "datum finished, the FPU positions (in degrees) are:",
+            gd.trackedAngles(grid_state, retrieve=True),
+        )
+    if verbosity > 9:
+        print("FPU states = ", list_states(grid_state))
 
     return gd, grid_state
 

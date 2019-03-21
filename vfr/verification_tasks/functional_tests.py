@@ -117,7 +117,7 @@ def test_limit(ctx, which_limit, pars=None):
     abs_alpha_def = -180.0
     abs_beta_def = 0.0
     goto_position(
-        ctx.gd, abs_alpha_def, abs_beta_def, ctx.grid_state, fpuset=ctx.measure_fpuset
+        ctx.gd, abs_alpha_def, abs_beta_def, ctx.grid_state, fpuset=ctx.measure_fpuset, verbosity=ctx.opts.verbosity
     )
 
     if which_limit == "alpha_min":
@@ -129,12 +129,12 @@ def test_limit(ctx, which_limit, pars=None):
         dw = -30
         idx = 0
     elif which_limit == "beta_min":
-        abs_alpha, abs_beta = pars.LIMIT_BETA_NEG_EXPECT, -180.0
+        abs_alpha, abs_beta = -180.0, pars.LIMIT_BETA_NEG_EXPECT
         free_dir = REQD_ANTI_CLOCKWISE
         dw = 30
         idx = 1
     elif which_limit == "beta_max":
-        abs_alpha, abs_beta = pars.LIMIT_BETA_POS_EXPECT, 180.0
+        abs_alpha, abs_beta = -180.0, pars.LIMIT_BETA_POS_EXPECT
         free_dir = REQD_CLOCKWISE
         dw = -30
         idx = 1
@@ -167,7 +167,10 @@ def test_limit(ctx, which_limit, pars=None):
         try:
             if which_limit == "beta_collision":
                 # home turntable
-                hw.safe_home_turntable(ctx.gd, ctx.grid_state)
+                print("pre-finding datum....")
+                ctx.gd.findDatum(ctx.grid_state)
+                print("OK")
+                hw.safe_home_turntable(ctx.gd, ctx.grid_state, opts=ctx.opts)
                 go_collision_test_pos(fpu_id, ctx.opts)
 
             print (
@@ -291,6 +294,7 @@ def test_limit(ctx, which_limit, pars=None):
             ctx.grid_state,
             fpuset=[fpu_id],
             allow_uninitialized=True,
+            soft_protection=False,
         )
         print ("searching datum for FPU %i, to resolve collision" % fpu_id)
         ctx.gd.findDatum(ctx.grid_state, fpuset=[fpu_id])

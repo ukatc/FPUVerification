@@ -6,6 +6,8 @@ from os import environ
 
 from ast import literal_eval
 import re
+import warnings
+
 
 from vfr.TaskLogic import T
 
@@ -256,6 +258,9 @@ def parse_args():
     return args
 
 
+sn_pat = re.compile("[a-zA-Z0-9]{1,5}$")
+
+
 def get_sets(vfdb, fpu_config, opts):
     """Under normal operation, we want to measure and evaluate the FPUs
     in the rig.
@@ -288,77 +293,6 @@ def get_sets(vfdb, fpu_config, opts):
         # both mesured and evaluated sets are exclusively defined by
         # the measurement configuration file
         measure_fpuset = fpu_config.keys()
-        eval_fpuset = fpuset
-    else:
-        # we restrict the measured FPUs to the serial numbers passed
-        # in the command line option, and create a config which has
-        # entries for these and the additional requested serial
-        # numbers
-        config_by_sn = {val["serialnumber"]: val for val in fpu_config.values()}
-
-        config_sns = set(config_by_sn.keys())
-        if len(config_sns) != len(fpu_config):
-            raise ValueError(
-                "the measurement configuration file has duplicate serial numbers"
-            )
-
-        measure_sns = config_sns.intersection(eval_snset)
-
-        measure_config = {
-            config_by_sn[sn]["fpu_id"]: config_by_sn[sn] for sn in measure_sns
-        }
-
-        measure_fpuset = fpu_config.keys()
-
-        extra_eval_sns = requested_snset.difference(measure_sns)
-
-        # we use the serial numbers as key - these need not to have
-        # integer type as they are not used in measurements.
-
-        fpu_config = {sn: {"serialnumber": sn} for sn in extra_eval_sns}
-
-        fpu_config.update(measure_config)
-
-        eval_fpuset = fpu_config.keys()
-
-    return fpu_config, sorted(measure_fpuset), sorted(eval_fpuset)
-
-    # get sets of measured and evaluated FPUs
-    fpu_config, measure_fpuset, eval_fpuset = get_sets(vfdb, fpu_config, opts)
-
-
-sn_pat = re.compile("[a-zA-Z0-9]{1,5}$")
-
-
-def get_sets(vfdb, fpu_config, opts):
-    """Under normal operation, we want to measure and evaluate the FPUs
-    in the rig.
-
-    However, we also need to be able to query and/or re-evaluate data
-    for FPUs which have been measured before. To do that, there is a
-    command line parameter so that we can select a subset of all
-    stored FPUs to be displayed.
-
-    This allows also to restrict a new measurement to FPUs which are
-    explicityly listed, for example because the need to be selectively
-    repeated.
-
-    """
-    eval_snset = opts.snset
-
-    if eval_snset == "all":
-        # get the serial numbers of all FPUs which have been measured so far
-        eval_snset = get_snset(env, vfdb)
-    elif eval_snset is not None:
-        # in this case, it needs to be a list of serial numbers
-        eval_snset = set(eval_snset)
-
-    # check passed serial numbers for validity
-
-    if eval_snset is None:
-        # both mesured and evaluated sets are exclusively defined by
-        # the measurement configuration file
-        measure_fpuset = fpu_config.keys()
         eval_fpuset = measure_fpuset
     else:
         for sn in eval_snset:
@@ -383,9 +317,9 @@ def get_sets(vfdb, fpu_config, opts):
             config_by_sn[sn]["fpu_id"]: config_by_sn[sn] for sn in measure_sns
         }
 
-        measure_fpuset = fpu_config.keys()
+        measure_fpuset = set(measure_config.keys())
 
-        extra_eval_sns = requested_snset.difference(measure_sns)
+        extra_eval_sns = eval_snset.difference(measure_sns)
 
         # we use the serial numbers as key - these need not to have
         # integer type as they are not used in measurements.
@@ -396,7 +330,18 @@ def get_sets(vfdb, fpu_config, opts):
 
         eval_fpuset = fpu_config.keys()
 
-    return fpu_config, measure_fpuset, eval_fpuset
+
+    # get sets of measured and evaluated FPUs
+    N = max(measure_fpuset) + 1
+
+    if N < opts.N:
+        warnings.warn("Subset selected. Adjusting number of addressed FPUs to %i." % N)
+        opts.N = N
+
+    return fpu_config, sorted(measure_fpuset), sorted(eval_fpuset)
+
+
+
 
 
 def load_config(config_file_name, vfdb, opts):

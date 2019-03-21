@@ -35,22 +35,23 @@ class T:
     TASK_INIT_GD = "initialize_grid_driver"
     TASK_INIT_RD = "initialize_unprotected_fpu_driver"
     TASK_MEASURE_ALL = "measure_all"
-    TASK_REFERENCE = "reference_step_counters"
+    TASK_REFERENCE = "reference"
     TASK_SELFTEST = "selftest"
     TASK_SELFTEST_NONFIBRE = "selftest_nonfibre"
     TASK_SELFTEST_FIBRE = "selftest_fibre"
     TASK_REPORT = "report"
     TASK_DUMP = "dump"
     # elementary tests
-    TST_ALPHA_MAX = "test_alpha_max"
-    TST_ALPHA_MIN = "test_alpha_min"
-    TST_BETA_MAX = "test_beta_max"
-    TST_BETA_MIN = "test_beta_min"
+    TST_ALPHA_MAX = "search_alpha_max"
+    TST_ALPHA_MIN = "search_alpha_min"
+    TST_BETA_MAX = "search_beta_max"
+    TST_BETA_MIN = "search_beta_min"
     TST_CAN_CONNECTION = "test_can_connection"
     TST_COLLDETECT = "test_collision_detection"
     TST_DATUM = "test_datum"
     TST_DATUM_ALPHA = "test_datum_alpha"
     TST_DATUM_BETA = "test_datum_beta"
+    TST_DATUM_BOTH = "test_datum_both"
     TST_DATUM_REP = "test_datum_rep"
     TST_FLASH = "flash"
     TST_FUNCTIONAL = "test_functional"
@@ -108,6 +109,7 @@ usertasks = set(
         T.TST_DATUM,
         T.TST_DATUM_ALPHA,
         T.TST_DATUM_BETA,
+        T.TST_DATUM_BOTH,
         T.TST_DATUM_REP,
         T.TST_FLASH,
         T.TST_FUNCTIONAL,
@@ -152,6 +154,7 @@ task_dependencies = [
     ),
     (T.TST_DATUM_ALPHA, [T.TASK_INIT_GD, T.TST_CAN_CONNECTION]),
     (T.TST_DATUM_BETA, [T.TASK_INIT_GD, T.TST_CAN_CONNECTION]),
+    (T.TST_DATUM_BOTH, [T.TASK_INIT_GD, T.TST_CAN_CONNECTION]),
     (
         T.TST_ALPHA_MAX,
         [T.TASK_INIT_GD, T.TST_CAN_CONNECTION, T.REQ_DATUM_PASSED, T.TASK_REFERENCE],
@@ -264,7 +267,7 @@ conditional_dependencies = [
 # task expansions (where one user-selectable task contains several sub-tasks)
 task_expansions = [
     (T.TST_INIT, [T.TST_FLASH, T.TST_INITPOS]),
-    (T.TST_DATUM, [T.TST_DATUM_ALPHA, T.TST_DATUM_BETA]),
+    (T.TST_DATUM, [T.TST_DATUM_ALPHA, T.TST_DATUM_BETA, T.TST_DATUM_BOTH,]),
     (
         T.TST_LIMITS,
         [
