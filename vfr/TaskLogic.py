@@ -257,7 +257,7 @@ task_dependencies = [
 # passed for all FPUs, otherwise the listed tasks are addded.
 conditional_dependencies = [
     (T.REQ_DATUM_REP_PASSED, get_datum_repeatability_passed_p, [T.TST_DATUM_REP]),
-    (T.REQ_DATUM_PASSED, get_datum_passed_p, [T.TST_DATUM]),
+    (T.REQ_DATUM_PASSED, get_datum_passed_p, [T.TST_DATUM_BOTH]),
     (T.REQ_COLLDECT_PASSED, get_colldect_passed_p, [T.TST_COLLDETECT]),
     (T.REQ_PUP_ALGN_PASSED, get_pupil_alignment_passed_p, [T.TST_PUP_ALGN]),
     (T.REQ_POS_REP_PASSED, get_positional_repeatability_passed_p, [T.TST_POS_REP]),
@@ -349,7 +349,7 @@ def resolve(tasks, ctx):
         for tsk, testfun, cond_expansion in conditional_dependencies:
             if tsk in tasks:
                 tfun = lambda fpu_id: testfun(ctx, fpu_id)
-                if (not all_true(tfun, fpuset)) or opts.repeat_passed_tests:
+                if (not all_true(tfun, fpuset)) or ctx.opts.repeat_passed_tests:
                     tasks = expand_tasks(tasks, tsk, cond_expansion, delete=True)
 
         # check for equality with last iteration

@@ -57,12 +57,12 @@ def save_datum_result(ctx, dasel, rigstate):
     add_sns_to_set(ctx, ctx.measure_fpuset)
 
 
-def get_datum_result(ctx, fpu_id):
+def get_datum_result(ctx, fpu_id, dasel=DASEL_BOTH):
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
         serialnumber = ctx.fpu_config[fpu_id]["serialnumber"]
-        keybase = (serialnumber, RECORD_TYPE, "result")
+        keybase = (serialnumber, RECORD_TYPE, str(dasel))
         return keybase
 
     return get_test_result(ctx, fpu_id, keyfunc)

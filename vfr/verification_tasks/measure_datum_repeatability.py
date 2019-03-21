@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 from numpy import NaN
 
-from vfr.conf import POS_REP_CAMERA_IP_ADDRESS
+from vfr.conf import MET_CAL_CAMERA_IP_ADDRESS
 
 from vfr.db.datum_repeatability import (
     TestResult,
@@ -35,6 +35,7 @@ from vfr.tests_common import (
 
 
 from ImageAnalysisFuncs.analyze_positional_repeatability import (
+    ImageAnalysisError,
     posrepCoordinates,
     evaluate_datum_repeatability,
     DATUM_REPEATABILITY_ALGORITHM_VERSION,
@@ -91,35 +92,36 @@ def measure_datum_repeatability(ctx, pars=None):
             datumed_images = []
             moved_images = []
 
-            def capture_image(subtest, count):
+            def capture_image(subtest, cnt):
 
                 ipath = store_image(
-                    pos_rep_cam,
-                    "{sn}/{tn}/{ts}/{tp}-{tc:02d}-{ic:03d}-.bmp",
+                    met_cal_cam,
+                    "{sn}/{tn}/{ts}/{tp}-{ct:03d}.bmp",
                     sn=ctx.fpu_config[fpu_id]["serialnumber"],
                     tn="datum-repeatability",
-                    ts=ttamp,
-                    tp=testphase,
-                    tc=testcount,
-                    ic=count,
+                    ts=tstamp,
+                    tp=subtest,
+                    ct=cnt,
                 )
 
                 return ipath
 
-            for k in range(pars.DATUM_REP_ITERATIONS):
+            for count in range(pars.DATUM_REP_ITERATIONS):
+                print("capturing datumed-%02i" % count)
                 ctx.gd.findDatum(ctx.grid_state, fpuset=[fpu_id])
                 ipath = capture_image("datumed", count)
                 datumed_images.append(ipath)
 
             ctx.gd.findDatum(ctx.grid_state)
-            for k in range(pars.DATUM_REP_ITERATIONS):
-                wf = gen_wf(30 * dirac(fpu_id), 30)
-                ctx.gd.configMottion(wf, ctx.grid_state)
+            for count in range(pars.DATUM_REP_ITERATIONS):
+                print("capturing moved+datumed-%02i" % count)
+                wf = gen_wf(30 * dirac(fpu_id, ctx.opts.N), 30)
+                ctx.gd.configMotion(wf, ctx.grid_state)
                 ctx.gd.executeMotion(ctx.grid_state, fpuset=[fpu_id])
                 ctx.gd.reverseMotion(ctx.grid_state, fpuset=[fpu_id])
                 ctx.gd.executeMotion(ctx.grid_state, fpuset=[fpu_id])
                 ctx.gd.findDatum(ctx.grid_state, fpuset=[fpu_id])
-                ipath, coords = capture_image("moved+datumed", count)
+                ipath = capture_image("moved+datumed", count)
                 moved_images.append(ipath)
 
             images = {"datumed_images": datumed_images, "moved_images": moved_images}
@@ -130,7 +132,7 @@ def measure_datum_repeatability(ctx, pars=None):
 def eval_datum_repeatability(ctx, pos_rep_analysis_pars):
 
     for fpu_id in ctx.eval_fpuset:
-        images = get_datum_repeatability_images(ctx, fpu_id, images)
+        images = get_datum_repeatability_images(ctx, fpu_id)["images"]
 
         def analysis_func(ipath):
             return posrepCoordinates(ipath, pars=pos_rep_analysis_pars)
@@ -165,6 +167,6 @@ def eval_datum_repeatability(ctx, pos_rep_analysis_pars):
             coords=coords,
             datum_repeatability_mm=datum_repeatability_mm,
             datum_repeatability_has_passed=datum_repeatability_has_passed,
-            ermmsg=errmsg,
+            errmsg=errmsg,
             analysis_version=DATUM_REPEATABILITY_ALGORITHM_VERSION,
         )

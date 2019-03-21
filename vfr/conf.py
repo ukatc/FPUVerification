@@ -8,6 +8,8 @@ from numpy import NaN, Inf
 
 DEFAULT_TASKS = ["selftest", "measure_all", "evaluate_all", "report"]
 
+# a few parameters are defined globally because they are
+# used in many different places
 
 INSTRUMENT_FOCAL_LENGTH = 4101.4  # millimeter (does not change)
 

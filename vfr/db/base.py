@@ -7,6 +7,7 @@ import platform
 import subprocess
 
 from vfr.tests_common import timestamp
+from numpy import NaN, nan
 
 GIT_VERSION = subprocess.check_output(["git", "describe"]).strip()
 
@@ -57,17 +58,24 @@ def get_test_result(ctx, fpu_id, keyfunc, count=None):
         if count is None:
             key1 = str(keybase + ("ntests",))
 
-            count = int(txn.get(key1))
-
-        if count is None:
-            return None
+            try:
+                count = int(txn.get(key1))
+            except TypeError:
+                return None
 
         key2 = repr(keybase + ("data", count))
 
         val = txn.get(key2)
 
         if val is not None:
-            val = ast.literal_eval(val)
+            try:
+                val = ast.literal_eval(val)
+
+            except ValueError:
+                # we need to work around the disappointing fact that
+                # literal_eval() does not recognize IEEE754 NaN
+                # symbols
+                val = eval(val)
 
         if verbosity > 4:
             print ("got %r : %r" % (key2, val))
