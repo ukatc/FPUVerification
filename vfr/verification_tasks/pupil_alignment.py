@@ -107,7 +107,7 @@ def measure_pupil_alignment(ctx, pars=None):
                 ipath = store_image(
                     pup_aln_cam,
                     "{sn}/{tn}/{ts}/{tp}-{cnt:02d}-{alpha:+08.3f}-{beta:+08.3f}.bmp",
-                    sn=fpu_config[fpu_id]["serialnumber"],
+                    sn=ctx.fpu_config[fpu_id]["serialnumber"],
                     tn="pupil-alignment",
                     ts=tstamp,
                     cnt=count,

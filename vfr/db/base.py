@@ -38,8 +38,8 @@ def save_test_result(ctx, fpuset, keyfunc, valfunc):
 
             val = valfunc(fpu_id)
 
-            if verbosity > 2:
-                print ("putting %r : %r" % (key1, str(count)))
+            if verbosity > 4:
+                print ("putting %r : %r" % (key1, count))
                 print ("putting %r : %r" % (key2, val))
 
             txn.put(key1, str(count))
@@ -57,7 +57,7 @@ def get_test_result(ctx, fpu_id, keyfunc, count=None):
         if count is None:
             key1 = str(keybase + ("ntests",))
 
-            count = txn.get(key1)
+            count = int(txn.get(key1))
 
         if count is None:
             return None
@@ -69,7 +69,7 @@ def get_test_result(ctx, fpu_id, keyfunc, count=None):
         if val is not None:
             val = ast.literal_eval(val)
 
-        if verbosity > 2:
+        if verbosity > 4:
             print ("got %r : %r" % (key2, val))
 
     return val

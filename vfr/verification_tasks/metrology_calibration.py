@@ -30,6 +30,7 @@ from vfr.tests_common import (
 
 
 from ImageAnalysisFuncs.analyze_metrology_calibration import (
+    ImageAnalysisError,
     metcalTargetCoordinates,
     metcalFibreCoordinates,
     fibre_target_distance,
@@ -76,7 +77,7 @@ def measure_metrology_calibration(ctx, pars=None):
             ipath = store_image(
                 camera,
                 "{sn}/{tn}/{ts}/{st}.bmp",
-                sn=fpu_config[fpu_id]["serialnumber"],
+                sn=ctx.fpu_config[fpu_id]["serialnumber"],
                 tn="metrology-calibration",
                 ts=tstamp,
                 st=subtest,
@@ -98,10 +99,10 @@ def measure_metrology_calibration(ctx, pars=None):
         with hw.use_ambientlight(manual_lamp_control=ctx.opts.manual_lamp_control):
             target_ipath = capture_image(met_cal_cam, "target")
 
-        met_cal_cam.SetExposureTime(METROLOGY_CAL_FIBRE_EXPOSURE_MS)
+        met_cal_cam.SetExposureTime(pars.METROLOGY_CAL_FIBRE_EXPOSURE_MS)
 
-        with use_backlight(
-            METROLOGY_CAL_BACKLIGHT_VOLTAGE,
+        with hw.use_backlight(
+            pars.METROLOGY_CAL_BACKLIGHT_VOLTAGE,
             manual_lamp_control=ctx.opts.manual_lamp_control,
         ):
             fibre_ipath = capture_image(met_cal_cam, "fibre")
@@ -116,8 +117,9 @@ def eval_metrology_calibration(
 ):
 
     for fpu_id in ctx.eval_fpuset:
-        images = get_metrology_calibration_images(ctx, fpu_id)
+        images = get_metrology_calibration_images(ctx, fpu_id)["images"]
 
+        print("images= %r" % images)
         try:
             target_coordinates = metcalTargetCoordinates(
                 images["target"], pars=metcal_target_analysis_pars

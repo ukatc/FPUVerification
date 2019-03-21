@@ -76,7 +76,7 @@ def measure_metrology_height(ctx, parse=None):
                 ipath = store_image(
                     camera,
                     "{sn}/{tn}/{ts}.bmp",
-                    sn=fpu_config[fpu_id]["serialnumber"],
+                    sn=ctx.fpu_config[fpu_id]["serialnumber"],
                     tn="metrology-height",
                     ts=tstamp,
                 )

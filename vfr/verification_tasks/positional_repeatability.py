@@ -130,7 +130,7 @@ def measure_positional_repeatability(ctx, parse=None):
                 ipath = store_image(
                     pos_rep_cam,
                     "{sn}/{tn}/{ts}/{itr:03d}-{inc:03d}-{dir:03d}-{alpha:+08.3f}-{beta:+08.3f}.bmp",
-                    sn=fpu_config[fpu_id]["serialnumber"],
+                    sn=ctx.fpu_config[fpu_id]["serialnumber"],
                     tn="positional-repeatability",
                     ts=tstamp,
                     itr=iteration,

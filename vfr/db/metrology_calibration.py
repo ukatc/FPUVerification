@@ -56,7 +56,6 @@ def save_metrology_calibration_result(
         val = repr(
             {
                 "coords": coords,
-                "fibre_distance": fibre_distance,
                 "metcal_fibre_large_target_distance": metcal_fibre_large_target_distance,
                 "metcal_fibre_small_target_distance": metcal_fibre_small_target_distance,
                 "metcal_target_vector_angle": metcal_target_vector_angle,

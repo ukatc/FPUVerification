@@ -50,7 +50,9 @@ def save_angular_limit(
     save_test_result(ctx, [fpu_id], keyfunc, valfunc)
 
 
-def get_angular_limit(ctx, fpu_id, serialnumber, which_limit):
+def get_angular_limit(ctx, fpu_id, which_limit):
+
+    serialnumber = ctx.fpu_config[fpu_id]["serialnumber"]
     def keyfunc(fpu_id):
         if which_limit == "beta_collision":
             keybase = (serialnumber, which_limit)
@@ -61,17 +63,17 @@ def get_angular_limit(ctx, fpu_id, serialnumber, which_limit):
     return get_test_result(ctx, fpu_id, keyfunc)
 
 
-def get_anglimit_passed_p(ctx, fpu_id, serialnumber, which_limit):
+def get_anglimit_passed_p(ctx, fpu_id, which_limit):
 
-    result = get_angular_limit(ctx, fpu_id, serialnumber, which_limit)
+    result = get_angular_limit(ctx, fpu_id,  which_limit)
 
     if result is None:
         return False
     return result["result"] == TestResult.OK
 
 
-def get_colldect_passed_p(ctx, fpu_id, serialnumber):
-    return get_anglimit_passed_p(ctx, fpu_id, serialnumber, "beta_collision")
+def get_colldect_passed_p(ctx, fpu_id):
+    return get_anglimit_passed_p(ctx, fpu_id, "beta_collision")
 
 
 def set_protection_limit(ctx, fpu_id, which_limit, measured_val):

@@ -96,7 +96,7 @@ def measure_datum_repeatability(ctx, pars=None):
                 ipath = store_image(
                     pos_rep_cam,
                     "{sn}/{tn}/{ts}/{tp}-{tc:02d}-{ic:03d}-.bmp",
-                    sn=fpu_config[fpu_id]["serialnumber"],
+                    sn=ctx.fpu_config[fpu_id]["serialnumber"],
                     tn="datum-repeatability",
                     ts=ttamp,
                     tp=testphase,

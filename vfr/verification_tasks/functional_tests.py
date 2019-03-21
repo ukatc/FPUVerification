@@ -155,7 +155,7 @@ def test_limit(ctx, which_limit, pars=None):
         sn = ctx.fpu_config[fpu_id]["serialnumber"]
 
         if get_anglimit_passed_p(
-            ctx, fpu_id, sn, which_limit,
+            ctx, fpu_id, which_limit,
         ) and (not ctx.opts.repeat_passed_tests):
 
             print (
