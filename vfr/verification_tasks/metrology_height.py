@@ -29,13 +29,14 @@ from vfr.tests_common import (
 
 
 from ImageAnalysisFuncs.analyze_metrology_height import (
+    ImageAnalysisError,
     methtHeight,
     eval_met_height_inspec,
     METROLOGY_HEIGHT_ANALYSIS_ALGORITHM_VERSION,
 )
 
 
-def measure_metrology_height(ctx, parse=None):
+def measure_metrology_height(ctx, pars=None):
 
     tstamp = timestamp()
     if ctx.opts.mockup:
@@ -63,7 +64,7 @@ def measure_metrology_height(ctx, parse=None):
         # get sorted positions (this is needed because the turntable can only
         # move into one direction)
         for fpu_id, stage_position in get_sorted_positions(
-            ctx.measure_fpuset, pars.METROLOGY_HEIGHT_POSITIONS
+            ctx.measure_fpuset, pars.MET_HEIGHT_POSITIONS
         ):
             # move rotary stage to POS_REP_POSN_N
             hw.turntable_safe_goto(ctx.gd, ctx.grid_state, stage_position)
@@ -91,7 +92,7 @@ def measure_metrology_height(ctx, parse=None):
 def eval_metrology_height(ctx, met_height_analysis_pars, met_height_evaluation_pars):
 
     for fpu_id in ctx.eval_fpuset:
-        image = get_metrology_height_images(ctx, fpu_id)
+        image = get_metrology_height_images(ctx, fpu_id)["images"]
 
         try:
 
@@ -105,7 +106,7 @@ def eval_metrology_height(ctx, met_height_analysis_pars, met_height_evaluation_p
                 pars=met_height_evaluation_pars,
             )
 
-            result = TestResult.OK if result_in_spec else TestResult.FAILED
+            test_result = TestResult.OK if result_in_spec else TestResult.FAILED
 
             errmsg = None
 
@@ -120,7 +121,7 @@ def eval_metrology_height(ctx, met_height_analysis_pars, met_height_evaluation_p
             fpu_id,
             metht_small_target_height=metht_small_target_height,
             metht_large_target_height=metht_large_target_height,
-            test_result=testResult,
+            test_result=test_result,
             errmsg=errmsg,
             analysis_version=METROLOGY_HEIGHT_ANALYSIS_ALGORITHM_VERSION,
         )

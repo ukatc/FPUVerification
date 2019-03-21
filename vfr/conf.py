@@ -292,5 +292,5 @@ MET_HEIGHT_ANALYSIS_PARS = Namespace(
 )
 
 MET_HEIGHT_EVALUATION_PARS = Namespace(
-    METHT_HEIGHT_TOLERANCE=NaN  # maximum allowable height of both targets, in millimeter
+    MET_HEIGHT_TOLERANCE=NaN  # maximum allowable height of both targets, in millimeter
 )

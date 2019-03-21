@@ -44,6 +44,7 @@ from vfr.tests_common import (
 )
 
 from ImageAnalysisFuncs.analyze_positional_repeatability import (
+    ImageAnalysisError,
     posrepCoordinates,
     evaluate_positional_verification,
     POSITIONAL_VERIFICATION_ALGORITHM_VERSION,

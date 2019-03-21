@@ -32,6 +32,7 @@ from vfr.tests_common import (
 
 
 from ImageAnalysisFuncs.analyze_pupil_alignment import (
+    ImageAnalysisError,
     pupalnCoordinates,
     evaluate_pupil_alignment,
     PUPIL_ALIGNMENT_ALGORITHM_VERSION,
