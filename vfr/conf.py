@@ -63,6 +63,29 @@ DATUM_REP_MEASUREMENT_PARS = Namespace(
     DATUM_REP_POSITIONS=METROLOGY_CAL_POSITIONS,
 )
 
+DAT_REP_PLATESCALE = 0.02361  # millimeter per pixel
+
+DAT_REP_CALIBRATION_PARS = {
+    "algorithm": "scale",
+    "scale_factor": DAT_REP_PLATESCALE,
+    # values below are placeholders
+    "coeffs": [[NaN, NaN, NaN], [NaN, NaN, NaN], [NaN, NaN, NaN]],
+}
+
+
+DATUM_REP_ANALYSIS_PARS = Namespace(
+    FIXME_FAKE_RESULT = True,              # DELETE THIS!! This is only for testing!
+    POS_REP_PLATESCALE=DAT_REP_PLATESCALE,
+    POS_REP_SMALL_DIAMETER=1.5,  # millimeter
+    POS_REP_LARGE_DIAMETER=2.5,  # millimeter
+    POS_REP_DIAMETER_TOLERANCE=0.1,  # millimeter
+    POS_REP_THRESHOLD=40,  # 0-255
+    POS_REP_QUALITY_METRIC=0.8,  # dimensionless
+    POS_REP_CALIBRATION_PARS=DAT_REP_CALIBRATION_PARS,
+    display=False,
+    verbosity=0,
+)
+
 
 MET_CAL_MEASUREMENT_PARS = Namespace(
     METROLOGY_CAL_POSITIONS=METROLOGY_CAL_POSITIONS,

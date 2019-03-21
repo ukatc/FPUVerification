@@ -23,6 +23,7 @@ from vfr.conf import (
     ALPHA_DATUM_OFFSET,
     COLLDECT_MEASUREMENT_PARS,
     DATUM_REP_MEASUREMENT_PARS,
+    DATUM_REP_ANALYSIS_PARS,
     IMAGE_ROOT_FOLDER,
     MET_CAL_FIBRE_ANALYSIS_PARS,
     MET_CAL_TARGET_ANALYSIS_PARS,
@@ -388,7 +389,7 @@ if __name__ == "__main__":
         print ("[%s] ###" % T.EVAL_DATUM_REP)
         eval_datum_repeatability(
             context,
-            POS_REP_ANALYSIS_PARS,
+            DATUM_REP_ANALYSIS_PARS,
         )
 
     if T.MEASURE_PUP_ALGN in tasks:

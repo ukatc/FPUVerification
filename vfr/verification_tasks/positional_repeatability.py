@@ -47,7 +47,7 @@ from ImageAnalysisFuncs.analyze_positional_repeatability import (
 from Gearbox.gear_correction import GearboxFitError, fit_gearbox_correction
 
 
-def measure_positional_repeatability(ctx, parse=None):
+def measure_positional_repeatability(ctx, pars=None):
 
     tstamp = timestamp()
     if ctx.opts.mockup:
@@ -62,7 +62,7 @@ def measure_positional_repeatability(ctx, parse=None):
         0.0, manual_lamp_control=ctx.opts.manual_lamp_control
     )
 
-    with use_ambientlight(manual_lamp_control=ctx.opts.manual_lamp_control):
+    with hw.use_ambientlight(manual_lamp_control=ctx.opts.manual_lamp_control):
         # initialize pos_rep camera
         # set pos_rep camera exposure time to POSITIONAL_REP_EXPOSURE milliseconds
         POS_REP_CAMERA_CONF = {
