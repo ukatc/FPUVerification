@@ -90,8 +90,8 @@ from vfr.verification_tasks.report import report, dump_data
 
 
 if __name__ == "__main__":
-    print ("starting verification")
     opts = parse_args()
+    print ("starting verification")
     print ("tasks = %r" % opts.tasks)
 
     env = open_database_env(mockup=opts.mockup)

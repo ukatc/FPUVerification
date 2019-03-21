@@ -1,0 +1,2 @@
+#!/bin/sh
+./vfrig --help | ${PAGER:-less}

@@ -38,11 +38,37 @@ summary = cleandoc(
 
     {DEFAULT_TASKS!r}
 
-    Overview on tasks & operations:
+    CONFIGURATION FILE
+    ==================
 
+    The configuration file is an ASCII file which associates
+    logical FPU IDs as used in the EtherCAN interface with
+    a serial number. On initialization, the serial number is
+    flashed on the FPU, and all captured data is associated with
+    the serial number. The configuration file also contains
+    the initial position of each FPU with which the protection
+    database is initialized. The file content is a Python data structure
+    which looks, for example, like this:
+
+        [
+        {{ 'serialnumber' : 'MP010', 'fpu_id' : 0, 'pos' : (-180, 0) }}
+        {{ 'serialnumber' : 'MP001', 'fpu_id' : 1, 'pos' : (-180, 3.2) }}
+        {{ 'serialnumber' : 'MP002', 'fpu_id' : 2, 'pos' : (-180, 0) }} ,
+        {{ 'serialnumber' : 'MP003', 'fpu_id' : 3, 'pos' : (-180, 0) }}
+        {{ 'serialnumber' : 'MP004', 'fpu_id' : 4, 'pos' : (-180, 0) }}
+        {{ 'serialnumber' : 'MP005', 'fpu_id' : 5, 'pos' : (-180, 0) }}
+        ]
+
+    The structure is a list of dictionaries, one for each FPU. Each
+    entry has the serial number under the key "serialnumber", the
+    logical FPU id under the key "fpu_id", and the initial (alpha, beta)
+    coordinates under the key "pos".
+
+    OVERVIEW ON TASKS & OPERATIONS:
+    ===============================
 
     1) INITIALIZATION & SET-UP
-    ==========================
+    --------------------------
 
 
     {TST_INITPOS!r:<20}  - Initialize the position database with the position
@@ -64,7 +90,7 @@ summary = cleandoc(
 
 
     2) FUNCTIONAL TESTS
-    ===================
+    -------------------
 
     {TST_DATUM!r:<20}  - test functionality of datum operation, and store result
 
@@ -87,11 +113,11 @@ summary = cleandoc(
 
 
     3) FPU CONFORMANCE TESTS AND MEASUREMENTS
-    =========================================
+    -----------------------------------------
 
 
     3a) TEST AND EVALUATION
-    -----------------------
+    .......................
 
     {TST_DATUM_REP!r:<20}  - test datum repeatability
 
@@ -107,7 +133,7 @@ summary = cleandoc(
 
 
     3b) MEASUREMENT ALONE
-    ---------------------
+    .....................
 
     These tests perform measurements on the hardware, while
     the image analysis and evaluation steps can be done later.
@@ -131,7 +157,7 @@ summary = cleandoc(
 
 
     3c) EVALUATION ALONE
-    --------------------
+    ....................
 
     These evaluations operate on stored data and can be done
     without the hardware being present. They are provided
@@ -149,7 +175,7 @@ summary = cleandoc(
 
 
     4) RESULTS
-    ==========
+    ----------
 
     {TASK_REPORT!r:<20}  - report results of all performed tests
     {TASK_DUMP!r:<20}  - dump content of last database entry for
