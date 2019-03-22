@@ -54,7 +54,19 @@ from vfr import hwsimulation as hws
 from vfr.turntable import go_collision_test_pos
 
 
+class DatumFailure (Exception):
+    pass
+
+class CollisionDetectionFailure(Exception):
+    pass
+
+class LimitDetectionFailure(Exception):
+    pass
+
+
 def test_datum(ctx, dasel=DASEL_BOTH):
+
+    failed_fpus = []
 
     ctx.gd.pingFPUs(ctx.grid_state, fpuset=ctx.measure_fpuset)
 
@@ -101,15 +113,26 @@ def test_datum(ctx, dasel=DASEL_BOTH):
         success = False
         valid = False
         rigstate = str(e)
+
     print ("findDatum finished, success=%s, rigstate=%s" % (success, rigstate))
 
     if valid:
         save_datum_result(ctx, dasel, rigstate)
 
+    for fpu_id, fpu in enumerate(ctx.grid_state.FPU):
+        if fpu_state != FPST_AT_DATUM:
+            failed_fpus.append( (fpu_id, ctx.fpu_config[fpu_id]["serialnumber"]))
+
+    if failed_fpus:
+        raise DatumFailure("Datum test failed for FPUs %r" % failed_fpus)
+
+
+
 
 def test_limit(ctx, which_limit, pars=None):
 
     tstamp = timestamp()
+    failed_fpus = []
     if ctx.opts.mockup:
         # replace all hardware functions by mock-up interfaces
         hw = hws
@@ -224,6 +247,7 @@ def test_limit(ctx, which_limit, pars=None):
             test_succeeded = False
             test_valid = False
             diagnostic = str(e)
+            failed_fpus.append((fpu_id, ctx.fpu_config[gpu_id]["serialnumber"]))
 
         print (
             "FPU %i test result: valid=%s, succeeded=%r, diagnostic=%s"
@@ -302,3 +326,9 @@ def test_limit(ctx, which_limit, pars=None):
     if which_limit == "beta_collision":
         # home turntable
         hw.safe_home_turntable(ctx.gd, ctx.grid_state)
+
+    if failed_fpus:
+        if which_limit == "beta_collision":
+            raise CollisionDetectionFailure("test of beta collision detection failed for FPUs %r" % failed_fpus)
+        else:
+            raise LimitDetectionFailure("limit detection for %s failed for FPUs %r" % (which_limit, failed_fpus))
