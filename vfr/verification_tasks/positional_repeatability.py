@@ -1,5 +1,7 @@
 from __future__ import absolute_import, division, print_function
 
+import warnings
+
 from fpu_commands import gen_wf
 from Gearbox.gear_correction import GearboxFitError, fit_gearbox_correction
 from GigE.GigECamera import BASLER_DEVICE_CLASS, DEVICE_CLASS, IP_ADDRESS
@@ -20,6 +22,11 @@ from vfr.db.positional_repeatability import (
     save_positional_repeatability_images,
     save_positional_repeatability_result,
 )
+
+from vfr.db.pupil_alignment import get_pupil_alignment_passed_p
+
+from vfr.db.colldect_limits import get_angular_limit, get_anglimit_passed_p
+
 from vfr.tests_common import (
     dirac,
     find_datum,
@@ -66,37 +73,41 @@ def measure_positional_repeatability(ctx, pars=None):
             ctx.eval_fpuset, pars.POS_REP_POSITIONS
         ):
 
+            sn = ctx.fpu_config[fpu_id]["serialnumber"]
             if not get_datum_repeatability_passed_p(ctx, fpu_id):
                 print(
                     "FPU %s: skipping positional repeatability measurement because"
                     " there is no passed datum repeatability test"
-                    % ctx.fpu_config["serialnumber"]
+                    % sn
                 )
                 continue
 
-            if not get_pupil_alignment_passed_p(ctx, fpu_config, fpu_id):
-                print(
-                    "FPU %s: skipping positional repeatability measurement because"
-                    " there is no passed pupil alignment test"
-                    % ctx.fpu_config["serialnumber"]
-                )
-                continue
+            if not get_pupil_alignment_passed_p(ctx, fpu_id):
+                if ctx.opts.skip_fibre:
+                    warnings.warn("skipping check for pupil alignment because '--skip-fibre' flag is set")
+                else:
+                    print(
+                        "FPU %s: skipping positional repeatability measurement because"
+                        " there is no passed pupil alignment test"
+                        " (use '--skip-fibre' flag if you want to omit that test)"
+                        % sn
+                    )
+                    continue
 
             if get_positional_repeatability_passed_p(ctx, fpu_id) and (
                 not ctx.opts.repeat_passed_tests
             ):
 
-                sn = ctx.fpu_config[fpu_id]["serialnumber"]
                 print(
                     "FPU %s : positional repeatability test already passed, skipping test"
                     % sn
                 )
                 continue
 
-            alpha_min = get_angular_limit(ctx, fpu_id, sn, "alpha_min")
-            alpha_max = get_angular_limit(ctx, fpu_id, sn, "alpha_max")
-            beta_min = get_angular_limit(ctx, fpu_id, sn, "beta_min")
-            beta_max = get_angular_limit(ctx, fpu_id, sn, "beta_max")
+            alpha_min = get_angular_limit(ctx, fpu_id, "alpha_min")["val"]
+            alpha_max = get_angular_limit(ctx, fpu_id, "alpha_max")["val"]
+            beta_min = get_angular_limit(ctx, fpu_id, "beta_min")["val"]
+            beta_max = get_angular_limit(ctx, fpu_id, "beta_max")["val"]
 
             if (
                 (alpha_min is None)
@@ -117,33 +128,35 @@ def measure_positional_repeatability(ctx, pars=None):
 
                 ipath = store_image(
                     pos_rep_cam,
-                    "{sn}/{tn}/{ts}/{itr:03d}-{inc:03d}-{dir:03d}-{alpha:+08.3f}-{beta:+08.3f}.bmp",
-                    sn=ctx.fpu_config[fpu_id]["serialnumber"],
+                    "{sn}/{tn}/{ts}/{itr:03d}-{inc:03d}-{dir:03d}-({alpha:+08.3f},_{beta:+08.3f}).bmp",
+                    sn=sn,
                     tn="positional-repeatability",
                     ts=tstamp,
                     itr=iteration,
                     inc=increment,
                     dir=direction,
+                    alpha=alpha,
+                    beta=beta
                 )
 
                 return ipath
 
-            for i in range(pars.POSITIONAL_REP_ITERATIONS):
-                gd.findDatum(ctx.grid_state, fpuset=[fpu_id])
+            for i in range(pars.POS_REP_ITERATIONS):
+                find_datum(ctx.gd, ctx.grid_state, opts=ctx.opts)
 
                 step_a = (
                     alpha_max - alpha_min - 2 * pars.POS_REP_SAFETY_MARGIN
-                ) / pars.POSITIONAL_REP_NUM_INCREMENTS
+                ) / pars.POS_REP_NUM_INCREMENTS
                 step_b = (
-                    beta_max - beta_min - 2 * POS_REP_SAFETY_MARGIN
-                ) / pars.POSITIONAL_REP_NUM_INCREMENTS
+                    beta_max - beta_min - 2 * pars.POS_REP_SAFETY_MARGIN
+                ) / pars.POS_REP_NUM_INCREMENTS
 
                 alpha0 = alpha_min + pars.POS_REP_SAFETY_MARGIN
                 beta0 = beta_min + pars.POS_REP_SAFETY_MARGIN
 
                 for j in range(4):
 
-                    M = pars.POSITIONAL_REP_INCREMENTS
+                    M = pars.POS_REP_NUM_INCREMENTS
                     for k in range(M):
                         if j == 0:
                             ka = k
@@ -153,18 +166,23 @@ def measure_positional_repeatability(ctx, pars=None):
                             kb = 0
                         elif j == 2:
                             ka = 0
-                            kb = l
+                            kb = k
                         elif j == 3:
                             ka = 0
                             kb = M - k - 1
 
                         abs_alpha = alpha0 + step_a * ka
                         abs_beta = beta0 + step_b * kb
+
+                        if ctx.opts.verbosity > 1:
+                            print("FPU %s measurement [%2i, %2i, %2i]: going to position (%7.2f, %7.2f)" %
+                                  (sn, i, j, k, abs_alpha, abs_beta))
+
                         goto_position(
                             ctx.gd, abs_alpha, abs_beta, ctx.grid_state, fpuset=[fpu_id]
                         )
 
-                        angles = ctx.gd.countedAngles()
+                        angles = ctx.gd.countedAngles(ctx.grid_state, fpuset=ctx.measure_fpuset)
 
                         alpha_count = angles[fpu_id][0]
                         beta_count = angles[fpu_id][1]
@@ -191,22 +209,21 @@ def measure_positional_repeatability(ctx, pars=None):
                 fpu_id,
                 image_dict_alpha=image_dict_alpha,
                 image_dict_beta=image_dict_beta,
-                waveform_pars=POS_REP_WAVEFORM_PARS,
+                waveform_pars=pars.POS_REP_WAVEFORM_PARS,
             )
 
 
 def eval_positional_repeatability(
-    ctx, pos_rep_calibration_pars, pos_rep_analysis_pars, pos_rep_evaluation_pars
+    ctx, pos_rep_analysis_pars, pos_rep_evaluation_pars
 ):
     def analysis_func(ipath):
         return posrepCoordinates(
             ipath,
-            POS_REP_CALIBRATION_PARS=pos_rep_calibration_pars,
             pars=pos_rep_analysis_pars,
         )
 
     for fpu_id in ctx.eval_fpuset:
-        meaurement = get_positional_repeatability_images(ctx, ctx.fpu_config, fpu_id)
+        measurement = get_positional_repeatability_images(ctx, fpu_id)
 
         images_alpha = measurement["images_alpha"]
         images_beta = measurement["images_beta"]
@@ -255,33 +272,47 @@ def eval_positional_repeatability(
                     y_measured_big,
                 )
 
-            positional_repeatability_mm = evaluate_positional_repeatability(
-                analysis_results_alpha_short,
-                analysis_results_beta_short,
-                pars=pos_rep_evaluation_pars,
+                (posrep_alpha_max_at_angle,
+                 posrep_beta_max_at_angle,
+                 posrep_alpha_max,
+                 posrep_beta_max,
+                 posrep_rss_mm,
+                )  = evaluate_positional_repeatability(
+                    analysis_results_alpha_short,
+                    analysis_results_beta_short,
+                    pars=pos_rep_evaluation_pars,
             )
 
             positional_repeatability_has_passed = (
-                positional_repeatability_mm <= POSITIONAL_REP_PASS
+                posrep_rss_mm <= pos_rep_evaluation_pars.POS_REP_PASS
             )
 
-            gearbox_correction = fit_gearbox_correction(analysis_results)
+            gearbox_correction = fit_gearbox_correction(analysis_results_alpha_short, analysis_results_beta_short)
+            errmsg = ""
 
         except (ImageAnalysisError, GearboxFitError) as e:
             analysis_results = None
             errmsg = str(e)
-            positional_repeatability_mm = NaN
+            posrep_alpha_max_at_angle=NaN,
+            posrep_beta_max_at_angle=NaN,
+            posrep_alpha_max=NaN,
+            posrep_beta_max=NaN,
+            posrep_rss_mm=NaN,
             positional_repeatability_has_passed = TestResult.NA
 
         save_positional_repeatability_result(
             ctx,
             fpu_id,
-            pos_rep_calibration_pars=pos_rep_calibration_pars,
+            pos_rep_calibration_pars=pos_rep_analysis_pars.POS_REP_CALIBRATION_PARS,
             analysis_results_alpha=analysis_results_alpha,
             analysis_results_beta=analysis_results_beta,
-            positional_repeatability_mm=positional_repeatability_mm,
+            posrep_alpha_max_at_angle=posrep_alpha_max_at_angle,
+            posrep_beta_max_at_angle=posrep_beta_max_at_angle,
+            posrep_alpha_max=posrep_alpha_max,
+            posrep_beta_max=posrep_beta_max,
+            posrep_rss_mm=posrep_rss_mm,
             positional_repeatability_has_passed=positional_repeatability_has_passed,
             gearbox_correction=gearbox_correction,
-            ermmsg=errmsg,
+            errmsg=errmsg,
             analysis_version=POSITIONAL_REPEATABILITY_ALGORITHM_VERSION,
         )

@@ -1,6 +1,6 @@
 # -*- coding: utf-8-unix -*-
 from __future__ import print_function, division
-from numpy import NaN, mean, std, array
+from numpy import NaN, mean, std, array, hstack
 from numpy.linalg import norm
 
 import cv2
@@ -8,7 +8,7 @@ from math import pi, sqrt
 from matplotlib import pyplot as plt
 
 from DistortionCorrection import correct
-from ImageAnalysisFuncs.base import ImageAnalysisError
+from ImageAnalysisFuncs.base import ImageAnalysisError, rss
 
 
 # exceptions which are raised if image analysis functions fail
@@ -68,9 +68,9 @@ def posrepCoordinates(
 
     if pars.verbosity > 5:
         print(
-            "Lower/upper perimeter limits of small & large "
+            "Image %s: Lower/upper perimeter limits of small & large "
             "targets in mm: %.2f / %.2f ; %.2f / %.2f"
-            % (smallPerimeterLo, smallPerimeterHi, largePerimeterLo, largePerimeterHi)
+            % (image_path, smallPerimeterLo, smallPerimeterHi, largePerimeterLo, largePerimeterHi)
         )
 
     centres = {}
@@ -104,8 +104,8 @@ def posrepCoordinates(
             circularity = 4 * pi * (area / (perimeter * perimeter))
         if pars.verbosity > 5:
             print(
-                "ContourID - %i; perimeter - %.2f; circularity - %.2f"
-                % (i, perimeter, circularity)
+                "Image %s: ContourID - %i; perimeter - %.2f; circularity - %.2f"
+                % (image_path, i, perimeter, circularity)
             )
         if circularity > pars.POS_REP_QUALITY_METRIC:
             if perimeter > smallPerimeterLo and perimeter < smallPerimeterHi:
@@ -156,31 +156,31 @@ def posrepCoordinates(
 
     if multipleSmall == True:
         raise RepeatabilityAnalysisError(
-            "Multiple small targets found - tighten parameters or use "
-            "display option to investigate images for contamination"
+            "Image %s: Multiple small targets found - tighten parameters or use "
+            "display option to investigate images for contamination" % image_path
         )
     if multipleLarge == True:
         raise RepeatabilityAnalysisError(
-            "Multiple large targets found - tighten parameters or"
-            " use display option to investigate images for contamination"
+            "Image %s: Multiple large targets found - tighten parameters or"
+            " use display option to investigate images for contamination" % image_path
         )
 
     if smallTargetFound == False:
         raise RepeatabilityAnalysisError(
-            "Small target not found - "
-            "loosen diameter tolerance or change image thresholding"
+            "Image %s: Small target not found - "
+            "loosen diameter tolerance or change image thresholding" % image_path
         )
 
     if largeTargetFound == False:
         raise RepeatabilityAnalysisError(
-            "Large target not found - "
-            "loosen diameter tolerance or change image thresholding"
+            "Image %s: Large target not found - "
+            "loosen diameter tolerance or change image thresholding" % image_path
         )
 
     if pars.verbosity > 5:
         print(
-            "Contour %i = small target, contour %i = large target"
-            % (centres["Small Target"][3], centres["Large Target"][3])
+            "Image %s: Contour %i = small target, contour %i = large target"
+            % (image_path, centres["Small Target"][3], centres["Large Target"][3])
         )
 
     pixels_posrep_small_target_x = centres["Small Target"][0]
@@ -213,19 +213,21 @@ def posrepCoordinates(
 
     # target separation check - the values here are not configurable, as
     # they represent real mechanical tolerances
-    targetSeparation = sqrt(
-        (posrep_small_target_x - posrep_large_target_x) ** 2
-        + (posrep_small_target_y - posrep_large_target_y) ** 2
+    targetSeparation = rss(
+        [
+            posrep_small_target_x - posrep_large_target_x,
+            posrep_small_target_y - posrep_large_target_y,
+        ]
     )
     if pars.verbosity > 5:
         print(
-            "Target separation is %.3f mm.  Specification is 2.375 +/- 0.1 mm."
-            % targetSeparation
+            "Image %s: Target separation is %.3f mm.  Specification is 2.375 +/- 0.1 mm."
+            % (image_path, targetSeparation)
         )
     if targetSeparation > 2.475 or targetSeparation < 2.275:
         raise RepeatabilityAnalysisError(
-            "Target separation is out of spec - "
-            "use display option to check for target-like reflections"
+            "Image %s: Target separation is out of spec - "
+            "use display option to check for target-like reflections" % image_path
         )
 
     return (
@@ -238,7 +240,7 @@ def posrepCoordinates(
     )
 
 
-def evaluate_datum_repeatability(datumed_coords, moved_coords):
+def evaluate_datum_repeatability(datumed_coords, moved_coords, pars=None):
     """Takes two lists of (x,y) coordinates : coordinates
     for unmoved FPU, for an FPU which was only datumed, for an FPU which
     was moved, then datumed.
@@ -280,7 +282,7 @@ def evaluate_datum_repeatability(datumed_coords, moved_coords):
 def get_angular_error(dict_of_coords, idx):
     coords_per_angles = {}
 
-    for k, v in dict_of_coordinates.items():
+    for k, v in dict_of_coords.items():
         ang = k[idx]
         if not coords_per_angles.has_key(ang):
             coords_per_angles[ang] = []
@@ -288,15 +290,17 @@ def get_angular_error(dict_of_coords, idx):
         coords_per_angles[ang].append(v)
 
     max_err_at_angle = {}
-    for k, v in coords_per_angles:
+    for k, v in coords_per_angles.items():
+        va = array(v)
         avg = mean(
-            v, axis=0
+            va, axis=0
         )  # this is an average of big and small target coords separately
-        err_small = map(norm, v[:2] - avg[:2])
-        err_big = map(norm, v[2:] - avg[2:])
+        err_small = map(norm, va[:,:2] - avg[:2])
+        err_big = map(norm, va[:,2:] - avg[2:])
 
+        # get maximum of both vectors
         max_err_at_angle[k] = max(
-            [err_small, err_big]
+            hstack([err_small, err_big])
         )  # this is a maximum of all errors
 
     poserr_max = max(max_err_at_angle.values())
@@ -305,7 +309,7 @@ def get_angular_error(dict_of_coords, idx):
 
 
 def evaluate_positional_repeatability(
-    dict_of_coordinates_alpha, dict_of_coordinates_beta
+        dict_of_coordinates_alpha, dict_of_coordinates_beta, pars=None,
 ):
     """Takes two dictionaries. The keys of each dictionary
     are the (alpha, beta, i,j,k) coordinates  indices of the positional
@@ -349,14 +353,14 @@ def evaluate_positional_repeatability(
         dict_of_coordinates_beta, 1
     )
 
-    posrep_rss = sqrt(posrep_alpha_max ** 2 + posrep_beta_max ** 2)
+    posrep_rss_mm = rss([posrep_alpha_max, posrep_beta_max])
 
     return (
         posrep_alpha_max_at_angle,
         posrep_beta_max_at_angle,
         posrep_alpha_max,
         posrep_beta_max,
-        posrep_rss,
+        posrep_rss_mm,
     )
 
 

@@ -1,5 +1,7 @@
 from __future__ import absolute_import, division, print_function
 
+from numpy import NaN
+
 from vfr.db.base import (
     GIT_VERSION,
     TestResult,
@@ -12,7 +14,7 @@ RECORD_TYPE = "positional-repeatability"
 
 
 def save_positional_repeatability_images(
-    ctx, fpu_id, images_dict_alpha=None, images_dict_beta=None, waveform_pars={}
+    ctx, fpu_id, image_dict_alpha=None, image_dict_beta=None, waveform_pars={}
 ):
 
     # define two closures - one for the unique key, another for the stored value
@@ -54,7 +56,11 @@ def save_positional_repeatability_result(
     pos_rep_calibration_pars=None,
     analysis_results_alpha=None,
     analysis_results_beta=None,
-    positional_repeatability_mm=None,
+    posrep_alpha_max_at_angle={},
+    posrep_beta_max_at_angle={},
+    posrep_alpha_max=NaN,
+    posrep_beta_max=NaN,
+    posrep_rss_mm=NaN,
     gearbox_correction={},
     analysis_version=None,
     errmsg="",
@@ -72,9 +78,13 @@ def save_positional_repeatability_result(
         val = repr(
             {
                 "calibration_pars": pos_rep_calibration_pars,
-                "analysis_results_alpha": analysis_results_alpha,
-                "analysis_results_beta": analysis_results_beta,
-                "repeatability_millimeter": positional_repeatability_mm,
+                "analysis_results_alpha" : analysis_results_alpha,
+                "analysis_results_beta" : analysis_results_beta,
+                "posrep_alpha_max_at_angle" : posrep_alpha_max_at_angle,
+                "posrep_beta_max_at_angle" : posrep_beta_max_at_angle,
+                "posrep_alpha_max" : posrep_alpha_max,
+                "posrep_beta_max" : posrep_beta_max,
+                "posrep_rss_mm" : posrep_rss_mm,
                 "result": positional_repeatability_has_passed,
                 "gearbox_correction": gearbox_correction,
                 "error_message": errmsg,

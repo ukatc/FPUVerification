@@ -45,7 +45,7 @@ def parse_args():
     )
 
     parser.add_argument(
-        "-F",
+        "-fmt",
         "--report-format",
         default="terse",
         choices=["terse", "long", "extensive"],
@@ -61,7 +61,7 @@ def parse_args():
     )
 
     parser.add_argument(
-        "-M",
+        "-mlc",
         "--manual-lamp-control",
         default=False,
         action="store_true",
@@ -69,7 +69,7 @@ def parse_args():
     )
 
     parser.add_argument(
-        "-r",
+        "-rf",
         "--resetFPUs",
         default=False,
         action="store_true",
@@ -77,7 +77,7 @@ def parse_args():
     )
 
     parser.add_argument(
-        "-ra",
+        "-ar",
         "--alwaysResetFPUs",
         default=False,
         action="store_true",
@@ -85,7 +85,7 @@ def parse_args():
     )
 
     parser.add_argument(
-        "-R",
+        "-ri",
         "--re-initialize",
         default=False,
         action="store_true",
@@ -93,7 +93,7 @@ def parse_args():
     )
 
     parser.add_argument(
-        "-S",
+        "-sn",
         "--snset",
         default=None,
         help="""apply tasks only to passed set of serial numbers, passed as "['MP001', 'MP002', ...]" """,
@@ -108,7 +108,7 @@ def parse_args():
     )
 
     parser.add_argument(
-        "-s",
+        "-rsn",
         "--reuse-serialnum",
         default=False,
         action="store_true",
@@ -116,7 +116,7 @@ def parse_args():
     )
 
     parser.add_argument(
-        "-p",
+        "-rpt",
         "--repeat-passed-tests",
         default=False,
         action="store_true",
@@ -124,7 +124,7 @@ def parse_args():
     )
 
     parser.add_argument(
-        "-u",
+        "-upl",
         "--update-protection-limits",
         default=False,
         action="store_true",
@@ -132,7 +132,7 @@ def parse_args():
     )
 
     parser.add_argument(
-        "-t",
+        "-pt",
         "--protection-tolerance",
         type=float,
         default=0.2,
@@ -148,7 +148,15 @@ def parse_args():
     )
 
     parser.add_argument(
-        "-w",
+        "-sf",
+        "--skip-fibre",
+        default=False,
+        action="store_true",
+        help="skip measurements and dependencies which require fibres to be present",
+    )
+
+    parser.add_argument(
+        "-rw",
         "--rewind_fpus",
         default=False,
         action="store_true",
@@ -156,7 +164,7 @@ def parse_args():
     )
 
     parser.add_argument(
-        "-g",
+        "-gp",
         "--gateway_port",
         metavar="GATEWAY_PORT",
         type=int,
@@ -165,7 +173,7 @@ def parse_args():
     )
 
     parser.add_argument(
-        "-a",
+        "-ga",
         "--gateway_address",
         metavar="GATEWAY_ADDRESS",
         type=str,
@@ -184,7 +192,7 @@ def parse_args():
     )
 
     parser.add_argument(
-        "-D",
+        "-dd",
         "--bus-repeat-dummy-delay",
         metavar="BUS_REPEAT_DUMMY_DELAY",
         type=int,

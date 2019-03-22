@@ -156,12 +156,13 @@ def find_datum(gd, grid_state, opts=None, uninitialized=False):
             )
 
         else:
+            timeout=DATUM_TIMEOUT_ENABLE
             if verbosity > 2:
                 print(
                     "issuing findDatum (%i FPUs, timeout=%r):"
                     % (len(unreferenced), timeout)
                 )
-            gd.findDatum(grid_state, fpuset=unreferenced, timeout=DATUM_TIMEOUT_ENABLE)
+            gd.findDatum(grid_state, fpuset=unreferenced, timeout=timeout)
 
         if verbosity > 5:
             print("findDatum finished, states=", list_states(grid_state))
