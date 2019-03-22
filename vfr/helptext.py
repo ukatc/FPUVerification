@@ -185,3 +185,68 @@ summary = cleandoc(
     ..................................................................
     """
 )
+
+
+examples = cleandoc(
+    """
+    -----------------------------------------------------------------
+
+
+
+
+    Examples
+    ========
+
+    we assume we have a file name "fpus_batch1.cfg" with the content:
+
+      ...........................................................
+      [
+      {{ 'serialnumber' : 'MP010', 'fpu_id' : 0, 'pos' : (-180, 0) }},
+      {{ 'serialnumber' : 'MP001', 'fpu_id' : 1, 'pos' : (-180, 3.2) }},
+      {{ 'serialnumber' : 'MP002', 'fpu_id' : 2, 'pos' : (-180, 0) }}  ,
+      {{ 'serialnumber' : 'MP003', 'fpu_id' : 3, 'pos' : (-180, 0) }},
+      {{ 'serialnumber' : 'MP004', 'fpu_id' : 4, 'pos' : (-180, 0) }},
+      {{ 'serialnumber' : 'MP005', 'fpu_id' : 5, 'pos' : (-180, 0) }},
+      ]
+      ...........................................................
+
+    The command
+
+      ./vfrig {TASK_SELFTEST}
+
+    will perform the self-test of the verification rig; "selftest_nonfibre"
+    will test only the functions which do not need fibres to be present.
+
+    The command
+
+      ./vfrig -f fpus_batch1.cfg {TST_INITPOS} {TST_FLASH}
+
+    will initialize the FPU by flashing the firmware with the serial numbers,
+    and initializing the position database to the positions in the
+    above config file.
+
+    The command
+
+      ./vfrig -f fpus_batch1.cfg {TST_INIT} {TST_FUNCTIONAL}
+
+    will to the above, and also perform the functional tests.
+
+
+    The command
+
+      ./vfrig -f fpus_batch1.cfg
+
+    will perform all the configured default tests, unless the functional
+    tests fail, and print out a report on the result.
+
+
+    This command:
+
+    ./vfrig -f fpus_batch1.cfg --verbosity=5 --mockup   -S"['MP010']" {TST_DATUM_REP}
+
+
+    will perform the datum repetability test for the FPU with serial number 'MP010',
+    and any tests which are required to do it.
+
+    """
+)

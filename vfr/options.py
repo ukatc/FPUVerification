@@ -8,7 +8,7 @@ from ast import literal_eval
 from os import environ
 
 from fpu_constants import *
-from vfr.helptext import summary
+from vfr.helptext import summary, examples
 from vfr.conf import DEFAULT_TASKS
 from vfr.db.snset import get_snset
 from vfr.TaskLogic import T
@@ -25,6 +25,7 @@ def parse_args():
 
     parser = argparse.ArgumentParser(
         description=summary.format(DEFAULT_TASKS=DEFAULT_TASKS, **T.__dict__),
+        epilog=examples.format(DEFAULT_TASKS=DEFAULT_TASKS, **T.__dict__),
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
