@@ -61,7 +61,7 @@ def metcalTargetCoordinates(image_path, pars=None):
     )
 
     if pars.verbosity > 5:
-        print (
+        print(
             "Lower/upper perimeter limits of small & large targets in mm: %.2f / %.2f ; %.2f / %.2f"
             % (smallPerimeterLo, smallPerimeterHi, largePerimeterLo, largePerimeterHi)
         )
@@ -96,7 +96,7 @@ def metcalTargetCoordinates(image_path, pars=None):
         if area > 0 and perimeter > 0:
             circularity = 4 * pi * (area / (perimeter * perimeter))
         if pars.verbosity > 5:
-            print (
+            print(
                 "ContourID - %i; perimeter - %.2f; circularity - %.2f"
                 % (i, perimeter, circularity)
             )
@@ -170,7 +170,7 @@ def metcalTargetCoordinates(image_path, pars=None):
         )
 
     if pars.verbosity > 5:
-        print (
+        print(
             "Contour %i = small target, contour %i = large target"
             % (centres["Small Target"][3], centres["Large Target"][3])
         )
@@ -190,7 +190,7 @@ def metcalTargetCoordinates(image_path, pars=None):
     )
 
     if pars.verbosity > 5:
-        print (
+        print(
             "Target separation is %.3f mm.  Specification is 2.375 +/- 0.1 mm."
             % targetSeparation
         )

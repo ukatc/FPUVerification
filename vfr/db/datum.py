@@ -1,8 +1,13 @@
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
 
 from FpuGridDriver import CAN_PROTOCOL_VERSION, DASEL_ALPHA, DASEL_BETA, DASEL_BOTH
-
-from vfr.db.base import GIT_VERSION, TestResult, save_test_result, get_test_result, timestamp
+from vfr.db.base import (
+    GIT_VERSION,
+    TestResult,
+    get_test_result,
+    save_test_result,
+    timestamp,
+)
 from vfr.db.snset import add_sns_to_set
 
 RECORD_TYPE = "findDatum"
@@ -25,7 +30,7 @@ def save_datum_result(ctx, dasel, rigstate):
             a_ok = ctx.grid_state.FPU[fpu_id].alpha_was_calibrated
             b_ok = ctx.grid_state.FPU[fpu_id].beta_was_calibrated
 
-        print ("%i : (alpha datumed=%s, beta datumed = %s)" % (fpu_id, a_ok, b_ok))
+        print("%i : (alpha datumed=%s, beta datumed = %s)" % (fpu_id, a_ok, b_ok))
 
         if (
             ((dasel == DASEL_ALPHA) and a_ok)

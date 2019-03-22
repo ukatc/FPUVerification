@@ -48,7 +48,7 @@ def methtHeight(
         if (betaScan[i + 1] - betaScan[i]) < 0:
             betaSide = i
             if pars.verbosity > 5:
-                print ("Beta arm side is at x-coordinate %i" % betaSide)
+                print("Beta arm side is at x-coordinate %i" % betaSide)
 
     if betaSide == 0:
         raise MetrologyHeightAnalysisError(
@@ -68,7 +68,7 @@ def methtHeight(
     noiseMetric = (threshstd - threshblurstd) / threshblurstd * 100
 
     if pars.verbosity > 5:
-        print ("Noise metric in thresholded image is %.2f" % noiseMetric)
+        print("Noise metric in thresholded image is %.2f" % noiseMetric)
 
     # pixel distances from side of beta arm to measurement points
     # these parameters could be made configurable but shouldn't need to be changed
@@ -103,9 +103,9 @@ def methtHeight(
                 break
 
     if pars.verbosity > 5:
-        print ("Arm surface points found - x:%s y:%s" % (armSurfaceX, armSurfaceY))
-        print ("Small target points found - x:%s y:%s" % (smallTargetX, smallTargetY))
-        print ("Large target points found - x:%s y:%s" % (largeTargetX, largeTargetY))
+        print("Arm surface points found - x:%s y:%s" % (armSurfaceX, armSurfaceY))
+        print("Small target points found - x:%s y:%s" % (smallTargetX, smallTargetY))
+        print("Large target points found - x:%s y:%s" % (largeTargetX, largeTargetY))
 
     # best fit straight line through 5 beta arm surface points
     armSurfaceDom = Polynomial.fit(armSurfaceX, armSurfaceY, 1, domain=(-1, 1))
@@ -129,7 +129,7 @@ def methtHeight(
     stdSmallTarget = std(smallTargetHeights) * pars.METHT_PLATESCALE
     stdLargeTarget = std(largeTargetHeights) * pars.METHT_PLATESCALE
     if pars.verbosity > 5:
-        print (
+        print(
             "Standard deviations of small/large target heights are %.3f and %.3f"
             % (stdSmallTarget, stdLargeTarget)
         )

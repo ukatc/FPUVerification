@@ -7,7 +7,7 @@ try:
     _PRODUCT_IDS[:] = [0xFAF0]
 
 except ImportError:
-    print (
+    print(
         ">>>>>>>>>>> Warning: Import of pylibftdi failed - probably dependency mismatch."
     )
 

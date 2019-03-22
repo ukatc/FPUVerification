@@ -1,7 +1,6 @@
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function
 
 from ast import literal_eval
-
 
 KEY = "serial-number-set"
 
@@ -37,7 +36,7 @@ def add_sns_to_set(ctx, new_serialnumbers):
             # literal_eval cannot parse a set (in Python2.7)
             txn.put(KEY, repr(list(existing_serial_numbers)))
             if verbosity > 2:
-                print (
+                print(
                     "db: adding serial numbers %r to set of seen FPUs"
                     % new_serialnumbers
                 )

@@ -1,94 +1,48 @@
 #!/usr/bin/env python
 
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function
 
-import sys
-import re
-import os
 import ast
-
+import os
+import re
+import sys
 from argparse import Namespace
 
-from FpuGridDriver import FPST_AT_DATUM
 from fpu_constants import ALPHA_DATUM_OFFSET, BETA_DATUM_OFFSET
-
-
-from vfr.tests_common import flush, goto_position, find_datum
-
+from FpuGridDriver import FPST_AT_DATUM
 from protectiondb import open_database_env
-
-from vfr.options import parse_args, load_config
-
-from vfr.conf import (
-    ALPHA_DATUM_OFFSET,
-    COLLDECT_MEASUREMENT_PARS,
-    DATUM_REP_MEASUREMENT_PARS,
-    DATUM_REP_ANALYSIS_PARS,
-    IMAGE_ROOT_FOLDER,
-    MET_CAL_FIBRE_ANALYSIS_PARS,
-    MET_CAL_TARGET_ANALYSIS_PARS,
-    MET_CAL_CAMERA_IP_ADDRESS,
-    MET_CAL_MEASUREMENT_PARS,
-    MET_HEIGHT_ANALYSIS_PARS,
-    MET_HEIGHT_CAMERA_IP_ADDRESS,
-    MET_HEIGHT_EVALUATION_PARS,
-    MET_HEIGHT_MEASUREMENT_PARS,
-    POS_REP_ANALYSIS_PARS,
-    POS_REP_EVALUATION_PARS,
-    POS_REP_MEASUREMENT_PARS,
-    POS_VER_EVALUATION_PARS,
-    POS_VER_MEASUREMENT_PARS,
-    POS_REP_CAMERA_IP_ADDRESS,
-    PUP_ALGN_ANALYSIS_PARS,
-    PUP_ALGN_EVALUATION_PARS,
-    PUP_ALGN_MEASUREMENT_PARS,
-    PUP_ALGN_CAMERA_IP_ADDRESS,
-)
-
-from vfr.TaskLogic import T, resolve
-
-from vfr.connection import (
-    check_ping_ok,
-    check_connection,
-    check_can_connection,
-    init_driver,
-)
-
+from vfr.conf import (ALPHA_DATUM_OFFSET, COLLDECT_MEASUREMENT_PARS,
+                      DATUM_REP_ANALYSIS_PARS, DATUM_REP_MEASUREMENT_PARS,
+                      IMAGE_ROOT_FOLDER, MET_CAL_CAMERA_IP_ADDRESS,
+                      MET_CAL_FIBRE_ANALYSIS_PARS, MET_CAL_MEASUREMENT_PARS,
+                      MET_CAL_TARGET_ANALYSIS_PARS, MET_HEIGHT_ANALYSIS_PARS,
+                      MET_HEIGHT_CAMERA_IP_ADDRESS, MET_HEIGHT_EVALUATION_PARS,
+                      MET_HEIGHT_MEASUREMENT_PARS, POS_REP_ANALYSIS_PARS,
+                      POS_REP_CAMERA_IP_ADDRESS, POS_REP_EVALUATION_PARS,
+                      POS_REP_MEASUREMENT_PARS, POS_VER_EVALUATION_PARS,
+                      POS_VER_MEASUREMENT_PARS, PUP_ALGN_ANALYSIS_PARS,
+                      PUP_ALGN_CAMERA_IP_ADDRESS, PUP_ALGN_EVALUATION_PARS,
+                      PUP_ALGN_MEASUREMENT_PARS)
+from vfr.connection import (check_can_connection, check_connection,
+                            check_ping_ok, init_driver)
+from vfr.options import load_config, parse_args
 from vfr.posdb import init_position
-from vfr.tests_common import find_datum
-
-from vfr.verification_tasks.functional_tests import (
-    test_datum,
-    test_limit,
-    DASEL_BOTH,
-    DASEL_ALPHA,
-    DASEL_BETA,
-)
-
-from vfr.verification_tasks.metrology_calibration import (
-    measure_metrology_calibration,
-    eval_metrology_calibration,
-)
-
-from vfr.verification_tasks.measure_datum_repeatability import (
-    measure_datum_repeatability,
-    eval_datum_repeatability,
-)
-
-from vfr.verification_tasks.positional_repeatability import (
-    measure_positional_repeatability,
-    eval_positional_repeatability,
-)
-
-from vfr.verification_tasks.metrology_height import (
-    measure_metrology_height,
-    eval_metrology_height,
-)
-
-from vfr.verification_tasks.rig_selftest import selftest_nonfibre, selftest_fibre
-
-from vfr.verification_tasks.report import report, dump_data
-
+from vfr.TaskLogic import T, resolve
+from vfr.tests_common import find_datum, flush, goto_position
+from vfr.verification_tasks.functional_tests import (DASEL_ALPHA, DASEL_BETA,
+                                                     DASEL_BOTH, test_datum,
+                                                     test_limit)
+from vfr.verification_tasks.measure_datum_repeatability import (eval_datum_repeatability,
+                                                                measure_datum_repeatability)
+from vfr.verification_tasks.metrology_calibration import (eval_metrology_calibration,
+                                                          measure_metrology_calibration)
+from vfr.verification_tasks.metrology_height import (eval_metrology_height,
+                                                     measure_metrology_height)
+from vfr.verification_tasks.positional_repeatability import (eval_positional_repeatability,
+                                                             measure_positional_repeatability)
+from vfr.verification_tasks.report import dump_data, report
+from vfr.verification_tasks.rig_selftest import (selftest_fibre,
+                                                 selftest_nonfibre)
 
 if __name__ == "__main__":
     opts = parse_args()

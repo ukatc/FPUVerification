@@ -128,7 +128,7 @@ class Message(_Message):
                 "<HBBBB", self.messageID, self.param1, self.param2, self.dest, self.src
             )
         if verbose:
-            print ("coded: ", strhex(ret))
+            print("coded: ", strhex(ret))
 
         return ret
 

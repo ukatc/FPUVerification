@@ -54,7 +54,7 @@ class TestMetCalImageAnalysis(unittest.TestCase):
         ]
 
         for (test_image, small_x, small_y, small_q, large_x, large_y, large_q) in cases:
-            print ("Testing metcalTargetCoordinates with image %s.." % test_image)
+            print("Testing metcalTargetCoordinates with image %s.." % test_image)
 
             (sx, sy, sq, lx, ly, lq) = metcalTargetCoordinates(
                 test_image, pars=MET_CAL_TARGET_ANALYSIS_PARS
@@ -77,7 +77,7 @@ class TestMetCalImageAnalysis(unittest.TestCase):
         with self.assertRaises(MetrologyAnalysisTargetError):
             for test_image in cases:
 
-                print ("Testing metcalTargetCoordinates with image %s.." % test_image)
+                print("Testing metcalTargetCoordinates with image %s.." % test_image)
 
                 (sx, sy, sq, lx, ly, lq) = metcalTargetCoordinates(
                     test_image, pars=MET_CAL_TARGET_ANALYSIS_PARS

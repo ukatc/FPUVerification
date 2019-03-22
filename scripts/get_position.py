@@ -14,7 +14,7 @@ import pyAPT
 
 
 def main(args):
-    print ("Looking for APT controllers")
+    print("Looking for APT controllers")
     drv = pylibftdi.Driver()
     controllers = drv.list_devices()
 
@@ -28,16 +28,16 @@ def main(args):
 
     if controllers:
         for con in controllers:
-            print ("Found %s %s S/N: %s" % con)
+            print("Found %s %s S/N: %s" % con)
             with pyAPT.MTS50(serial_number=con[2]) as con:
-                print (
+                print(
                     "\tPosition (%s) = %.2f [enc:%d]"
                     % (con.unit, con.position(), con.position(raw=True))
                 )
 
             return 0
     else:
-        print ("\tNo APT controllers found. Maybe you need to specify a PID")
+        print("\tNo APT controllers found. Maybe you need to specify a PID")
         return 1
 
 

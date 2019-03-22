@@ -16,7 +16,7 @@ from runner import runner_serial
 def info(serial):
     with pyAPT.Controller(serial_number=serial) as con:
         info = con.info()
-        print ("\tController info:")
+        print("\tController info:")
         labels = [
             "S/N",
             "Model",
@@ -29,7 +29,7 @@ def info(serial):
         ]
 
         for idx, ainfo in enumerate(info):
-            print ("\t%12s: %s" % (labels[idx], bytes(ainfo)))
+            print("\t%12s: %s" % (labels[idx], bytes(ainfo)))
 
 
 if __name__ == "__main__":

@@ -1,41 +1,31 @@
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function
 
+from GigE.GigECamera import BASLER_DEVICE_CLASS, DEVICE_CLASS, IP_ADDRESS
+from ImageAnalysisFuncs.analyze_pupil_alignment import (
+    PUPIL_ALIGNMENT_ALGORITHM_VERSION,
+    ImageAnalysisError,
+    evaluate_pupil_alignment,
+    pupalnCoordinates,
+)
 from numpy import NaN
-
+from vfr import hw, hwsimulation
 from vfr.conf import PUP_ALN_CAMERA_IP_ADDRESS
-
 from vfr.db.pupil_alignment import (
     TestResult,
-    save_pupil_alignment_images,
     get_pupil_alignment_images,
-    save_pupil_alignment_result,
-    get_pupil_alignment_result,
     get_pupil_alignment_passed_p,
+    get_pupil_alignment_result,
+    save_pupil_alignment_images,
+    save_pupil_alignment_result,
 )
-
-from vfr import hw
-from vfr import hwsimulation
-
-
-from GigE.GigECamera import DEVICE_CLASS, BASLER_DEVICE_CLASS, IP_ADDRESS
-
-
 from vfr.tests_common import (
-    flush,
-    timestamp,
     dirac,
-    goto_position,
     find_datum,
-    store_image,
+    flush,
     get_sorted_positions,
-)
-
-
-from ImageAnalysisFuncs.analyze_pupil_alignment import (
-    ImageAnalysisError,
-    pupalnCoordinates,
-    evaluate_pupil_alignment,
-    PUPIL_ALIGNMENT_ALGORITHM_VERSION,
+    goto_position,
+    store_image,
+    timestamp,
 )
 
 
@@ -94,7 +84,7 @@ def measure_pupil_alignment(ctx, pars=None):
             ):
 
                 sn = ctx.fpu_config[fpu_id]["serialnumber"]
-                print (
+                print(
                     "FPU %s : pupil alignment test already passed, skipping test" % sn
                 )
                 continue

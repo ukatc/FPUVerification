@@ -1,38 +1,29 @@
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function
 
+from GigE.GigECamera import BASLER_DEVICE_CLASS, DEVICE_CLASS, IP_ADDRESS
+from ImageAnalysisFuncs.analyze_metrology_height import (
+    METROLOGY_HEIGHT_ANALYSIS_ALGORITHM_VERSION,
+    ImageAnalysisError,
+    eval_met_height_inspec,
+    methtHeight,
+)
 from numpy import NaN
-
+from vfr import hw, hwsimulation
 from vfr.conf import MET_HEIGHT_CAMERA_IP_ADDRESS
-
 from vfr.db.metrology_height import (
     TestResult,
-    save_metrology_height_images,
     get_metrology_height_images,
+    save_metrology_height_images,
     save_metrology_height_result,
 )
-
-from vfr import hw
-from vfr import hwsimulation
-
-from GigE.GigECamera import DEVICE_CLASS, BASLER_DEVICE_CLASS, IP_ADDRESS
-
-
 from vfr.tests_common import (
-    flush,
-    timestamp,
     dirac,
-    goto_position,
     find_datum,
-    store_image,
+    flush,
     get_sorted_positions,
-)
-
-
-from ImageAnalysisFuncs.analyze_metrology_height import (
-    ImageAnalysisError,
-    methtHeight,
-    eval_met_height_inspec,
-    METROLOGY_HEIGHT_ANALYSIS_ALGORITHM_VERSION,
+    goto_position,
+    store_image,
+    timestamp,
 )
 
 

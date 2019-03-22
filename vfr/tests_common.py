@@ -1,59 +1,52 @@
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function
 
+import errno
+import os
 import sys
 import time
-
-from os import path
-import os
-import errno
-import time
 from math import floor
-
-from numpy import zeros, nan, array
+from os import path
 
 from fpu_commands import gen_wf, list_states
-
 from fpu_constants import ALPHA_DATUM_OFFSET, BETA_DATUM_OFFSET
-
-from FpuGridDriver import (
-    CAN_PROTOCOL_VERSION,
-    FPST_AT_DATUM,
-    SEARCH_CLOCKWISE,
-    SEARCH_ANTI_CLOCKWISE,
-    DEFAULT_WAVEFORM_RULSET_VERSION,
-    DATUM_TIMEOUT_ENABLE,
-    DATUM_TIMEOUT_DISABLE,
-    DASEL_BOTH,
-    DASEL_ALPHA,
-    DASEL_BETA,
-    REQD_ANTI_CLOCKWISE,
-    REQD_CLOCKWISE,
-    # see documentation reference for Exception hierarchy
-    # (for CAN protocol 1, this is section 12.6.1)
-    EtherCANException,
-    MovementError,
-    CollisionError,
-    LimitBreachError,
-    FirmwareTimeoutError,
-    AbortMotionError,
-    StepTimingError,
-    InvalidStateException,
-    SystemFailure,
-    InvalidParameterError,
-    SetupError,
-    InvalidWaveformException,
-    ConnectionFailure,
-    SocketFailure,
-    CommandTimeout,
-    ProtectionError,
-    HardwareProtectionError,
-)
-
+from numpy import array, nan, zeros
 from vfr.conf import (
     DB_TIME_FORMAT,
     IMAGE_ROOT_FOLDER,
-    NR360_SERIALNUMBER,
     MTS50_SERIALNUMBER,
+    NR360_SERIALNUMBER,
+)
+
+from FpuGridDriver import (
+    CAN_PROTOCOL_VERSION,  # see documentation reference for Exception hierarchy; (for CAN protocol 1, this is section 12.6.1)
+    DASEL_ALPHA,
+    DASEL_BETA,
+    DASEL_BOTH,
+    DATUM_TIMEOUT_DISABLE,
+    DATUM_TIMEOUT_ENABLE,
+    DEFAULT_WAVEFORM_RULSET_VERSION,
+    FPST_AT_DATUM,
+    REQD_ANTI_CLOCKWISE,
+    REQD_CLOCKWISE,
+    SEARCH_ANTI_CLOCKWISE,
+    SEARCH_CLOCKWISE,
+    AbortMotionError,
+    CollisionError,
+    CommandTimeout,
+    ConnectionFailure,
+    EtherCANException,
+    FirmwareTimeoutError,
+    HardwareProtectionError,
+    InvalidParameterError,
+    InvalidStateException,
+    InvalidWaveformException,
+    LimitBreachError,
+    MovementError,
+    ProtectionError,
+    SetupError,
+    SocketFailure,
+    StepTimingError,
+    SystemFailure,
 )
 
 
@@ -68,7 +61,6 @@ def timestamp():
     ms = "%03i" % int((fs - floor(fs)) * 1000)
     # replace
     return ti.replace("~", ms)
-
 
 
 def dirac(n, L):
@@ -94,8 +86,8 @@ def goto_position(
     current_alpha = array([x.as_scalar() for x, y in current_angles])
     current_beta = array([y.as_scalar() for x, y in current_angles])
     if verbosity > 2:
-        print ("current positions:\nalpha=%r,\nbeta=%r" % (current_alpha, current_beta))
-        print ("moving to (%6.2f,%6.2f)" % (abs_alpha, abs_beta))
+        print("current positions:\nalpha=%r,\nbeta=%r" % (current_alpha, current_beta))
+        print("moving to (%6.2f,%6.2f)" % (abs_alpha, abs_beta))
 
     wf = gen_wf(-current_alpha + abs_alpha, -current_beta + abs_beta)
     wf2 = {k: v for k, v in wf.items() if k in fpuset}
@@ -127,8 +119,10 @@ def find_datum(gd, grid_state, opts=None, uninitialized=False):
         print("states=", list_states(grid_state))
     if verbosity > 8:
         for fpu_id, fpu in enumerate(grid_state.FPU):
-            print("FPU %i (alpha_initalized, beta_initialized) = (%s, %s)"
-                  % (fpu_id, fpu.alpha_was_zeroed, fpu.beta_was_zeroed))
+            print(
+                "FPU %i (alpha_initalized, beta_initialized) = (%s, %s)"
+                % (fpu_id, fpu.alpha_was_zeroed, fpu.beta_was_zeroed)
+            )
 
     unreferenced = []
     for fpu_id, fpu in enumerate(grid_state.FPU):
@@ -147,10 +141,9 @@ def find_datum(gd, grid_state, opts=None, uninitialized=False):
             verbosity=verbosity,
         )
 
-
         if uninitialized:
             if verbosity > 0:
-                print ("issuing initial findDatum (%i FPUs):" % len(unreferenced))
+                print("issuing initial findDatum (%i FPUs):" % len(unreferenced))
 
             modes = {fpu_id: SEARCH_CLOCKWISE for fpu_id in unreferenced}
 
@@ -164,21 +157,21 @@ def find_datum(gd, grid_state, opts=None, uninitialized=False):
 
         else:
             if verbosity > 2:
-                print ("issuing findDatum (%i FPUs, timeout=%r):" % (len(unreferenced), timeout))
+                print(
+                    "issuing findDatum (%i FPUs, timeout=%r):"
+                    % (len(unreferenced), timeout)
+                )
             gd.findDatum(grid_state, fpuset=unreferenced, timeout=DATUM_TIMEOUT_ENABLE)
 
-
         if verbosity > 5:
-            print ("findDatum finished, states=", list_states(grid_state))
+            print("findDatum finished, states=", list_states(grid_state))
     else:
         if verbosity > 1:
             print("find_datum(): all FPUs already at datum")
 
-
-
     # We can use grid_state to display the starting position
     if verbosity > 9:
-        print (
+        print(
             "datum finished, the FPU positions (in degrees) are:",
             gd.trackedAngles(grid_state, retrieve=True),
         )

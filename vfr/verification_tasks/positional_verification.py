@@ -1,57 +1,43 @@
-from __future__ import print_function, division
-
-from numpy import NaN
+from __future__ import absolute_import, division, print_function
 
 import warnings
 
-from GigE.GigECamera import DEVICE_CLASS, BASLER_DEVICE_CLASS, IP_ADDRESS
-
+from fpu_commands import gen_wf
+from Gearbox.gear_correction import GearboxFitError, apply_gearbox_correction
+from GigE.GigECamera import BASLER_DEVICE_CLASS, DEVICE_CLASS, IP_ADDRESS
+from ImageAnalysisFuncs.analyze_positional_repeatability import (
+    POSITIONAL_VERIFICATION_ALGORITHM_VERSION,
+    ImageAnalysisError,
+    evaluate_positional_verification,
+    fit_gearbox_correction,
+    posrepCoordinates,
+)
+from numpy import NaN
+from vfr import hw, hwsimulation
 from vfr.conf import POS_REP_CAMERA_IP_ADDRESS
-
+from vfr.db.positional_verification import (
+    TestResult,
+    get_positional_verification_images,
+    save_positional_verification_images,
+    save_positional_verification_result,
+)
+from vfr.tests_common import (
+    dirac,
+    find_datum,
+    flush,
+    get_sorted_positions,
+    goto_position,
+    store_image,
+    timestamp,
+)
 from vfr.verification_tasks.measure_datum_repeatability import (
     get_datum_repeatability_passed_p,
 )
-
 from vfr.verification_tasks.positional_repeatability import (
-    get_positional_repeatability_result,
-    get_positional_repeatability_passed_p,
     POSITIONAL_REPEATABILITY_ALGORITHM_VERSION,
+    get_positional_repeatability_passed_p,
+    get_positional_repeatability_result,
 )
-
-from vfr.db.positional_verification import (
-    TestResult,
-    save_positional_verification_images,
-    get_positional_verification_images,
-    save_positional_verification_result,
-)
-
-
-from vfr import hw
-from vfr import hwsimulation
-
-
-from fpu_commands import gen_wf
-
-
-from vfr.tests_common import (
-    flush,
-    timestamp,
-    dirac,
-    goto_position,
-    find_datum,
-    store_image,
-    get_sorted_positions,
-)
-
-from ImageAnalysisFuncs.analyze_positional_repeatability import (
-    ImageAnalysisError,
-    posrepCoordinates,
-    evaluate_positional_verification,
-    POSITIONAL_VERIFICATION_ALGORITHM_VERSION,
-    fit_gearbox_correction,
-)
-
-from Gearbox.gear_correction import GearboxFitError, apply_gearbox_correction
 
 
 def generate_tested_positions(
@@ -104,7 +90,7 @@ def measure_positional_verification(ctx, pars=None):
         ):
 
             if not get_datum_verification_passed_p(ctx, fpu_id):
-                print (
+                print(
                     "FPU %s: skipping positional verification measurement because"
                     " there is no passed datum verification test"
                     % fpu_config["serialnumber"]
@@ -112,7 +98,7 @@ def measure_positional_verification(ctx, pars=None):
                 continue
 
             if not get_pupil_alignment_passed_p(ctx, fpu_id):
-                print (
+                print(
                     "FPU %s: skipping positional verification measurement because"
                     " there is no passed pupil alignment test"
                     % fpu_config["serialnumber"]
@@ -120,7 +106,7 @@ def measure_positional_verification(ctx, pars=None):
                 continue
 
             if not get_positional_repeatability_passed_p(ctx, fpu_id):
-                print (
+                print(
                     "FPU %s: skipping positional verification measurement because"
                     " there is no passed positional repeatability test"
                     % fpu_config["serialnumber"]
@@ -132,7 +118,7 @@ def measure_positional_verification(ctx, pars=None):
             ):
 
                 sn = ctx.fpu_config[fpu_id]["serialnumber"]
-                print (
+                print(
                     "FPU %s : datum verification test already passed, skipping test"
                     % sn
                 )

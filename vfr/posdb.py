@@ -1,21 +1,17 @@
-from __future__ import print_function, division
-
-from interval import Interval
-from protectiondb import ProtectionDB as pdb
-from protectiondb import INIT_COUNTERS
-from protectiondb import HealthLogDB
+from __future__ import absolute_import, division, print_function
 
 from fpu_constants import (
-    BETA_DATUM_OFFSET,
-    ALPHA_MIN_DEGREE,
     ALPHA_MAX_DEGREE,
-    BETA_MIN_DEGREE,
+    ALPHA_MIN_DEGREE,
+    BETA_DATUM_OFFSET,
     BETA_MAX_DEGREE,
+    BETA_MIN_DEGREE,
     DEFAULT_FREE_BETA_RETRIES,
 )
-
+from interval import Interval
+from protectiondb import ProtectionDB as pdb
+from protectiondb import INIT_COUNTERS, HealthLogDB
 from vfr.conf import ALPHA_DATUM_OFFSET
-
 from vfr.tests_common import flush
 
 
@@ -29,7 +25,7 @@ def init_position(ctx, fpu_id, serialnumber, alpha_start, beta_start):
 
     init_counters = INIT_COUNTERS.copy()
 
-    print (
+    print(
         "setting FPU #%i, sn=%s to starting position (%r, %r) ... "
         % (fpu_id, serialnumber, alpha_start, beta_start),
         "end=' '",
@@ -68,4 +64,4 @@ def init_position(ctx, fpu_id, serialnumber, alpha_start, beta_start):
         pdb.putField(txn, sn, pdb.beta_retry_count_acw, 0)
         pdb.putField(txn, sn, pdb.counters, init_counters)
 
-    print ("OK")
+    print("OK")

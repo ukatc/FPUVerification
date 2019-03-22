@@ -1,45 +1,33 @@
-from __future__ import print_function, division
-
-from numpy import NaN
+from __future__ import absolute_import, division, print_function
 
 import warnings
-from vfr.conf import MET_CAL_CAMERA_IP_ADDRESS
-
-from vfr.db.datum_repeatability import (
-    TestResult,
-    save_datum_repeatability_images,
-    get_datum_repeatability_images,
-    save_datum_repeatability_result,
-    get_datum_repeatability_result,
-    get_datum_repeatability_passed_p,
-)
-
-
-from vfr import hw
-from vfr import hwsimulation
-
-
-from GigE.GigECamera import DEVICE_CLASS, BASLER_DEVICE_CLASS, IP_ADDRESS
-
 
 from fpu_commands import gen_wf
-
-
-from vfr.tests_common import (
-    timestamp,
-    dirac,
-    goto_position,
-    find_datum,
-    store_image,
-    get_sorted_positions,
-)
-
-
+from GigE.GigECamera import BASLER_DEVICE_CLASS, DEVICE_CLASS, IP_ADDRESS
 from ImageAnalysisFuncs.analyze_positional_repeatability import (
-    ImageAnalysisError,
-    posrepCoordinates,
-    evaluate_datum_repeatability,
     DATUM_REPEATABILITY_ALGORITHM_VERSION,
+    ImageAnalysisError,
+    evaluate_datum_repeatability,
+    posrepCoordinates,
+)
+from numpy import NaN
+from vfr import hw, hwsimulation
+from vfr.conf import MET_CAL_CAMERA_IP_ADDRESS
+from vfr.db.datum_repeatability import (
+    TestResult,
+    get_datum_repeatability_images,
+    get_datum_repeatability_passed_p,
+    get_datum_repeatability_result,
+    save_datum_repeatability_images,
+    save_datum_repeatability_result,
+)
+from vfr.tests_common import (
+    dirac,
+    find_datum,
+    get_sorted_positions,
+    goto_position,
+    store_image,
+    timestamp,
 )
 
 
@@ -71,7 +59,7 @@ def measure_datum_repeatability(ctx, pars=None):
             ):
 
                 sn = ctx.fpu_config[fpu_id]["serialnumber"]
-                print (
+                print(
                     "FPU %s : datum repeatability test already passed, skipping test"
                     % sn
                 )
@@ -163,8 +151,10 @@ def eval_datum_repeatability(ctx, dat_rep_analysis_pars):
             datum_repeatability_has_passed = TestResult.NA
 
             if dat_rep_analysis_pars.FIXME_FAKE_RESULT:
-                warnings.warn("Faking passed result for datum repeatability "
-                              "- does not work because test images is missing")
+                warnings.warn(
+                    "Faking passed result for datum repeatability "
+                    "- does not work because test images is missing"
+                )
                 datum_repeatability_has_passed = TestResult.OK
 
         save_datum_repeatability_result(

@@ -17,7 +17,7 @@ class TestMetHeightImageAnalysis(unittest.TestCase):
         ]
 
         for (test_image, small_ht, large_ht) in cases:
-            print ("Testing methtHeight with image %s.." % test_image)
+            print("Testing methtHeight with image %s.." % test_image)
 
             (sh, lh) = methtHeight(test_image, pars=MET_HEIGHT_ANALYSIS_PARS)
 

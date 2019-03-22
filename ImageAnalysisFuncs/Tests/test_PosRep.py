@@ -58,7 +58,7 @@ class TestPosRepImageAnalysis(unittest.TestCase):
         ]
 
         for (test_image, small_x, small_y, small_q, large_x, large_y, large_q) in cases:
-            print ("Testing posrepCoordinates with image %s.." % test_image)
+            print("Testing posrepCoordinates with image %s.." % test_image)
 
             (sx, sy, sq, lx, ly, lq) = posrepCoordinates(
                 test_image, pars=POS_REP_ANALYSIS_PARS

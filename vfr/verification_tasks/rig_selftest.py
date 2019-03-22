@@ -1,48 +1,38 @@
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function
 
 import sys
 
+from GigE.GigECamera import BASLER_DEVICE_CLASS, DEVICE_CLASS, IP_ADDRESS
+from ImageAnalysisFuncs.analyze_metrology_calibration import (
+    metcalFibreCoordinates,
+    metcalTargetCoordinates,
+)
+from ImageAnalysisFuncs.analyze_metrology_height import methtHeight
+from ImageAnalysisFuncs.analyze_positional_repeatability import posrepCoordinates
+from ImageAnalysisFuncs.analyze_pupil_alignment import (
+    evaluate_pupil_alignment,
+    pupalnCoordinates,
+)
+from vfr import hw, hwsimulation
 from vfr.conf import (
-    PUP_ALGN_CAMERA_IP_ADDRESS,
-    POS_REP_CAMERA_IP_ADDRESS,
     MET_CAL_CAMERA_IP_ADDRESS,
     MET_HEIGHT_CAMERA_IP_ADDRESS,
+    POS_REP_CAMERA_IP_ADDRESS,
+    PUP_ALGN_CAMERA_IP_ADDRESS,
 )
-
-
-from vfr import hw
-from vfr import hwsimulation
-
-from GigE.GigECamera import DEVICE_CLASS, BASLER_DEVICE_CLASS, IP_ADDRESS
-
-
 from vfr.tests_common import (
-    flush,
-    timestamp,
     dirac,
-    goto_position,
     find_datum,
-    store_image,
+    flush,
     get_sorted_positions,
+    goto_position,
+    store_image,
+    timestamp,
 )
-
-from ImageAnalysisFuncs.analyze_pupil_alignment import (
-    pupalnCoordinates,
-    evaluate_pupil_alignment,
-)
-
-from ImageAnalysisFuncs.analyze_metrology_calibration import (
-    metcalTargetCoordinates,
-    metcalFibreCoordinates,
-)
-
-from ImageAnalysisFuncs.analyze_metrology_height import methtHeight
-
-from ImageAnalysisFuncs.analyze_positional_repeatability import posrepCoordinates
 
 
 def selftest_pup_algn(ctx, pars=None, PUP_ALGN_ANALYSIS_PARS=None, capture_image=None):
-    print ("selftest: pupil alignment")
+    print("selftest: pupil alignment")
     if ctx.opts.mockup:
         # replace all hardware functions by mock-up interfaces
         hw = hwsimulation
@@ -95,7 +85,7 @@ def selftest_metrology_calibration(
     capture_image=None,
 ):
 
-    print ("selftest: metrology calibration")
+    print("selftest: metrology calibration")
     if ctx.opts.mockup:
         # replace all hardware functions by mock-up interfaces
         hw = hwsimulation
@@ -166,7 +156,7 @@ def selftest_metrology_height(
     ctx, MET_HEIGHT_ANALYSIS_PARS=None, pars=None, capture_image=None
 ):
 
-    print ("selftest: metrology height")
+    print("selftest: metrology height")
     if ctx.opts.mockup:
         # replace all hardware functions by mock-up interfaces
         hw = hwsimulation
@@ -213,7 +203,7 @@ def selftest_positional_repeatability(
     ctx, pars=None, POS_REP_ANALYSIS_PARS=None, capture_image=None
 ):
 
-    print ("selftest: positional repeatability")
+    print("selftest: positional repeatability")
 
     if ctx.opts.mockup:
         # replace all hardware functions by mock-up interfaces
@@ -264,7 +254,7 @@ def selftest_nonfibre(
     PUP_ALGN_MEASUREMENT_PARS=None,
 ):
 
-    print ("selftest: tests without fibre involved")
+    print("selftest: tests without fibre involved")
 
     tstamp = timestamp()
 
@@ -283,7 +273,7 @@ def selftest_nonfibre(
 
     # except Exception as e:
     except SystemError as e:
-        print ("metrology height self-test failed", repr(e))
+        print("metrology height self-test failed", repr(e))
         sys.exit(1)
 
     try:
@@ -294,9 +284,9 @@ def selftest_nonfibre(
             pars=POS_REP_MEASUREMENT_PARS,
         )
     except SystemError as e:
-        print ("positional repeatability self-test failed", repr(e))
+        print("positional repeatability self-test failed", repr(e))
         sys.exit(1)
-    print (">>>> selftest: tests without fibre succeeded")
+    print(">>>> selftest: tests without fibre succeeded")
 
 
 def selftest_fibre(
@@ -308,7 +298,7 @@ def selftest_fibre(
     PUP_ALGN_MEASUREMENT_PARS=None,
 ):
 
-    print ("selftest: tests requiring fibre")
+    print("selftest: tests requiring fibre")
     tstamp = timestamp()
 
     def capture_image(cam, subtest):
@@ -325,7 +315,7 @@ def selftest_fibre(
         )
 
     except SystemError as e:
-        print ("pupil alignment self-test failed:", repr(e))
+        print("pupil alignment self-test failed:", repr(e))
         sys.exit(1)
 
     try:
@@ -337,7 +327,7 @@ def selftest_fibre(
             pars=MET_CAL_MEASUREMENT_PARS,
         )
     except SystemError as e:
-        print ("metrology calibration self-test failed", repr(e))
+        print("metrology calibration self-test failed", repr(e))
         sys.exit(1)
 
-    print (">>>> selftest: tests requiring fibre succeeded")
+    print(">>>> selftest: tests requiring fibre succeeded")

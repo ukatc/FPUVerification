@@ -1,40 +1,30 @@
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function
 
+from GigE.GigECamera import BASLER_DEVICE_CLASS, DEVICE_CLASS, IP_ADDRESS
+from ImageAnalysisFuncs.analyze_metrology_calibration import (
+    METROLOGY_ANALYSIS_ALGORITHM_VERSION,
+    ImageAnalysisError,
+    fibre_target_distance,
+    metcalFibreCoordinates,
+    metcalTargetCoordinates,
+)
 from numpy import NaN
-
+from vfr import hw, hwsimulation
 from vfr.conf import MET_CAL_CAMERA_IP_ADDRESS
-
 from vfr.db.metrology_calibration import (
     TestResult,
-    save_metrology_calibration_images,
     get_metrology_calibration_images,
+    save_metrology_calibration_images,
     save_metrology_calibration_result,
 )
-
-from vfr import hw
-from vfr import hwsimulation
-
-
-from GigE.GigECamera import DEVICE_CLASS, BASLER_DEVICE_CLASS, IP_ADDRESS
-
-
 from vfr.tests_common import (
-    flush,
-    timestamp,
     dirac,
-    goto_position,
     find_datum,
-    store_image,
+    flush,
     get_sorted_positions,
-)
-
-
-from ImageAnalysisFuncs.analyze_metrology_calibration import (
-    ImageAnalysisError,
-    metcalTargetCoordinates,
-    metcalFibreCoordinates,
-    fibre_target_distance,
-    METROLOGY_ANALYSIS_ALGORITHM_VERSION,
+    goto_position,
+    store_image,
+    timestamp,
 )
 
 

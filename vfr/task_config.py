@@ -1,10 +1,11 @@
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function
 
+from vfr.db.colldect_limits import get_colldect_passed_p
 from vfr.db.datum import get_datum_passed_p
 from vfr.db.datum_repeatability import get_datum_repeatability_passed_p
-from vfr.db.colldect_limits import get_colldect_passed_p
-from vfr.db.pupil_alignment import get_pupil_alignment_passed_p
 from vfr.db.positional_repeatability import get_positional_repeatability_passed_p
+from vfr.db.pupil_alignment import get_pupil_alignment_passed_p
+
 
 class T:
     # evaluation of measurements
@@ -161,9 +162,7 @@ task_dependencies = [
         T.TST_BETA_MIN,
         [T.TASK_INIT_GD, T.TST_CAN_CONNECTION, T.REQ_DATUM_PASSED, T.TASK_REFERENCE],
     ),
-
-    (T.TASK_REFERENCE, [T.REQ_DATUM_PASSED,]),
-
+    (T.TASK_REFERENCE, [T.REQ_DATUM_PASSED]),
     (T.TST_COLLDETECT, [T.REQ_DATUM_PASSED, T.TASK_REFERENCE]),
     (
         T.MEASURE_DATUM_REP,
@@ -260,7 +259,7 @@ conditional_dependencies = [
 # task expansions (where one user-selectable task contains several sub-tasks)
 task_expansions = [
     (T.TST_INIT, [T.TST_FLASH, T.TST_INITPOS]),
-    (T.TST_DATUM, [T.TST_DATUM_ALPHA, T.TST_DATUM_BETA, T.TST_DATUM_BOTH,]),
+    (T.TST_DATUM, [T.TST_DATUM_ALPHA, T.TST_DATUM_BETA, T.TST_DATUM_BOTH]),
     (
         T.TST_LIMITS,
         [
@@ -273,12 +272,7 @@ task_expansions = [
     ),
     (
         T.TST_FUNCTIONAL,
-        [
-            T.TST_GATEWAY_CONNECTION,
-            T.TST_CAN_CONNECTION,
-            T.TST_DATUM,
-            T.TST_LIMITS,
-        ],
+        [T.TST_GATEWAY_CONNECTION, T.TST_CAN_CONNECTION, T.TST_DATUM, T.TST_LIMITS],
     ),
     (T.TST_DATUM_REP, [T.MEASURE_DATUM_REP, T.EVAL_DATUM_REP]),
     (T.TST_MET_CAL, [T.MEASURE_MET_CAL, T.EVAL_MET_CAL]),

@@ -1,10 +1,12 @@
-# -*- coding: utf-8-unix -*-
+# -*- coding: utf-8 -*-
 
-from __future__ import print_function, division
-from os import environ
+from __future__ import absolute_import, division, print_function
+
 from argparse import Namespace
 from math import ceil
-from numpy import NaN, Inf
+from os import environ
+
+from numpy import Inf, NaN
 
 DEFAULT_TASKS = ["selftest", "measure_all", "evaluate_all", "report"]
 
@@ -15,10 +17,10 @@ INSTRUMENT_FOCAL_LENGTH = 4101.4  # millimeter (does not change)
 
 ALPHA_DATUM_OFFSET = -180
 
-PROTECTION_TOLERANCE = 0.15 # degrees of protection between measured
-                            # limit and soft protection range
+PROTECTION_TOLERANCE = 0.15  # degrees of protection between measured
+# limit and soft protection range
 
-DB_TIME_FORMAT = "%Y-%m-%dT%H:%M:%S.~%Z" # "~" means number of milliseconds
+DB_TIME_FORMAT = "%Y-%m-%dT%H:%M:%S.~%Z"  # "~" means number of milliseconds
 
 LAMP_WARMING_TIME_MILLISECONDS = 1000.0
 
@@ -74,7 +76,7 @@ DAT_REP_CALIBRATION_PARS = {
 
 
 DATUM_REP_ANALYSIS_PARS = Namespace(
-    FIXME_FAKE_RESULT = True,              # DELETE THIS!! This is only for testing!
+    FIXME_FAKE_RESULT=True,  # DELETE THIS!! This is only for testing!
     POS_REP_PLATESCALE=DAT_REP_PLATESCALE,
     POS_REP_SMALL_DIAMETER=1.5,  # millimeter
     POS_REP_LARGE_DIAMETER=2.5,  # millimeter

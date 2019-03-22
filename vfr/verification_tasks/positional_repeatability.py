@@ -1,50 +1,37 @@
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function
 
-
+from fpu_commands import gen_wf
+from Gearbox.gear_correction import GearboxFitError, fit_gearbox_correction
+from GigE.GigECamera import BASLER_DEVICE_CLASS, DEVICE_CLASS, IP_ADDRESS
+from ImageAnalysisFuncs.analyze_positional_repeatability import (
+    POSITIONAL_REPEATABILITY_ALGORITHM_VERSION,
+    ImageAnalysisError,
+    evaluate_positional_repeatability,
+    posrepCoordinates,
+)
 from numpy import NaN
-
-from GigE.GigECamera import DEVICE_CLASS, BASLER_DEVICE_CLASS, IP_ADDRESS
+from vfr import hw, hwsimulation
 from vfr.conf import POS_REP_CAMERA_IP_ADDRESS
-
+from vfr.db.positional_repeatability import (
+    TestResult,
+    get_positional_repeatability_images,
+    get_positional_repeatability_passed_p,
+    get_positional_repeatability_result,
+    save_positional_repeatability_images,
+    save_positional_repeatability_result,
+)
+from vfr.tests_common import (
+    dirac,
+    find_datum,
+    flush,
+    get_sorted_positions,
+    goto_position,
+    store_image,
+    timestamp,
+)
 from vfr.verification_tasks.measure_datum_repeatability import (
     get_datum_repeatability_passed_p,
 )
-from vfr.db.positional_repeatability import (
-    TestResult,
-    save_positional_repeatability_images,
-    get_positional_repeatability_images,
-    save_positional_repeatability_result,
-    get_positional_repeatability_result,
-    get_positional_repeatability_passed_p,
-)
-
-from vfr import hw
-from vfr import hwsimulation
-
-
-from fpu_commands import gen_wf
-
-
-from vfr.tests_common import (
-    flush,
-    timestamp,
-    dirac,
-    goto_position,
-    find_datum,
-    store_image,
-    get_sorted_positions,
-)
-
-
-from ImageAnalysisFuncs.analyze_positional_repeatability import (
-    ImageAnalysisError,
-    posrepCoordinates,
-    evaluate_positional_repeatability,
-    POSITIONAL_REPEATABILITY_ALGORITHM_VERSION,
-)
-
-
-from Gearbox.gear_correction import GearboxFitError, fit_gearbox_correction
 
 
 def measure_positional_repeatability(ctx, pars=None):
@@ -71,7 +58,7 @@ def measure_positional_repeatability(ctx, pars=None):
         }
 
         pos_rep_cam = hw.GigECamera(POS_REP_CAMERA_CONF)
-        pos_rep_cam.SetExposureTime(pars.POSITIONAL_REP_EXPOSURE_MS)
+        pos_rep_cam.SetExposureTime(pars.POS_REP_EXPOSURE_MS)
 
         # get sorted positions (this is needed because the turntable can only
         # move into one direction)
@@ -80,7 +67,7 @@ def measure_positional_repeatability(ctx, pars=None):
         ):
 
             if not get_datum_repeatability_passed_p(ctx, fpu_id):
-                print (
+                print(
                     "FPU %s: skipping positional repeatability measurement because"
                     " there is no passed datum repeatability test"
                     % ctx.fpu_config["serialnumber"]
@@ -88,7 +75,7 @@ def measure_positional_repeatability(ctx, pars=None):
                 continue
 
             if not get_pupil_alignment_passed_p(ctx, fpu_config, fpu_id):
-                print (
+                print(
                     "FPU %s: skipping positional repeatability measurement because"
                     " there is no passed pupil alignment test"
                     % ctx.fpu_config["serialnumber"]
@@ -100,7 +87,7 @@ def measure_positional_repeatability(ctx, pars=None):
             ):
 
                 sn = ctx.fpu_config[fpu_id]["serialnumber"]
-                print (
+                print(
                     "FPU %s : positional repeatability test already passed, skipping test"
                     % sn
                 )
@@ -117,7 +104,7 @@ def measure_positional_repeatability(ctx, pars=None):
                 or (beta_min is None)
                 or (beta_max is None)
             ):
-                print ("FPU %s : limit test value missing, skipping test" % sn)
+                print("FPU %s : limit test value missing, skipping test" % sn)
                 continue
 
             # move rotary stage to POS_REP_POSN_N

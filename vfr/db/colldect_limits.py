@@ -1,27 +1,29 @@
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
 
 from fpu_constants import (
     ALPHA_DATUM_OFFSET,
-    ALPHA_MIN_DEGREE,
     ALPHA_MAX_DEGREE,
-    BETA_MIN_DEGREE,
+    ALPHA_MIN_DEGREE,
     BETA_MAX_DEGREE,
+    BETA_MIN_DEGREE,
 )
-
-from protectiondb import ProtectionDB
-
 from interval import Interval
-
+from protectiondb import ProtectionDB
 from vfr.conf import PROTECTION_TOLERANCE
-
-from vfr.db.base import GIT_VERSION, TestResult, save_test_result, get_test_result, timestamp
+from vfr.db.base import (
+    GIT_VERSION,
+    TestResult,
+    get_test_result,
+    save_test_result,
+    timestamp,
+)
 
 
 def save_angular_limit(
     ctx, fpu_id, serialnumber, which_limit, test_succeeded, limit_val, diagnostic
 ):
 
-    print ("saving limit value")
+    print("saving limit value")
 
     def keyfunc(fpu_id):
         if which_limit == "beta_collision":
@@ -53,6 +55,7 @@ def save_angular_limit(
 def get_angular_limit(ctx, fpu_id, which_limit):
 
     serialnumber = ctx.fpu_config[fpu_id]["serialnumber"]
+
     def keyfunc(fpu_id):
         if which_limit == "beta_collision":
             keybase = (serialnumber, which_limit)
@@ -65,7 +68,7 @@ def get_angular_limit(ctx, fpu_id, which_limit):
 
 def get_anglimit_passed_p(ctx, fpu_id, which_limit):
 
-    result = get_angular_limit(ctx, fpu_id,  which_limit)
+    result = get_angular_limit(ctx, fpu_id, which_limit)
 
     if result is None:
         return False
@@ -112,5 +115,5 @@ def set_protection_limit(ctx, fpu_id, which_limit, measured_val):
                 val_max = measured_val - PROTECTION_TOLERANCE
 
         new_val = Interval(val_min, val_max)
-        print ("limit %s: replacing %r by %r" % (which_limit, val, new_val))
+        print("limit %s: replacing %r by %r" % (which_limit, val, new_val))
         ProtectionDB.putInterval(txn, serialnumber, subkey, new_val, offset)

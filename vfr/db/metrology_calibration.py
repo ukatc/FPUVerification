@@ -1,8 +1,13 @@
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
 
 from numpy import NaN
-
-from vfr.db.base import GIT_VERSION, TestResult, save_test_result, get_test_result, timestamp
+from vfr.db.base import (
+    GIT_VERSION,
+    TestResult,
+    get_test_result,
+    save_test_result,
+    timestamp,
+)
 
 RECORD_TYPE = "metrology-calibration"
 

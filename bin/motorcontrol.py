@@ -186,7 +186,7 @@ def get_devicetypes():
         cfg = "".join(open(rcpath).readlines())
         typedict = literal_eval(cfg)
     except IOError, e:
-        print (
+        print(
             "warning: configuration file %r not found,  using default device type configuration"
             % rcpath
         )
@@ -199,7 +199,7 @@ def get_devicetypes():
 def print_device_info(driver):
     with driver as con:
         info = con.info()
-        print ("\tController info:")
+        print("\tController info:")
         labels = [
             "S/N",
             "Model",
@@ -212,7 +212,7 @@ def print_device_info(driver):
         ]
 
         for idx, ainfo in enumerate(info):
-            print ("\t%12s: %s" % (labels[idx], bytes(ainfo)))
+            print("\t%12s: %s" % (labels[idx], bytes(ainfo)))
 
 
 def list_device_info():
@@ -222,36 +222,36 @@ def list_device_info():
 
     if controllers:
         for vendor, devicetype, serialnumber in controllers:
-            print ("Found %s %s S/N: %s" % (vendor, devicetype, serialnumber))
+            print("Found %s %s S/N: %s" % (vendor, devicetype, serialnumber))
             driver = pyAPT.Controller(serial_number=serialnumber)
             print_device_info(driver)
     else:
-        print ("no Thorlabs / FTDI controllers found")
+        print("no Thorlabs / FTDI controllers found")
         return 1
 
 
 def exec_identify(driver, serialnum, wait_for_enter=True):
     with driver as con:
-        print ("\tIdentifying controller")
+        print("\tIdentifying controller")
         con.identify()
         raw_input("\n>>>>Press enter to continue")
 
 
 def exec_moverel(driver, serialnum, dist):
     if dist is None:
-        print ("Error: distance parameter is missing! Exiting without move.")
+        print("Error: distance parameter is missing! Exiting without move.")
         return 1
 
     try:
         with driver as con:
-            print ("Found APT controller S/N", serialnum)
-            print ("\tMoving stage by %.3f %s ..." % (dist, con.unit), "end=''")
+            print("Found APT controller S/N", serialnum)
+            print("\tMoving stage by %.3f %s ..." % (dist, con.unit), "end=''")
             con.move(dist)
-            print ("moved")
-            print ("\tNew position: %.3f %s" % (con.position(), con.unit))
+            print("moved")
+            print("\tNew position: %.3f %s" % (con.position(), con.unit))
             return 0
     except FtdiError as ex:
-        print ("\tCould not find APT controller S/N of", serialnum)
+        print("\tCould not find APT controller S/N of", serialnum)
         return 1
 
 
@@ -265,7 +265,7 @@ def auto_detect_driverclass(serialnum):
 
 def exec_get_position(driver, serialnum):
     with driver as con:
-        print (
+        print(
             "\tPosition (%s) = %.2f [enc:%d]"
             % (con.unit, con.position(), con.position(raw=True))
         )
@@ -275,20 +275,20 @@ def exec_get_position(driver, serialnum):
 def exec_get_status(driver, serialnum):
     with driver as con:
         status = con.status()
-        print ("\tController status:")
-        print ("\t\tPosition: %.3fmm (%d cnt)" % (status.position, status.position_apt))
-        print ("\t\tVelocity: %.3fmm" % (status.velocity))
-        print ("\t\tStatus:", status.flag_strings())
+        print("\tController status:")
+        print("\t\tPosition: %.3fmm (%d cnt)" % (status.position, status.position_apt))
+        print("\t\tVelocity: %.3fmm" % (status.velocity))
+        print("\t\tStatus:", status.flag_strings())
 
 
 def exec_get_velparams(driver, serialnum):
     with driver as con:
         min_vel, acc, max_vel = con.velocity_parameters()
         raw_min_vel, raw_acc, raw_max_vel = con.velocity_parameters(raw=True)
-        print ("\tController velocity parameters:")
-        print ("\t\tMin. Velocity: %.2fmm/s (%d)" % (min_vel, raw_min_vel))
-        print ("\t\tMax. Velocity: %.2fmm/s (%d)" % (max_vel, raw_max_vel))
-        print ("\t\tAcceleration: %.2fmm/s/s (%d)" % (acc, raw_acc))
+        print("\tController velocity parameters:")
+        print("\t\tMin. Velocity: %.2fmm/s (%d)" % (min_vel, raw_min_vel))
+        print("\t\tMax. Velocity: %.2fmm/s (%d)" % (max_vel, raw_max_vel))
+        print("\t\tAcceleration: %.2fmm/s/s (%d)" % (acc, raw_acc))
 
 
 def exec_moveabs(driver, serialnum, newposition, wait=True, monitor=False):
@@ -296,8 +296,8 @@ def exec_moveabs(driver, serialnum, newposition, wait=True, monitor=False):
         if monitor:
             wait = False
         with driver as con:
-            print ("Found APT controller S/N", serialnum)
-            print ("\tMoving stage to %.2f %s..." % (newposition, con.unit))
+            print("Found APT controller S/N", serialnum)
+            print("\tMoving stage to %.2f %s..." % (newposition, con.unit))
             st = time.time()
             con.goto(newposition, wait=wait)
             if monitor:
@@ -317,14 +317,14 @@ def exec_moveabs(driver, serialnum, newposition, wait=True, monitor=False):
                     sys.stdout.write(" " * l)
                     sys.stdout.write("\b" * l)
 
-            print ("\tMove completed in %.2fs" % (time.time() - st))
-            print ("\tNew position: %.2f %s" % (con.position(), con.unit))
+            print("\tMove completed in %.2fs" % (time.time() - st))
+            print("\tNew position: %.2f %s" % (con.position(), con.unit))
             if monitor:
-                print ("\tStatus:", con.status())
+                print("\tStatus:", con.status())
             return 0
 
     except FtdiError as ex:
-        print ("\tCould not find APT controller S/N of", serial)
+        print("\tCould not find APT controller S/N of", serial)
         return 1
 
 
@@ -346,11 +346,11 @@ def exec_home(driver, serialnum, home_direction=None, limitswitch=None, velocity
         kwargs["velocity"] = velocity
 
     with driver as con:
-        print ("\tHoming stage...", "end=''")
+        print("\tHoming stage...", "end=''")
         sys.stdout.flush()
         con.home(**kwargs)
 
-    print ("OK")
+    print("OK")
     return 0
 
 
@@ -361,14 +361,14 @@ def exec_stop(driver, serialnum, immediate=False, wait=True):
         mode = "profiled stop"
 
     try:
-        print ("stopping serial number %s (%s) ..." % (serialnum, mode), "end=' '")
+        print("stopping serial number %s (%s) ..." % (serialnum, mode), "end=' '")
         sys.stdout.flush()
         with driver as con:
             con.stop(immediate=True, wait=wait)
-            print ("STOPPED")
+            print("STOPPED")
 
     except FtdiError as ex:
-        print ("\terror stopping device %s (%s)" % (serialnum, ex))
+        print("\terror stopping device %s (%s)" % (serialnum, ex))
         return 1
     return 0
 
@@ -378,18 +378,18 @@ def exec_set_velparams(driver, serialnum, max_velocity=None, max_acceleration=No
     assert max_acceleration != None
     with driver as con:
         unit = con.unit
-        print ("\tSetting new velocity parameters", max_acceleration, max_velocity)
+        print("\tSetting new velocity parameters", max_acceleration, max_velocity)
         con.set_velocity_parameters(float(max_acceleration), float(max_velocity))
         min_vel, acc, max_vel = con.velocity_parameters()
-        print ("\tNew velocity parameters:")
-        print ("\t\tMin. Velocity: %.2f %s" % (min_vel, unit))
-        print ("\t\tMax. Velocity: %.2f %s" % (max_vel, unit))
-        print ("\t\tAcceleration: %.2f %s" % (acc, unit))
+        print("\tNew velocity parameters:")
+        print("\t\tMin. Velocity: %.2f %s" % (min_vel, unit))
+        print("\t\tMax. Velocity: %.2f %s" % (max_vel, unit))
+        print("\t\tAcceleration: %.2f %s" % (acc, unit))
 
 
 def exec_reset(driver, serialnum):
     with driver as con:
-        print ("\tResetting controller parameters to EEPROM defaults")
+        print("\tResetting controller parameters to EEPROM defaults")
         con.reset_parameters()
     return 0
 
@@ -402,7 +402,7 @@ def main():
     dist = args.distance
 
     if command == "help":
-        print (__help__)
+        print(__help__)
         return 1
 
     driver = auto_detect_driverclass(serialnum)

@@ -19,7 +19,7 @@ def home(serial):
     #  with pyAPT.NR360S(serial_number=serial) as con:
     with pyAPT.CR1Z7(serial_number=serial) as con:
         con.stop(immediate=True, wait=True)
-        print ("stopped")
+        print("stopped")
 
 
 if __name__ == "__main__":

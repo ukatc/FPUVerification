@@ -25,19 +25,19 @@ def runner_serial(func):
             func(serial)
             return 0
         else:
-            print ("Looking for APT controllers")
+            print("Looking for APT controllers")
             drv = pylibftdi.Driver()
             controllers = drv.list_devices()
 
             if controllers:
                 for con in controllers:
-                    print ("Found %s %s S/N: %s" % con)
+                    print("Found %s %s S/N: %s" % con)
                     func(con[2])
-                    print ("")
+                    print("")
 
                 return 0
             else:
-                print ("\tNo APT controllers found. Maybe you need to specify a PID")
+                print("\tNo APT controllers found. Maybe you need to specify a PID")
                 return 1
 
     return inner

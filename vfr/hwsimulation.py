@@ -1,45 +1,42 @@
-from __future__ import print_function, division
-from contextlib import contextmanager
+from __future__ import absolute_import, division, print_function
 
-import time
 import inspect
 import os
 import os.path
-
+import time
 import warnings
-from vfr.conf import (
-    POS_REP_CAMERA_IP_ADDRESS,
-    MET_CAL_CAMERA_IP_ADDRESS,
-    MET_HEIGHT_CAMERA_IP_ADDRESS,
-    PUP_ALGN_CAMERA_IP_ADDRESS,
-    MET_CAL_MEASUREMENT_PARS,
-    LAMP_WARMING_TIME_MILLISECONDS,
-)
-
-from vfr.tests_common import find_datum
+from contextlib import contextmanager
 
 import ImageAnalysisFuncs  # used to look up images
-
 from FpuGridDriver import DATUM_TIMEOUT_DISABLE
+from vfr.conf import (
+    LAMP_WARMING_TIME_MILLISECONDS,
+    MET_CAL_CAMERA_IP_ADDRESS,
+    MET_CAL_MEASUREMENT_PARS,
+    MET_HEIGHT_CAMERA_IP_ADDRESS,
+    POS_REP_CAMERA_IP_ADDRESS,
+    PUP_ALGN_CAMERA_IP_ADDRESS,
+)
+from vfr.tests_common import find_datum
 
 # here a nice explanation how the context managers work:
 # https://jeffknupp.com/blog/2016/03/07/python-with-context-managers/
 
 
 def switch_fibre_backlight(state, manual_lamp_control=False):
-    print ("switch state of backlight to %r and presse <enter>" % state)
+    print("switch state of backlight to %r and presse <enter>" % state)
 
 
 def switch_fibre_backlight_voltage(voltage, manual_lamp_control=False):
-    print ("switch voltage of backlight to %3.1f and presse <enter>" % voltage)
+    print("switch voltage of backlight to %3.1f and presse <enter>" % voltage)
 
 
 def switch_ambientlight(state, manual_lamp_control=False):
-    print ("switch state of ambient light to %r and presse <enter>" % state)
+    print("switch state of ambient light to %r and presse <enter>" % state)
 
 
 def switch_silhouettelight(state, manual_lamp_control=False):
-    print ("switch state of silhouette light to %r and presse <enter>" % state)
+    print("switch state of silhouette light to %r and presse <enter>" % state)
 
 
 @contextmanager
@@ -82,27 +79,27 @@ def use_ambientlight(manual_lamp_control=False):
 def turntable_safe_goto(gd, grid_state, stage_position, opts=None):
     find_datum(gd, grid_state, opts=opts)
 
-    print ("moving turntable to position %5.2f" % stage_position)
+    print("moving turntable to position %5.2f" % stage_position)
 
 
 def safe_home_turntable(gd, grid_state, opts=None):
-    print ("issuing findDatum:")
+    print("issuing findDatum:")
     # gd.findDatum(grid_state, timeout=DATUM_TIMEOUT_DISABLE)
     find_datum(gd, grid_state, opts=opts)
-    print ("findDatum finished")
+    print("findDatum finished")
 
-    print ("moving turntable to home position")
+    print("moving turntable to home position")
 
 
 def home_linear_stage():
-    print ("\tHoming linear stage...", "end=' '")
-    print ("homed")
+    print("\tHoming linear stage...", "end=' '")
+    print("homed")
 
 
 def linear_stage_goto(stage_position):
-    print ("Found APT controller S/N", "[MOCKUP]")
-    print ("\tNew position: %.2fmm %s" % (stage_position, "mm"))
-    print ("\tStatus:", "OK")
+    print("Found APT controller S/N", "[MOCKUP]")
+    print("\tNew position: %.2fmm %s" % (stage_position, "mm"))
+    print("\tStatus:", "OK")
 
 
 class GigECamera:

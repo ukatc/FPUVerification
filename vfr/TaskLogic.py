@@ -1,12 +1,12 @@
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function
 
 from vfr.task_config import (
     T,
-    usertasks,
-    task_dependencies,
     conditional_dependencies,
-    task_expansions )
-
+    task_dependencies,
+    task_expansions,
+    usertasks,
+)
 
 
 def set_empty(set1):
@@ -25,10 +25,10 @@ def all_true(testfun, sequence):
 
 def expand_tasks(tasks, goal, expansion, delete=False):
     if goal in tasks:
-        print ("[expanding %s to %r] ###" % (goal, expansion))
+        print("[expanding %s to %r] ###" % (goal, expansion))
 
         if delete:
-            print ("deleting %s " % goal)
+            print("deleting %s " % goal)
             tasks.remove(goal)
 
         tasks.update(expansion)
@@ -40,7 +40,6 @@ def resolve(tasks, ctx):
     tasks = set(tasks)
 
     fpuset = set(ctx.measure_fpuset) | set(ctx.eval_fpuset)
-
 
     for tsk in tasks:
         if tsk not in usertasks:
@@ -68,7 +67,7 @@ def resolve(tasks, ctx):
 
         # check for equality with last iteration
         # -- if equal, expansion is finished
-        print ("tasks = ", tasks)
+        print("tasks = ", tasks)
         if tasks == last_tasks:
             break
 

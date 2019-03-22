@@ -35,7 +35,7 @@ try:
     from pypylon import pylon
     from pypylon import genicam
 except ImportError:
-    print (
+    print(
         ">>>>>>>>>>> Warning: Import of Basler pylon software failed - probably not installed."
     )
     pylon = None
@@ -44,7 +44,7 @@ except ImportError:
 try:
     from scipy.misc import imsave
 except ImportError:
-    print (
+    print(
         ">>>>>>>>>>> Warning: Import of scipy.misc.imsave failed - probably dependency mismatch."
     )
 
@@ -65,22 +65,22 @@ DEV_CAMERA = {DEVICE_CLASS: BASLER_DEVICE_CLASS, IP_ADDRESS: "169.254.244.184"}
 
 class GigECamera(object):
     """ Prototype GIGeCamera interface.
-    
+
     Simple Object design for the Basler GIGe cameras being used for the MOONs verification rig. The camera will open upon initialisation but needs to closed manually.
-    
+
     """
 
     def __init__(self, device_config):
         """ Create the Basler GIGe camera device.
-        
+
         Parameters
         ----------
         device_config : dictionary
             dictionary containing the device configuration, currently this is the IP address (IpAddress) and the pypylon class device (DeviceClass). The only useful value for DeviceClass is currently "BaslerGigE". If None is given, will use the camera finding tool and connect to the first one found.
         """
-        print ("Starting Setup")
+        print("Starting Setup")
         if device_config is None:
-            print ("No device config specified, using first camera found")
+            print("No device config specified, using first camera found")
             self.camera = pylon.InstantCamera(
                 pylon.TlFactory.GetInstance().CreateFirstDevice()
             )
@@ -92,19 +92,19 @@ class GigECamera(object):
             device = factory.CreateDevice(di)
             self.camera = pylon.InstantCamera(device)
 
-        print ("Gained access to Camera")
+        print("Gained access to Camera")
 
         # FROM HERE USES SAMPLES/GRAB.PY
 
         # Print the model name of the camera.
-        print ("Using device ", self.camera.GetDeviceInfo().GetModelName())
+        print("Using device ", self.camera.GetDeviceInfo().GetModelName())
 
         # Camera needs to be open to change the exposure time, normal camera.StartGrabbingMax will open a camera but this is an explicit call
         self.camera.Open()
 
     def SetExposureTime(self, exposure_time):
         """Set the exposure time of the camera.
-        
+
         Parameters
         ----------
         exposure_time : int
@@ -114,19 +114,19 @@ class GigECamera(object):
         if genicam.isWritable(self.camera.ExposureTimeRaw):
             self.camera.ExposureTimeRaw.SetValue(exposure_time)
         else:
-            print (
+            print(
                 "Exposure Time is not settable, continuing with current exposure time."
             )
 
     def saveImage(self, filename):
         """Function to save an image from a camera device and save it to a location.
-        
+
         Overwrites any existing file at filename.
         Parameters
         ----------
         filename : str
             Path to location where the image will be saved.
-            
+
         """
         # The parameter MaxNumBuffer can be used to control the count of buffers
         # allocated for grabbing. The default value of this parameter is 10.
@@ -153,9 +153,9 @@ class GigECamera(object):
                 # Access the image data.
                 img = grabResult.Array
                 imsave(filename, np.asarray(img))
-                print ("Filesaved as : {}".format(filename))
+                print("Filesaved as : {}".format(filename))
             else:
-                print ("Error: ", grabResult.ErrorCode, grabResult.ErrorDescription)
+                print("Error: ", grabResult.ErrorCode, grabResult.ErrorDescription)
         grabResult.Release()
 
     def close(self):
@@ -164,7 +164,7 @@ class GigECamera(object):
         if self.camera.IsOpen():
             self.camera.Close()
         else:
-            print ("Camera is already closed.")
+            print("Camera is already closed.")
 
     def __del__(self):
         self.close()

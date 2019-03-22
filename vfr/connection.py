@@ -1,18 +1,17 @@
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function
 
 import os
 
 import FpuGridDriver
 from FpuGridDriver import (
+    DATUM_TIMEOUT_DISABLE,
+    DEFAULT_WAVEFORM_RULSET_VERSION,
+    SEARCH_ANTI_CLOCKWISE,
+    SEARCH_CLOCKWISE,
     TEST_GATEWAY_ADRESS_LIST,
     GatewayAddress,
     ProtectionError,
-    SEARCH_CLOCKWISE,
-    SEARCH_ANTI_CLOCKWISE,
-    DEFAULT_WAVEFORM_RULSET_VERSION,
-    DATUM_TIMEOUT_DISABLE,
 )
-
 from vfr.tests_common import flush
 
 
@@ -22,7 +21,7 @@ def check_ping_ok(ipaddr):
 
 
 def check_connection(opts, name, address):
-    print ("testing connection to %s .." % name, "end=''")
+    print("testing connection to %s .." % name, "end=''")
     flush()
 
     pok = check_ping_ok(address)
@@ -31,7 +30,7 @@ def check_connection(opts, name, address):
             "network connection to %s at address %r not alive" % (name, address)
         )
     else:
-        print ("... OK")
+        print("... OK")
 
 
 def init_driver(opts, max_id, env=None, protected=True):
@@ -39,7 +38,7 @@ def init_driver(opts, max_id, env=None, protected=True):
         try:
             rd = FpuGridDriver.GridDriver(max_id + 1, env=env)
         except ProtectionError as e:
-            print (
+            print(
                 "protectionError exception raised -- maybe the"
                 " postion database needs to be initialized with 'init' ?\n\n",
                 str(e),
@@ -51,7 +50,7 @@ def init_driver(opts, max_id, env=None, protected=True):
         FpuGridDriver.GatewayAddress(opts.gateway_address, opts.gateway_port)
     ]
 
-    print ("connecting grid:", rd.connect(address_list=gateway_adr))
+    print("connecting grid:", rd.connect(address_list=gateway_adr))
 
     grid_state = rd.getGridState()
 
@@ -59,11 +58,11 @@ def init_driver(opts, max_id, env=None, protected=True):
 
 
 def check_can_connection(rd, grid_state, opts, fpu_id):
-    print ("checking CAN connection to FPU %i ..." % fpu_id, "end=''")
+    print("checking CAN connection to FPU %i ..." % fpu_id, "end=''")
     flush()
 
     rv = rd.pingFPUs(grid_state, fpuset=[fpu_id])
-    print (rv)
+    print(rv)
 
     return rv == FpuGridDriver.ethercanif.DE_OK
 
@@ -73,8 +72,8 @@ def ping_fpus(gd, grid_state, opts):
     gd.pingFPUs(grid_state)
 
     if opts.resetFPUs:
-        print ("resetting FPUs")
+        print("resetting FPUs")
         gd.resetFPUs(grid_state)
-        print ("OK")
+        print("OK")
 
     return grid_state

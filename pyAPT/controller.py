@@ -6,7 +6,7 @@ from __future__ import absolute_import, division, print_function
 try:
     import pylibftdi
 except ImportError:
-    print (
+    print(
         ">>>>>>>>>>> Warning: Import of pylibftdi failed - probably dependency mismatch."
     )
 import time
@@ -146,7 +146,7 @@ class Controller(object):
     bytes to be sent to the controller
     """
         if verbose:
-            print ("sending:", message.strhex(m.pack()))
+            print("sending:", message.strhex(m.pack()))
 
         self._device.write(m.pack())
 
@@ -169,7 +169,7 @@ class Controller(object):
             time.sleep(0.001)
 
         if verbose:
-            print ("received:", message.strhex(data))
+            print("received:", message.strhex(data))
 
         return data
 
@@ -185,7 +185,7 @@ class Controller(object):
 
     def _wait_message(self, expected_messageID, verbose=False):
         if verbose:
-            print ("waiting for message ID 0x%0x..." % expected_messageID, "end=' '")
+            print("waiting for message ID 0x%0x..." % expected_messageID, "end=' '")
         sys.stdout.flush()
         found = False
         while not found:
@@ -193,11 +193,11 @@ class Controller(object):
             found = m.messageID == expected_messageID
             if found:
                 if verbose:
-                    print ("ok")
+                    print("ok")
                 return m
             else:
                 if verbose:
-                    print (
+                    print(
                         "Warning: extra message received with ID",
                         m.messageID,
                         "param1 = ",

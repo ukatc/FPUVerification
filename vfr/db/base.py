@@ -1,13 +1,13 @@
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function
 
-import os
 import ast
-import lmdb
+import os
 import platform
 import subprocess
 
-from vfr.tests_common import timestamp
+import lmdb
 from numpy import NaN, nan
+from vfr.tests_common import timestamp
 
 GIT_VERSION = subprocess.check_output(["git", "describe"]).strip()
 
@@ -40,8 +40,8 @@ def save_test_result(ctx, fpuset, keyfunc, valfunc):
             val = valfunc(fpu_id)
 
             if verbosity > 4:
-                print ("putting %r : %r" % (key1, count))
-                print ("putting %r : %r" % (key2, val))
+                print("putting %r : %r" % (key1, count))
+                print("putting %r : %r" % (key2, val))
 
             txn.put(key1, str(count))
             txn.put(key2, val)
@@ -78,6 +78,6 @@ def get_test_result(ctx, fpu_id, keyfunc, count=None):
                 val = eval(val)
 
         if verbosity > 4:
-            print ("got %r : %r" % (key2, val))
+            print("got %r : %r" % (key2, val))
 
     return val

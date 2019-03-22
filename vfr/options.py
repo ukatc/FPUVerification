@@ -1,32 +1,26 @@
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function
 
 import argparse
+import re
 import sys
+import warnings
+from ast import literal_eval
 from os import environ
 
-from ast import literal_eval
-import re
-import warnings
-
-
+from fpu_constants import *
+from vfr.helptext import summary
+from vfr.conf import DEFAULT_TASKS
+from vfr.db.snset import get_snset
 from vfr.TaskLogic import T
 
-from fpu_constants import *
-
-from vfr.conf import DEFAULT_TASKS
-
 # from vfr.tasks import *
-
-from vfr.db.snset import get_snset
-
-from helptext import summary
 
 
 def parse_args():
     try:
         DEFAULT_VERBOSITY = int(environ.get("VFR_VERBOSITY", "0"))
     except:
-        print ("VFR_VERBOSITY has invalid value, setting verbosity to one")
+        print("VFR_VERBOSITY has invalid value, setting verbosity to one")
         DEFAULT_VERBOSITY = 1
 
     parser = argparse.ArgumentParser(
@@ -330,7 +324,6 @@ def get_sets(vfdb, fpu_config, opts):
 
         eval_fpuset = fpu_config.keys()
 
-
     # get sets of measured and evaluated FPUs
     N = max(measure_fpuset) + 1
 
@@ -341,11 +334,8 @@ def get_sets(vfdb, fpu_config, opts):
     return fpu_config, sorted(measure_fpuset), sorted(eval_fpuset)
 
 
-
-
-
 def load_config(config_file_name, vfdb, opts):
-    print ("reading measurement configuratiom from %r..." % config_file_name)
+    print("reading measurement configuratiom from %r..." % config_file_name)
     cfg_list = literal_eval("".join(open(config_file_name).readlines()))
 
     fconfig = dict(
