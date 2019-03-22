@@ -51,6 +51,8 @@ def pupalnCoordinates(
     # exceptions
     # scale and straighten the result coordinates
 
+    print ("image %s: processing pupil alignment analysis" % image_path)
+
     if pars.PUP_ALGN_CALIBRATION_PARS is None:
         pars.PUP_ALGN_CALIBRATION_PARS = {
             "algorithm": "scale",

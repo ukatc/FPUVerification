@@ -48,11 +48,11 @@ def methtHeight(
         if (betaScan[i + 1] - betaScan[i]) < 0:
             betaSide = i
             if pars.verbosity > 5:
-                print("Beta arm side is at x-coordinate %i" % betaSide)
+                print("Image %s: Beta arm side is at x-coordinate %i" % (image_path, betaSide))
 
     if betaSide == 0:
         raise MetrologyHeightAnalysisError(
-            "Beta arm side not found - consider changing scan height"
+            "Image %s: Beta arm side not found - consider changing scan height" % image_path
         )
 
     threshcrop = thresh[1750:2700, betaSide - 100 : betaSide + 1500]
@@ -68,7 +68,7 @@ def methtHeight(
     noiseMetric = (threshstd - threshblurstd) / threshblurstd * 100
 
     if pars.verbosity > 5:
-        print("Noise metric in thresholded image is %.2f" % noiseMetric)
+        print("Image %s: Noise metric in thresholded image is %.2f" % (image_path, noiseMetric))
 
     # pixel distances from side of beta arm to measurement points
     # these parameters could be made configurable but shouldn't need to be changed
@@ -103,6 +103,7 @@ def methtHeight(
                 break
 
     if pars.verbosity > 5:
+        print("Image %s:" % image_path)
         print("Arm surface points found - x:%s y:%s" % (armSurfaceX, armSurfaceY))
         print("Small target points found - x:%s y:%s" % (smallTargetX, smallTargetY))
         print("Large target points found - x:%s y:%s" % (largeTargetX, largeTargetY))
@@ -130,26 +131,27 @@ def methtHeight(
     stdLargeTarget = std(largeTargetHeights) * pars.METHT_PLATESCALE
     if pars.verbosity > 5:
         print(
-            "Standard deviations of small/large target heights are %.3f and %.3f"
-            % (stdSmallTarget, stdLargeTarget)
+            "Image %s: Standard deviations of small/large target heights are %.3f and %.3f"
+            % (image_path, stdSmallTarget, stdLargeTarget)
         )
 
     # exceptions
     if stdSmallTarget > pars.METHT_STANDARD_DEV:
         raise MetrologyHeightAnalysisError(
-            "Small target points have high standard deviation"
-            " - target may not be sitting flat"
+            "Image %s: Small target points have high standard deviation"
+            " - target may not be sitting flat" % image_path
         )
 
     if stdLargeTarget > pars.METHT_STANDARD_DEV:
         raise MetrologyHeightAnalysisError(
-            "Large target points have high standard deviation"
-            " - target may not be sitting flat"
+            "Image %s: Large target points have high standard deviation"
+            " - target may not be sitting flat" % image_path
         )
 
     if noiseMetric > pars.METHT_NOISE_METRIC:
         raise MetrologyHeightAnalysisError(
-            "Image noise excessive - consider " "changing Gaussian blur value"
+            "Image %s: Image noise excessive - consider "
+            "changing Gaussian blur value" % image_path
         )
 
     metht_small_target_height = (

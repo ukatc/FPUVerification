@@ -62,8 +62,9 @@ def metcalTargetCoordinates(image_path, pars=None):
 
     if pars.verbosity > 5:
         print(
+            "Image %s:"
             "Lower/upper perimeter limits of small & large targets in mm: %.2f / %.2f ; %.2f / %.2f"
-            % (smallPerimeterLo, smallPerimeterHi, largePerimeterLo, largePerimeterHi)
+            % (image_path, smallPerimeterLo, smallPerimeterHi, largePerimeterLo, largePerimeterHi)
         )
 
     centres = {}
@@ -97,8 +98,9 @@ def metcalTargetCoordinates(image_path, pars=None):
             circularity = 4 * pi * (area / (perimeter * perimeter))
         if pars.verbosity > 5:
             print(
+                "Image %s:"
                 "ContourID - %i; perimeter - %.2f; circularity - %.2f"
-                % (i, perimeter, circularity)
+                % (image_path, i, perimeter, circularity)
             )
         if circularity > pars.MET_CAL_QUALITY_METRIC:
             if perimeter > smallPerimeterLo and perimeter < smallPerimeterHi:
@@ -147,32 +149,32 @@ def metcalTargetCoordinates(image_path, pars=None):
 
     if multipleSmall == True:
         raise MetrologyAnalysisTargetError(
-            "Multiple small targets found - tighten"
-            " parameters or investigate images for contamination"
+            "Image %s: Multiple small targets found - tighten"
+            " parameters or investigate images for contamination" % image_path
         )
 
     if multipleLarge == True:
         raise MetrologyAnalysisTargetError(
-            "Multiple large targets found - tighten "
-            "parameters or investigate images for contamination"
+            "Image %s: Multiple large targets found - tighten "
+            "parameters or investigate images for contamination" % image_path
         )
 
     if smallTargetFound == False:
         raise MetrologyAnalysisTargetError(
-            "Small target not found - loosen diameter"
-            " tolerance or change image thresholding"
+            "Image %s: Small target not found - loosen diameter"
+            " tolerance or change image thresholding" % image_path
         )
 
     if largeTargetFound == False:
         raise MetrologyAnalysisTargetError(
-            "Large target not found - loosen diameter"
-            " tolerance or change image thresholding"
+            "Image %s: Large target not found - loosen diameter"
+            " tolerance or change image thresholding" % image_path
         )
 
     if pars.verbosity > 5:
         print(
-            "Contour %i = small target, contour %i = large target"
-            % (centres["Small Target"][3], centres["Large Target"][3])
+            "Image %s: Contour %i = small target, contour %i = large target"
+            % (image_path, centres["Small Target"][3], centres["Large Target"][3])
         )
 
     metcal_small_target_x = centres["Small Target"][0] * pars.MET_CAL_PLATESCALE
@@ -191,14 +193,14 @@ def metcalTargetCoordinates(image_path, pars=None):
 
     if pars.verbosity > 5:
         print(
-            "Target separation is %.3f mm.  Specification is 2.375 +/- 0.1 mm."
-            % targetSeparation
+            "Image %s: Target separation is %.3f mm.  Specification is 2.375 +/- 0.1 mm."
+            % (image_path, targetSeparation)
         )
 
     if targetSeparation > 2.475 or targetSeparation < 2.275:
         raise MetrologyAnalysisTargetError(
-            "Target separation is out of spec - use display option "
-            "to check for target-like reflections"
+            "Image %s: Target separation is out of spec - use display option "
+            "to check for target-like reflections" % image_path
         )
 
     return (

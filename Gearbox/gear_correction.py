@@ -17,7 +17,7 @@ class GearboxFitError(Exception):
 GEARBOX_CORRECTION_VERSION = 0.1
 
 
-def fit_gearbox_correction(dict_of_coordinates):
+def fit_gearbox_correction(dict_of_coordinates_alpha, dict_of_coordinates_beta):
     """Computes gearbox correction and returns correction coefficients
     as a dictionary.
 
@@ -25,7 +25,7 @@ def fit_gearbox_correction(dict_of_coordinates):
     Input is a dictionary. The keys of the dictionary
     are the i,j,k indices of the positional repeteability measurement.
     Equal i and k mean equal step counts, and j indicates
-    the arm and movement direction of the corresponding arm 
+    the arm and movement direction of the corresponding arm
     during measurement.
 
     The values of the dictionary are a 4-tuple
@@ -37,7 +37,7 @@ def fit_gearbox_correction(dict_of_coordinates):
     the small (index 2) target measured from the images taken.
 
 
-    The units are in degrees (for alpha_steps and beta_steps) 
+    The units are in degrees (for alpha_steps and beta_steps)
     and millimeter (for x_measured and y_measured).
 
     """
