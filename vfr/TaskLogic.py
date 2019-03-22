@@ -162,6 +162,9 @@ task_dependencies = [
         T.TST_BETA_MIN,
         [T.TASK_INIT_GD, T.TST_CAN_CONNECTION, T.REQ_DATUM_PASSED, T.TASK_REFERENCE],
     ),
+
+    (T.TASK_REFERENCE, [T.REQ_DATUM_PASSED,]),
+
     (T.TST_COLLDETECT, [T.REQ_DATUM_PASSED, T.TASK_REFERENCE]),
     (
         T.MEASURE_DATUM_REP,
@@ -248,7 +251,7 @@ task_dependencies = [
 # passed for all FPUs, otherwise the listed tasks are addded.
 conditional_dependencies = [
     (T.REQ_DATUM_REP_PASSED, get_datum_repeatability_passed_p, [T.TST_DATUM_REP]),
-    (T.REQ_DATUM_PASSED, get_datum_passed_p, [T.TST_DATUM_BOTH]),
+    (T.REQ_DATUM_PASSED, get_datum_passed_p, [T.TST_DATUM]),
     (T.REQ_COLLDECT_PASSED, get_colldect_passed_p, [T.TST_COLLDETECT]),
     (T.REQ_PUP_ALGN_PASSED, get_pupil_alignment_passed_p, [T.TST_PUP_ALGN]),
     (T.REQ_POS_REP_PASSED, get_positional_repeatability_passed_p, [T.TST_POS_REP]),
