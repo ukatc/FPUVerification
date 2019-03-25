@@ -26,6 +26,7 @@ from FpuGridDriver import (
     DASEL_BOTH,
     DATUM_TIMEOUT_DISABLE,
     DEFAULT_WAVEFORM_RULSET_VERSION,
+    FPST_AT_DATUM,
     REQD_ANTI_CLOCKWISE,
     REQD_CLOCKWISE,
     SEARCH_ANTI_CLOCKWISE,
@@ -118,7 +119,7 @@ def test_datum(ctx, dasel=DASEL_BOTH):
         save_datum_result(ctx, dasel, rigstate)
 
     for fpu_id, fpu in enumerate(ctx.grid_state.FPU):
-        if fpu_state != FPST_AT_DATUM:
+        if not success:
             failed_fpus.append((fpu_id, ctx.fpu_config[fpu_id]["serialnumber"]))
 
     if failed_fpus:

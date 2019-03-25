@@ -264,7 +264,7 @@ def parse_args():
 sn_pat = re.compile("[a-zA-Z0-9]{1,5}$")
 
 
-def get_sets(vfdb, fpu_config, opts):
+def get_sets(env, vfdb, fpu_config, opts):
     """Under normal operation, we want to measure and evaluate the FPUs
     in the rig.
 
@@ -282,15 +282,15 @@ def get_sets(vfdb, fpu_config, opts):
 
     if eval_snset == "all":
         # get the serial numbers of all FPUs which have been measured so far
-        eval_snset = get_snset(env, vfdb)
+        eval_snset = get_snset(env, vfdb, opts)
     elif eval_snset is not None:
         # in this case, it needs to be a list of serial numbers
         eval_snset = set(eval_snset)
 
-    # check passed serial numbers for validity
-    for sn in eval_snset:
-        if not sn_pat.match(sn):
-            raise ValueError("serial number %r is not valid!" % sn)
+        # check passed serial numbers for validity
+        for sn in eval_snset:
+            if not sn_pat.match(sn):
+                raise ValueError("serial number %r is not valid!" % sn)
 
     if eval_snset is None:
         # both mesured and evaluated sets are exclusively defined by
@@ -343,7 +343,7 @@ def get_sets(vfdb, fpu_config, opts):
     return fpu_config, sorted(measure_fpuset), sorted(eval_fpuset)
 
 
-def load_config(config_file_name, vfdb, opts):
+def load_config(env, vfdb, config_file_name, opts=None):
     print("reading measurement configuratiom from %r..." % config_file_name)
     cfg_list = literal_eval("".join(open(config_file_name).readlines()))
 
@@ -361,6 +361,18 @@ def load_config(config_file_name, vfdb, opts):
         ]
     )
 
+    if not opts.reuse_serialnum:
+        config_sns = set([it["serialnumber"] for it in fconfig.values()])
+        used_sns = get_snset(env, vfdb, opts)
+        reused_sns = config_sns & used_sns
+        print("config_sns=%r, used_sns=%r, reused_sns=%r" % (
+            config_sns, used_sns, reused_sns))
+        if reused_sns:
+            raise ValueError("serial numbers %s have been used before"
+                             " - use option --reuse_serialnum to explicitly"
+                             " use them again")
+
+
     for key, val in fconfig.items():
         if key < 0:
             raise ValueError("FPU id %i is not valid!" % key)
@@ -371,6 +383,6 @@ def load_config(config_file_name, vfdb, opts):
             )
 
     # get sets of measured and evaluated FPUs
-    fpu_config, measure_fpuset, eval_fpuset = get_sets(vfdb, fconfig, opts)
+    fpu_config, measure_fpuset, eval_fpuset = get_sets(env, vfdb, fconfig, opts)
 
     return fpu_config, sorted(measure_fpuset), sorted(eval_fpuset)

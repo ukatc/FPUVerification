@@ -25,6 +25,7 @@ from vfr.conf import (ALPHA_DATUM_OFFSET, COLLDECT_MEASUREMENT_PARS,
                       PUP_ALGN_MEASUREMENT_PARS)
 from vfr.connection import (check_can_connection, check_connection,
                             check_ping_ok, init_driver)
+from vfr.db.snset import add_sns_to_set
 from vfr.options import load_config, parse_args
 from vfr.posdb import init_position
 from vfr.TaskLogic import T, resolve
@@ -59,7 +60,7 @@ if __name__ == "__main__":
 
     vfdb = env.open_db("verification")
 
-    fpu_config, measure_fpuset, eval_fpuset = load_config(opts.setup_file, vfdb, opts)
+    fpu_config, measure_fpuset, eval_fpuset = load_config(env, vfdb, opts.setup_file, opts=opts)
 
     print ("measurement config= %r" % fpu_config)
 
@@ -141,6 +142,7 @@ if __name__ == "__main__":
 
     if T.TST_FLASH in tasks:
         print ("[flash_snum] ###")
+        flashed_numbers = []
         for fpu_id in measure_fpuset:
             serial_number = fpu_config[fpu_id]["serialnumber"]
 
@@ -150,8 +152,13 @@ if __name__ == "__main__":
             )
             flush()
             rval = rd.writeSerialNumber(fpu_id, serial_number, grid_state)
+            flashed_numbers.append(serial_number)
             print (rval)
             rd.readSerialNumbers(grid_state)
+        # we update the set of FPUs which are in the database,
+        # so that we can iterate over existing data when generating reports.
+        add_sns_to_set(context, flashed_numbers)
+
 
 
     context.fpudb = env.open_db("fpu")

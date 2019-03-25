@@ -8,7 +8,6 @@ from vfr.db.base import (
     save_test_result,
     timestamp,
 )
-from vfr.db.snset import add_sns_to_set
 
 RECORD_TYPE = "findDatum"
 
@@ -57,9 +56,6 @@ def save_datum_result(ctx, dasel, rigstate):
         return val
 
     save_test_result(ctx, ctx.measure_fpuset, keyfunc, valfunc)
-    # we update the set of FPUs which are in the database,
-    # so that we can iterate over existing data when generating reports.
-    add_sns_to_set(ctx, ctx.measure_fpuset)
 
 
 def get_datum_result(ctx, fpu_id, dasel=DASEL_BOTH):
