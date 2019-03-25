@@ -290,7 +290,7 @@ def eval_positional_repeatability(
             )
 
             positional_repeatability_has_passed = (
-                posrep_rss_mm <= pos_rep_evaluation_pars.POS_REP_PASS
+                TestResult.OK if posrep_rss_mm <= pos_rep_evaluation_pars.POS_REP_PASS else TestResult.FAILED
             )
 
             gearbox_correction = fit_gearbox_correction(analysis_results_alpha_short, analysis_results_beta_short)

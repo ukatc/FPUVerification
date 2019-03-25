@@ -8,13 +8,14 @@ from vfr.db.base import (
     timestamp,
 )
 
+RECORD_TYPE = "positional-verification"
 
 def save_positional_verification_images(ctx, fpu_id, images_dict):
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
         serialnumber = ctx.fpu_config[fpu_id]["serialnumber"]
-        keybase = (serialnumber, "positional-verification", "images")
+        keybase = (serialnumber, RECORD_TYPE, "images")
         return keybase
 
     def valfunc(fpu_id):
@@ -30,7 +31,7 @@ def get_positional_verification_images(ctx, fpu_id):
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
         serialnumber = ctx.fpu_config[fpu_id]["serialnumber"]
-        keybase = (serialnumber, "positional-verification", "images")
+        keybase = (serialnumber, RECORD_TYPE, "images")
         return keybase
 
     return get_test_result(ctx, fpu_id, keyfunc)
@@ -39,10 +40,10 @@ def get_positional_verification_images(ctx, fpu_id):
 def save_positional_verification_result(
     ctx,
     fpu_id,
-    pos_rep_calibration_pars=None,
+    pos_ver_calibration_pars=None,
     analysis_results=None,
-    posver_errors=None,
-    positional_verification_mm=None,
+    posver_error=[],
+    posver_error_max=None,
     errmsg="",
     analysis_version=None,
     positional_verification_has_passed=None,
@@ -51,16 +52,17 @@ def save_positional_verification_result(
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
         serialnumber = ctx.fpu_config[fpu_id]["serialnumber"]
-        keybase = (serialnumber, "positional-verification", "result")
+        keybase = (serialnumber, RECORD_TYPE, "result")
         return keybase
 
     def valfunc(fpu_id):
 
         val = repr(
             {
-                "calibration_pars": pos_rep_calibration_pars,
+                "calibration_pars": pos_ver_calibration_pars,
                 "analysis_results": analysis_results,
-                "verification_millimeter": positional_verification_mm,
+                "posver_error" : posver_error,
+                "posver_error_max" : posver_error_max,
                 "result": positional_verification_has_passed,
                 "posver_errors": posver_errors,
                 "error_message": errmsg,
@@ -78,7 +80,7 @@ def save_positional_verification_result(
 def get_positional_verification_result(ctx, fpu_id):
     def keyfunc(fpu_id):
         serialnumber = fpu_config[fpu_id]["serialnumber"]
-        keybase = (serialnumber, "positional-verification", "result")
+        keybase = (serialnumber, RECORD_TYPE, "result")
         return keybase
 
     return get_test_result(ctx, fpu_id, keyfunc)

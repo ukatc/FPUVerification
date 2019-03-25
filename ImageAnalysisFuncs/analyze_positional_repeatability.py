@@ -1,5 +1,8 @@
 # -*- coding: utf-8-unix -*-
 from __future__ import print_function, division
+
+import warnings
+
 from numpy import NaN, mean, std, array, hstack
 from numpy.linalg import norm
 
@@ -22,8 +25,11 @@ class RepeatabilityAnalysisError(ImageAnalysisError):
 # (each different result for the same data
 # should yield a version number increase)
 
-POSITIONAL_REPEATABILITY_ALGORITHM_VERSION = 0.1
 DATUM_REPEATABILITY_ALGORITHM_VERSION = 0.1
+
+POSITIONAL_REPEATABILITY_ALGORITHM_VERSION = 0.1
+
+POSITIONAL_VERIFICATION_ALGORITHM_VERSION = 0.1
 
 
 def posrepCoordinates(
@@ -390,4 +396,27 @@ def evaluate_positional_verification(dict_of_coordinates, POSITION_VER_PASS=None
 
     """
 
-    return 0.005
+
+    posver_error = {}
+
+    for k, va in dict_of_coords.items():
+        alpha, beta, count = k
+
+        # FIXME: compute somehow nominal coordinates
+        warnings.warn("insert computation of nominal target coordinates here")
+        x_small, y_small = NaN * alpha, NaN * beta
+        x_big, y_big = NaN * alpha, NaN * beta
+
+        # compute difference
+        err_small = norm(va[:,:2] - array([alpha, beta]))
+        err_big = norm(va[:,2:] - - array([alpha, beta]))
+
+        posver_error[k] = max(err_small, err_big)
+
+
+    posver_error_max = max(posver_error.values())
+
+    return (
+        posver_error,
+        posver_error_max,
+    )

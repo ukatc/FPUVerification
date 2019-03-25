@@ -41,6 +41,8 @@ from vfr.verification_tasks.metrology_height import (eval_metrology_height,
                                                      measure_metrology_height)
 from vfr.verification_tasks.positional_repeatability import (eval_positional_repeatability,
                                                              measure_positional_repeatability)
+from vfr.verification_tasks.positional_verification import (eval_positional_verification,
+                                                             measure_positional_verification)
 from vfr.verification_tasks.report import dump_data, report
 from vfr.verification_tasks.rig_selftest import (selftest_fibre,
                                                  selftest_nonfibre)
