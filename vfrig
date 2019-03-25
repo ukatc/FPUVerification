@@ -26,7 +26,7 @@ from vfr.conf import (ALPHA_DATUM_OFFSET, COLLDECT_MEASUREMENT_PARS,
 from vfr.connection import (check_can_connection, check_connection,
                             check_ping_ok, init_driver)
 from vfr.db.snset import add_sns_to_set
-from vfr.options import load_config, parse_args
+from vfr.options import load_config, parse_args, check_sns_unique
 from vfr.posdb import init_position
 from vfr.TaskLogic import T, resolve
 from vfr.tests_common import find_datum, flush, goto_position
@@ -142,6 +142,7 @@ if __name__ == "__main__":
 
     if T.TST_FLASH in tasks:
         print ("[flash_snum] ###")
+        check_sns_unique(context)
         flashed_numbers = []
         for fpu_id in measure_fpuset:
             serial_number = fpu_config[fpu_id]["serialnumber"]

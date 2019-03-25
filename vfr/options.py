@@ -361,17 +361,6 @@ def load_config(env, vfdb, config_file_name, opts=None):
         ]
     )
 
-    if not opts.reuse_serialnum:
-        config_sns = set([it["serialnumber"] for it in fconfig.values()])
-        used_sns = get_snset(env, vfdb, opts)
-        reused_sns = config_sns & used_sns
-        print("config_sns=%r, used_sns=%r, reused_sns=%r" % (
-            config_sns, used_sns, reused_sns))
-        if reused_sns:
-            raise ValueError("serial numbers %s have been used before"
-                             " - use option --reuse_serialnum to explicitly"
-                             " use them again")
-
 
     for key, val in fconfig.items():
         if key < 0:
@@ -386,3 +375,18 @@ def load_config(env, vfdb, config_file_name, opts=None):
     fpu_config, measure_fpuset, eval_fpuset = get_sets(env, vfdb, fconfig, opts)
 
     return fpu_config, sorted(measure_fpuset), sorted(eval_fpuset)
+
+
+def check_sns_unique(ctx):
+    if not ctx.opts.reuse_serialnum:
+        config_sns = set(
+            [ctx.fpu_config[fpu_id]["serialnumber"] for fpu_id in ctx.measure_fpuset]
+        )
+        used_sns = get_snset(ctx.env, ctx.vfdb, ctx.opts)
+        reused_sns = config_sns & used_sns
+        print("config_sns=%r, used_sns=%r, reused_sns=%r" % (
+            config_sns, used_sns, reused_sns))
+        if reused_sns:
+            raise ValueError("serial numbers %s have been used before"
+                             " - use option '--reuse-serialnum' to explicitly"
+                             " use them again" % sorted(reused_sns))
