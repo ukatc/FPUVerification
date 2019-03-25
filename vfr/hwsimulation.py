@@ -24,19 +24,19 @@ from vfr.tests_common import find_datum
 
 
 def switch_fibre_backlight(state, manual_lamp_control=False):
-    print("switch state of backlight to %r and presse <enter>" % state)
+    print("'switch state of backlight to %r and press <enter>'" % state)
 
 
 def switch_fibre_backlight_voltage(voltage, manual_lamp_control=False):
-    print("switch voltage of backlight to %3.1f and presse <enter>" % voltage)
+    print("'switch voltage of backlight to %3.1f and press <enter>'" % voltage)
 
 
 def switch_ambientlight(state, manual_lamp_control=False):
-    print("switch state of ambient light to %r and presse <enter>" % state)
+    print("'switch state of ambient light to %r and press <enter>'" % state)
 
 
 def switch_silhouettelight(state, manual_lamp_control=False):
-    print("switch state of silhouette light to %r and presse <enter>" % state)
+    print("'switch state of silhouette light to %r and press <enter>'" % state)
 
 
 @contextmanager

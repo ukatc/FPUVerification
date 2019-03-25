@@ -182,7 +182,9 @@ def measure_positional_repeatability(ctx, pars=None):
                             ctx.gd, abs_alpha, abs_beta, ctx.grid_state, fpuset=[fpu_id]
                         )
 
-                        angles = ctx.gd.countedAngles(ctx.grid_state, fpuset=ctx.measure_fpuset)
+                        # to get the angles, we need to pass all connected FPUs
+                        fpuset = range(ctx.opts.N)
+                        angles = ctx.gd.countedAngles(ctx.grid_state, fpuset=fpuset)
 
                         alpha_count = angles[fpu_id][0]
                         beta_count = angles[fpu_id][1]
@@ -224,6 +226,10 @@ def eval_positional_repeatability(
 
     for fpu_id in ctx.eval_fpuset:
         measurement = get_positional_repeatability_images(ctx, fpu_id)
+
+        if measurement is None:
+            print("FPU %s: no positional repeatability measurement data found" % fpu_id)
+            continue
 
         images_alpha = measurement["images_alpha"]
         images_beta = measurement["images_beta"]

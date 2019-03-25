@@ -107,7 +107,13 @@ def eval_metrology_calibration(
 ):
 
     for fpu_id in ctx.eval_fpuset:
-        images = get_metrology_calibration_images(ctx, fpu_id)["images"]
+        measurement = get_metrology_calibration_images(ctx, fpu_id)
+
+        if measurement is None:
+            print("FPU %s: no metrology calibration measurement data found" % fpu_id)
+            continue
+
+        images = measurement["images"]
 
         print("images= %r" % images)
         try:

@@ -129,7 +129,13 @@ def eval_pupil_alignment(
 ):
 
     for fpu_id in ctx.eval_fpuset:
-        images = get_pupil_alignment_images(ctx, fpu_id, images)
+        measurement = get_pupil_alignment_images(ctx, fpu_id, images)
+
+        if measurement is None:
+            print("FPU %s: no pupil alignment measurement data found" % fpu_id)
+            continue
+
+        images = measurement["images"]
 
         def analysis_func(ipath):
             return pupalnCoordinates(

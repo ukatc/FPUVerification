@@ -127,7 +127,12 @@ def measure_datum_repeatability(ctx, pars=None):
 def eval_datum_repeatability(ctx, dat_rep_analysis_pars):
 
     for fpu_id in ctx.eval_fpuset:
-        images = get_datum_repeatability_images(ctx, fpu_id)["images"]
+        measurement = get_datum_repeatability_images(ctx, fpu_id)["images"]
+        if measurement is None:
+            print("FPU %s: no datum repeatability measurement data found" % fpu_id)
+            continue
+
+        images = measurement["images"]
 
         def analysis_func(ipath):
             return posrepCoordinates(ipath, pars=dat_rep_analysis_pars)

@@ -210,7 +210,13 @@ def eval_positional_verification(ctx, pos_rep_analysis_pars, pos_ver_evaluation_
         )
 
     for fpu_id in fpuset:
-        image_dict = get_positional_verification_images(ctx, fpu_id)
+        measurement = get_positional_verification_images(ctx, fpu_id)
+
+        if measurement is None:
+            print("FPU %s: no positional verification measurement data found" % fpu_id)
+            continue
+
+        images = measurement["images"]
 
         try:
             analysis_results_short = {}

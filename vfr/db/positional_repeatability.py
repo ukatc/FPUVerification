@@ -48,7 +48,7 @@ def get_positional_repeatability_images(ctx, fpu_id):
         keybase = (serialnumber, RECORD_TYPE, "images")
         return keybase
 
-    verbosity = max(cts.opts.verbosity - 3, 0)
+    verbosity = max(ctx.opts.verbosity - 3, 0)
     return get_test_result(ctx, fpu_id, keyfunc, verbosity=verbosity)
 
 
