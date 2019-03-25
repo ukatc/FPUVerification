@@ -18,7 +18,7 @@ from vfr.TaskLogic import T
 
 def parse_args():
     try:
-        DEFAULT_VERBOSITY = int(environ.get("VFR_VERBOSITY", "0"))
+        DEFAULT_VERBOSITY = int(environ.get("VFR_VERBOSITY", "1"))
     except:
         print("VFR_VERBOSITY has invalid value, setting verbosity to one")
         DEFAULT_VERBOSITY = 1

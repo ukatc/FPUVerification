@@ -103,13 +103,19 @@ def measure_datum_repeatability(ctx, pars=None):
 
             ctx.gd.findDatum(ctx.grid_state)
             for count in range(pars.DATUM_REP_ITERATIONS):
-                print("capturing moved+datumed-%02i" % count)
+                if ctx.opts.verbosity > 0:
+                    print("moving FPU %i to (30,30) and back" % fpu_id)
                 wf = gen_wf(30 * dirac(fpu_id, ctx.opts.N), 30)
-                ctx.gd.configMotion(wf, ctx.grid_state)
-                ctx.gd.executeMotion(ctx.grid_state, fpuset=[fpu_id])
-                ctx.gd.reverseMotion(ctx.grid_state, fpuset=[fpu_id])
-                ctx.gd.executeMotion(ctx.grid_state, fpuset=[fpu_id])
-                ctx.gd.findDatum(ctx.grid_state, fpuset=[fpu_id])
+                verbosity = max(ctx.opts.verbosity - 3, 0)
+                gd = ctx.gd
+                grid_state = ctx.grid_state
+
+                gd.configMotion(wf, grid_state, verbosity=verbosity)
+                gd.executeMotion(grid_state, fpuset=[fpu_id])
+                gd.reverseMotion(grid_state, fpuset=[fpu_id], verbosity=verbosity)
+                gd.executeMotion(grid_state, fpuset=[fpu_id])
+                gd.findDatum(grid_state, fpuset=[fpu_id])
+                print("capturing moved+datumed-%02i" % count)
                 ipath = capture_image("moved+datumed", count)
                 moved_images.append(ipath)
 

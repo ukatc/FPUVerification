@@ -85,18 +85,21 @@ def goto_position(
     current_angles = gd.trackedAngles(grid_state, retrieve=True)
     current_alpha = array([x.as_scalar() for x, y in current_angles])
     current_beta = array([y.as_scalar() for x, y in current_angles])
-    if verbosity > 2:
-        print("current positions:\nalpha=%r,\nbeta=%r" % (current_alpha, current_beta))
-        print("moving to (%6.2f,%6.2f)" % (abs_alpha, abs_beta))
+    if verbosity > 8:
+        print("current positions:\n%r" % current_angles)
+    if verbosity > 0:
+        print("moving FPUs %s to (%6.2f,%6.2f)" % (fpuset, abs_alpha, abs_beta))
 
     wf = gen_wf(-current_alpha + abs_alpha, -current_beta + abs_beta)
     wf2 = {k: v for k, v in wf.items() if k in fpuset}
+    verbosity = max(verbosity - 3, 0)
     gd.configMotion(
         wf2,
         grid_state,
         allow_uninitialized=allow_uninitialized,
         soft_protection=soft_protection,
         warn_unsafe=soft_protection,
+        verbosity=verbosity,
     )
 
     gd.executeMotion(grid_state, fpuset=fpuset)
@@ -104,7 +107,7 @@ def goto_position(
     if CAN_PROTOCOL_VERSION == 1:
         gd.pingFPUs(grid_state)
 
-    if verbosity > 2:
+    if verbosity > 8:
         print("FPU states=", list_states(grid_state))
 
 
@@ -114,7 +117,7 @@ def find_datum(gd, grid_state, opts=None, uninitialized=False):
     gd.pingFPUs(grid_state)
     if verbosity > 9:
         print("pre datum:")
-    gd.trackedAngles(grid_state)
+        gd.trackedAngles(grid_state)
     if verbosity > 9:
         print("states=", list_states(grid_state))
     if verbosity > 8:
@@ -157,7 +160,7 @@ def find_datum(gd, grid_state, opts=None, uninitialized=False):
 
         else:
             timeout=DATUM_TIMEOUT_ENABLE
-            if verbosity > 2:
+            if verbosity > 3:
                 print(
                     "issuing findDatum (%i FPUs, timeout=%r):"
                     % (len(unreferenced), timeout)

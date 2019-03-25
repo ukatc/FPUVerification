@@ -18,9 +18,10 @@ class TestResult:
     NA = "NA"
 
 
-def save_test_result(ctx, fpuset, keyfunc, valfunc):
+def save_test_result(ctx, fpuset, keyfunc, valfunc, verbosity=None):
 
-    verbosity = ctx.opts
+    if verbosity is None:
+        verbosity = ctx.opts
 
     with ctx.env.begin(write=True, db=ctx.vfdb) as txn:
 
@@ -47,9 +48,10 @@ def save_test_result(ctx, fpuset, keyfunc, valfunc):
             txn.put(key2, val)
 
 
-def get_test_result(ctx, fpu_id, keyfunc, count=None):
+def get_test_result(ctx, fpu_id, keyfunc, count=None, verbosity=None):
 
-    verbosity = ctx.opts.verbosity
+    if verbosity is None:
+        verbosity = ctx.opts.verbosity
 
     with ctx.env.begin(write=False, db=ctx.vfdb) as txn:
 

@@ -1,6 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
-from numpy import NaN
+from numpy import NaN, max
 
 from vfr.db.base import (
     GIT_VERSION,
@@ -36,7 +36,8 @@ def save_positional_repeatability_images(
         )
         return val
 
-    save_test_result(ctx, [fpu_id], keyfunc, valfunc)
+    verbosity = max(ctx.opts.verbosity - 4, 0)
+    save_test_result(ctx, [fpu_id], keyfunc, valfunc, verbosity=verbosity)
 
 
 def get_positional_repeatability_images(ctx, fpu_id):
@@ -47,7 +48,8 @@ def get_positional_repeatability_images(ctx, fpu_id):
         keybase = (serialnumber, RECORD_TYPE, "images")
         return keybase
 
-    return get_test_result(ctx, fpu_id, keyfunc)
+    verbosity = max(cts.opts.verbosity - 3, 0)
+    return get_test_result(ctx, fpu_id, keyfunc, verbosity=verbosity)
 
 
 def save_positional_repeatability_result(

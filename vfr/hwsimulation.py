@@ -83,10 +83,12 @@ def turntable_safe_goto(gd, grid_state, stage_position, opts=None):
 
 
 def safe_home_turntable(gd, grid_state, opts=None):
-    print("issuing findDatum:")
+    if (opts is not None) and opts.verbosity > 2:
+        print("issuing findDatum:")
     # gd.findDatum(grid_state, timeout=DATUM_TIMEOUT_DISABLE)
     find_datum(gd, grid_state, opts=opts)
-    print("findDatum finished")
+    if (opts is not None) and opts.verbosity > 2:
+        print("findDatum finished")
 
     print("moving turntable to home position")
 
