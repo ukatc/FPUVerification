@@ -64,7 +64,6 @@ def save_positional_verification_result(
                 "posver_error" : posver_error,
                 "posver_error_max" : posver_error_max,
                 "result": positional_verification_has_passed,
-                "posver_errors": posver_errors,
                 "error_message": errmsg,
                 "algorithm_version": analysis_version,
                 "git-version": GIT_VERSION,

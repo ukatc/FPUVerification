@@ -370,7 +370,7 @@ def evaluate_positional_repeatability(
     )
 
 
-def evaluate_positional_verification(dict_of_coordinates, POSITION_VER_PASS=None):
+def evaluate_positional_verification(dict_of_coords, pars=None):
     """Takes a dictionary. The keys of the dictionary
     are the i,j,k indices of the positional repeteability measurement.
     Equal i and k mean equal step counts, and j indicates
@@ -408,8 +408,8 @@ def evaluate_positional_verification(dict_of_coordinates, POSITION_VER_PASS=None
         x_big, y_big = NaN * alpha, NaN * beta
 
         # compute difference
-        err_small = norm(va[:,:2] - array([alpha, beta]))
-        err_big = norm(va[:,2:] - - array([alpha, beta]))
+        err_small = norm(va[:2] - array([alpha, beta]))
+        err_big = norm(va[2:] - - array([alpha, beta]))
 
         posver_error[k] = max(err_small, err_big)
 

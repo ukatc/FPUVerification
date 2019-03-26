@@ -220,6 +220,7 @@ def measure_positional_verification(ctx, pars=None):
             image_dict = {}
             for k, (alpha, beta) in enumerate(tested_positions):
                 # get current step count
+                gd.pingFPUs(grid_state)
                 alpha_cursteps = grid_state.FPU[fpu_id].alpha_steps
                 beta_cursteps = grid_state.FPU[fpu_id].beta_steps
 
@@ -232,7 +233,7 @@ def measure_positional_verification(ctx, pars=None):
 
                 if verbosity > 0:
                     print(
-                        "FPU %s: #%i moving to (%7.2f, %7.2f) degrees = (%i, %i) steps"
+                        "FPU %s: measurement #%i - moving to (%7.2f, %7.2f) degrees = (%i, %i) steps"
                         % (sn, k, alpha, beta, asteps_target, bsteps_target)
                     )
 
@@ -251,8 +252,16 @@ def measure_positional_verification(ctx, pars=None):
                 gd.configMotion(wf, grid_state, verbosity=verbosity_)
                 gd.executeMotion(grid_state)
 
+                gd.pingFPUs(grid_state)
+                alpha_actualsteps = grid_state.FPU[fpu_id].alpha_steps
+                beta_actualsteps = grid_state.FPU[fpu_id].beta_steps
+
+                assert (
+                    (alpha_actualsteps == asteps_target) and (beta_actualsteps == bsteps_target)
+                ), "could not reach corrected step count"
+
                 if verbosity > 0:
-                    print("FPU  %s: saving image..." % sn)
+                    print("FPU %s: saving image # %i..." % (sn, k))
 
                 ipath = capture_image(k, alpha, beta)
 
@@ -279,9 +288,9 @@ def eval_positional_verification(ctx, pos_ver_analysis_pars, pos_ver_evaluation_
             analysis_results = {}
             analysis_results_short = {}
 
-            for k, v in images_alpha.items():
+            for k, v in images.items():
                 alpha_steps, beta_steps, count = k
-                path = v
+                ipath = v
                 analysis_results[k] = analysis_func(ipath)
 
                 (
@@ -304,8 +313,8 @@ def eval_positional_verification(ctx, pos_ver_analysis_pars, pos_ver_evaluation_
                     analysis_results_short, pars=pos_ver_evaluation_pars
                 )
 
-            positional_repeatability_has_passed = (
-                posrep_rss_mm <= pos_ver_evaluation_pars.POS_VER_PASS
+            positional_verification_has_passed = (
+                posver_error_max <= pos_ver_evaluation_pars.POS_VER_PASS
             )
 
             errmsg = ""
@@ -315,13 +324,12 @@ def eval_positional_verification(ctx, pos_ver_analysis_pars, pos_ver_evaluation_
             errmsg = str(e)
             posver_error = ([],)
             posver_error_max = (NaN,)
-            posver_rss_mm = (NaN,)
             positional_verification_has_passed = TestResult.NA
 
         save_positional_verification_result(
             ctx,
             fpu_id,
-            pos_ver_calibration_pars=pos_ver_evaluation_pars.POS_VER_CALIBRATION_PARS,
+            pos_ver_calibration_pars=pos_ver_analysis_pars.POS_REP_CALIBRATION_PARS,
             analysis_results=analysis_results,
             posver_error=posver_error,
             posver_error_max=posver_error_max,
