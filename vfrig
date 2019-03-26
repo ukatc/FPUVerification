@@ -43,6 +43,8 @@ from vfr.verification_tasks.positional_repeatability import (eval_positional_rep
                                                              measure_positional_repeatability)
 from vfr.verification_tasks.positional_verification import (eval_positional_verification,
                                                              measure_positional_verification)
+from vfr.verification_tasks.pupil_alignment import (eval_pupil_alignment,
+                                                    measure_pupil_alignment)
 from vfr.verification_tasks.report import dump_data, report
 from vfr.verification_tasks.rig_selftest import (selftest_fibre,
                                                  selftest_nonfibre)
@@ -367,7 +369,7 @@ if __name__ == "__main__":
         eval_pupil_alignment(
             context,
             PUP_ALGN_ANALYSIS_PARS=PUP_ALGN_ANALYSIS_PARS,
-            pars=PUP_ALGN_EVALUATION_PARS
+            PUP_ALGN_EVALUATION_PARS=PUP_ALGN_EVALUATION_PARS
         )
 
     if T.MEASURE_POS_REP in tasks:

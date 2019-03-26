@@ -334,4 +334,5 @@ def eval_positional_verification(ctx, pos_ver_analysis_pars, pos_ver_evaluation_
             errmsg=errmsg,
             analysis_version=POSITIONAL_REPEATABILITY_ALGORITHM_VERSION,
             positional_verification_has_passed=positional_verification_has_passed,
+            pass_threshold=pos_ver_evaluation_pars.POS_VER_PASS,
         )

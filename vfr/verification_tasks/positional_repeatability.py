@@ -318,6 +318,7 @@ def eval_positional_repeatability(
             posrep_beta_max=posrep_beta_max,
             posrep_rss_mm=posrep_rss_mm,
             positional_repeatability_has_passed=positional_repeatability_has_passed,
+            pass_threshold=pos_rep_evaluation_pars.POS_REP_PASS,
             gearbox_correction=gearbox_correction,
             errmsg=errmsg,
             analysis_version=POSITIONAL_REPEATABILITY_ALGORITHM_VERSION,

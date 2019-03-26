@@ -1,5 +1,7 @@
 from __future__ import absolute_import, division, print_function
 
+from numpy import NaN
+
 from vfr.db.base import (
     GIT_VERSION,
     TestResult,
@@ -44,6 +46,7 @@ def save_positional_verification_result(
     analysis_results=None,
     posver_error=[],
     posver_error_max=None,
+    pass_threshold=NaN,
     errmsg="",
     analysis_version=None,
     positional_verification_has_passed=None,
@@ -64,6 +67,7 @@ def save_positional_verification_result(
                 "posver_error" : posver_error,
                 "posver_error_max" : posver_error_max,
                 "result": positional_verification_has_passed,
+                "pass_threshold": pass_threshold,
                 "error_message": errmsg,
                 "algorithm_version": analysis_version,
                 "git-version": GIT_VERSION,

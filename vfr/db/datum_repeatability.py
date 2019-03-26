@@ -1,5 +1,7 @@
 from __future__ import absolute_import, division, print_function
 
+from numpy import NaN
+
 from vfr.db.base import (
     GIT_VERSION,
     TestResult,
@@ -44,6 +46,7 @@ def save_datum_repeatability_result(
     coords=None,
     datum_repeatability_mm=None,
     datum_repeatability_has_passed=None,
+    pass_threshold=NaN,
     errmsg="",
     analysis_version=None,
 ):
@@ -61,6 +64,7 @@ def save_datum_repeatability_result(
                 "coords": coords,
                 "repeatability_millimeter": datum_repeatability_mm,
                 "result": datum_repeatability_has_passed,
+                "pass_threshold": pass_threshold,
                 "error_message": errmsg,
                 "git-version": GIT_VERSION,
                 "time": timestamp(),

@@ -1,9 +1,9 @@
 from __future__ import print_function, division
 
 import cv2
-from math import pi, sqrt
+from math import pi, sqrt, atan
 from matplotlib import pyplot as plt
-from numpy import NaN, mean, std
+from numpy import NaN, mean, std, array
 from numpy.linalg import norm
 
 from ImageAnalysisFuncs.base import ImageAnalysisError
@@ -77,11 +77,11 @@ def evaluate_pupil_alignment(dict_of_coordinates, pars=None):
 
     # group by having the same alpha coordinates
     alpha_dict = {}
-    for pos, coord in dict_of_coordinates.items():
+    for pos, (x, y, q) in dict_of_coordinates.items():
         alpha, beta = pos
         if not alpha_dict.has_key(alpha):
             alpha_dict[alpha] = []
-        alpha_dict[alpha].append(coord)
+        alpha_dict[alpha].append((x,y))
 
     beta_errors = []
     beta_centers = []
@@ -89,20 +89,20 @@ def evaluate_pupil_alignment(dict_of_coordinates, pars=None):
         bcoords = array(bgroup)
         bcenter = mean(bcoords, axis=0)
         beta_centers.append(bcenter)
-        beta_errors.append(mean(map(norm, boords - bcenter)))
+        beta_errors.append(mean(map(norm, bcoords - bcenter)))
 
     pupalnBetaErr = mean(beta_errors)
 
     alpha_center = mean(beta_centers, axis=0)
     pupalnAlphaErr = mean(map(norm, beta_centers - alpha_center))
 
+    all_coords = array(dict_of_coordinates.values())[:,:2]
     xc = norm(
-        mean(dict_of_coordinates.values(), axis=0)
+        mean(all_coords, axis=0)
         - array((pars.PUP_ALGN_CALIBRATED_CENTRE_X, pars.PUP_ALGN_CALIBRATED_CENTRE_Y))
     )
 
     # ask Steve Watson what the following means - it is from his spec
-    warnings.warn("probably rubbish here")
     pupalnChassisErr = atan(xc / INSTRUMENT_FOCAL_LENGTH)
 
     pupalnTotalErr = sum([pupalnChassisErr, pupalnAlphaErr, pupalnBetaErr])

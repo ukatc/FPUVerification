@@ -127,7 +127,7 @@ def measure_datum_repeatability(ctx, pars=None):
 def eval_datum_repeatability(ctx, dat_rep_analysis_pars):
 
     for fpu_id in ctx.eval_fpuset:
-        measurement = get_datum_repeatability_images(ctx, fpu_id)["images"]
+        measurement = get_datum_repeatability_images(ctx, fpu_id)
         if measurement is None:
             print("FPU %s: no datum repeatability measurement data found" % fpu_id)
             continue
@@ -148,7 +148,7 @@ def eval_datum_repeatability(ctx, dat_rep_analysis_pars):
 
             datum_repeatability_has_passed = (
                 TestResult.OK
-                if datum_repeatability_mm <= DATUM_REP_PASS
+                if datum_repeatability_mm <= dat_rep_analysis_pars.DATUM_REP_PASS
                 else TestResult.FAILED
             )
 
@@ -174,6 +174,7 @@ def eval_datum_repeatability(ctx, dat_rep_analysis_pars):
             coords=coords,
             datum_repeatability_mm=datum_repeatability_mm,
             datum_repeatability_has_passed=datum_repeatability_has_passed,
+            pass_threshold=dat_rep_analysis_pars.DATUM_REP_PASS,
             errmsg=errmsg,
             analysis_version=DATUM_REPEATABILITY_ALGORITHM_VERSION,
         )

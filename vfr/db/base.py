@@ -6,7 +6,7 @@ import platform
 import subprocess
 
 import lmdb
-from numpy import NaN, nan
+from numpy import NaN, nan, inf, Inf
 from vfr.tests_common import timestamp
 
 GIT_VERSION = subprocess.check_output(["git", "describe"]).strip()
