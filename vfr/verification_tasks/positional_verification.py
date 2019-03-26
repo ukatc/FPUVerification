@@ -39,6 +39,7 @@ from vfr.tests_common import (
     dirac,
     find_datum,
     flush,
+    get_stepcounts,
     get_sorted_positions,
     goto_position,
     store_image,
@@ -220,9 +221,7 @@ def measure_positional_verification(ctx, pars=None):
             image_dict = {}
             for k, (alpha, beta) in enumerate(tested_positions):
                 # get current step count
-                gd.pingFPUs(grid_state)
-                alpha_cursteps = grid_state.FPU[fpu_id].alpha_steps
-                beta_cursteps = grid_state.FPU[fpu_id].beta_steps
+                alpha_cursteps, beta_cursteps = get_stepcounts(gd, grid_state, fpu_id)
 
                 # get absolute corrected step count from desired absolute angle
                 asteps_target, bsteps_target = apply_gearbox_correction(
@@ -253,8 +252,7 @@ def measure_positional_verification(ctx, pars=None):
                 gd.executeMotion(grid_state)
 
                 gd.pingFPUs(grid_state)
-                alpha_actualsteps = grid_state.FPU[fpu_id].alpha_steps
-                beta_actualsteps = grid_state.FPU[fpu_id].beta_steps
+                alpha_actualsteps, beta_actualsteps = get_stepcounts(gd, grid_state, fpu_id)
 
                 assert (
                     (alpha_actualsteps == asteps_target) and (beta_actualsteps == bsteps_target)

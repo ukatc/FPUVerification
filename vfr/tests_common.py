@@ -207,3 +207,10 @@ def get_sorted_positions(fpuset, positions):
     we can only move it in rising order"""
 
     return [(fid, pos) for pos, fid in sorted((positions[fid], fid) for fid in fpuset)]
+
+def get_stepcounts(gd, grid_state, fpu_id):
+    gd.pingFPUs(grid_state)
+    alpha_steps = grid_state.FPU[fpu_id].alpha_steps
+    beta_steps = grid_state.FPU[fpu_id].beta_steps
+
+    return alpha_steps, beta_steps
