@@ -57,13 +57,22 @@ def get_test_result(ctx, fpu_id, keyfunc, count=None, verbosity=None):
 
         keybase = keyfunc(fpu_id)
 
-        if count is None:
+        if (count is None) or (count < 0):
             key1 = str(keybase + ("ntests",))
 
             try:
-                count = int(txn.get(key1))
+                rcount = int(txn.get(key1))
             except TypeError:
                 return None
+
+            if count is None:
+                #default value: last record
+                count = rcount
+            else:
+                count = rcount - count
+                if count < 0:
+                    return None
+
 
         key2 = repr(keybase + ("data", count))
 
@@ -78,6 +87,7 @@ def get_test_result(ctx, fpu_id, keyfunc, count=None, verbosity=None):
                 # literal_eval() does not recognize IEEE754 NaN
                 # symbols
                 val = eval(val)
+            val["record-count"]=count
 
         if verbosity > 4:
             print("got %r : %r" % (key2, val))

@@ -30,7 +30,7 @@ def save_pupil_alignment_images(ctx, fpu_id, images=None):
     save_test_result(ctx, [fpu_id], keyfunc, valfunc)
 
 
-def get_pupil_alignment_images(ctx, fpu_id):
+def get_pupil_alignment_images(ctx, fpu_id, count=None):
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
@@ -38,7 +38,7 @@ def get_pupil_alignment_images(ctx, fpu_id):
         keybase = (serialnumber, RECORD_TYPE, "images")
         return keybase
 
-    return get_test_result(ctx, fpu_id, keyfunc)
+    return get_test_result(ctx, fpu_id, keyfunc, count=count)
 
 
 def save_pupil_alignment_result(
@@ -78,7 +78,7 @@ def save_pupil_alignment_result(
     save_test_result(ctx, [fpu_id], keyfunc, valfunc)
 
 
-def get_pupil_alignment_result(ctx, fpu_id):
+def get_pupil_alignment_result(ctx, fpu_id, count=None):
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
@@ -86,14 +86,14 @@ def get_pupil_alignment_result(ctx, fpu_id):
         keybase = (serialnumber, RECORD_TYPE, "result")
         return keybase
 
-    return get_test_result(ctx, fpu_id, keyfunc)
+    return get_test_result(ctx, fpu_id, keyfunc, count=count)
 
 
-def get_pupil_alignment_passed_p(ctx, fpu_id):
+def get_pupil_alignment_passed_p(ctx, fpu_id, count=None):
     """returns True if the latest datum repeatability test for this FPU
     was passed successfully."""
 
-    val = get_pupil_alignment_result(ctx, fpu_id)
+    val = get_pupil_alignment_result(ctx, fpu_id, count=count)
 
     if val is None:
         return False

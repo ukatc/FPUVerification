@@ -28,7 +28,7 @@ def save_metrology_calibration_images(ctx, fpu_id, images):
     save_test_result(ctx, [fpu_id], keyfunc, valfunc)
 
 
-def get_metrology_calibration_images(ctx, fpu_id):
+def get_metrology_calibration_images(ctx, fpu_id, count=None):
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
@@ -36,7 +36,7 @@ def get_metrology_calibration_images(ctx, fpu_id):
         keybase = (serialnumber, RECORD_TYPE, "images")
         return keybase
 
-    return get_test_result(ctx, fpu_id, keyfunc)
+    return get_test_result(ctx, fpu_id, keyfunc, count=count)
 
 
 def save_metrology_calibration_result(
@@ -75,7 +75,7 @@ def save_metrology_calibration_result(
     save_test_result(ctx, [fpu_id], keyfunc, valfunc)
 
 
-def get_metrology_calibration_result(ctx, fpu_id):
+def get_metrology_calibration_result(ctx, fpu_id, count=None):
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
@@ -83,4 +83,4 @@ def get_metrology_calibration_result(ctx, fpu_id):
         keybase = (serialnumber, RECORD_TYPE, "result")
         return keybase
 
-    return get_test_result(ctx, [fpu_id], keyfunc, verbosity=opts.verbosity)
+    return get_test_result(ctx, fpu_id, keyfunc, verbosity=ctx.opts.verbosity, count=count)

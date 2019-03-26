@@ -8,7 +8,7 @@ from os import environ
 
 from numpy import Inf, NaN
 
-DEFAULT_TASKS = ["selftest", "measure_all", "evaluate_all", "report"]
+DEFAULT_TASKS = ["selftest", "measure_all", "eval_all", "report"]
 
 # a few parameters are defined globally because they are
 # used in many different places

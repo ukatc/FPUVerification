@@ -40,7 +40,7 @@ def save_positional_repeatability_images(
     save_test_result(ctx, [fpu_id], keyfunc, valfunc, verbosity=verbosity)
 
 
-def get_positional_repeatability_images(ctx, fpu_id):
+def get_positional_repeatability_images(ctx, fpu_id, count=None):
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
@@ -49,7 +49,7 @@ def get_positional_repeatability_images(ctx, fpu_id):
         return keybase
 
     verbosity = max(ctx.opts.verbosity - 3, 0)
-    return get_test_result(ctx, fpu_id, keyfunc, verbosity=verbosity)
+    return get_test_result(ctx, fpu_id, keyfunc, verbosity=verbosity, count=count)
 
 
 def save_positional_repeatability_result(
@@ -99,10 +99,13 @@ def save_positional_repeatability_result(
         )
         return val
 
-    save_test_result(ctx, [fpu_id], keyfunc, valfunc)
+    verbosity=max(ctx.opts.verbosity - 3, 0)
+    if verbosity > 3:
+        print("saving positional repetabilty result..")
+    save_test_result(ctx, [fpu_id], keyfunc, valfunc, verbosity=verbosity)
 
 
-def get_positional_repeatability_result(ctx, fpu_id):
+def get_positional_repeatability_result(ctx, fpu_id, count=None):
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
@@ -110,14 +113,14 @@ def get_positional_repeatability_result(ctx, fpu_id):
         keybase = (serialnumber, RECORD_TYPE, "result")
         return keybase
 
-    return get_test_result(ctx, fpu_id, keyfunc)
+    return get_test_result(ctx, fpu_id, keyfunc, count=count)
 
 
-def get_positional_repeatability_passed_p(ctx, fpu_id):
+def get_positional_repeatability_passed_p(ctx, fpu_id, count=None):
     """returns True if the latest positional repeatability test for this FPU
     was passed successfully."""
 
-    val = get_positional_repeatability_result(ctx, fpu_id)
+    val = get_positional_repeatability_result(ctx, fpu_id, count=count)
 
     if val is None:
         return False

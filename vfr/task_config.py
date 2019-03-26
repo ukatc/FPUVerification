@@ -78,6 +78,7 @@ usertasks = set(
         T.EVAL_POS_REP,
         T.EVAL_POS_VER,
         T.EVAL_PUP_ALGN,
+        T.TASK_EVAL_ALL,
         T.MEASURE_DATUM_REP,
         T.MEASURE_MET_CAL,
         T.MEASURE_MET_HEIGHT,

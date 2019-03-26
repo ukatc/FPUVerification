@@ -266,7 +266,7 @@ def measure_positional_verification(ctx, pars=None):
                 image_dict[(k, alpha, beta)] = ipath
 
             # store dict of image paths
-            save_positional_verification_images(ctx, fpu_id, image_dict=image_dict)
+            save_positional_verification_images(ctx, fpu_id, image_dict=image_dict, gearbox_correction=gearbox_correction)
 
 
 def eval_positional_verification(ctx, pos_ver_analysis_pars, pos_ver_evaluation_pars):

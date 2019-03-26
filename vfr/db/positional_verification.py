@@ -12,7 +12,7 @@ from vfr.db.base import (
 
 RECORD_TYPE = "positional-verification"
 
-def save_positional_verification_images(ctx, fpu_id, image_dict=None):
+def save_positional_verification_images(ctx, fpu_id, image_dict=None, gearbox_correction=None):
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
@@ -22,13 +22,17 @@ def save_positional_verification_images(ctx, fpu_id, image_dict=None):
 
     def valfunc(fpu_id):
 
-        val = repr({"fpuid": fpu_id, "images": image_dict, "time": timestamp()})
+        val = repr({
+            "fpuid": fpu_id,
+            "images": image_dict,
+            "gearbox_correction" : gearbox_correction,
+            "time": timestamp()})
         return val
 
     save_test_result(ctx, [fpu_id], keyfunc, valfunc)
 
 
-def get_positional_verification_images(ctx, fpu_id):
+def get_positional_verification_images(ctx, fpu_id, count=None):
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
@@ -36,7 +40,7 @@ def get_positional_verification_images(ctx, fpu_id):
         keybase = (serialnumber, RECORD_TYPE, "images")
         return keybase
 
-    return get_test_result(ctx, fpu_id, keyfunc)
+    return get_test_result(ctx, fpu_id, keyfunc, count=count)
 
 
 def save_positional_verification_result(
@@ -80,21 +84,21 @@ def save_positional_verification_result(
     save_test_result(ctx, [fpu_id], keyfunc, valfunc)
 
 
-def get_positional_verification_result(ctx, fpu_id):
+def get_positional_verification_result(ctx, fpu_id, count=None):
     def keyfunc(fpu_id):
         serialnumber = ctx.fpu_config[fpu_id]["serialnumber"]
         keybase = (serialnumber, RECORD_TYPE, "result")
         return keybase
 
-    return get_test_result(ctx, fpu_id, keyfunc)
+    return get_test_result(ctx, fpu_id, keyfunc, count=count)
 
-def get_positional_verification_passed_p(ctx, fpu_id):
+def get_positional_verification_passed_p(ctx, fpu_id, count=None):
     """returns True if the latest positional verification test for this
     FPU was passed successfully.
 
     """
 
-    val = get_positional_verification_result(ctx, fpu_id)
+    val = get_positional_verification_result(ctx, fpu_id, count=count)
 
     if val is None:
         return False

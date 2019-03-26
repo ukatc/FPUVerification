@@ -29,7 +29,7 @@ def save_datum_repeatability_images(ctx, fpu_id, images):
     save_test_result(ctx, [fpu_id], keyfunc, valfunc)
 
 
-def get_datum_repeatability_images(ctx, fpu_id):
+def get_datum_repeatability_images(ctx, fpu_id, count=None):
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
@@ -37,7 +37,7 @@ def get_datum_repeatability_images(ctx, fpu_id):
         keybase = (serialnumber, RECORD_TYPE, "images")
         return keybase
 
-    return get_test_result(ctx, fpu_id, keyfunc)
+    return get_test_result(ctx, fpu_id, keyfunc, count=count)
 
 
 def save_datum_repeatability_result(
@@ -67,6 +67,7 @@ def save_datum_repeatability_result(
                 "pass_threshold": pass_threshold,
                 "error_message": errmsg,
                 "git-version": GIT_VERSION,
+                "analysis-version": analysis_version,
                 "time": timestamp(),
             }
         )
@@ -75,7 +76,7 @@ def save_datum_repeatability_result(
     save_test_result(ctx, [fpu_id], keyfunc, valfunc)
 
 
-def get_datum_repeatability_result(ctx, fpu_id):
+def get_datum_repeatability_result(ctx, fpu_id, count=None):
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
@@ -83,14 +84,14 @@ def get_datum_repeatability_result(ctx, fpu_id):
         keybase = (serialnumber, RECORD_TYPE, "result")
         return keybase
 
-    return get_test_result(ctx, fpu_id, keyfunc)
+    return get_test_result(ctx, fpu_id, keyfunc, count=count)
 
 
-def get_datum_repeatability_passed_p(ctx, fpu_id):
+def get_datum_repeatability_passed_p(ctx, fpu_id, count=None):
     """returns True if the latest datum repeatability test for this FPU
     was passed successfully."""
 
-    val = get_datum_repeatability_result(ctx, fpu_id)
+    val = get_datum_repeatability_result(ctx, fpu_id, count=count)
 
     if val is None:
         return False

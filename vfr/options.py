@@ -235,6 +235,16 @@ def parse_args():
     )
 
     parser.add_argument(
+        "-cnt",
+        "--record-count",
+        metavar="RECORD_COUNT",
+        type=int,
+        default=None,
+        help="record number to be retrieved in report, negative values count"
+        " back from the latest. Default is the latest record.",
+    )
+
+    parser.add_argument(
         "-v",
         "--verbosity",
         metavar="VERBOSITY",
