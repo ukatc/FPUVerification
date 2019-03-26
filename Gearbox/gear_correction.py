@@ -1,7 +1,13 @@
 from __future__ import print_function, division
 from numpy import nan
 
-from fpu_constants import StepsPerDegreeAlpha, StepsPerDegreeBeta
+from fpu_constants import (
+    StepsPerDegreeAlpha,
+    StepsPerDegreeBeta,
+    ALPHA_DATUM_OFFSET,
+    BETA_DATUM_OFFSET,
+    )
+
 
 # exceptions which are raised if image analysis functions fail
 
@@ -50,7 +56,8 @@ def fit_gearbox_correction(dict_of_coordinates_alpha, dict_of_coordinates_beta):
 
 def apply_gearbox_correction(incoords, coeffs=None):
     alpha, beta = incoords
-    alpha_steps = alpha * StepsPerDegreeAlpha
-    beta_steps = beta * StepsPerDegreeBeta
+    # naive linear correction (only for testing)
+    alpha_steps = int(round((alpha - ALPHA_DATUM_OFFSET) * StepsPerDegreeAlpha))
+    beta_steps = int(round((beta - BETA_DATUM_OFFSET) * StepsPerDegreeBeta))
 
-    return incoords
+    return (alpha_steps, beta_steps)

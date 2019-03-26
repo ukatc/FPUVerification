@@ -396,7 +396,7 @@ if __name__ == "__main__":
         print ("[%s] ###" % T.EVAL_POS_VER)
         eval_positional_verification(
             context,
-            POS_VER_ANALYSIS_PARS,
+            POS_REP_ANALYSIS_PARS,
             POS_VER_EVALUATION_PARS,
         )
 

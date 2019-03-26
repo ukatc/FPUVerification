@@ -10,7 +10,7 @@ from vfr.db.base import (
 
 RECORD_TYPE = "positional-verification"
 
-def save_positional_verification_images(ctx, fpu_id, images_dict):
+def save_positional_verification_images(ctx, fpu_id, image_dict=None):
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
@@ -79,8 +79,21 @@ def save_positional_verification_result(
 
 def get_positional_verification_result(ctx, fpu_id):
     def keyfunc(fpu_id):
-        serialnumber = fpu_config[fpu_id]["serialnumber"]
+        serialnumber = ctx.fpu_config[fpu_id]["serialnumber"]
         keybase = (serialnumber, RECORD_TYPE, "result")
         return keybase
 
     return get_test_result(ctx, fpu_id, keyfunc)
+
+def get_positional_verification_passed_p(ctx, fpu_id):
+    """returns True if the latest positional verification test for this
+    FPU was passed successfully.
+
+    """
+
+    val = get_positional_verification_result(ctx, fpu_id)
+
+    if val is None:
+        return False
+
+    return val["result"] == TestResult.OK

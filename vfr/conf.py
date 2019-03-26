@@ -219,8 +219,9 @@ POS_VER_MEASUREMENT_PARS = Namespace(
     POS_VER_EXPOSURE_MS=NaN,  # the exposure time in
     # milliseconds for a correctly
     # exposed image
-    POS_VER_ITERATIONS=NaN,  # the number of times each FPU
+    POS_VER_ITERATIONS=3,  # the number of times each FPU
     # sweeps back and forth
+    POS_VER_SAFETY_TOLERANCE=1.5, # safety distance towards range limits
 )
 
 
