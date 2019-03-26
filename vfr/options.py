@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function
 import argparse
 import re
 import sys
+import types
 import warnings
 from ast import literal_eval
 from os import environ
@@ -96,7 +97,8 @@ def parse_args():
         "-sn",
         "--snset",
         default=None,
-        help="""apply tasks only to passed set of serial numbers, passed as "['MP001', 'MP002', ...]" """,
+        help="""apply tasks only to passed set of serial numbers, passed as "['MP001', 'MP002', ...]",
+        or just as single serial number, as 'MP001' """,
     )
 
     parser.add_argument(
@@ -128,11 +130,11 @@ def parse_args():
         "--update-protection-limits",
         default=False,
         action="store_true",
-        help="update range limits to protection database, even if already set",
+        help="update range limits to protection database, even if it was already set",
     )
 
     parser.add_argument(
-        "-pt",
+        "-ptl",
         "--protection-tolerance",
         type=float,
         default=0.2,
@@ -250,9 +252,6 @@ def parse_args():
         args.gateway_address = "127.0.0.1"
         args.gateway_port = 4700
 
-    if not (args.snset is None):
-        args.snset = literal_eval(args.snset)
-
     if args.output_file is None:
         args.output_file = sys.stdout
     else:
@@ -284,8 +283,17 @@ def get_sets(env, vfdb, fpu_config, opts):
         # get the serial numbers of all FPUs which have been measured so far
         eval_snset = get_snset(env, vfdb, opts)
     elif eval_snset is not None:
-        # in this case, it needs to be a list of serial numbers
-        eval_snset = set(eval_snset)
+        # in this case, it needs to be a literal list of serial numbers,
+        # a string with a quoted string literal, or a string
+        try:
+            val = literal_eval(eval_snset)
+        except ValueError:
+            val = eval_snset
+
+        if type(val) == types.ListType:
+            eval_snset = set(val)
+        else:
+            eval_snset = set([val])
 
         # check passed serial numbers for validity
         for sn in eval_snset:
