@@ -292,23 +292,27 @@ def get_sets(env, vfdb, fpu_config, opts):
     if eval_snset == "all":
         # get the serial numbers of all FPUs which have been measured so far
         eval_snset = get_snset(env, vfdb, opts)
-    elif eval_snset is not None:
-        # in this case, it needs to be a literal list of serial numbers,
-        # a string with a quoted string literal, or a string
-        try:
-            val = literal_eval(eval_snset)
-        except ValueError:
-            val = eval_snset
+        # this is a workaround against dirty data
+        eval_snset = set(filter(lambda x: type(x) == types.StringType, eval_snset))
+        fpu_config = {}
+    else:
+        if eval_snset is not None:
+            # in this case, it needs to be a literal list of serial numbers,
+            # a string with a quoted string literal, or a string
+            try:
+                val = literal_eval(eval_snset)
+            except ValueError:
+                val = eval_snset
 
-        if type(val) == types.ListType:
-            eval_snset = set(val)
-        else:
-            eval_snset = set([val])
+            if type(val) == types.ListType:
+                eval_snset = set(val)
+            else:
+                eval_snset = set([val])
 
-        # check passed serial numbers for validity
-        for sn in eval_snset:
-            if not sn_pat.match(sn):
-                raise ValueError("serial number %r is not valid!" % sn)
+            # check passed serial numbers for validity
+            for sn in eval_snset:
+                if not sn_pat.match(sn):
+                    raise ValueError("serial number %r is not valid!" % sn)
 
     if eval_snset is None:
         # both mesured and evaluated sets are exclusively defined by
@@ -351,12 +355,15 @@ def get_sets(env, vfdb, fpu_config, opts):
 
         eval_fpuset = fpu_config.keys()
 
-    # get sets of measured and evaluated FPUs
-    N = max(measure_fpuset) + 1
+        # get sets of measured and evaluated FPUs
+        if measure_fpuset:
+            N = max(measure_fpuset) + 1
+        else:
+            N = 0
 
-    if N < opts.N:
-        warnings.warn("Subset selected. Adjusting number of addressed FPUs to %i." % N)
-        opts.N = N
+        if N < opts.N:
+            warnings.warn("Subset selected. Adjusting number of addressed FPUs to %i." % N)
+            opts.N = N
 
     return fpu_config, sorted(measure_fpuset), sorted(eval_fpuset)
 
