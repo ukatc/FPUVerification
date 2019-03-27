@@ -29,7 +29,7 @@ from vfr.db.snset import add_sns_to_set
 from vfr.options import load_config, parse_args, check_sns_unique
 from vfr.posdb import init_position
 from vfr.TaskLogic import T, resolve
-from vfr.tests_common import find_datum, flush, goto_position
+from vfr.tests_common import find_datum, flush, goto_position, cd_to_image_root
 from vfr.verification_tasks.functional_tests import (DASEL_ALPHA, DASEL_BETA,
                                                      DASEL_BOTH, test_datum,
                                                      test_limit)
@@ -72,8 +72,9 @@ if __name__ == "__main__":
 
 
     # change current directory to image root folder, so that
-    # we can use relative image paths
-    os.chdir(IMAGE_ROOT_FOLDER)
+    # we can use relative image paths in both measurement
+    # and evaluation tasks
+    cd_to_image_root(IMAGE_ROOT_FOLDER)
     # check connections to cameras and EtherCAN gateway
 
     context = Namespace(            env=env,

@@ -2,6 +2,7 @@ from __future__ import absolute_import, division, print_function
 
 import errno
 import os
+from os.path import expanduser, expandvars
 import sys
 import time
 from math import floor
@@ -12,7 +13,6 @@ from fpu_constants import ALPHA_DATUM_OFFSET, BETA_DATUM_OFFSET
 from numpy import array, nan, zeros
 from vfr.conf import (
     DB_TIME_FORMAT,
-    IMAGE_ROOT_FOLDER,
     MTS50_SERIALNUMBER,
     NR360_SERIALNUMBER,
 )
@@ -185,10 +185,21 @@ def find_datum(gd, grid_state, opts=None, uninitialized=False):
     return gd, grid_state
 
 
+def cd_to_image_root(image_root_folder):
+    image_root_path = expanduser(expandvars(image_root_folder))
+    try:
+        os.makedirs(image_root_path)
+    except OSError, e:
+        if e.errno == errno.EEXIST:
+            pass
+        else:
+            raise
+    os.chdir(image_root_path)
+
 def store_image(camera, format_string, **kwargs):
 
-    image_filename = format_string.format(**kwargs)
-    ipath = path.join(IMAGE_ROOT_FOLDER, image_filename)
+    # requires current work directory set to image root folder
+    ipath = format_string.format(**kwargs)
 
     try:
         os.makedirs(path.dirname(ipath))
