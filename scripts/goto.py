@@ -5,13 +5,13 @@ Usage: python goto.py <serial> <position_mm>
 This program tells the specified controller to move the stage to the specified
 position.
 """
-from __future__ import absolute_import
-from __future__ import print_function
+from __future__ import absolute_import, print_function
 
-import time
-import pylibftdi
-import pyAPT
 import sys
+import time
+
+import pyAPT
+import pylibftdi
 
 
 def main(args):

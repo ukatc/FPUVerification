@@ -5,12 +5,12 @@ Usage: python get_position.py [<serial>]
 This program reads the position of all APT controllers found, or the one
 specified
 """
-from __future__ import absolute_import
-from __future__ import print_function
+from __future__ import absolute_import, print_function
 
 import time
-import pylibftdi
+
 import pyAPT
+import pylibftdi
 
 
 def main(args):

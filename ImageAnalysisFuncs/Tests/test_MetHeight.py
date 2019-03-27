@@ -1,8 +1,8 @@
-from __future__ import print_function, division, absolute_import
-from ImageAnalysisFuncs.analyze_metrology_height import methtHeight
+from __future__ import absolute_import, division, print_function
 
 import unittest
 
+from ImageAnalysisFuncs.analyze_metrology_height import methtHeight
 from vfr.conf import MET_HEIGHT_ANALYSIS_PARS
 
 

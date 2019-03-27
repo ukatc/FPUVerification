@@ -1,20 +1,23 @@
 #!/usr/bin/python
 
 from __future__ import absolute_import, print_function
-import sys
 
-from os import path, environ
-from ast import literal_eval
 import argparse
-
-
+import sys
 import time
+from ast import literal_eval
+from os import environ, path
 
 # import pylibftdi
 import pyAPT
-from pylibftdi import FtdiError
+from pyAPT.controller import Controller  # the generic diver class
+from pyAPT.cr1z7 import CR1Z7
+from pyAPT.lts300 import LTS300
+from pyAPT.mts50 import MTS50
+from pyAPT.nr360s import NR360S
+from pyAPT.prm1 import PRM1
 from pylibftdi import Driver as LibFTDI_Driver
-
+from pylibftdi import FtdiError
 
 __help__ = """Thorlabs motor control, re-written in Python.
 To automatically use a certain device type with a specific
@@ -55,13 +58,7 @@ reset  [-T devtype] serialnum              - reset controller to eprom defaults.
 """
 
 # this variable lists driver classes
-from pyAPT.controller import Controller  # the generic diver class
 
-from pyAPT.lts300 import LTS300
-from pyAPT.mts50 import MTS50
-from pyAPT.nr360s import NR360S
-from pyAPT.prm1 import PRM1
-from pyAPT.cr1z7 import CR1Z7
 
 driverlist = [LTS300, MTS50, NR360S, PRM1, CR1Z7]
 

@@ -1,13 +1,13 @@
-from __future__ import print_function, division
-import cv2
+from __future__ import division, print_function
+
 from math import pi, sqrt
-from numpy.polynomial import Polynomial
+
+import cv2
+from ImageAnalysisFuncs.base import ImageAnalysisError
 from matplotlib import pyplot as plt
 from numpy import NaN, float32, mean, std
 from numpy.linalg import norm
-
-
-from ImageAnalysisFuncs.base import ImageAnalysisError
+from numpy.polynomial import Polynomial
 
 # version number for analysis algorithm
 # (each different result for the same data
@@ -48,11 +48,15 @@ def methtHeight(
         if (betaScan[i + 1] - betaScan[i]) < 0:
             betaSide = i
             if pars.verbosity > 5:
-                print("Image %s: Beta arm side is at x-coordinate %i" % (image_path, betaSide))
+                print(
+                    "Image %s: Beta arm side is at x-coordinate %i"
+                    % (image_path, betaSide)
+                )
 
     if betaSide == 0:
         raise MetrologyHeightAnalysisError(
-            "Image %s: Beta arm side not found - consider changing scan height" % image_path
+            "Image %s: Beta arm side not found - consider changing scan height"
+            % image_path
         )
 
     threshcrop = thresh[1750:2700, betaSide - 100 : betaSide + 1500]
@@ -68,7 +72,10 @@ def methtHeight(
     noiseMetric = (threshstd - threshblurstd) / threshblurstd * 100
 
     if pars.verbosity > 5:
-        print("Image %s: Noise metric in thresholded image is %.2f" % (image_path, noiseMetric))
+        print(
+            "Image %s: Noise metric in thresholded image is %.2f"
+            % (image_path, noiseMetric)
+        )
 
     # pixel distances from side of beta arm to measurement points
     # these parameters could be made configurable but shouldn't need to be changed

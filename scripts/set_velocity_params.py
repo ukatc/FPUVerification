@@ -4,10 +4,10 @@ Usage: python get_status.py <acceleration (mm/s/s)> <max velocity (mm/s) [<seria
 
 Gets the status of all APT controllers, or of the one specified
 """
-from __future__ import absolute_import
-from __future__ import print_function
-import pylibftdi
+from __future__ import absolute_import, print_function
+
 import pyAPT
+import pylibftdi
 
 
 def set_vel_params(serial, acc, max_vel):

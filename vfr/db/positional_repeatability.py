@@ -1,7 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
 from numpy import NaN, max
-
 from vfr.db.base import (
     GIT_VERSION,
     TestResult,
@@ -81,13 +80,13 @@ def save_positional_repeatability_result(
         val = repr(
             {
                 "calibration_pars": pos_rep_calibration_pars,
-                "analysis_results_alpha" : analysis_results_alpha,
-                "analysis_results_beta" : analysis_results_beta,
-                "posrep_alpha_max_at_angle" : posrep_alpha_max_at_angle,
-                "posrep_beta_max_at_angle" : posrep_beta_max_at_angle,
-                "posrep_alpha_max" : posrep_alpha_max,
-                "posrep_beta_max" : posrep_beta_max,
-                "posrep_rss_mm" : posrep_rss_mm,
+                "analysis_results_alpha": analysis_results_alpha,
+                "analysis_results_beta": analysis_results_beta,
+                "posrep_alpha_max_at_angle": posrep_alpha_max_at_angle,
+                "posrep_beta_max_at_angle": posrep_beta_max_at_angle,
+                "posrep_alpha_max": posrep_alpha_max,
+                "posrep_beta_max": posrep_beta_max,
+                "posrep_rss_mm": posrep_rss_mm,
                 "result": positional_repeatability_has_passed,
                 "pass_threshold": pass_threshold,
                 "gearbox_correction": gearbox_correction,
@@ -99,7 +98,7 @@ def save_positional_repeatability_result(
         )
         return val
 
-    verbosity=max(ctx.opts.verbosity - 3, 0)
+    verbosity = max(ctx.opts.verbosity - 3, 0)
     if verbosity > 3:
         print("saving positional repetabilty result..")
     save_test_result(ctx, [fpu_id], keyfunc, valfunc, verbosity=verbosity)

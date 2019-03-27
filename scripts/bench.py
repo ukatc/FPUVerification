@@ -6,12 +6,12 @@ Usage: python bench.py
 Performs simply benchmarks on how long it takes to list devices, open a device
 and performing a status query
 """
-from __future__ import absolute_import
-from __future__ import print_function
+from __future__ import absolute_import, print_function
 
-import pylibftdi
-import pyAPT
 import time
+
+import pyAPT
+import pylibftdi
 
 
 def main(args):

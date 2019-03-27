@@ -6,7 +6,7 @@ import platform
 import subprocess
 
 import lmdb
-from numpy import NaN, nan, inf, Inf
+from numpy import Inf, NaN, inf, nan
 from vfr.tests_common import timestamp
 
 GIT_VERSION = subprocess.check_output(["git", "describe"]).strip()
@@ -66,13 +66,12 @@ def get_test_result(ctx, fpu_id, keyfunc, count=None, verbosity=None):
                 return None
 
             if count is None:
-                #default value: last record
+                # default value: last record
                 count = rcount
             else:
                 count = rcount - count
                 if count < 0:
                     return None
-
 
         key2 = repr(keybase + ("data", count))
 
@@ -87,7 +86,7 @@ def get_test_result(ctx, fpu_id, keyfunc, count=None, verbosity=None):
                 # literal_eval() does not recognize IEEE754 NaN
                 # symbols
                 val = eval(val)
-            val["record-count"]=count
+            val["record-count"] = count
 
         if verbosity > 4:
             print("got %r : %r" % (key2, val))

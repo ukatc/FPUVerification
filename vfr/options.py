@@ -9,9 +9,9 @@ from ast import literal_eval
 from os import environ
 
 from fpu_constants import *
-from vfr.helptext import summary, examples
 from vfr.conf import DEFAULT_TASKS
 from vfr.db.snset import get_snset
+from vfr.helptext import examples, summary
 from vfr.TaskLogic import T
 
 # from vfr.tasks import *
@@ -49,7 +49,7 @@ def parse_args():
         "-fmt",
         "--report-format",
         default="terse",
-        choices=["terse", "long", "extensive"],
+        choices=["terse", "long", "extended"],
         help="output format of 'report' task (one of 'terse', 'long', 'extensive', default is 'terse')",
     )
 
@@ -70,7 +70,7 @@ def parse_args():
     )
 
     parser.add_argument(
-        "-rf",
+        "-reset",
         "--resetFPUs",
         default=False,
         action="store_true",
@@ -379,7 +379,6 @@ def load_config(env, vfdb, config_file_name, opts=None):
         ]
     )
 
-
     for key, val in fconfig.items():
         if key < 0:
             raise ValueError("FPU id %i is not valid!" % key)
@@ -402,9 +401,13 @@ def check_sns_unique(ctx):
         )
         used_sns = get_snset(ctx.env, ctx.vfdb, ctx.opts)
         reused_sns = config_sns & used_sns
-        print("config_sns=%r, used_sns=%r, reused_sns=%r" % (
-            config_sns, used_sns, reused_sns))
+        print(
+            "config_sns=%r, used_sns=%r, reused_sns=%r"
+            % (config_sns, used_sns, reused_sns)
+        )
         if reused_sns:
-            raise ValueError("serial numbers %s have been used before"
-                             " - use option '--reuse-serialnum' to explicitly"
-                             " use them again" % sorted(reused_sns))
+            raise ValueError(
+                "serial numbers %s have been used before"
+                " - use option '--reuse-serialnum' to explicitly"
+                " use them again" % sorted(reused_sns)
+            )

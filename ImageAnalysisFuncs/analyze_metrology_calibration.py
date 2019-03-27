@@ -1,17 +1,14 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function, division
-from numpy import NaN, mean, std
-from numpy.linalg import norm
+from __future__ import division, print_function
+
+from math import asin, pi, sqrt
 
 import cv2
-from math import pi, sqrt, asin
 import numpy as np
-
-from numpy import cross, array
-from matplotlib import pyplot as plt
-
-
 from ImageAnalysisFuncs.base import ImageAnalysisError
+from matplotlib import pyplot as plt
+from numpy import NaN, array, cross, mean, std
+from numpy.linalg import norm
 
 # version number for analysis algorithm
 # (each different result for the same data
@@ -64,7 +61,13 @@ def metcalTargetCoordinates(image_path, pars=None):
         print(
             "Image %s:"
             "Lower/upper perimeter limits of small & large targets in mm: %.2f / %.2f ; %.2f / %.2f"
-            % (image_path, smallPerimeterLo, smallPerimeterHi, largePerimeterLo, largePerimeterHi)
+            % (
+                image_path,
+                smallPerimeterLo,
+                smallPerimeterHi,
+                largePerimeterLo,
+                largePerimeterHi,
+            )
         )
 
     centres = {}

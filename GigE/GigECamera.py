@@ -23,13 +23,14 @@ Pylon software - PyPylon is just python bindings to the C++ pylon software, the 
 01/10/2018: 0.3.1 Fixed Error and added support to find a camera.
 03/10/2018: 0.3.2 Fixed indent issues and updated documentation.
 """
-from __future__ import print_function, division
-
-__version__ = "0.3.2"
+from __future__ import division, print_function
 
 import sys
 
 import numpy as np
+
+__version__ = "0.3.2"
+
 
 try:
     from pypylon import pylon

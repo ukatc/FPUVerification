@@ -1,18 +1,15 @@
-# -*- coding: utf-8-unix -*-
-from __future__ import print_function, division
+# -*- coding: utf-8 -*-
+from __future__ import division, print_function
 
 import warnings
-
-from numpy import NaN, mean, std, array, hstack
-from numpy.linalg import norm
+from math import pi, sqrt
 
 import cv2
-from math import pi, sqrt
-from matplotlib import pyplot as plt
-
 from DistortionCorrection import correct
 from ImageAnalysisFuncs.base import ImageAnalysisError, rss
-
+from matplotlib import pyplot as plt
+from numpy import NaN, array, hstack, mean, std
+from numpy.linalg import norm
 
 # exceptions which are raised if image analysis functions fail
 
@@ -76,7 +73,13 @@ def posrepCoordinates(
         print(
             "Image %s: Lower/upper perimeter limits of small & large "
             "targets in mm: %.2f / %.2f ; %.2f / %.2f"
-            % (image_path, smallPerimeterLo, smallPerimeterHi, largePerimeterLo, largePerimeterHi)
+            % (
+                image_path,
+                smallPerimeterLo,
+                smallPerimeterHi,
+                largePerimeterLo,
+                largePerimeterHi,
+            )
         )
 
     centres = {}
@@ -267,10 +270,10 @@ def evaluate_datum_repeatability(datumed_coords, moved_coords, pars=None):
     datumed_mean = mean(xy_datumed, axis=0)  # averages small and big targets
     moved_mean = mean(xy_datumed, axis=0)
 
-    datumed_errors_small = map(norm, xy_datumed[:,:2] - datumed_mean[:2])
-    datumed_errors_big = map(norm, xy_datumed[:,2:] - datumed_mean[2:])
-    moved_errors_small = map(norm, xy_moved[:,:2] - moved_mean[:2])
-    moved_errors_big = map(norm, xy_moved[:,2:] - moved_mean[2:])
+    datumed_errors_small = map(norm, xy_datumed[:, :2] - datumed_mean[:2])
+    datumed_errors_big = map(norm, xy_datumed[:, 2:] - datumed_mean[2:])
+    moved_errors_small = map(norm, xy_moved[:, :2] - moved_mean[:2])
+    moved_errors_big = map(norm, xy_moved[:, 2:] - moved_mean[2:])
 
     datrep_dat_only_max = max(hstack([datumed_errors_big, datumed_errors_small]))
     datrep_dat_only_std = std(hstack([datumed_errors_big, datumed_errors_small]))
@@ -301,8 +304,8 @@ def get_angular_error(dict_of_coords, idx):
         avg = mean(
             va, axis=0
         )  # this is an average of big and small target coords separately
-        err_small = map(norm, va[:,:2] - avg[:2])
-        err_big = map(norm, va[:,2:] - avg[2:])
+        err_small = map(norm, va[:, :2] - avg[:2])
+        err_big = map(norm, va[:, 2:] - avg[2:])
 
         # get maximum of both vectors
         max_err_at_angle[k] = max(
@@ -315,7 +318,7 @@ def get_angular_error(dict_of_coords, idx):
 
 
 def evaluate_positional_repeatability(
-        dict_of_coordinates_alpha, dict_of_coordinates_beta, pars=None,
+    dict_of_coordinates_alpha, dict_of_coordinates_beta, pars=None
 ):
     """Takes two dictionaries. The keys of each dictionary
     are the (alpha, beta, i,j,k) coordinates  indices of the positional
@@ -396,7 +399,6 @@ def evaluate_positional_verification(dict_of_coords, pars=None):
 
     """
 
-
     posver_error = {}
 
     for k, va in dict_of_coords.items():
@@ -409,14 +411,10 @@ def evaluate_positional_verification(dict_of_coords, pars=None):
 
         # compute difference
         err_small = norm(va[:2] - array([alpha, beta]))
-        err_big = norm(va[2:] - - array([alpha, beta]))
+        err_big = norm(va[2:] - -array([alpha, beta]))
 
         posver_error[k] = max(err_small, err_big)
 
-
     posver_error_max = max(posver_error.values())
 
-    return (
-        posver_error,
-        posver_error_max,
-    )
+    return (posver_error, posver_error_max)

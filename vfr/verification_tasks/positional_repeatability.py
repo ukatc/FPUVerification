@@ -14,6 +14,7 @@ from ImageAnalysisFuncs.analyze_positional_repeatability import (
 from numpy import NaN
 from vfr import hw, hwsimulation
 from vfr.conf import POS_REP_CAMERA_IP_ADDRESS
+from vfr.db.colldect_limits import get_anglimit_passed_p, get_angular_limit
 from vfr.db.positional_repeatability import (
     TestResult,
     get_positional_repeatability_images,
@@ -22,11 +23,7 @@ from vfr.db.positional_repeatability import (
     save_positional_repeatability_images,
     save_positional_repeatability_result,
 )
-
 from vfr.db.pupil_alignment import get_pupil_alignment_passed_p
-
-from vfr.db.colldect_limits import get_angular_limit, get_anglimit_passed_p
-
 from vfr.tests_common import (
     dirac,
     find_datum,
@@ -77,20 +74,20 @@ def measure_positional_repeatability(ctx, pars=None):
             if not get_datum_repeatability_passed_p(ctx, fpu_id):
                 print(
                     "FPU %s: skipping positional repeatability measurement because"
-                    " there is no passed datum repeatability test"
-                    % sn
+                    " there is no passed datum repeatability test" % sn
                 )
                 continue
 
             if not get_pupil_alignment_passed_p(ctx, fpu_id):
                 if ctx.opts.skip_fibre:
-                    warnings.warn("skipping check for pupil alignment because '--skip-fibre' flag is set")
+                    warnings.warn(
+                        "skipping check for pupil alignment because '--skip-fibre' flag is set"
+                    )
                 else:
                     print(
                         "FPU %s: skipping positional repeatability measurement because"
                         " there is no passed pupil alignment test"
-                        " (use '--skip-fibre' flag if you want to omit that test)"
-                        % sn
+                        " (use '--skip-fibre' flag if you want to omit that test)" % sn
                     )
                     continue
 
@@ -136,7 +133,7 @@ def measure_positional_repeatability(ctx, pars=None):
                     inc=increment,
                     dir=direction,
                     alpha=alpha,
-                    beta=beta
+                    beta=beta,
                 )
 
                 return ipath
@@ -175,8 +172,10 @@ def measure_positional_repeatability(ctx, pars=None):
                         abs_beta = beta0 + step_b * kb
 
                         if ctx.opts.verbosity > 1:
-                            print("FPU %s measurement [%2i, %2i, %2i]: going to position (%7.2f, %7.2f)" %
-                                  (sn, i, j, k, abs_alpha, abs_beta))
+                            print(
+                                "FPU %s measurement [%2i, %2i, %2i]: going to position (%7.2f, %7.2f)"
+                                % (sn, i, j, k, abs_alpha, abs_beta)
+                            )
 
                         goto_position(
                             ctx.gd, abs_alpha, abs_beta, ctx.grid_state, fpuset=[fpu_id]
@@ -215,14 +214,9 @@ def measure_positional_repeatability(ctx, pars=None):
             )
 
 
-def eval_positional_repeatability(
-    ctx, pos_rep_analysis_pars, pos_rep_evaluation_pars
-):
+def eval_positional_repeatability(ctx, pos_rep_analysis_pars, pos_rep_evaluation_pars):
     def analysis_func(ipath):
-        return posrepCoordinates(
-            ipath,
-            pars=pos_rep_analysis_pars,
-        )
+        return posrepCoordinates(ipath, pars=pos_rep_analysis_pars)
 
     for fpu_id in ctx.eval_fpuset:
         measurement = get_positional_repeatability_images(ctx, fpu_id)
@@ -278,32 +272,37 @@ def eval_positional_repeatability(
                     y_measured_big,
                 )
 
-                (posrep_alpha_max_at_angle,
-                 posrep_beta_max_at_angle,
-                 posrep_alpha_max,
-                 posrep_beta_max,
-                 posrep_rss_mm,
-                )  = evaluate_positional_repeatability(
+                (
+                    posrep_alpha_max_at_angle,
+                    posrep_beta_max_at_angle,
+                    posrep_alpha_max,
+                    posrep_beta_max,
+                    posrep_rss_mm,
+                ) = evaluate_positional_repeatability(
                     analysis_results_alpha_short,
                     analysis_results_beta_short,
                     pars=pos_rep_evaluation_pars,
-            )
+                )
 
             positional_repeatability_has_passed = (
-                TestResult.OK if posrep_rss_mm <= pos_rep_evaluation_pars.POS_REP_PASS else TestResult.FAILED
+                TestResult.OK
+                if posrep_rss_mm <= pos_rep_evaluation_pars.POS_REP_PASS
+                else TestResult.FAILED
             )
 
-            gearbox_correction = fit_gearbox_correction(analysis_results_alpha_short, analysis_results_beta_short)
+            gearbox_correction = fit_gearbox_correction(
+                analysis_results_alpha_short, analysis_results_beta_short
+            )
             errmsg = ""
 
         except (ImageAnalysisError, GearboxFitError) as e:
             analysis_results = None
             errmsg = str(e)
-            posrep_alpha_max_at_angle=NaN,
-            posrep_beta_max_at_angle=NaN,
-            posrep_alpha_max=NaN,
-            posrep_beta_max=NaN,
-            posrep_rss_mm=NaN,
+            posrep_alpha_max_at_angle = (NaN,)
+            posrep_beta_max_at_angle = (NaN,)
+            posrep_alpha_max = (NaN,)
+            posrep_beta_max = (NaN,)
+            posrep_rss_mm = (NaN,)
             positional_repeatability_has_passed = TestResult.NA
 
         save_positional_repeatability_result(

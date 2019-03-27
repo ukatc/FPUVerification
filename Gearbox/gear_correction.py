@@ -1,13 +1,12 @@
-from __future__ import print_function, division
-from numpy import nan
+from __future__ import division, print_function
 
 from fpu_constants import (
-    StepsPerDegreeAlpha,
-    StepsPerDegreeBeta,
     ALPHA_DATUM_OFFSET,
     BETA_DATUM_OFFSET,
-    )
-
+    StepsPerDegreeAlpha,
+    StepsPerDegreeBeta,
+)
+from numpy import nan
 
 # exceptions which are raised if image analysis functions fail
 

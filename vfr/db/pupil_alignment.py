@@ -1,7 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
 from numpy import NaN
-
 from vfr.db.base import (
     GIT_VERSION,
     TestResult,
@@ -9,7 +8,6 @@ from vfr.db.base import (
     save_test_result,
     timestamp,
 )
-
 
 RECORD_TYPE = "pupil-alignment"
 
@@ -67,8 +65,9 @@ def save_pupil_alignment_result(
                 "coords": coords,
                 "measures": pupil_alignment_measures,
                 "result": pupil_alignment_has_passed,
-                "pass_threshold" : pass_threshold,
+                "pass_threshold": pass_threshold,
                 "error_message": errmsg,
+                "algorithm_version": analysis_version,
                 "git-version": GIT_VERSION,
                 "time": timestamp(),
             }

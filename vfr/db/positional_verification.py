@@ -1,7 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
 from numpy import NaN
-
 from vfr.db.base import (
     GIT_VERSION,
     TestResult,
@@ -12,14 +11,16 @@ from vfr.db.base import (
 
 RECORD_TYPE = "positional-verification"
 
+
 def save_positional_verification_images(
-        ctx,
-        fpu_id,
-        image_dict=None,
-        gearbox_correction=None,
-        gearbox_algorithm_version=None,
-        gearbox_git_version="",
-        gearbox_record_count=None):
+    ctx,
+    fpu_id,
+    image_dict=None,
+    gearbox_correction=None,
+    gearbox_algorithm_version=None,
+    gearbox_git_version="",
+    gearbox_record_count=None,
+):
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
@@ -29,14 +30,17 @@ def save_positional_verification_images(
 
     def valfunc(fpu_id):
 
-        val = repr({
-            "fpuid": fpu_id,
-            "images": image_dict,
-            "gearbox_correction" : gearbox_correction,
-            "gearbox_algorithm_version" : gearbox_algorithm_version,
-            "gearbox_git-version" : gearbox_git_version,
-            "gearbox_record_count" : gearbox_record_count,
-            "time": timestamp()})
+        val = repr(
+            {
+                "fpuid": fpu_id,
+                "images": image_dict,
+                "gearbox_correction": gearbox_correction,
+                "gearbox_algorithm_version": gearbox_algorithm_version,
+                "gearbox_git-version": gearbox_git_version,
+                "gearbox_record_count": gearbox_record_count,
+                "time": timestamp(),
+            }
+        )
         return val
 
     save_test_result(ctx, [fpu_id], keyfunc, valfunc)
@@ -78,8 +82,8 @@ def save_positional_verification_result(
             {
                 "calibration_pars": pos_ver_calibration_pars,
                 "analysis_results": analysis_results,
-                "posver_error" : posver_error,
-                "posver_error_max" : posver_error_max,
+                "posver_error": posver_error,
+                "posver_error_max": posver_error_max,
                 "result": positional_verification_has_passed,
                 "pass_threshold": pass_threshold,
                 "error_message": errmsg,
@@ -101,6 +105,7 @@ def get_positional_verification_result(ctx, fpu_id, count=None):
         return keybase
 
     return get_test_result(ctx, fpu_id, keyfunc, count=count)
+
 
 def get_positional_verification_passed_p(ctx, fpu_id, count=None):
     """returns True if the latest positional verification test for this

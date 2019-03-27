@@ -1,26 +1,10 @@
 from __future__ import absolute_import, division, print_function
 
 from fpu_commands import gen_wf
-from numpy import NaN
-from vfr import hwsimulation as hws
-from vfr import hw
-from vfr.db.colldect_limits import (
-    get_anglimit_passed_p,
-    save_angular_limit,
-    set_protection_limit,
-)
-from vfr.db.datum import TestResult, save_datum_result
-from vfr.tests_common import (
-    dirac,
-    flush,
-    get_sorted_positions,
-    goto_position,
-    timestamp,
-)
-from vfr.turntable import go_collision_test_pos
-
 from FpuGridDriver import (
-    CAN_PROTOCOL_VERSION,  # see documentation reference for Exception hierarchy; (for CAN protocol 1, this is section 12.6.1)
+    CAN_PROTOCOL_VERSION,
+)  # see documentation reference for Exception hierarchy; (for CAN protocol 1, this is section 12. \
+from FpuGridDriver import (
     DASEL_ALPHA,
     DASEL_BETA,
     DASEL_BOTH,
@@ -49,6 +33,23 @@ from FpuGridDriver import (
     StepTimingError,
     SystemFailure,
 )
+from numpy import NaN
+from vfr import hwsimulation as hws
+from vfr import hw
+from vfr.db.colldect_limits import (
+    get_anglimit_passed_p,
+    save_angular_limit,
+    set_protection_limit,
+)
+from vfr.db.datum import TestResult, save_datum_result
+from vfr.tests_common import (
+    dirac,
+    flush,
+    get_sorted_positions,
+    goto_position,
+    timestamp,
+)
+from vfr.turntable import go_collision_test_pos
 
 
 class DatumFailure(Exception):
@@ -275,7 +276,12 @@ def test_limit(ctx, which_limit, pars=None):
             if ctx.opts.verbosity > 0:
                 print(
                     "FPU %i = %s: setting limit %s to %7.2f"
-                    % (fpu_id, ctx.fpu_config[fpu_id]["serialnumber"], which_limit, limit_val)
+                    % (
+                        fpu_id,
+                        ctx.fpu_config[fpu_id]["serialnumber"],
+                        which_limit,
+                        limit_val,
+                    )
                 )
 
             set_protection_limit(ctx, fpu_id, which_limit, limit_val)

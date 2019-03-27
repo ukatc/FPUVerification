@@ -1,14 +1,13 @@
-from __future__ import print_function, division, absolute_import
-
-from ImageAnalysisFuncs.analyze_metrology_calibration import (
-    metcalTargetCoordinates,
-    metcalFibreCoordinates,
-    MetrologyAnalysisFibreError,
-    MetrologyAnalysisTargetError,
-)
+from __future__ import absolute_import, division, print_function
 
 import unittest
 
+from ImageAnalysisFuncs.analyze_metrology_calibration import (
+    MetrologyAnalysisFibreError,
+    MetrologyAnalysisTargetError,
+    metcalFibreCoordinates,
+    metcalTargetCoordinates,
+)
 from vfr.conf import MET_CAL_TARGET_ANALYSIS_PARS
 
 

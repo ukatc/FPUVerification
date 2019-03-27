@@ -40,7 +40,7 @@ def generate_positions():
     a_near = 1.0
     b_near = 1.0
 
-    yield (a_near,  b_near), False
+    yield (a_near, b_near), False
 
 
 def measure_pupil_alignment(ctx, pars=None):
@@ -66,7 +66,7 @@ def measure_pupil_alignment(ctx, pars=None):
     )
 
     with hw.use_backlight(
-            pars.PUP_ALGN_LAMP_VOLTAGE, manual_lamp_control=ctx.opts.manual_lamp_control
+        pars.PUP_ALGN_LAMP_VOLTAGE, manual_lamp_control=ctx.opts.manual_lamp_control
     ):
 
         # initialize pos_rep camera
@@ -121,8 +121,10 @@ def measure_pupil_alignment(ctx, pars=None):
             for count, (coords, do_capture) in enumerate(generate_positions()):
                 abs_alpha, abs_beta = coords
                 if ctx.opts.verbosity > 3:
-                    print("FPU %s: go to position (%7.2f, %7.2f)"
-                          % (sn, abs_alpha, abs_beta))
+                    print(
+                        "FPU %s: go to position (%7.2f, %7.2f)"
+                        % (sn, abs_alpha, abs_beta)
+                    )
 
                 goto_position(
                     ctx.gd, abs_alpha, abs_beta, ctx.grid_state, fpuset=[fpu_id]
@@ -130,8 +132,10 @@ def measure_pupil_alignment(ctx, pars=None):
 
                 if do_capture:
                     if ctx.opts.verbosity > 0:
-                        print("FPU %s: saving image for (%7.2f, %7.2f)"
-                              % (sn, abs_alpha, abs_beta))
+                        print(
+                            "FPU %s: saving image for (%7.2f, %7.2f)"
+                            % (sn, abs_alpha, abs_beta)
+                        )
                     ipath = capture_image(count, abs_alpha, abs_beta)
                     images[(abs_alpha, abs_beta)] = ipath
 
@@ -141,7 +145,7 @@ def measure_pupil_alignment(ctx, pars=None):
 
 
 def eval_pupil_alignment(
-        ctx, PUP_ALGN_ANALYSIS_PARS=None, PUP_ALGN_EVALUATION_PARS=None,
+    ctx, PUP_ALGN_ANALYSIS_PARS=None, PUP_ALGN_EVALUATION_PARS=None
 ):
 
     for fpu_id in ctx.eval_fpuset:
@@ -154,16 +158,13 @@ def eval_pupil_alignment(
         images = measurement["images"]
 
         def analysis_func(ipath):
-            return pupalnCoordinates(
-                ipath,
-                pars=PUP_ALGN_ANALYSIS_PARS,
-            )
+            return pupalnCoordinates(ipath, pars=PUP_ALGN_ANALYSIS_PARS)
 
         try:
             coords = dict((k, analysis_func(v)) for k, v in images.items())
 
             pupalnChassisErr, pupalnAlphaErr, pupalnBetaErr, pupalnTotalErr, pupalnErrorBars = evaluate_pupil_alignment(
-                coords, pars=PUP_ALGN_EVALUATION_PARS,
+                coords, pars=PUP_ALGN_EVALUATION_PARS
             )
 
             pupil_alignment_has_passed = (

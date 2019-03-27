@@ -3,20 +3,21 @@ Simple class which encapsulate an APT controller
 """
 from __future__ import absolute_import, division, print_function
 
+import collections
+import struct as st
+import sys
+import time
+from warnings import warn
+
+from . import message
+from .message import Message
+
 try:
     import pylibftdi
 except ImportError:
     print(
         ">>>>>>>>>>> Warning: Import of pylibftdi failed - probably dependency mismatch."
     )
-import time
-import sys
-import struct as st
-import collections
-
-from .message import Message
-from . import message
-from warnings import warn
 
 
 class OutOfRangeError(Exception):

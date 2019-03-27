@@ -83,4 +83,6 @@ def get_metrology_calibration_result(ctx, fpu_id, count=None):
         keybase = (serialnumber, RECORD_TYPE, "result")
         return keybase
 
-    return get_test_result(ctx, fpu_id, keyfunc, verbosity=ctx.opts.verbosity, count=count)
+    return get_test_result(
+        ctx, fpu_id, keyfunc, verbosity=ctx.opts.verbosity, count=count
+    )

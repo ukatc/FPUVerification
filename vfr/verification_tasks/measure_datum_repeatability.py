@@ -142,13 +142,19 @@ def eval_datum_repeatability(ctx, dat_rep_analysis_pars):
             datumed_coords = map(analysis_func, images["datumed_images"])
             moved_coords = map(analysis_func, images["moved_images"])
 
-            datum_repeatability_mm = evaluate_datum_repeatability(
-                datumed_coords, moved_coords
-            )
+            (
+                datrep_dat_only_max,
+                datrep_dat_only_std,
+                datrep_move_dat_max,
+                datrep_move_dat_std,
+            ) = evaluate_datum_repeatability(datumed_coords, moved_coords)
 
             datum_repeatability_has_passed = (
                 TestResult.OK
-                if datum_repeatability_mm <= dat_rep_analysis_pars.DATUM_REP_PASS
+                if (
+                    max(datrep_dat_only_max, datrep_move_dat_max)
+                    <= dat_rep_analysis_pars.DATUM_REP_PASS
+                )
                 else TestResult.FAILED
             )
 
@@ -158,7 +164,9 @@ def eval_datum_repeatability(ctx, dat_rep_analysis_pars):
         except ImageAnalysisError as e:
             errmsg = str(e)
             coords = {}
-            datum_repeatability_mm = NaN
+            datrep_dat_only_max = (
+                datrep_dat_only_std
+            ) = datrep_move_dat_max = datrep_move_dat_std = NaN
             datum_repeatability_has_passed = TestResult.NA
 
             if dat_rep_analysis_pars.FIXME_FAKE_RESULT:
@@ -172,7 +180,10 @@ def eval_datum_repeatability(ctx, dat_rep_analysis_pars):
             ctx,
             fpu_id,
             coords=coords,
-            datum_repeatability_mm=datum_repeatability_mm,
+            datum_repeatability_only_max_mm=datrep_dat_only_max,
+            datum_repeatability_only_std_mm=datrep_dat_only_std,
+            datum_repeatability_move_max_mm=datrep_move_dat_max,
+            datum_repeatability_move_std_mm=datrep_move_dat_std,
             datum_repeatability_has_passed=datum_repeatability_has_passed,
             pass_threshold=dat_rep_analysis_pars.DATUM_REP_PASS,
             errmsg=errmsg,

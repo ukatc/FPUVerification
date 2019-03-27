@@ -4,11 +4,12 @@ Usage: python identify.py [<serial>]
 
 Finds all APT controllers and flashes their activity lights
 """
-from __future__ import absolute_import
-from __future__ import print_function
-import time
-import pyAPT
+from __future__ import absolute_import, print_function
+
 import sys
+import time
+
+import pyAPT
 from runner import runner_serial
 
 

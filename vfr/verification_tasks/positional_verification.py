@@ -1,7 +1,7 @@
 from __future__ import absolute_import, division, print_function
 
-import warnings
 import random
+import warnings
 
 from fpu_commands import gen_wf
 from Gearbox.gear_correction import (
@@ -20,7 +20,7 @@ from ImageAnalysisFuncs.analyze_positional_repeatability import (
 from numpy import NaN
 from vfr import hw, hwsimulation
 from vfr.conf import POS_REP_CAMERA_IP_ADDRESS
-from vfr.db.colldect_limits import get_angular_limit, get_anglimit_passed_p
+from vfr.db.colldect_limits import get_anglimit_passed_p, get_angular_limit
 from vfr.db.datum_repeatability import get_datum_repeatability_passed_p
 from vfr.db.positional_repeatability import (
     TestResult,
@@ -39,8 +39,8 @@ from vfr.tests_common import (
     dirac,
     find_datum,
     flush,
-    get_stepcounts,
     get_sorted_positions,
+    get_stepcounts,
     goto_position,
     store_image,
     timestamp,
@@ -60,11 +60,10 @@ def generate_tested_positions(
 ):
     positions = []
 
-    N_FIX_POS=8
+    N_FIX_POS = 8
     for k in range(N_FIX_POS):
         positions.append(
-            (alpha_min + k * (alpha_max - alpha_min) / float(N_FIX_POS),
-             beta_min + 10)
+            (alpha_min + k * (alpha_max - alpha_min) / float(N_FIX_POS), beta_min + 10)
         )
 
     interval_alpha = (alpha_max - alpha_min) / float(niterations)
@@ -164,8 +163,13 @@ def measure_positional_verification(ctx, pars=None):
             beta_max = get_angular_limit(ctx, fpu_id, "beta_max")["val"]
 
             if opts.verbosity > 0:
-                print("FPU %s: limits: alpha = %7.2f .. %7.2f" % (sn, alpha_min, alpha_max))
-                print("FPU %s: limits: beta = %7.2f .. %7.2f" % (sn, beta_min, beta_max))
+                print(
+                    "FPU %s: limits: alpha = %7.2f .. %7.2f"
+                    % (sn, alpha_min, alpha_max)
+                )
+                print(
+                    "FPU %s: limits: beta = %7.2f .. %7.2f" % (sn, beta_min, beta_max)
+                )
 
             if (alpha_min and alpha_max and beta_min and beta_max) is None:
                 print(
@@ -186,9 +190,9 @@ def measure_positional_verification(ctx, pars=None):
 
             gearbox_correction = pr_result["gearbox_correction"]
             fpu_coeffs = gearbox_correction["coeffs"]
-            gearbox_algorithm_version=pr_result["algorithm_version"]
-            gearbox_git_version=pr_result["git-version"]
-            gearbox_record_count=pr_result["record-count"]
+            gearbox_algorithm_version = pr_result["algorithm_version"]
+            gearbox_git_version = pr_result["git-version"]
+            gearbox_record_count = pr_result["record-count"]
 
             # move rotary stage to POS_VER_POSN_N
             hw.turntable_safe_goto(gd, grid_state, stage_position)
@@ -255,10 +259,12 @@ def measure_positional_verification(ctx, pars=None):
                 gd.executeMotion(grid_state)
 
                 gd.pingFPUs(grid_state)
-                alpha_actualsteps, beta_actualsteps = get_stepcounts(gd, grid_state, fpu_id)
+                alpha_actualsteps, beta_actualsteps = get_stepcounts(
+                    gd, grid_state, fpu_id
+                )
 
-                assert (
-                    (alpha_actualsteps == asteps_target) and (beta_actualsteps == bsteps_target)
+                assert (alpha_actualsteps == asteps_target) and (
+                    beta_actualsteps == bsteps_target
                 ), "could not reach corrected step count"
 
                 if verbosity > 0:
@@ -270,13 +276,14 @@ def measure_positional_verification(ctx, pars=None):
 
             # store dict of image paths, together with all data and algorithms
             # which are relevant to assess result later
-            save_positional_verification_images(ctx,
-                                                fpu_id,
-                                                image_dict=image_dict,
-                                                gearbox_correction=gearbox_correction,
-                                                gearbox_algorithm_version=gearbox_algorithm_version,
-                                                gearbox_git_version=gearbox_git_version,
-                                                gearbox_record_count=gearbox_record_count,
+            save_positional_verification_images(
+                ctx,
+                fpu_id,
+                image_dict=image_dict,
+                gearbox_correction=gearbox_correction,
+                gearbox_algorithm_version=gearbox_algorithm_version,
+                gearbox_git_version=gearbox_git_version,
+                gearbox_record_count=gearbox_record_count,
             )
 
 

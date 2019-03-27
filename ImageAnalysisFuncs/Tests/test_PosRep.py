@@ -1,9 +1,8 @@
-from __future__ import print_function, division, absolute_import
-
-from ImageAnalysisFuncs.analyze_positional_repeatability import posrepCoordinates
+from __future__ import absolute_import, division, print_function
 
 import unittest
 
+from ImageAnalysisFuncs.analyze_positional_repeatability import posrepCoordinates
 from vfr.conf import POS_REP_ANALYSIS_PARS
 
 

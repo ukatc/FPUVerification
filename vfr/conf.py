@@ -66,7 +66,9 @@ DATUM_REP_MEASUREMENT_PARS = Namespace(
 )
 
 
-DAT_REP_PLATESCALE = 0.00668  # millimeter per pixel, for the metology calibration camera
+DAT_REP_PLATESCALE = (
+    0.00668
+)  # millimeter per pixel, for the metology calibration camera
 
 
 DAT_REP_CALIBRATION_PARS = {
@@ -227,7 +229,7 @@ POS_VER_MEASUREMENT_PARS = Namespace(
     # exposed image
     POS_VER_ITERATIONS=3,  # the number of times each FPU
     # sweeps back and forth
-    POS_VER_SAFETY_TOLERANCE=1.5, # safety distance towards range limits
+    POS_VER_SAFETY_TOLERANCE=1.5,  # safety distance towards range limits
 )
 
 

@@ -1,15 +1,14 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
+
+from math import atan, pi, sqrt
 
 import cv2
-from math import pi, sqrt, atan
-from matplotlib import pyplot as plt
-from numpy import NaN, mean, std, array
-from numpy.linalg import norm
-
-from ImageAnalysisFuncs.base import ImageAnalysisError
 from DistortionCorrection import correct
+from ImageAnalysisFuncs.base import ImageAnalysisError
+from matplotlib import pyplot as plt
+from numpy import NaN, array, mean, std
+from numpy.linalg import norm
 from vfr.conf import INSTRUMENT_FOCAL_LENGTH
-
 
 # exceptions which are raised if image analysis functions fail
 
@@ -51,7 +50,7 @@ def pupalnCoordinates(
     # exceptions
     # scale and straighten the result coordinates
 
-    print ("image %s: processing pupil alignment analysis" % image_path)
+    print("image %s: processing pupil alignment analysis" % image_path)
 
     if pars.PUP_ALGN_CALIBRATION_PARS is None:
         pars.PUP_ALGN_CALIBRATION_PARS = {
@@ -81,7 +80,7 @@ def evaluate_pupil_alignment(dict_of_coordinates, pars=None):
         alpha, beta = pos
         if not alpha_dict.has_key(alpha):
             alpha_dict[alpha] = []
-        alpha_dict[alpha].append((x,y))
+        alpha_dict[alpha].append((x, y))
 
     beta_errors = []
     beta_centers = []
@@ -96,7 +95,7 @@ def evaluate_pupil_alignment(dict_of_coordinates, pars=None):
     alpha_center = mean(beta_centers, axis=0)
     pupalnAlphaErr = mean(map(norm, beta_centers - alpha_center))
 
-    all_coords = array(dict_of_coordinates.values())[:,:2]
+    all_coords = array(dict_of_coordinates.values())[:, :2]
     xc = norm(
         mean(all_coords, axis=0)
         - array((pars.PUP_ALGN_CALIBRATED_CENTRE_X, pars.PUP_ALGN_CALIBRATED_CENTRE_Y))

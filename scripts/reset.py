@@ -4,10 +4,9 @@ Usage: python reset.py [<serial>]
 
 Resets all controller parameters to their default EEPROM value.
 """
-from __future__ import absolute_import
-from __future__ import print_function
-import pyAPT
+from __future__ import absolute_import, print_function
 
+import pyAPT
 from runner import runner_serial
 
 

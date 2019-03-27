@@ -4,10 +4,9 @@ Usage: python get_status.py [<serial>]
 
 Gets the status of all APT controllers, or of the one specified
 """
-from __future__ import absolute_import
-from __future__ import print_function
-import pyAPT
+from __future__ import absolute_import, print_function
 
+import pyAPT
 from runner import runner_serial
 
 

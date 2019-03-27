@@ -1,7 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
 from numpy import NaN
-
 from vfr.db.base import (
     GIT_VERSION,
     TestResult,
@@ -44,7 +43,10 @@ def save_datum_repeatability_result(
     ctx,
     fpu_id,
     coords=None,
-    datum_repeatability_mm=None,
+    datum_repeatability_only_max_mm=None,
+    datum_repeatability_only_std_mm=None,
+    datum_repeatability_move_max_mm=None,
+    datum_repeatability_move_std_mm=None,
     datum_repeatability_has_passed=None,
     pass_threshold=NaN,
     errmsg="",
@@ -62,12 +64,15 @@ def save_datum_repeatability_result(
         val = repr(
             {
                 "coords": coords,
-                "repeatability_millimeter": datum_repeatability_mm,
+                "datum_repeatability_only_max_mm": datum_repeatability_only_max_mm,
+                "datum_repeatability_only_std_mm": datum_repeatability_only_std_mm,
+                "datum_repeatability_move_max_mm": datum_repeatability_move_max_mm,
+                "datum_repeatability_move_std_mm": datum_repeatability_move_std_mm,
                 "result": datum_repeatability_has_passed,
                 "pass_threshold": pass_threshold,
                 "error_message": errmsg,
                 "git-version": GIT_VERSION,
-                "analysis-version": analysis_version,
+                "algorithm_version": analysis_version,
                 "time": timestamp(),
             }
         )

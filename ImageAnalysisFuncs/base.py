@@ -1,5 +1,6 @@
-from __future__ import print_function, division
-from numpy import nan, asarray, sum, sqrt
+from __future__ import division, print_function
+
+from numpy import asarray, nan, sqrt, sum
 
 
 class ImageAnalysisError(Exception):

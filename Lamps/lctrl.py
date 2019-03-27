@@ -1,10 +1,9 @@
-from __future__ import print_function, division
-from contextlib import contextmanager
+from __future__ import division, print_function
 
 import time
+from contextlib import contextmanager
 
 from vfr.conf import LAMP_WARMING_TIME_MILLISECONDS
-
 
 # here a nice explanation how the context managers work:
 # https://jeffknupp.com/blog/2016/03/07/python-with-context-managers/
