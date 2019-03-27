@@ -59,14 +59,15 @@ def measure_pupil_alignment(ctx, pars=None):
     hw.safe_home_turntable(ctx.gd, ctx.grid_state)
     hw.home_linear_stage()
 
-    hw.switch_ambientlight("off", manual_lamp_control=ctx.opts.manual_lamp_control)
-    hw.switch_silhouettelight("off", manual_lamp_control=ctx.opts.manual_lamp_control)
-    hw.switch_fibre_backlight_voltage(
+    ctx.lctrl.switch_ambientlight("off", manual_lamp_control=ctx.opts.manual_lamp_control)
+    ctx.lctrl.switch_silhouettelight("off", manual_lamp_control=ctx.opts.manual_lamp_control)
+    ctx.lctrl.switch_fibre_backlight_voltage(
         5.0, manual_lamp_control=ctx.opts.manual_lamp_control
     )
 
-    with hw.use_backlight(
+    with ctx.lctrl.use_backlight(
         pars.PUP_ALGN_LAMP_VOLTAGE, manual_lamp_control=ctx.opts.manual_lamp_control
+
     ):
 
         # initialize pos_rep camera

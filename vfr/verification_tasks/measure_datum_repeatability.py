@@ -41,12 +41,12 @@ def measure_datum_repeatability(ctx, pars=None):
     # home turntable
     hw.safe_home_turntable(ctx.gd, ctx.grid_state)
 
-    hw.switch_fibre_backlight("off", manual_lamp_control=ctx.opts.manual_lamp_control)
-    hw.switch_fibre_backlight_voltage(
+    ctx.lctrl.switch_fibre_backlight("off", manual_lamp_control=ctx.opts.manual_lamp_control)
+    ctx.lctrl.switch_fibre_backlight_voltage(
         0.0, manual_lamp_control=ctx.opts.manual_lamp_control
     )
 
-    with hw.use_ambientlight(manual_lamp_control=ctx.opts.manual_lamp_control):
+    with ctx.lctrl.use_ambientlight(manual_lamp_control=ctx.opts.manual_lamp_control):
 
         # get sorted positions (this is needed because the turntable can only
         # move into one direction)

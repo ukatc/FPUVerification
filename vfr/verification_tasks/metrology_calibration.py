@@ -38,9 +38,9 @@ def measure_metrology_calibration(ctx, pars=None):
     # home turntable
     hw.safe_home_turntable(ctx.gd, ctx.grid_state)
 
-    hw.switch_fibre_backlight("off", manual_lamp_control=ctx.opts.manual_lamp_control)
-    hw.switch_ambientlight("off", manual_lamp_control=ctx.opts.manual_lamp_control)
-    hw.switch_fibre_backlight_voltage(
+    ctx.lctrl.switch_fibre_backlight("off", manual_lamp_control=ctx.opts.manual_lamp_control)
+    ctx.lctrl.switch_ambientlight("off", manual_lamp_control=ctx.opts.manual_lamp_control)
+    ctx.lctrl.switch_fibre_backlight_voltage(
         0.0, manual_lamp_control=ctx.opts.manual_lamp_control
     )
 
@@ -76,22 +76,22 @@ def measure_metrology_calibration(ctx, pars=None):
             return ipath
 
         met_cal_cam.SetExposureTime(pars.METROLOGY_CAL_TARGET_EXPOSURE_MS)
-        hw.switch_fibre_backlight(
+        ctx.lctrl.switch_fibre_backlight(
             "off", manual_lamp_control=ctx.opts.manual_lamp_control
         )
-        hw.switch_fibre_backlight_voltage(
+        ctx.lctrl.switch_fibre_backlight_voltage(
             0.0, manual_lamp_control=ctx.opts.manual_lamp_control
         )
 
         # use context manager to switch lamp on
         # and guarantee it is switched off after the
         # measurement (even if exceptions occur)
-        with hw.use_ambientlight(manual_lamp_control=ctx.opts.manual_lamp_control):
+        with ctx.lctrl.use_ambientlight(manual_lamp_control=ctx.opts.manual_lamp_control):
             target_ipath = capture_image(met_cal_cam, "target")
 
         met_cal_cam.SetExposureTime(pars.METROLOGY_CAL_FIBRE_EXPOSURE_MS)
 
-        with hw.use_backlight(
+        with ctx.lctrl.use_backlight(
             pars.METROLOGY_CAL_BACKLIGHT_VOLTAGE,
             manual_lamp_control=ctx.opts.manual_lamp_control,
         ):

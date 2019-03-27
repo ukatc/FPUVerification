@@ -3,6 +3,7 @@
 from __future__ import absolute_import, division, print_function
 
 import ast
+import atexit
 import os
 import re
 import sys
@@ -11,6 +12,8 @@ from argparse import Namespace
 from fpu_constants import ALPHA_DATUM_OFFSET, BETA_DATUM_OFFSET
 from FpuGridDriver import FPST_AT_DATUM
 from protectiondb import open_database_env
+from vfr import hw
+from vfr import hwsimulation
 from vfr.conf import (ALPHA_DATUM_OFFSET, COLLDECT_MEASUREMENT_PARS,
                       DATUM_REP_ANALYSIS_PARS, DATUM_REP_MEASUREMENT_PARS,
                       IMAGE_ROOT_FOLDER, MET_CAL_CAMERA_IP_ADDRESS,
@@ -77,10 +80,23 @@ if __name__ == "__main__":
     cd_to_image_root(IMAGE_ROOT_FOLDER)
     # check connections to cameras and EtherCAN gateway
 
+    if opts.mockup:
+        lctrl = hwsimulation.lampController()
+    else:
+        lctrl = hw.lampController()
+
+    # make sure that lamps are switched off on program exit
+    def lamps_off():
+        lctrl.switch_fibre_backlight("off")
+        lctrl.switch_ambientlight("off")
+        lctrl.switch_silhouettelight("off")
+
+    atexit.register(lamps_off)
     context = Namespace(            env=env,
                                     fpudb=None,
                                     vfdb=vfdb,
                                     gd=None,
+                                    lctrl=lctrl,
                                     grid_state=None,
                                     measure_fpuset=measure_fpuset,
                                     eval_fpuset=eval_fpuset,

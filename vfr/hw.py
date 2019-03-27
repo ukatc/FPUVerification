@@ -5,15 +5,7 @@ import time
 import pyAPT
 from FpuGridDriver import DATUM_TIMEOUT_DISABLE
 from GigE.GigECamera import GigECamera
-from Lamps.lctrl import (
-    switch_ambientlight,
-    switch_fibre_backlight,
-    switch_fibre_backlight_voltage,
-    switch_silhouettelight,
-    use_ambientlight,
-    use_backlight,
-    use_silhouettelight,
-)
+from Lamps.lctrl import lampController
 from vfr.tests_common import find_datum
 
 
