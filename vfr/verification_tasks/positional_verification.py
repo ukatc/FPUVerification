@@ -186,6 +186,9 @@ def measure_positional_verification(ctx, pars=None):
 
             gearbox_correction = pr_result["gearbox_correction"]
             fpu_coeffs = gearbox_correction["coeffs"]
+            gearbox_algorithm_version=pr_result["algorithm_version"]
+            gearbox_git_version=pr_result["git-version"]
+            gearbox_record_count=pr_result["record-count"]
 
             # move rotary stage to POS_VER_POSN_N
             hw.turntable_safe_goto(gd, grid_state, stage_position)
@@ -265,8 +268,16 @@ def measure_positional_verification(ctx, pars=None):
 
                 image_dict[(k, alpha, beta)] = ipath
 
-            # store dict of image paths
-            save_positional_verification_images(ctx, fpu_id, image_dict=image_dict, gearbox_correction=gearbox_correction)
+            # store dict of image paths, together with all data and algorithms
+            # which are relevant to assess result later
+            save_positional_verification_images(ctx,
+                                                fpu_id,
+                                                image_dict=image_dict,
+                                                gearbox_correction=gearbox_correction,
+                                                gearbox_algorithm_version=gearbox_algorithm_version,
+                                                gearbox_git_version=gearbox_git_version,
+                                                gearbox_record_count=gearbox_record_count,
+            )
 
 
 def eval_positional_verification(ctx, pos_ver_analysis_pars, pos_ver_evaluation_pars):

@@ -12,7 +12,14 @@ from vfr.db.base import (
 
 RECORD_TYPE = "positional-verification"
 
-def save_positional_verification_images(ctx, fpu_id, image_dict=None, gearbox_correction=None):
+def save_positional_verification_images(
+        ctx,
+        fpu_id,
+        image_dict=None,
+        gearbox_correction=None,
+        gearbox_algorithm_version=None,
+        gearbox_git_version="",
+        gearbox_record_count=None):
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
@@ -26,6 +33,9 @@ def save_positional_verification_images(ctx, fpu_id, image_dict=None, gearbox_co
             "fpuid": fpu_id,
             "images": image_dict,
             "gearbox_correction" : gearbox_correction,
+            "gearbox_algorithm_version" : gearbox_algorithm_version,
+            "gearbox_git-version" : gearbox_git_version,
+            "gearbox_record_count" : gearbox_record_count,
             "time": timestamp()})
         return val
 
