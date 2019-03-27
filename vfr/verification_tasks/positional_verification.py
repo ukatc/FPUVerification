@@ -7,20 +7,19 @@ from fpu_commands import gen_wf
 from Gearbox.gear_correction import (
     GearboxFitError,
     apply_gearbox_correction,
-    fit_gearbox_correction,
 )
 from GigE.GigECamera import BASLER_DEVICE_CLASS, DEVICE_CLASS, IP_ADDRESS
 from ImageAnalysisFuncs.analyze_positional_repeatability import (
     POSITIONAL_REPEATABILITY_ALGORITHM_VERSION,
-    POSITIONAL_VERIFICATION_ALGORITHM_VERSION,
     ImageAnalysisError,
     evaluate_positional_verification,
     posrepCoordinates,
 )
 from numpy import NaN
-from vfr import hw, hwsimulation
+from vfr import hw as real_hw
+from vfr import hwsimulation
 from vfr.conf import POS_REP_CAMERA_IP_ADDRESS
-from vfr.db.colldect_limits import get_anglimit_passed_p, get_angular_limit
+from vfr.db.colldect_limits import get_angular_limit
 from vfr.db.datum_repeatability import get_datum_repeatability_passed_p
 from vfr.db.positional_repeatability import (
     TestResult,
@@ -28,7 +27,6 @@ from vfr.db.positional_repeatability import (
     get_positional_repeatability_result,
 )
 from vfr.db.positional_verification import (
-    TestResult,
     get_positional_verification_images,
     get_positional_verification_passed_p,
     save_positional_verification_images,
@@ -38,20 +36,10 @@ from vfr.db.pupil_alignment import get_pupil_alignment_passed_p
 from vfr.tests_common import (
     dirac,
     find_datum,
-    flush,
     get_sorted_positions,
     get_stepcounts,
-    goto_position,
     store_image,
     timestamp,
-)
-from vfr.verification_tasks.measure_datum_repeatability import (
-    get_datum_repeatability_passed_p,
-)
-from vfr.verification_tasks.positional_repeatability import (
-    POSITIONAL_REPEATABILITY_ALGORITHM_VERSION,
-    get_positional_repeatability_passed_p,
-    get_positional_repeatability_result,
 )
 
 
@@ -94,6 +82,8 @@ def measure_positional_verification(ctx, pars=None):
     if opts.mockup:
         # replace all hardware functions by mock-up interfaces
         hw = hwsimulation
+    else:
+        hw = real_hw
 
     hw.safe_home_turntable(gd, grid_state)
 
@@ -159,10 +149,24 @@ def measure_positional_verification(ctx, pars=None):
                 )
                 continue
 
-            alpha_min = get_angular_limit(ctx, fpu_id, "alpha_min")["val"]
-            alpha_max = get_angular_limit(ctx, fpu_id, "alpha_max")["val"]
-            beta_min = get_angular_limit(ctx, fpu_id, "beta_min")["val"]
-            beta_max = get_angular_limit(ctx, fpu_id, "beta_max")["val"]
+            _alpha_min = get_angular_limit(ctx, fpu_id, "alpha_min")
+            _alpha_max = get_angular_limit(ctx, fpu_id, "alpha_max")
+            _beta_min = get_angular_limit(ctx, fpu_id, "beta_min")
+            _beta_max = get_angular_limit(ctx, fpu_id, "beta_max")
+
+            if (
+                (_alpha_min is None)
+                or (_alpha_max is None)
+                or (_beta_min is None)
+                or (_beta_max is None)
+            ):
+                print("FPU %s : limit test value missing, skipping test" % sn)
+                continue
+
+            alpha_min = _alpha_min["val"]
+            alpha_max = _alpha_max["val"]
+            beta_min = _beta_min["val"]
+            beta_max = _beta_max["val"]
 
             if opts.verbosity > 0:
                 print(

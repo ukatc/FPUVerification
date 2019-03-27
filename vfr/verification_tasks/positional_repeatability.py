@@ -2,7 +2,6 @@ from __future__ import absolute_import, division, print_function
 
 import warnings
 
-from fpu_commands import gen_wf
 from Gearbox.gear_correction import GearboxFitError, fit_gearbox_correction
 from GigE.GigECamera import BASLER_DEVICE_CLASS, DEVICE_CLASS, IP_ADDRESS
 from ImageAnalysisFuncs.analyze_positional_repeatability import (
@@ -12,22 +11,20 @@ from ImageAnalysisFuncs.analyze_positional_repeatability import (
     posrepCoordinates,
 )
 from numpy import NaN
-from vfr import hw, hwsimulation
+from vfr import hw as real_hw
+from vfr import hwsimulation
 from vfr.conf import POS_REP_CAMERA_IP_ADDRESS
-from vfr.db.colldect_limits import get_anglimit_passed_p, get_angular_limit
+from vfr.db.colldect_limits import get_angular_limit
 from vfr.db.positional_repeatability import (
     TestResult,
     get_positional_repeatability_images,
     get_positional_repeatability_passed_p,
-    get_positional_repeatability_result,
     save_positional_repeatability_images,
     save_positional_repeatability_result,
 )
 from vfr.db.pupil_alignment import get_pupil_alignment_passed_p
 from vfr.tests_common import (
-    dirac,
     find_datum,
-    flush,
     get_sorted_positions,
     goto_position,
     store_image,
@@ -44,6 +41,8 @@ def measure_positional_repeatability(ctx, pars=None):
     if ctx.opts.mockup:
         # replace all hardware functions by mock-up interfaces
         hw = hwsimulation
+    else:
+        hw = real_hw
 
     # home turntable
     hw.safe_home_turntable(ctx.gd, ctx.grid_state)
@@ -67,7 +66,7 @@ def measure_positional_repeatability(ctx, pars=None):
         # get sorted positions (this is needed because the turntable can only
         # move into one direction)
         for fpu_id, stage_position in get_sorted_positions(
-            ctx.eval_fpuset, pars.POS_REP_POSITIONS
+            ctx.measure_fpuset, pars.POS_REP_POSITIONS
         ):
 
             sn = ctx.fpu_config[fpu_id]["serialnumber"]
@@ -101,19 +100,24 @@ def measure_positional_repeatability(ctx, pars=None):
                 )
                 continue
 
-            alpha_min = get_angular_limit(ctx, fpu_id, "alpha_min")["val"]
-            alpha_max = get_angular_limit(ctx, fpu_id, "alpha_max")["val"]
-            beta_min = get_angular_limit(ctx, fpu_id, "beta_min")["val"]
-            beta_max = get_angular_limit(ctx, fpu_id, "beta_max")["val"]
+            _alpha_min = get_angular_limit(ctx, fpu_id, "alpha_min")
+            _alpha_max = get_angular_limit(ctx, fpu_id, "alpha_max")
+            _beta_min = get_angular_limit(ctx, fpu_id, "beta_min")
+            _beta_max = get_angular_limit(ctx, fpu_id, "beta_max")
 
             if (
-                (alpha_min is None)
-                or (alpha_max is None)
-                or (beta_min is None)
-                or (beta_max is None)
+                (_alpha_min is None)
+                or (_alpha_max is None)
+                or (_beta_min is None)
+                or (_beta_max is None)
             ):
                 print("FPU %s : limit test value missing, skipping test" % sn)
                 continue
+
+            alpha_min = _alpha_min["val"]
+            alpha_max = _alpha_max["val"]
+            beta_min = _beta_min["val"]
+            beta_max = _beta_max["val"]
 
             # move rotary stage to POS_REP_POSN_N
             hw.turntable_safe_goto(ctx.gd, ctx.grid_state, stage_position)
@@ -296,7 +300,6 @@ def eval_positional_repeatability(ctx, pos_rep_analysis_pars, pos_rep_evaluation
             errmsg = ""
 
         except (ImageAnalysisError, GearboxFitError) as e:
-            analysis_results = None
             errmsg = str(e)
             posrep_alpha_max_at_angle = (NaN,)
             posrep_beta_max_at_angle = (NaN,)
@@ -304,6 +307,14 @@ def eval_positional_repeatability(ctx, pos_rep_analysis_pars, pos_rep_evaluation
             posrep_beta_max = (NaN,)
             posrep_rss_mm = (NaN,)
             positional_repeatability_has_passed = TestResult.NA
+            analysis_results_alpha=None
+            analysis_results_beta=None
+            posrep_alpha_max_at_angle=[]
+            posrep_beta_max_at_angle=[]
+            posrep_alpha_max=NaN
+            posrep_beta_max=NaN
+            posrep_rss_mm=NaN
+            gearbox_correction=None
 
         save_positional_repeatability_result(
             ctx,
