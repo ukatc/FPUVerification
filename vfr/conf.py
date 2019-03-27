@@ -28,6 +28,10 @@ NR360_SERIALNUMBER = 40873952
 
 MTS50_SERIALNUMBER = 83822910
 
+# if you work on another machine (for example testing image analysis
+# scripts), you should set the environment variable IMAGE_ROOT_FOLDER
+# to the path which contains the images. Shorthands like ~/, ~user, or
+# ${HOME} are expanded before use.
 IMAGE_ROOT_FOLDER = environ.get("IMAGE_ROOT_FOLDER", "/moonsdata/verification/images")
 
 POS_REP_CAMERA_IP_ADDRESS = "169.254.187.121"
@@ -61,7 +65,9 @@ DATUM_REP_MEASUREMENT_PARS = Namespace(
     DATUM_REP_POSITIONS=METROLOGY_CAL_POSITIONS,
 )
 
-DAT_REP_PLATESCALE = 0.02361  # millimeter per pixel
+
+DAT_REP_PLATESCALE = 0.00668  # millimeter per pixel, for the metology calibration camera
+
 
 DAT_REP_CALIBRATION_PARS = {
     "algorithm": "scale",

@@ -267,15 +267,15 @@ def evaluate_datum_repeatability(datumed_coords, moved_coords, pars=None):
     datumed_mean = mean(xy_datumed, axis=0)  # averages small and big targets
     moved_mean = mean(xy_datumed, axis=0)
 
-    datumed_errors_small = map(norm, xy_datumed[:2] - datumed_mean[:2])
-    datumed_errors_big = map(norm, xy_datumed[2:] - datumed_mean[2:])
-    moved_errors_small = map(norm, xy_moved[:2] - moved_mean[:2])
-    moved_errors_big = map(norm, xy_moved[2:] - moved_mean[2:])
+    datumed_errors_small = map(norm, xy_datumed[:,:2] - datumed_mean[:2])
+    datumed_errors_big = map(norm, xy_datumed[:,2:] - datumed_mean[2:])
+    moved_errors_small = map(norm, xy_moved[:,:2] - moved_mean[:2])
+    moved_errors_big = map(norm, xy_moved[:,2:] - moved_mean[2:])
 
-    datrep_dat_only_max = max([datumed_errors_big, datumed_errors_small])
-    datrep_dat_only_std = std([datumed_errors_big, datumed_errors_small])
-    datrep_move_dat_max = max([moved_errors_big, moved_errors_small])
-    datrep_move_dat_std = std([moved_errors_big, moved_errors_small])
+    datrep_dat_only_max = max(hstack([datumed_errors_big, datumed_errors_small]))
+    datrep_dat_only_std = std(hstack([datumed_errors_big, datumed_errors_small]))
+    datrep_move_dat_max = max(hstack([moved_errors_big, moved_errors_small]))
+    datrep_move_dat_std = std(hstack([moved_errors_big, moved_errors_small]))
 
     return (
         datrep_dat_only_max,
