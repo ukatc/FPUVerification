@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 """Module to control the Lamps via MCCDAQ.
 
 Largely simplifies the interface to the uldaq library. The Factory
@@ -21,19 +23,29 @@ Created on 20/03/2019
 __version__ = "1.0"
 __author__ = "Alan O'Brien"
 
-from __future__ import division, print_function
 
 import time
 from contextlib import contextmanager
 
-from uldaq import (
-    AOutFlag,
-    DaqDevice,
-    DigitalDirection,
-    DigitalPortIoType,
-    InterfaceType,
-    get_daq_device_inventory,
-)
+try:
+    from uldaq import (
+        AOutFlag,
+        DaqDevice,
+        DigitalDirection,
+        DigitalPortIoType,
+        InterfaceType,
+        get_daq_device_inventory,
+    )
+except ImportError:
+    print(">>>>>>>>>>> Warning: Could not import uldaq module -- probably a setup problem or running in simulation context")
+    AOutFlag = None
+    DaqDevice = None
+    DigitalDirection = None
+    DigitalPortIoType = None
+    InterfaceType = None
+    get_daq_device_inventory = None
+
+
 from vfr.conf import LAMP_WARMING_TIME_MILLISECONDS
 
 # Exceptions to raise if there is an error related to the Lamp

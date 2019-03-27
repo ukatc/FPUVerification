@@ -23,57 +23,55 @@ from vfr.tests_common import find_datum
 # https://jeffknupp.com/blog/2016/03/07/python-with-context-managers/
 
 
-def switch_fibre_backlight(state, manual_lamp_control=False):
-    print("switch state of backlight to %r and presse <enter>" % state)
+class lampController:
+    def __init__():
+        pass
 
+    def switch_fibre_backlight(self, state, manual_lamp_control=False):
+        print("switch state of backlight to %r and presse <enter>" % state)
 
-def switch_fibre_backlight_voltage(voltage, manual_lamp_control=False):
-    print("switch voltage of backlight to %3.1f and presse <enter>" % voltage)
+    def switch_fibre_backlight_voltage(self, voltage, manual_lamp_control=False):
+        print("switch voltage of backlight to %3.1f and presse <enter>" % voltage)
 
+    def switch_ambientlight(self, state, manual_lamp_control=False):
+        print("switch state of ambient light to %r and presse <enter>" % state)
 
-def switch_ambientlight(state, manual_lamp_control=False):
-    print("switch state of ambient light to %r and presse <enter>" % state)
+    def switch_silhouettelight(self, state, manual_lamp_control=False):
+        print("switch state of silhouette light to %r and presse <enter>" % state)
 
-
-def switch_silhouettelight(state, manual_lamp_control=False):
-    print("switch state of silhouette light to %r and presse <enter>" % state)
-
-
-@contextmanager
-def use_silhouettelight(manual_lamp_control=False):
-    switch_silhouettelight("on", manual_lamp_control=manual_lamp_control)
-    time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
-    try:
-        yield None
-
-    finally:
-        switch_silhouettelight("off", manual_lamp_control=manual_lamp_control)
+    @contextmanager
+    def use_silhouettelight(self, manual_lamp_control=False):
+        switch_silhouettelight("on", manual_lamp_control=manual_lamp_control)
         time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
+        try:
+            yield None
 
+        finally:
+            switch_silhouettelight("off", manual_lamp_control=manual_lamp_control)
+            time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
 
-@contextmanager
-def use_backlight(voltage, manual_lamp_control=False):
-    switch_fibre_backlight_voltage(voltage, manual_lamp_control=manual_lamp_control)
-    switch_fibre_backlight("on", manual_lamp_control=manual_lamp_control)
-    time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
-    try:
-        yield None
-
-    finally:
-        switch_fibre_backlight("off", manual_lamp_control=manual_lamp_control)
+    @contextmanager
+    def use_backlight(self, voltage, manual_lamp_control=False):
+        switch_fibre_backlight_voltage(voltage, manual_lamp_control=manual_lamp_control)
+        switch_fibre_backlight("on", manual_lamp_control=manual_lamp_control)
         time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
+        try:
+            yield None
 
+        finally:
+            switch_fibre_backlight("off", manual_lamp_control=manual_lamp_control)
+            time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
 
-@contextmanager
-def use_ambientlight(manual_lamp_control=False):
-    switch_ambientlight("on", manual_lamp_control=manual_lamp_control)
-    time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
-    try:
-        yield None
-
-    finally:
-        switch_ambientlight("off", manual_lamp_control=manual_lamp_control)
+    @contextmanager
+    def use_ambientlight(self, manual_lamp_control=False):
+        switch_ambientlight("on", manual_lamp_control=manual_lamp_control)
         time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
+        try:
+            yield None
+
+        finally:
+            switch_ambientlight("off", manual_lamp_control=manual_lamp_control)
+            time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
 
 
 def turntable_safe_goto(gd, grid_state, stage_position, opts=None):

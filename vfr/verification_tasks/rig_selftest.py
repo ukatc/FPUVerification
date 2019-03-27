@@ -42,12 +42,12 @@ def selftest_pup_algn(ctx, pars=None, PUP_ALGN_ANALYSIS_PARS=None, capture_image
         hw.safe_home_turntable(ctx.gd, ctx.grid_state)
         hw.home_linear_stage()
 
-        hw.switch_ambientlight("off", manual_lamp_control=ctx.opts.manual_lamp_control)
-        hw.switch_silhouettelight(
+        ctx.lctrl.switch_ambientlight("off", manual_lamp_control=ctx.opts.manual_lamp_control)
+        ctx.lctrl.switch_silhouettelight(
             "off", manual_lamp_control=ctx.opts.manual_lamp_control
         )
 
-        with hw.use_backlight(5.0, manual_lamp_control=ctx.opts.manual_lamp_control):
+        with ctxl.lctrl.use_backlight(5.0, manual_lamp_control=ctx.opts.manual_lamp_control):
 
             # initialize pos_rep camera
             # set pos_rep camera exposure time to DATUM_REP_EXPOSURE milliseconds
@@ -94,11 +94,11 @@ def selftest_metrology_calibration(
         # home turntable
         hw.safe_home_turntable(ctx.gd, ctx.grid_state)
 
-        hw.switch_fibre_backlight(
+        ctx.lctrl.switch_fibre_backlight(
             "off", manual_lamp_control=ctx.opts.manual_lamp_control
         )
-        hw.switch_ambientlight("off", manual_lamp_control=ctx.opts.manual_lamp_control)
-        hw.switch_fibre_backlight_voltage(
+        ctx.lctrl.switch_ambientlight("off", manual_lamp_control=ctx.opts.manual_lamp_control)
+        ctx.lctrl.switch_fibre_backlight_voltage(
             0.0, manual_lamp_control=ctx.opts.manual_lamp_control
         )
 
@@ -119,23 +119,23 @@ def selftest_metrology_calibration(
         hw.turntable_safe_goto(ctx.gd, ctx.grid_state, stage_position)
 
         met_cal_cam.SetExposureTime(pars.METROLOGY_CAL_TARGET_EXPOSURE_MS)
-        hw.switch_fibre_backlight(
+        ctx.lctrl.switch_fibre_backlight(
             "off", manual_lamp_control=ctx.opts.manual_lamp_control
         )
-        hw.switch_fibre_backlight_voltage(
+        ctx.lctrl.switch_fibre_backlight_voltage(
             0.0, manual_lamp_control=ctx.opts.manual_lamp_control
         )
 
         # use context manager to switch lamp on
         # and guarantee it is switched off after the
         # measurement (even if exceptions occur)
-        with hw.use_ambientlight(manual_lamp_control=ctx.opts.manual_lamp_control):
+        with ctx.lctrl.use_ambientlight(manual_lamp_control=ctx.opts.manual_lamp_control):
             ipath_selftest_met_cal_target = capture_image(met_cal_cam, "met-cal-target")
 
         met_cal_cam.SetExposureTime(pars.METROLOGY_CAL_FIBRE_EXPOSURE_MS)
-        hw.switch_ambientlight("off", manual_lamp_control=ctx.opts.manual_lamp_control)
+        ctx.lctrl.switch_ambientlight("off", manual_lamp_control=ctx.opts.manual_lamp_control)
 
-        with hw.use_backlight(
+        with ctx.lctrl.use_backlight(
             pars.METROLOGY_CAL_BACKLIGHT_VOLTAGE,
             manual_lamp_control=ctx.opts.manual_lamp_control,
         ):
@@ -164,11 +164,11 @@ def selftest_metrology_height(
     try:
         hw.safe_home_turntable(ctx.gd, ctx.grid_state)
 
-        hw.switch_fibre_backlight(
+        ctx.lctrl.switch_fibre_backlight(
             "off", manual_lamp_control=ctx.opts.manual_lamp_control
         )
-        hw.switch_ambientlight("off", manual_lamp_control=ctx.opts.manual_lamp_control)
-        hw.switch_fibre_backlight_voltage(
+        ctx.lctrl.switch_ambientlight("off", manual_lamp_control=ctx.opts.manual_lamp_control)
+        ctx.lctrl.switch_fibre_backlight_voltage(
             0.0, manual_lamp_control=ctx.opts.manual_lamp_control
         )
 
@@ -186,7 +186,7 @@ def selftest_metrology_height(
         # move rotary stage to POS_REP_POSN_N
         hw.turntable_safe_goto(ctx.gd, ctx.grid_state, stage_position)
 
-        with hw.use_silhouettelight(manual_lamp_control=ctx.opts.manual_lamp_control):
+        with ctx.lctrl.use_silhouettelight(manual_lamp_control=ctx.opts.manual_lamp_control):
             ipath_selftest_met_height = capture_image(
                 met_height_cam, "metrology-height"
             )
@@ -212,10 +212,10 @@ def selftest_positional_repeatability(
     try:
         hw.safe_home_turntable(ctx.gd, ctx.grid_state)
 
-        hw.switch_fibre_backlight(
+        ctx.lctrl.switch_fibre_backlight(
             "off", manual_lamp_control=ctx.opts.manual_lamp_control
         )
-        hw.switch_fibre_backlight_voltage(
+        ctx.lctrl.switch_fibre_backlight_voltage(
             0.0, manual_lamp_control=ctx.opts.manual_lamp_control
         )
 
@@ -233,7 +233,7 @@ def selftest_positional_repeatability(
 
         hw.turntable_safe_goto(ctx.gd, ctx.grid_state, stage_position)
 
-        with hw.use_ambientlight(manual_lamp_control=ctx.opts.manual_lamp_control):
+        with ctx.lctrl.use_ambientlight(manual_lamp_control=ctx.opts.manual_lamp_control):
 
             selftest_ipath_pos_rep = capture_image(
                 pos_rep_cam, "positional-repeatability"
