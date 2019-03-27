@@ -8,7 +8,7 @@ import warnings
 from contextlib import contextmanager
 
 import ImageAnalysisFuncs  # used to look up images
-from FpuGridDriver import DATUM_TIMEOUT_DISABLE
+
 from vfr.conf import (
     LAMP_WARMING_TIME_MILLISECONDS,
     MET_CAL_CAMERA_IP_ADDRESS,

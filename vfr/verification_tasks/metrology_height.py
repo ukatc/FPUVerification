@@ -8,7 +8,8 @@ from ImageAnalysisFuncs.analyze_metrology_height import (
     methtHeight,
 )
 from numpy import NaN
-from vfr import hw, hwsimulation
+from vfr import hw as real_hw
+from vfr import hwsimulation
 from vfr.conf import MET_HEIGHT_CAMERA_IP_ADDRESS
 from vfr.db.metrology_height import (
     TestResult,
@@ -17,11 +18,7 @@ from vfr.db.metrology_height import (
     save_metrology_height_result,
 )
 from vfr.tests_common import (
-    dirac,
-    find_datum,
-    flush,
     get_sorted_positions,
-    goto_position,
     store_image,
     timestamp,
 )
@@ -33,6 +30,8 @@ def measure_metrology_height(ctx, pars=None):
     if ctx.opts.mockup:
         # replace all hardware functions by mock-up interfaces
         hw = hwsimulation
+    else:
+        hw = real_hw
 
     # home turntable
     hw.safe_home_turntable(ctx.gd, ctx.grid_state)
@@ -111,7 +110,7 @@ def eval_metrology_height(ctx, met_height_analysis_pars, met_height_evaluation_p
             errmsg = str(e)
             metht_small_target_height = NaN
             metht_large_target_height = NaN
-            result = TestResult.NA
+            test_result = TestResult.NA
 
         save_metrology_height_result(
             ctx,

@@ -4,12 +4,6 @@ import os
 
 import FpuGridDriver
 from FpuGridDriver import (
-    DATUM_TIMEOUT_DISABLE,
-    DEFAULT_WAVEFORM_RULSET_VERSION,
-    SEARCH_ANTI_CLOCKWISE,
-    SEARCH_CLOCKWISE,
-    TEST_GATEWAY_ADRESS_LIST,
-    GatewayAddress,
     ProtectionError,
 )
 from vfr.tests_common import flush

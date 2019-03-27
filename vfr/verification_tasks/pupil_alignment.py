@@ -8,20 +8,18 @@ from ImageAnalysisFuncs.analyze_pupil_alignment import (
     pupalnCoordinates,
 )
 from numpy import NaN
-from vfr import hw, hwsimulation
+from vfr import hw as real_hw
+from vfr import hwsimulation
 from vfr.conf import PUP_ALGN_CAMERA_IP_ADDRESS
 from vfr.db.pupil_alignment import (
     TestResult,
     get_pupil_alignment_images,
     get_pupil_alignment_passed_p,
-    get_pupil_alignment_result,
     save_pupil_alignment_images,
     save_pupil_alignment_result,
 )
 from vfr.tests_common import (
-    dirac,
     find_datum,
-    flush,
     get_sorted_positions,
     goto_position,
     store_image,
@@ -50,6 +48,8 @@ def measure_pupil_alignment(ctx, pars=None):
     if ctx.opts.mockup:
         # replace all hardware functions by mock-up interfaces
         hw = hwsimulation
+    else:
+        hw = real_hw
 
     if ctx.opts.skip_fibre:
         print("option '--skip-fibre' is set -- skipping pupil alignment test")

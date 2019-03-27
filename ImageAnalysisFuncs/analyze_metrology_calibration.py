@@ -4,10 +4,8 @@ from __future__ import division, print_function
 from math import asin, pi, sqrt
 
 import cv2
-import numpy as np
 from ImageAnalysisFuncs.base import ImageAnalysisError
-from matplotlib import pyplot as plt
-from numpy import NaN, array, cross, mean, std
+from numpy import array, cross
 from numpy.linalg import norm
 
 # version number for analysis algorithm

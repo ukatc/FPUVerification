@@ -10,7 +10,7 @@ from fpu_constants import (
 )
 from interval import Interval
 from protectiondb import ProtectionDB as pdb
-from protectiondb import INIT_COUNTERS, HealthLogDB
+from protectiondb import INIT_COUNTERS
 from vfr.conf import ALPHA_DATUM_OFFSET
 from vfr.tests_common import flush
 

@@ -1,12 +1,11 @@
 from __future__ import absolute_import, division, print_function
 
 import ast
-import os
-import platform
 import subprocess
 
-import lmdb
-from numpy import Inf, NaN, inf, nan
+from numpy import Inf, NaN, inf, nan # these values are used!!
+assert Inf or NaN or inf or nan or True
+
 from vfr.tests_common import timestamp
 
 GIT_VERSION = subprocess.check_output(["git", "describe"]).strip()

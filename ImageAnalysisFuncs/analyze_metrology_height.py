@@ -1,12 +1,9 @@
 from __future__ import division, print_function
 
-from math import pi, sqrt
-
 import cv2
 from ImageAnalysisFuncs.base import ImageAnalysisError
 from matplotlib import pyplot as plt
-from numpy import NaN, float32, mean, std
-from numpy.linalg import norm
+from numpy import float32, std, sqrt
 from numpy.polynomial import Polynomial
 
 # version number for analysis algorithm
@@ -62,7 +59,7 @@ def methtHeight(
     threshcrop = thresh[1750:2700, betaSide - 100 : betaSide + 1500]
     if pars.display == True:
         plt.imshow(threshcrop)
-        plt.title("Thresholded image, thresholdVal = %i" % thresholdVal)
+        plt.title("Thresholded image, thresholdVal = %i" % pars.METHT_THRESHOLD)
         plt.show()
 
     # estimation of noise in thresholded image

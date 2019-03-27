@@ -5,14 +5,11 @@ from inspect import cleandoc
 from textwrap import TextWrapper
 
 from vfr.db.colldect_limits import (
-    get_anglimit_passed_p,
     get_angular_limit,
-    get_colldect_passed_p,
 )
-from vfr.db.datum import get_datum_passed_p, get_datum_result
+from vfr.db.datum import get_datum_result
 from vfr.db.datum_repeatability import (
     get_datum_repeatability_images,
-    get_datum_repeatability_passed_p,
     get_datum_repeatability_result,
 )
 from vfr.db.metrology_calibration import (
@@ -25,7 +22,6 @@ from vfr.db.metrology_height import (
 )
 from vfr.db.positional_repeatability import (
     get_positional_repeatability_images,
-    get_positional_repeatability_passed_p,
     get_positional_repeatability_result,
 )
 from vfr.db.positional_verification import (
@@ -34,7 +30,6 @@ from vfr.db.positional_verification import (
 )
 from vfr.db.pupil_alignment import (
     get_pupil_alignment_images,
-    get_pupil_alignment_passed_p,
     get_pupil_alignment_result,
 )
 

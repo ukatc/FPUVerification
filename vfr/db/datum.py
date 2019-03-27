@@ -2,7 +2,6 @@ from __future__ import absolute_import, division, print_function
 
 from FpuGridDriver import CAN_PROTOCOL_VERSION, DASEL_ALPHA, DASEL_BETA, DASEL_BOTH
 from vfr.db.base import (
-    GIT_VERSION,
     TestResult,
     get_test_result,
     save_test_result,

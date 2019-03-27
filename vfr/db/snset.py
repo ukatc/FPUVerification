@@ -45,7 +45,6 @@ def add_sns_to_set(ctx, new_serialnumbers):
 def get_snset(env, vfdb, opts):
     """Gets the set of processed FPU serial numbers from the database.
     """
-    verbosity = opts.verbosity
 
     with env.begin(db=vfdb) as txn:
         existing_serial_numbers = _get_set(txn, KEY)

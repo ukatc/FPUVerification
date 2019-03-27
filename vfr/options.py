@@ -8,13 +8,12 @@ import warnings
 from ast import literal_eval
 from os import environ
 
-from fpu_constants import *
+from fpu_constants import ALPHA_MIN_DEGREE, ALPHA_MAX_DEGREE, BETA_MIN_DEGREE, BETA_MAX_DEGREE
 from vfr.conf import DEFAULT_TASKS
 from vfr.db.snset import get_snset
 from vfr.helptext import examples, summary
 from vfr.TaskLogic import T
 
-# from vfr.tasks import *
 
 
 def parse_args():
@@ -249,8 +248,9 @@ def parse_args():
         "--verbosity",
         metavar="VERBOSITY",
         type=int,
-        default=3,
-        help="verbosity level of progress messages (default: %(default)s)",
+        default=DEFAULT_VERBOSITY,
+        help="verbosity level of progress messages, between 0 and 15 "
+        "(can be set by environment variable VFR_VERBOSITY, default: %(default)s)",
     )
 
     args = parser.parse_args()
@@ -265,7 +265,7 @@ def parse_args():
     if args.output_file is None:
         args.output_file = sys.stdout
     else:
-        args.output_file = open(args, output_file, "w")
+        args.output_file = open(args.output_file, "w")
 
     return args
 

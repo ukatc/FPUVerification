@@ -11,7 +11,6 @@ from interval import Interval
 from protectiondb import ProtectionDB
 from vfr.conf import PROTECTION_TOLERANCE
 from vfr.db.base import (
-    GIT_VERSION,
     TestResult,
     get_test_result,
     save_test_result,

@@ -145,7 +145,7 @@ class lampController:
 
     def switch_fibre_backlight_voltage(self, voltage, manual_lamp_control=False):
         if manual_lamp_control:
-            raw_input("switch state of backlight to %r and presse <enter>" % state)
+            raw_input("switch voltage of backlight to %r and presse <enter>" % voltage)
         else:
             self.analog_device.a_out(
                 BACKLIGHT_CHANNEL, self.analog_output_range, AOutFlag.DEFAULT, voltage

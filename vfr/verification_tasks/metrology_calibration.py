@@ -9,20 +9,16 @@ from ImageAnalysisFuncs.analyze_metrology_calibration import (
     metcalTargetCoordinates,
 )
 from numpy import NaN
-from vfr import hw, hwsimulation
+from vfr import hw as real_hw
+from vfr import hwsimulation
 from vfr.conf import MET_CAL_CAMERA_IP_ADDRESS
 from vfr.db.metrology_calibration import (
-    TestResult,
     get_metrology_calibration_images,
     save_metrology_calibration_images,
     save_metrology_calibration_result,
 )
 from vfr.tests_common import (
-    dirac,
-    find_datum,
-    flush,
     get_sorted_positions,
-    goto_position,
     store_image,
     timestamp,
 )
@@ -34,6 +30,8 @@ def measure_metrology_calibration(ctx, pars=None):
     if ctx.opts.mockup:
         # replace all hardware functions by mock-up interfaces
         hw = hwsimulation
+    else:
+        hw = real_hw
 
     # home turntable
     hw.safe_home_turntable(ctx.gd, ctx.grid_state)

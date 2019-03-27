@@ -1,13 +1,10 @@
 from __future__ import absolute_import, division, print_function
 
-import time
-
 import pyAPT
-from FpuGridDriver import DATUM_TIMEOUT_DISABLE
 from GigE.GigECamera import GigECamera
 from Lamps.lctrl import lampController
 from vfr.tests_common import find_datum
-
+from vfr.conf import NR360_SERIALNUMBER, MTS50_SERIALNUMBER
 
 """this module simply bundles all real hardware access functions
 so that they can be easily swapped out by mock-up functions."""
@@ -40,7 +37,7 @@ def home_linear_stage():
 
 def linear_stage_goto(stage_position):
     with pyAPT.MTS50(serial_number=MTS50_SERIALNUMBER) as con:
-        print("Found APT controller S/N", MTS_SERIALNUMBER)
+        print("Found APT controller S/N", MTS50_SERIALNUMBER)
         con.goto(stage_position, wait=True)
         print("\tNew position: %.2fmm %s" % (con.position(), con.unit))
         print("\tStatus:", con.status())

@@ -10,10 +10,10 @@ from ImageAnalysisFuncs.analyze_metrology_calibration import (
 from ImageAnalysisFuncs.analyze_metrology_height import methtHeight
 from ImageAnalysisFuncs.analyze_positional_repeatability import posrepCoordinates
 from ImageAnalysisFuncs.analyze_pupil_alignment import (
-    evaluate_pupil_alignment,
     pupalnCoordinates,
 )
-from vfr import hw, hwsimulation
+from vfr import hw as real_hw
+from vfr import hwsimulation
 from vfr.conf import (
     MET_CAL_CAMERA_IP_ADDRESS,
     MET_HEIGHT_CAMERA_IP_ADDRESS,
@@ -21,11 +21,7 @@ from vfr.conf import (
     PUP_ALGN_CAMERA_IP_ADDRESS,
 )
 from vfr.tests_common import (
-    dirac,
-    find_datum,
-    flush,
     get_sorted_positions,
-    goto_position,
     store_image,
     timestamp,
 )
@@ -36,6 +32,8 @@ def selftest_pup_algn(ctx, pars=None, PUP_ALGN_ANALYSIS_PARS=None, capture_image
     if ctx.opts.mockup:
         # replace all hardware functions by mock-up interfaces
         hw = hwsimulation
+    else:
+        hw =  real_hw
 
     try:
         # home turntable
@@ -72,6 +70,7 @@ def selftest_pup_algn(ctx, pars=None, PUP_ALGN_ANALYSIS_PARS=None, capture_image
             result = pupalnCoordinates(
                 ipath_selftest_pup_algn, pars=PUP_ALGN_ANALYSIS_PARS
             )
+            del result
     finally:
         hw.safe_home_turntable(ctx.gd, ctx.grid_state)
         hw.home_linear_stage()
@@ -144,9 +143,12 @@ def selftest_metrology_calibration(
         target_coordinates = metcalTargetCoordinates(
             ipath_selftest_met_cal_target, pars=MET_CAL_TARGET_ANALYSIS_PARS
         )
+        del target_coordinates
+
         fibre_coordinates = metcalFibreCoordinates(
             ipath_selftest_met_cal_fibre, pars=MET_CAL_FIBRE_ANALYSIS_PARS
         )
+        del fibre_coordinates
 
     finally:
         hw.safe_home_turntable(ctx.gd, ctx.grid_state)
@@ -240,6 +242,7 @@ def selftest_positional_repeatability(
             )
 
         coords = posrepCoordinates(selftest_ipath_pos_rep, pars=POS_REP_ANALYSIS_PARS)
+        del coords
 
     finally:
         hw.safe_home_turntable(ctx.gd, ctx.grid_state)

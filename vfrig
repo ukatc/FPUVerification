@@ -2,19 +2,13 @@
 
 from __future__ import absolute_import, division, print_function
 
-import ast
 import atexit
-import os
-import re
-import sys
 from argparse import Namespace
 
-from fpu_constants import ALPHA_DATUM_OFFSET, BETA_DATUM_OFFSET
-from FpuGridDriver import FPST_AT_DATUM
 from protectiondb import open_database_env
 from vfr import hw
 from vfr import hwsimulation
-from vfr.conf import (ALPHA_DATUM_OFFSET, COLLDECT_MEASUREMENT_PARS,
+from vfr.conf import (COLLDECT_MEASUREMENT_PARS,
                       DATUM_REP_ANALYSIS_PARS, DATUM_REP_MEASUREMENT_PARS,
                       IMAGE_ROOT_FOLDER, MET_CAL_CAMERA_IP_ADDRESS,
                       MET_CAL_FIBRE_ANALYSIS_PARS, MET_CAL_MEASUREMENT_PARS,
@@ -27,12 +21,12 @@ from vfr.conf import (ALPHA_DATUM_OFFSET, COLLDECT_MEASUREMENT_PARS,
                       PUP_ALGN_CAMERA_IP_ADDRESS, PUP_ALGN_EVALUATION_PARS,
                       PUP_ALGN_MEASUREMENT_PARS)
 from vfr.connection import (check_can_connection, check_connection,
-                            check_ping_ok, init_driver)
+                            init_driver)
 from vfr.db.snset import add_sns_to_set
 from vfr.options import load_config, parse_args, check_sns_unique
 from vfr.posdb import init_position
 from vfr.TaskLogic import T, resolve
-from vfr.tests_common import find_datum, flush, goto_position, cd_to_image_root
+from vfr.tests_common import find_datum, flush, cd_to_image_root
 from vfr.verification_tasks.functional_tests import (DASEL_ALPHA, DASEL_BETA,
                                                      DASEL_BOTH, test_datum,
                                                      test_limit)
@@ -127,7 +121,7 @@ if __name__ == "__main__":
             print ("skipping test...")
         else:
             check_connection(
-                opts, "metrology calibration camera", POS_REP_CAMERA_IP_ADDRESS
+                opts, "metrology calibration camera", MET_CAL_CAMERA_IP_ADDRESS
             )
 
     if T.TST_MET_HEIGHT_CAM_CONNECTION in tasks:

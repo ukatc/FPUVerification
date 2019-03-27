@@ -14,37 +14,14 @@ from FpuGridDriver import (
     CAN_PROTOCOL_VERSION,
 )  # see documentation reference for Exception hierarchy; (for CAN protocol 1, this is section 12. \
 from FpuGridDriver import (
-    DASEL_ALPHA,
-    DASEL_BETA,
     DASEL_BOTH,
     DATUM_TIMEOUT_DISABLE,
     DATUM_TIMEOUT_ENABLE,
-    DEFAULT_WAVEFORM_RULSET_VERSION,
     FPST_AT_DATUM,
-    REQD_ANTI_CLOCKWISE,
-    REQD_CLOCKWISE,
-    SEARCH_ANTI_CLOCKWISE,
     SEARCH_CLOCKWISE,
-    AbortMotionError,
-    CollisionError,
-    CommandTimeout,
-    ConnectionFailure,
-    EtherCANException,
-    FirmwareTimeoutError,
-    HardwareProtectionError,
-    InvalidParameterError,
-    InvalidStateException,
-    InvalidWaveformException,
-    LimitBreachError,
-    MovementError,
-    ProtectionError,
-    SetupError,
-    SocketFailure,
-    StepTimingError,
-    SystemFailure,
 )
-from numpy import array, nan, zeros
-from vfr.conf import DB_TIME_FORMAT, MTS50_SERIALNUMBER, NR360_SERIALNUMBER
+from numpy import array, zeros
+from vfr.conf import DB_TIME_FORMAT
 
 
 def flush():

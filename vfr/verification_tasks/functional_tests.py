@@ -2,52 +2,34 @@ from __future__ import absolute_import, division, print_function
 
 from fpu_commands import gen_wf
 from FpuGridDriver import (
-    CAN_PROTOCOL_VERSION,
-)  # see documentation reference for Exception hierarchy; (for CAN protocol 1, this is section 12. \
-from FpuGridDriver import (
     DASEL_ALPHA,
     DASEL_BETA,
     DASEL_BOTH,
     DATUM_TIMEOUT_DISABLE,
-    DEFAULT_WAVEFORM_RULSET_VERSION,
-    FPST_AT_DATUM,
     REQD_ANTI_CLOCKWISE,
     REQD_CLOCKWISE,
-    SEARCH_ANTI_CLOCKWISE,
     SEARCH_CLOCKWISE,
-    AbortMotionError,
     CollisionError,
-    CommandTimeout,
     ConnectionFailure,
-    EtherCANException,
     FirmwareTimeoutError,
-    HardwareProtectionError,
-    InvalidParameterError,
     InvalidStateException,
-    InvalidWaveformException,
     LimitBreachError,
     MovementError,
-    ProtectionError,
-    SetupError,
-    SocketFailure,
-    StepTimingError,
-    SystemFailure,
 )
 from numpy import NaN
-from vfr import hwsimulation as hws
-from vfr import hw
+from vfr import hw as real_hw
+from vfr import hwsimulation
 from vfr.db.colldect_limits import (
     get_anglimit_passed_p,
     save_angular_limit,
     set_protection_limit,
 )
-from vfr.db.datum import TestResult, save_datum_result
+from vfr.db.datum import save_datum_result
 from vfr.tests_common import (
     dirac,
     flush,
     get_sorted_positions,
     goto_position,
-    timestamp,
 )
 from vfr.turntable import go_collision_test_pos
 
@@ -131,11 +113,12 @@ def test_datum(ctx, dasel=DASEL_BOTH):
 
 def test_limit(ctx, which_limit, pars=None):
 
-    tstamp = timestamp()
-    failed_fpus = []
     if ctx.opts.mockup:
-        # replace all hardware functions by mock-up interfaces
-        hw = hws
+        hw = hwsimulation
+    else:
+        hw = real_hw
+
+    failed_fpus = []
 
     abs_alpha_def = -180.0
     abs_beta_def = 0.0
@@ -251,7 +234,7 @@ def test_limit(ctx, which_limit, pars=None):
             test_succeeded = False
             test_valid = False
             diagnostic = str(e)
-            failed_fpus.append((fpu_id, ctx.fpu_config[gpu_id]["serialnumber"]))
+            failed_fpus.append((fpu_id, ctx.fpu_config[fpu_id]["serialnumber"]))
 
         print(
             "FPU %i test result: valid=%s, succeeded=%r, diagnostic=%s"

@@ -1,12 +1,11 @@
 from __future__ import division, print_function
 
-from math import atan, pi, sqrt
+from math import atan
 
 import cv2
 from DistortionCorrection import correct
 from ImageAnalysisFuncs.base import ImageAnalysisError
-from matplotlib import pyplot as plt
-from numpy import NaN, array, mean, std
+from numpy import array, mean
 from numpy.linalg import norm
 from vfr.conf import INSTRUMENT_FOCAL_LENGTH
 
@@ -42,6 +41,7 @@ def pupalnCoordinates(
     # image processing
     # APPLY DISTORTION CORRECTION
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    # FIXME: "gray" is unused
 
     pupaln_spot_x = 0
     pupaln_spot_y = 0

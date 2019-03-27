@@ -1,6 +1,6 @@
 from __future__ import division, print_function
 
-from numpy import asarray, nan, sqrt, sum
+from numpy import asarray, sqrt, sum
 
 
 class ImageAnalysisError(Exception):

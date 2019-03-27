@@ -11,21 +11,19 @@ from ImageAnalysisFuncs.analyze_positional_repeatability import (
     posrepCoordinates,
 )
 from numpy import NaN
-from vfr import hw, hwsimulation
+from vfr import hw as real_hw
+from vfr import hwsimulation
 from vfr.conf import MET_CAL_CAMERA_IP_ADDRESS
 from vfr.db.datum_repeatability import (
     TestResult,
     get_datum_repeatability_images,
     get_datum_repeatability_passed_p,
-    get_datum_repeatability_result,
     save_datum_repeatability_images,
     save_datum_repeatability_result,
 )
 from vfr.tests_common import (
     dirac,
-    find_datum,
     get_sorted_positions,
-    goto_position,
     store_image,
     timestamp,
 )
@@ -37,6 +35,8 @@ def measure_datum_repeatability(ctx, pars=None):
     if ctx.opts.mockup:
         # replace all hardware functions by mock-up interfaces
         hw = hwsimulation
+    else:
+        hw = real_hw
 
     # home turntable
     hw.safe_home_turntable(ctx.gd, ctx.grid_state)

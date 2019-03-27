@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 from __future__ import division, print_function
 
+from math import pi
 import warnings
-from math import pi, sqrt
 
 import cv2
 from DistortionCorrection import correct
 from ImageAnalysisFuncs.base import ImageAnalysisError, rss
-from matplotlib import pyplot as plt
 from numpy import NaN, array, hstack, mean, std
 from numpy.linalg import norm
 
@@ -88,6 +87,7 @@ def posrepCoordinates(
 
     # image processing
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    # FIXME: gray is unused!
     blur = cv2.GaussianBlur(gray, (9, 9), 0)
     thresh = cv2.threshold(blur, pars.POS_REP_THRESHOLD, 255, cv2.THRESH_BINARY)[1]
 
