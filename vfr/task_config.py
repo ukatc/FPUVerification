@@ -14,7 +14,7 @@ class T:
     EVAL_MET_HEIGHT = "eval_met_height"
     EVAL_POS_REP = "eval_pos_rep"
     EVAL_POS_VER = "eval_pos_ver"
-    EVAL_PUP_ALGN = "eval_pup_align"
+    EVAL_PUP_ALGN = "eval_pup_aln"
     # measurements
     MEASURE_ALL = "measure_all"
     MEASURE_DATUM_REP = "measure_datum_rep"
@@ -22,16 +22,16 @@ class T:
     MEASURE_MET_HEIGHT = "measure_met_height"
     MEASURE_POS_REP = "measure_pos_rep"
     MEASURE_POS_VER = "measure_pos_ver"
-    MEASURE_PUP_ALGN = "measure_pup_align"
+    MEASURE_PUP_ALGN = "measure_pup_aln"
     # conditional dependencies (can be skipped if done once)
     REQ_DATUM_PASSED = "req_datum_passed"
     REQ_COLLDECT_PASSED = "req_colldect_passed"
     REQ_DATUM_REP_PASSED = "req_datum_repeatability_passed"
     REQ_FUNCTIONAL_PASSED = "req_functional_test_passed"
     REQ_POS_REP_PASSED = "req_positional_repeatability_passed"
-    REQ_PUP_ALGN_PASSED = "req_pupil_alignment_passed"
+    REQ_PUP_ALGN_PASSED = "req_pupil_alnment_passed"
     # tasks which pack measurements and evaluation in pairs
-    TASK_EVAL_ALL = "evaluate_all"
+    TASK_EVAL_ALL = "eval_all"
     TASK_INIT_GD = "initialize_grid_driver"
     TASK_INIT_RD = "initialize_unprotected_fpu_driver"
     TASK_MEASURE_ALL = "measure_all"
@@ -66,7 +66,7 @@ class T:
     TST_POS_REP = "test_pos_rep"
     TST_POS_REP_CAM_CONNECTION = "test_pos_rep_cam_conn"
     TST_POS_VER = "test_pos_ver"
-    TST_PUP_ALGN = "test_pup_align"
+    TST_PUP_ALGN = "test_pup_aln"
     TST_PUP_ALGN_CAM_CONNECTION = "test_pup_algn_cam_conn"
 
 
@@ -76,7 +76,9 @@ usertasks = set(
         T.EVAL_MET_CAL,
         T.EVAL_MET_HEIGHT,
         T.EVAL_POS_REP,
+        T.EVAL_POS_VER,
         T.EVAL_PUP_ALGN,
+        T.TASK_EVAL_ALL,
         T.MEASURE_DATUM_REP,
         T.MEASURE_MET_CAL,
         T.MEASURE_MET_HEIGHT,
@@ -278,5 +280,6 @@ task_expansions = [
     (T.TST_MET_CAL, [T.MEASURE_MET_CAL, T.EVAL_MET_CAL]),
     (T.TST_MET_HEIGHT, [T.MEASURE_MET_HEIGHT, T.EVAL_MET_HEIGHT]),
     (T.TST_POS_REP, [T.MEASURE_POS_REP, T.EVAL_POS_REP]),
+    (T.TST_POS_VER, [T.MEASURE_POS_VER, T.EVAL_POS_VER]),
     (T.TST_PUP_ALGN, [T.MEASURE_PUP_ALGN, T.EVAL_PUP_ALGN]),
 ]

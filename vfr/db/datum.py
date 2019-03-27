@@ -8,7 +8,6 @@ from vfr.db.base import (
     save_test_result,
     timestamp,
 )
-from vfr.db.snset import add_sns_to_set
 
 RECORD_TYPE = "findDatum"
 
@@ -57,12 +56,9 @@ def save_datum_result(ctx, dasel, rigstate):
         return val
 
     save_test_result(ctx, ctx.measure_fpuset, keyfunc, valfunc)
-    # we update the set of FPUs which are in the database,
-    # so that we can iterate over existing data when generating reports.
-    add_sns_to_set(ctx, ctx.measure_fpuset)
 
 
-def get_datum_result(ctx, fpu_id, dasel=DASEL_BOTH):
+def get_datum_result(ctx, fpu_id, dasel=DASEL_BOTH, count=None):
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
@@ -70,14 +66,14 @@ def get_datum_result(ctx, fpu_id, dasel=DASEL_BOTH):
         keybase = (serialnumber, RECORD_TYPE, str(dasel))
         return keybase
 
-    return get_test_result(ctx, fpu_id, keyfunc)
+    return get_test_result(ctx, fpu_id, keyfunc, count=count)
 
 
-def get_datum_passed_p(ctx, fpu_id):
+def get_datum_passed_p(ctx, fpu_id, count=None):
     """returns True if the latest datum repeatability test for this FPU
     was passed successfully."""
 
-    val = get_datum_result(ctx, fpu_id)
+    val = get_datum_result(ctx, fpu_id, count=count)
 
     if val is None:
         return False

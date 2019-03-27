@@ -83,12 +83,18 @@ def measure_metrology_height(ctx, pars=None):
 def eval_metrology_height(ctx, met_height_analysis_pars, met_height_evaluation_pars):
 
     for fpu_id in ctx.eval_fpuset:
-        image = get_metrology_height_images(ctx, fpu_id)["images"]
+        measurement = get_metrology_height_images(ctx, fpu_id)
+
+        if measurement is None:
+            print("FPU %s: no metrology height measurement data found" % fpu_id)
+            continue
+
+        images = measurement["images"]
 
         try:
 
             metht_small_target_height, metht_large_target_height = methtHeight(
-                image, pars=met_height_analysis_pars
+                images, pars=met_height_analysis_pars
             )
 
             result_in_spec = eval_met_height_inspec(

@@ -47,7 +47,7 @@ def selftest_pup_algn(ctx, pars=None, PUP_ALGN_ANALYSIS_PARS=None, capture_image
             "off", manual_lamp_control=ctx.opts.manual_lamp_control
         )
 
-        with ctxl.lctrl.use_backlight(5.0, manual_lamp_control=ctx.opts.manual_lamp_control):
+        with ctx.lctrl.use_backlight(5.0, manual_lamp_control=ctx.opts.manual_lamp_control):
 
             # initialize pos_rep camera
             # set pos_rep camera exposure time to DATUM_REP_EXPOSURE milliseconds

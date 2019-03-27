@@ -26,6 +26,7 @@ from FpuGridDriver import (
     DASEL_BOTH,
     DATUM_TIMEOUT_DISABLE,
     DEFAULT_WAVEFORM_RULSET_VERSION,
+    FPST_AT_DATUM,
     REQD_ANTI_CLOCKWISE,
     REQD_CLOCKWISE,
     SEARCH_ANTI_CLOCKWISE,
@@ -118,7 +119,9 @@ def test_datum(ctx, dasel=DASEL_BOTH):
         save_datum_result(ctx, dasel, rigstate)
 
     for fpu_id, fpu in enumerate(ctx.grid_state.FPU):
-        if fpu_state != FPST_AT_DATUM:
+        if fpu_id not in ctx.measure_fpuset:
+            continue
+        if not success:
             failed_fpus.append((fpu_id, ctx.fpu_config[fpu_id]["serialnumber"]))
 
     if failed_fpus:
@@ -269,6 +272,12 @@ def test_limit(ctx, which_limit, pars=None):
             )
 
         if test_valid and test_succeeded and (which_limit != "beta_collision"):
+            if ctx.opts.verbosity > 0:
+                print(
+                    "FPU %i = %s: setting limit %s to %7.2f"
+                    % (fpu_id, ctx.fpu_config[fpu_id]["serialnumber"], which_limit, limit_val)
+                )
+
             set_protection_limit(ctx, fpu_id, which_limit, limit_val)
 
         if test_succeeded:

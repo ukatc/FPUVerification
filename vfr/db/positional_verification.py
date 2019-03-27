@@ -1,5 +1,7 @@
 from __future__ import absolute_import, division, print_function
 
+from numpy import NaN
+
 from vfr.db.base import (
     GIT_VERSION,
     TestResult,
@@ -8,41 +10,47 @@ from vfr.db.base import (
     timestamp,
 )
 
+RECORD_TYPE = "positional-verification"
 
-def save_positional_verification_images(ctx, fpu_id, images_dict):
+def save_positional_verification_images(ctx, fpu_id, image_dict=None, gearbox_correction=None):
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
         serialnumber = ctx.fpu_config[fpu_id]["serialnumber"]
-        keybase = (serialnumber, "positional-verification", "images")
+        keybase = (serialnumber, RECORD_TYPE, "images")
         return keybase
 
     def valfunc(fpu_id):
 
-        val = repr({"fpuid": fpu_id, "images": image_dict, "time": timestamp()})
+        val = repr({
+            "fpuid": fpu_id,
+            "images": image_dict,
+            "gearbox_correction" : gearbox_correction,
+            "time": timestamp()})
         return val
 
     save_test_result(ctx, [fpu_id], keyfunc, valfunc)
 
 
-def get_positional_verification_images(ctx, fpu_id):
+def get_positional_verification_images(ctx, fpu_id, count=None):
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
         serialnumber = ctx.fpu_config[fpu_id]["serialnumber"]
-        keybase = (serialnumber, "positional-verification", "images")
+        keybase = (serialnumber, RECORD_TYPE, "images")
         return keybase
 
-    return get_test_result(ctx, fpu_id, keyfunc)
+    return get_test_result(ctx, fpu_id, keyfunc, count=count)
 
 
 def save_positional_verification_result(
     ctx,
     fpu_id,
-    pos_rep_calibration_pars=None,
+    pos_ver_calibration_pars=None,
     analysis_results=None,
-    posver_errors=None,
-    positional_verification_mm=None,
+    posver_error=[],
+    posver_error_max=None,
+    pass_threshold=NaN,
     errmsg="",
     analysis_version=None,
     positional_verification_has_passed=None,
@@ -51,18 +59,19 @@ def save_positional_verification_result(
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
         serialnumber = ctx.fpu_config[fpu_id]["serialnumber"]
-        keybase = (serialnumber, "positional-verification", "result")
+        keybase = (serialnumber, RECORD_TYPE, "result")
         return keybase
 
     def valfunc(fpu_id):
 
         val = repr(
             {
-                "calibration_pars": pos_rep_calibration_pars,
+                "calibration_pars": pos_ver_calibration_pars,
                 "analysis_results": analysis_results,
-                "verification_millimeter": positional_verification_mm,
+                "posver_error" : posver_error,
+                "posver_error_max" : posver_error_max,
                 "result": positional_verification_has_passed,
-                "posver_errors": posver_errors,
+                "pass_threshold": pass_threshold,
                 "error_message": errmsg,
                 "algorithm_version": analysis_version,
                 "git-version": GIT_VERSION,
@@ -75,10 +84,23 @@ def save_positional_verification_result(
     save_test_result(ctx, [fpu_id], keyfunc, valfunc)
 
 
-def get_positional_verification_result(ctx, fpu_id):
+def get_positional_verification_result(ctx, fpu_id, count=None):
     def keyfunc(fpu_id):
-        serialnumber = fpu_config[fpu_id]["serialnumber"]
-        keybase = (serialnumber, "positional-verification", "result")
+        serialnumber = ctx.fpu_config[fpu_id]["serialnumber"]
+        keybase = (serialnumber, RECORD_TYPE, "result")
         return keybase
 
-    return get_test_result(ctx, fpu_id, keyfunc)
+    return get_test_result(ctx, fpu_id, keyfunc, count=count)
+
+def get_positional_verification_passed_p(ctx, fpu_id, count=None):
+    """returns True if the latest positional verification test for this
+    FPU was passed successfully.
+
+    """
+
+    val = get_positional_verification_result(ctx, fpu_id, count=count)
+
+    if val is None:
+        return False
+
+    return val["result"] == TestResult.OK

@@ -1,5 +1,7 @@
 from __future__ import absolute_import, division, print_function
 
+from numpy import NaN
+
 from vfr.db.base import (
     GIT_VERSION,
     TestResult,
@@ -8,10 +10,11 @@ from vfr.db.base import (
     timestamp,
 )
 
+
 RECORD_TYPE = "pupil-alignment"
 
 
-def save_pupil_alignment_images(ctx, fpu_id, images):
+def save_pupil_alignment_images(ctx, fpu_id, images=None):
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
@@ -27,7 +30,7 @@ def save_pupil_alignment_images(ctx, fpu_id, images):
     save_test_result(ctx, [fpu_id], keyfunc, valfunc)
 
 
-def get_pupil_alignment_images(ctx, fpu_id):
+def get_pupil_alignment_images(ctx, fpu_id, count=None):
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
@@ -35,7 +38,7 @@ def get_pupil_alignment_images(ctx, fpu_id):
         keybase = (serialnumber, RECORD_TYPE, "images")
         return keybase
 
-    return get_test_result(ctx, fpu_id, keyfunc)
+    return get_test_result(ctx, fpu_id, keyfunc, count=count)
 
 
 def save_pupil_alignment_result(
@@ -45,6 +48,7 @@ def save_pupil_alignment_result(
     coords=None,
     pupil_alignment_has_passed=None,
     pupil_alignment_measures=None,
+    pass_threshold=NaN,
     errmsg="",
     analysis_version=None,
 ):
@@ -59,10 +63,11 @@ def save_pupil_alignment_result(
 
         val = repr(
             {
-                "calibration_pars": pup_algn_calibration_pars,
+                "calibration_pars": calibration_pars,
                 "coords": coords,
                 "measures": pupil_alignment_measures,
                 "result": pupil_alignment_has_passed,
+                "pass_threshold" : pass_threshold,
                 "error_message": errmsg,
                 "git-version": GIT_VERSION,
                 "time": timestamp(),
@@ -73,7 +78,7 @@ def save_pupil_alignment_result(
     save_test_result(ctx, [fpu_id], keyfunc, valfunc)
 
 
-def get_pupil_alignment_result(ctx, fpu_id):
+def get_pupil_alignment_result(ctx, fpu_id, count=None):
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
@@ -81,14 +86,14 @@ def get_pupil_alignment_result(ctx, fpu_id):
         keybase = (serialnumber, RECORD_TYPE, "result")
         return keybase
 
-    return get_test_result(ctx, fpu_id, keyfunc)
+    return get_test_result(ctx, fpu_id, keyfunc, count=count)
 
 
-def get_pupil_alignment_passed_p(ctx, fpu_id):
+def get_pupil_alignment_passed_p(ctx, fpu_id, count=None):
     """returns True if the latest datum repeatability test for this FPU
     was passed successfully."""
 
-    val = get_pupil_alignment_result(ctx, fpu_id)
+    val = get_pupil_alignment_result(ctx, fpu_id, count=count)
 
     if val is None:
         return False

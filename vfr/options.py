@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function
 import argparse
 import re
 import sys
+import types
 import warnings
 from ast import literal_eval
 from os import environ
@@ -18,7 +19,7 @@ from vfr.TaskLogic import T
 
 def parse_args():
     try:
-        DEFAULT_VERBOSITY = int(environ.get("VFR_VERBOSITY", "0"))
+        DEFAULT_VERBOSITY = int(environ.get("VFR_VERBOSITY", "1"))
     except:
         print("VFR_VERBOSITY has invalid value, setting verbosity to one")
         DEFAULT_VERBOSITY = 1
@@ -96,7 +97,8 @@ def parse_args():
         "-sn",
         "--snset",
         default=None,
-        help="""apply tasks only to passed set of serial numbers, passed as "['MP001', 'MP002', ...]" """,
+        help="""apply tasks only to passed set of serial numbers, passed as "['MP001', 'MP002', ...]",
+        or just as single serial number, as 'MP001' """,
     )
 
     parser.add_argument(
@@ -128,11 +130,11 @@ def parse_args():
         "--update-protection-limits",
         default=False,
         action="store_true",
-        help="update range limits to protection database, even if already set",
+        help="update range limits to protection database, even if it was already set",
     )
 
     parser.add_argument(
-        "-pt",
+        "-ptl",
         "--protection-tolerance",
         type=float,
         default=0.2,
@@ -233,6 +235,16 @@ def parse_args():
     )
 
     parser.add_argument(
+        "-cnt",
+        "--record-count",
+        metavar="RECORD_COUNT",
+        type=int,
+        default=None,
+        help="record number to be retrieved in report, negative values count"
+        " back from the latest. Default is the latest record.",
+    )
+
+    parser.add_argument(
         "-v",
         "--verbosity",
         metavar="VERBOSITY",
@@ -250,9 +262,6 @@ def parse_args():
         args.gateway_address = "127.0.0.1"
         args.gateway_port = 4700
 
-    if not (args.snset is None):
-        args.snset = literal_eval(args.snset)
-
     if args.output_file is None:
         args.output_file = sys.stdout
     else:
@@ -264,7 +273,7 @@ def parse_args():
 sn_pat = re.compile("[a-zA-Z0-9]{1,5}$")
 
 
-def get_sets(vfdb, fpu_config, opts):
+def get_sets(env, vfdb, fpu_config, opts):
     """Under normal operation, we want to measure and evaluate the FPUs
     in the rig.
 
@@ -282,15 +291,24 @@ def get_sets(vfdb, fpu_config, opts):
 
     if eval_snset == "all":
         # get the serial numbers of all FPUs which have been measured so far
-        eval_snset = get_snset(env, vfdb)
+        eval_snset = get_snset(env, vfdb, opts)
     elif eval_snset is not None:
-        # in this case, it needs to be a list of serial numbers
-        eval_snset = set(eval_snset)
+        # in this case, it needs to be a literal list of serial numbers,
+        # a string with a quoted string literal, or a string
+        try:
+            val = literal_eval(eval_snset)
+        except ValueError:
+            val = eval_snset
 
-    # check passed serial numbers for validity
-    for sn in eval_snset:
-        if not sn_pat.match(sn):
-            raise ValueError("serial number %r is not valid!" % sn)
+        if type(val) == types.ListType:
+            eval_snset = set(val)
+        else:
+            eval_snset = set([val])
+
+        # check passed serial numbers for validity
+        for sn in eval_snset:
+            if not sn_pat.match(sn):
+                raise ValueError("serial number %r is not valid!" % sn)
 
     if eval_snset is None:
         # both mesured and evaluated sets are exclusively defined by
@@ -343,7 +361,7 @@ def get_sets(vfdb, fpu_config, opts):
     return fpu_config, sorted(measure_fpuset), sorted(eval_fpuset)
 
 
-def load_config(config_file_name, vfdb, opts):
+def load_config(env, vfdb, config_file_name, opts=None):
     print("reading measurement configuratiom from %r..." % config_file_name)
     cfg_list = literal_eval("".join(open(config_file_name).readlines()))
 
@@ -361,6 +379,7 @@ def load_config(config_file_name, vfdb, opts):
         ]
     )
 
+
     for key, val in fconfig.items():
         if key < 0:
             raise ValueError("FPU id %i is not valid!" % key)
@@ -371,6 +390,21 @@ def load_config(config_file_name, vfdb, opts):
             )
 
     # get sets of measured and evaluated FPUs
-    fpu_config, measure_fpuset, eval_fpuset = get_sets(vfdb, fconfig, opts)
+    fpu_config, measure_fpuset, eval_fpuset = get_sets(env, vfdb, fconfig, opts)
 
     return fpu_config, sorted(measure_fpuset), sorted(eval_fpuset)
+
+
+def check_sns_unique(ctx):
+    if not ctx.opts.reuse_serialnum:
+        config_sns = set(
+            [ctx.fpu_config[fpu_id]["serialnumber"] for fpu_id in ctx.measure_fpuset]
+        )
+        used_sns = get_snset(ctx.env, ctx.vfdb, ctx.opts)
+        reused_sns = config_sns & used_sns
+        print("config_sns=%r, used_sns=%r, reused_sns=%r" % (
+            config_sns, used_sns, reused_sns))
+        if reused_sns:
+            raise ValueError("serial numbers %s have been used before"
+                             " - use option '--reuse-serialnum' to explicitly"
+                             " use them again" % sorted(reused_sns))

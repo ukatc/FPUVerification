@@ -8,7 +8,7 @@ from os import environ
 
 from numpy import Inf, NaN
 
-DEFAULT_TASKS = ["selftest", "measure_all", "evaluate_all", "report"]
+DEFAULT_TASKS = ["selftest", "measure_all", "eval_all", "report"]
 
 # a few parameters are defined globally because they are
 # used in many different places
@@ -55,10 +55,6 @@ DATUM_REP_MEASUREMENT_PARS = Namespace(
     DATUM_REP_ITERATIONS=10,  # the
     # number of datum operations made for
     # each test
-    DATUM_REP_PASS=20.0,  # the maximum single
-    # deviation in microns from the
-    # baseline position which represents an
-    # acceptable FPU
     DATUM_REP_EXPOSURE_MS=500,  # the exposure
     # time in milliseconds for a correctly
     # exposed image
@@ -86,6 +82,10 @@ DATUM_REP_ANALYSIS_PARS = Namespace(
     POS_REP_CALIBRATION_PARS=DAT_REP_CALIBRATION_PARS,
     display=False,
     verbosity=0,
+    DATUM_REP_PASS=20.0,  # the maximum single
+    # deviation in microns from the
+    # baseline position which represents an
+    # acceptable FPU
 )
 
 
@@ -204,7 +204,7 @@ POS_REP_MEASUREMENT_PARS = Namespace(
 
 
 POS_REP_EVALUATION_PARS = Namespace(
-    POS_REP_PASS=NaN,  # the maximum angular deviation, in
+    POS_REP_PASS=Inf,  # the maximum angular deviation, in
     # degrees, from an average position of
     # a grouping of measured points at a
     # given nominal position which
@@ -219,8 +219,9 @@ POS_VER_MEASUREMENT_PARS = Namespace(
     POS_VER_EXPOSURE_MS=NaN,  # the exposure time in
     # milliseconds for a correctly
     # exposed image
-    POS_VER_ITERATIONS=NaN,  # the number of times each FPU
+    POS_VER_ITERATIONS=3,  # the number of times each FPU
     # sweeps back and forth
+    POS_VER_SAFETY_TOLERANCE=1.5, # safety distance towards range limits
 )
 
 
@@ -256,6 +257,7 @@ PUP_ALGN_MEASUREMENT_PARS = Namespace(
     # fibre
     PUP_ALGN_EXPOSURE_MS=NaN,  # the exposure time in milliseconds
     # for a correctly exposed image
+    PUP_ALGN_LAMP_VOLTAGE=3.3,
 )
 
 PUP_ALGN_PLATESCALE = 0.00668
@@ -281,7 +283,7 @@ PUP_ALGN_ANALYSIS_PARS = Namespace(
 PUP_ALGN_EVALUATION_PARS = Namespace(
     PUP_ALGN_CALIBRATED_CENTRE_X=0.0,
     PUP_ALGN_CALIBRATED_CENTRE_Y=-0.0,
-    PUPIL_ALN_PASS=Inf,  # the maximum total deviation in arcmin
+    PUP_ALGN_PASS=Inf,  # the maximum total deviation in arcmin
     # from the calibrated centre point which
     # represents an acceptable FPU
 )

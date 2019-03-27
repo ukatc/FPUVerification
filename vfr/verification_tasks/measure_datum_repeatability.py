@@ -103,13 +103,19 @@ def measure_datum_repeatability(ctx, pars=None):
 
             ctx.gd.findDatum(ctx.grid_state)
             for count in range(pars.DATUM_REP_ITERATIONS):
-                print("capturing moved+datumed-%02i" % count)
+                if ctx.opts.verbosity > 0:
+                    print("moving FPU %i to (30,30) and back" % fpu_id)
                 wf = gen_wf(30 * dirac(fpu_id, ctx.opts.N), 30)
-                ctx.gd.configMotion(wf, ctx.grid_state)
-                ctx.gd.executeMotion(ctx.grid_state, fpuset=[fpu_id])
-                ctx.gd.reverseMotion(ctx.grid_state, fpuset=[fpu_id])
-                ctx.gd.executeMotion(ctx.grid_state, fpuset=[fpu_id])
-                ctx.gd.findDatum(ctx.grid_state, fpuset=[fpu_id])
+                verbosity = max(ctx.opts.verbosity - 3, 0)
+                gd = ctx.gd
+                grid_state = ctx.grid_state
+
+                gd.configMotion(wf, grid_state, verbosity=verbosity)
+                gd.executeMotion(grid_state, fpuset=[fpu_id])
+                gd.reverseMotion(grid_state, fpuset=[fpu_id], verbosity=verbosity)
+                gd.executeMotion(grid_state, fpuset=[fpu_id])
+                gd.findDatum(grid_state, fpuset=[fpu_id])
+                print("capturing moved+datumed-%02i" % count)
                 ipath = capture_image("moved+datumed", count)
                 moved_images.append(ipath)
 
@@ -121,7 +127,12 @@ def measure_datum_repeatability(ctx, pars=None):
 def eval_datum_repeatability(ctx, dat_rep_analysis_pars):
 
     for fpu_id in ctx.eval_fpuset:
-        images = get_datum_repeatability_images(ctx, fpu_id)["images"]
+        measurement = get_datum_repeatability_images(ctx, fpu_id)
+        if measurement is None:
+            print("FPU %s: no datum repeatability measurement data found" % fpu_id)
+            continue
+
+        images = measurement["images"]
 
         def analysis_func(ipath):
             return posrepCoordinates(ipath, pars=dat_rep_analysis_pars)
@@ -137,7 +148,7 @@ def eval_datum_repeatability(ctx, dat_rep_analysis_pars):
 
             datum_repeatability_has_passed = (
                 TestResult.OK
-                if datum_repeatability_mm <= DATUM_REP_PASS
+                if datum_repeatability_mm <= dat_rep_analysis_pars.DATUM_REP_PASS
                 else TestResult.FAILED
             )
 
@@ -163,6 +174,7 @@ def eval_datum_repeatability(ctx, dat_rep_analysis_pars):
             coords=coords,
             datum_repeatability_mm=datum_repeatability_mm,
             datum_repeatability_has_passed=datum_repeatability_has_passed,
+            pass_threshold=dat_rep_analysis_pars.DATUM_REP_PASS,
             errmsg=errmsg,
             analysis_version=DATUM_REPEATABILITY_ALGORITHM_VERSION,
         )

@@ -6,7 +6,7 @@ import platform
 import subprocess
 
 import lmdb
-from numpy import NaN, nan
+from numpy import NaN, nan, inf, Inf
 from vfr.tests_common import timestamp
 
 GIT_VERSION = subprocess.check_output(["git", "describe"]).strip()
@@ -18,9 +18,10 @@ class TestResult:
     NA = "NA"
 
 
-def save_test_result(ctx, fpuset, keyfunc, valfunc):
+def save_test_result(ctx, fpuset, keyfunc, valfunc, verbosity=None):
 
-    verbosity = ctx.opts
+    if verbosity is None:
+        verbosity = ctx.opts
 
     with ctx.env.begin(write=True, db=ctx.vfdb) as txn:
 
@@ -47,21 +48,31 @@ def save_test_result(ctx, fpuset, keyfunc, valfunc):
             txn.put(key2, val)
 
 
-def get_test_result(ctx, fpu_id, keyfunc, count=None):
+def get_test_result(ctx, fpu_id, keyfunc, count=None, verbosity=None):
 
-    verbosity = ctx.opts.verbosity
+    if verbosity is None:
+        verbosity = ctx.opts.verbosity
 
     with ctx.env.begin(write=False, db=ctx.vfdb) as txn:
 
         keybase = keyfunc(fpu_id)
 
-        if count is None:
+        if (count is None) or (count < 0):
             key1 = str(keybase + ("ntests",))
 
             try:
-                count = int(txn.get(key1))
+                rcount = int(txn.get(key1))
             except TypeError:
                 return None
+
+            if count is None:
+                #default value: last record
+                count = rcount
+            else:
+                count = rcount - count
+                if count < 0:
+                    return None
+
 
         key2 = repr(keybase + ("data", count))
 
@@ -76,6 +87,7 @@ def get_test_result(ctx, fpu_id, keyfunc, count=None):
                 # literal_eval() does not recognize IEEE754 NaN
                 # symbols
                 val = eval(val)
+            val["record-count"]=count
 
         if verbosity > 4:
             print("got %r : %r" % (key2, val))

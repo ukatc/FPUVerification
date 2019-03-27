@@ -182,7 +182,9 @@ def measure_positional_repeatability(ctx, pars=None):
                             ctx.gd, abs_alpha, abs_beta, ctx.grid_state, fpuset=[fpu_id]
                         )
 
-                        angles = ctx.gd.countedAngles(ctx.grid_state, fpuset=ctx.measure_fpuset)
+                        # to get the angles, we need to pass all connected FPUs
+                        fpuset = range(ctx.opts.N)
+                        angles = ctx.gd.countedAngles(ctx.grid_state, fpuset=fpuset)
 
                         alpha_count = angles[fpu_id][0]
                         beta_count = angles[fpu_id][1]
@@ -224,6 +226,10 @@ def eval_positional_repeatability(
 
     for fpu_id in ctx.eval_fpuset:
         measurement = get_positional_repeatability_images(ctx, fpu_id)
+
+        if measurement is None:
+            print("FPU %s: no positional repeatability measurement data found" % fpu_id)
+            continue
 
         images_alpha = measurement["images_alpha"]
         images_beta = measurement["images_beta"]
@@ -284,7 +290,7 @@ def eval_positional_repeatability(
             )
 
             positional_repeatability_has_passed = (
-                posrep_rss_mm <= pos_rep_evaluation_pars.POS_REP_PASS
+                TestResult.OK if posrep_rss_mm <= pos_rep_evaluation_pars.POS_REP_PASS else TestResult.FAILED
             )
 
             gearbox_correction = fit_gearbox_correction(analysis_results_alpha_short, analysis_results_beta_short)
@@ -312,6 +318,7 @@ def eval_positional_repeatability(
             posrep_beta_max=posrep_beta_max,
             posrep_rss_mm=posrep_rss_mm,
             positional_repeatability_has_passed=positional_repeatability_has_passed,
+            pass_threshold=pos_rep_evaluation_pars.POS_REP_PASS,
             gearbox_correction=gearbox_correction,
             errmsg=errmsg,
             analysis_version=POSITIONAL_REPEATABILITY_ALGORITHM_VERSION,
