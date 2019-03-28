@@ -56,11 +56,12 @@ def parse_args():
         "-fmt",
         "--report-format",
         default="terse",
-        choices=["status", "terse", "short", "long", "extended"],
+        choices=["status", "brief", "terse", "short", "long", "extended"],
         help="""output format of 'report' task (one of 'status', 'terse', 'short', 'long',
         'extended', default is 'terse'). The options do the following:
 
         'status': print one line with the overall status for each FPU
+        'brief' : print one line for each test section
         'terse' : print essential information
         'short' : print additional information, like angles with maximum errors
         'long'  : in addition, list values for each angle

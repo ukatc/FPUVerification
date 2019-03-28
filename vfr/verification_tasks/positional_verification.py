@@ -335,9 +335,9 @@ def eval_positional_verification(ctx, pos_ver_analysis_pars, pos_ver_evaluation_
                     analysis_results_short, pars=pos_ver_evaluation_pars
                 )
 
-            positional_verification_has_passed = (
+            positional_verification_has_passed = TestResult.OK if (
                 posver_error_max <= pos_ver_evaluation_pars.POS_VER_PASS
-            )
+            ) else TestResult.FAILED
 
             errmsg = ""
 
