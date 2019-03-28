@@ -48,8 +48,15 @@ def parse_args():
         "-fmt",
         "--report-format",
         default="terse",
-        choices=["terse", "long", "extended"],
-        help="output format of 'report' task (one of 'terse', 'long', 'extensive', default is 'terse')",
+        choices=["status", "terse", "long", "extended"],
+        help="""output format of 'report' task (one of 'status', 'terse', 'short', 'long',
+        'extended', default is 'terse'). The options do the following:
+
+        'status': print one line with the overall status for each FPU
+        'terse' : print essential information
+        'short' : print additional information, like angles with maximum errors
+        'long'  : in addition, list values for each angle
+        'extended' : print nearly full information, including a list of images"""
     )
 
     parser.add_argument(
@@ -202,35 +209,35 @@ def parse_args():
     )
 
     parser.add_argument(
-        "--alpha_min",
-        metavar="ALPHA_MIN",
+        "--display-alpha-min",
+        metavar="DISPLAY_ALPHA_MIN",
         type=float,
         default=ALPHA_MIN_DEGREE,
-        help="minimum alpha value  (default: %(default)s)",
+        help="minimum alpha value displayed in 'long' report format  (default: %(default)s)",
     )
 
     parser.add_argument(
-        "--alpha_max",
-        metavar="ALPHA_MAX",
+        "--display-alpha-max",
+        metavar="DISPLAY_ALPHA_MAX",
         type=float,
         default=ALPHA_MAX_DEGREE,
-        help="maximum alpha value  (default: %(default)s)",
+        help="maximum alpha value displayed in 'long' report format  (default: %(default)s)",
     )
 
     parser.add_argument(
-        "--beta_min",
-        metavar="BETA_MIN",
+        "--display-beta-min",
+        metavar="DISPLAY_BETA_MIN",
         type=float,
         default=BETA_MIN_DEGREE,
-        help="minimum beta value  (default: %(default)s)",
+        help="minimum beta value displayed in 'long' report format  (default: %(default)s)",
     )
 
     parser.add_argument(
-        "--beta_max",
-        metavar="BETA_MAX",
+        "--display-beta-max",
+        metavar="DISPLAY_BETA_MAX",
         type=float,
         default=BETA_MAX_DEGREE,
-        help="maximum beta value  (default: %(default)s)",
+        help="maximum beta value displayed in 'long' report format  (default: %(default)s)",
     )
 
     parser.add_argument(

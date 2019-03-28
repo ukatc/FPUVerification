@@ -4,6 +4,8 @@ from argparse import Namespace
 from inspect import cleandoc
 from textwrap import TextWrapper
 
+from vfr.db.base import TestResult
+
 from vfr.db.colldect_limits import (
     get_angular_limit,
 )
@@ -89,6 +91,137 @@ def get_data(ctx, fpu_id):
         outfile=ctx.opts.output_file,
     )
 
+def print_report_status(
+    serial_number=None,
+    datum_result=None,
+    alpha_min_result=None,
+    alpha_max_result=None,
+    beta_min_result=None,
+    beta_max_result=None,
+    beta_collision_result=None,
+    datum_repeatability_result=None,
+    metrology_calibration_result=None,
+    metrology_height_result=None,
+    positional_repeatability_result=None,
+    positional_verification_result=None,
+    pupil_alignment_result=None,
+    datum_repeatability_images=None,
+    metrology_calibration_images=None,
+    metrology_height_images=None,
+    positional_repeatability_images=None,
+    positional_verification_images=None,
+    pupil_alignment_images=None,
+    outfile=None,
+    skip_fibre=None,
+):
+
+    if datum_result is None:
+        datum_alpha = TestResult.NA
+        datum_beta  = TestResult.NA
+    else:
+        datum_alpha = TestResult.OK if datum_result["datumed"][0] else TestResult.FAILED
+        datum_beta = TestResult.OK if datum_result["datumed"][1]  else TestResult.FAILED
+
+    if beta_collision_result is None:
+        beta_collision = TestResult.NA
+    else:
+        beta_collision = beta_collision_result["result"]
+
+    if alpha_min_result is None:
+        alpha_min = TestResult.NA
+    else:
+        alpha_min = alpha_min_result["result"]
+
+    if alpha_max_result is None:
+        alpha_max  = TestResult.NA
+    else:
+        alpha_max = alpha_max_result["result"]
+
+    if beta_min_result is None:
+        beta_min = TestResult.NA
+    else:
+        beta_min = beta_min_result["result"]
+
+    if beta_max_result is None:
+        beta_max  = TestResult.NA
+    else:
+        beta_max = beta_max_result["result"]
+
+    if datum_repeatability_result is None:
+        datum_repeatability = TestResult.NA
+    else:
+        datum_repeatability = datum_repeatability_result["result"]
+
+    if metrology_height_result is None:
+        metrology_height = TestResult.NA
+    else:
+        metrology_height = TestResult.OK if not (metrology_height_result["error_message"]) else TestResult.FAILED
+
+    if positional_repeatability_result is None:
+        positional_repeatability = TestResult.NA
+    else:
+        positional_repeatability = positional_repeatability_result["result"]
+
+    if positional_verification_result is None:
+        positional_verification = TestResult.NA
+    else:
+        positional_verification = positional_verification_result["result"]
+
+    if skip_fibre:
+        rlist = [(beta_collision, "beta_collision",),
+                 (alpha_min, "alpha min",),
+                 (beta_min, "beta min",),
+                 (alpha_max, "alpha max",),
+                 (beta_max, "beta max",),
+                 (datum_repeatability, "datum repeatability",),
+                 (metrology_height, "metrology height",),
+                 (positional_repeatability, "positional_repeatability",),
+                 (positional_verification, "positional verification",),
+        ]
+
+    else:
+        if metrology_calibration_result is None:
+            metrology_calibration  = TestResult.NA
+        else:
+            metrology_calibration = TestResult.OK if not (metrology_calibration_result["error_message"]) else TestResult.FAILED
+
+        if pupil_alignment_result is None:
+            pupil_alignment = TestResult.NA
+        else:
+            pupil_alignment = pupil_alignment_result["result"]
+
+        rlist = [(beta_collision, "beta_collision",),
+                 (alpha_min, "alpha min",),
+                 (beta_min, "beta min",),
+                 (alpha_max, "alpha max",),
+                 (beta_max, "beta max",),
+                 (datum_repeatability, "datum repeatability",),
+                 (metrology_height, "metrology height",),
+                 (metrology_calibration, "metrology calibration",),
+                 (pupil_alignment, "pupil alignment",),
+                 (positional_repeatability, "positional_repeatability",),
+                 (positional_verification, "positional verification",),
+        ]
+
+    sum_status = TestResult.OK
+    failed_name = ""
+    for test, name in rlist:
+        if test == TestResult.OK:
+            continue
+        elif test == TestResult.NA:
+            if sum_status == TestResult.OK:
+                sum_status = TestResult.NA
+                failed_name = name
+        else:
+            if sum_status == TestResult.NA:
+                sum_status = TestResult.FAILED
+                failed_name = name
+
+
+    if sum_status == TestResult.OK:
+        print("FPU %s : %s" % (serial_number, sum_status), file=outfile)
+    else:
+        print("FPU %s : %s (failed in %s)" % (serial_number, sum_status, failed_name), file=outfile)
 
 def print_report_terse(
     serial_number=None,
@@ -867,10 +1000,12 @@ def report(ctx):
     for count, fpu_id in enumerate(ctx.eval_fpuset):
         ddict = vars(get_data(ctx, fpu_id))
 
-        if count > 0:
+        if (count > 0) and report_format != "status":
             print("\n", file=ctx.opts.output_file)
 
-        if report_format == "terse":
+        if report_format == "status":
+            print_report_status(skip_fibre=ctx.opts.skip_fibre, **ddict)
+        elif report_format == "terse":
             print_report_terse(**ddict)
         elif report_format == "long":
             raise ValueError("option not implemented")
