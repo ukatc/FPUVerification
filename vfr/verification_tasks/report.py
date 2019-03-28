@@ -335,11 +335,13 @@ def print_report_terse(
                 cleandoc(
                     """
                 datum repeatability     : {result},
-                datum repeatability     : datum only max = {datum_repeatability_only_max_mm:7.3} mm,
-                datum repeatability     : datum only std = {datum_repeatability_only_std_mm:7.3} mm,
-                datum repeatability     : datum+move max = {datum_repeatability_move_max_mm:7.3} mm,
-                datum repeatability     : datum+move std = {datum_repeatability_move_std_mm:7.3} mm,
-                datum repeatability     : time/record = {time:.16}/{record-count}, version = {algorithm_version}""".format(
+                datum repeatability     : datum only max                = {datum_repeatability_only_max_mm:7.3} mm,
+                datum repeatability     : datum only std                = {datum_repeatability_only_std_mm:7.3} mm,
+                datum repeatability     : datum only max residual count = {datum_repeatability_max_residual_datumed},
+                datum repeatability     : datum+move max                = {datum_repeatability_move_max_mm:7.3} mm,
+                datum repeatability     : datum+move std                = {datum_repeatability_move_std_mm:7.3} mm,
+                datum repeatability     : datum+move max residual count = {datum_repeatability_max_residual_moved},
+                datum repeatability     : time/record                   = {time:.16}/{record-count}, version = {algorithm_version}""".format(
                         **datum_repeatability_result
                     )
                 ),

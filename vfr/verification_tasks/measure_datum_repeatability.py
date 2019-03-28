@@ -10,7 +10,8 @@ from ImageAnalysisFuncs.analyze_positional_repeatability import (
     evaluate_datum_repeatability,
     posrepCoordinates,
 )
-from numpy import NaN
+from numpy import NaN, array
+import numpy as np
 from vfr import hw as real_hw
 from vfr import hwsimulation
 from vfr.conf import MET_CAL_CAMERA_IP_ADDRESS
@@ -80,6 +81,8 @@ def measure_datum_repeatability(ctx, pars=None):
 
             datumed_images = []
             moved_images = []
+            datumed_residuals = []
+            moved_residuals = []
 
             def capture_image(subtest, cnt):
 
@@ -100,6 +103,10 @@ def measure_datum_repeatability(ctx, pars=None):
                 ctx.gd.findDatum(ctx.grid_state, fpuset=[fpu_id])
                 ipath = capture_image("datumed", count)
                 datumed_images.append(ipath)
+                ctx.gd.getCounterDeviation(ctx.grid_state, fpuset=[fpu_id])
+                fpu = ctx.grid_state.FPU[fpu_id]
+                datumed_residuals.append( (fpu.alpha_deviation, fpu.beta_deviation,) )
+
 
             ctx.gd.findDatum(ctx.grid_state)
             for count in range(pars.DATUM_REP_ITERATIONS):
@@ -119,9 +126,14 @@ def measure_datum_repeatability(ctx, pars=None):
                 ipath = capture_image("moved+datumed", count)
                 moved_images.append(ipath)
 
-            images = {"datumed_images": datumed_images, "moved_images": moved_images}
+                ctx.gd.getCounterDeviation(ctx.grid_state, fpuset=[fpu_id])
+                fpu = ctx.grid_state.FPU[fpu_id]
+                moved_residuals.append( (fpu.alpha_deviation, fpu.beta_deviation,) )
 
-            save_datum_repeatability_images(ctx, fpu_id, images)
+            images = {"datumed_images": datumed_images, "moved_images": moved_images}
+            residuals = {"datumed_residuals": datumed_residuals, "moved_residuals": moved_residuals}
+
+            save_datum_repeatability_images(ctx, fpu_id, images, residuals)
 
 
 def eval_datum_repeatability(ctx, dat_rep_analysis_pars):
@@ -133,6 +145,8 @@ def eval_datum_repeatability(ctx, dat_rep_analysis_pars):
             continue
 
         images = measurement["images"]
+
+        residual_counts = measurement["residual_counts"]
 
         def analysis_func(ipath):
             return posrepCoordinates(ipath, pars=dat_rep_analysis_pars)
@@ -160,6 +174,8 @@ def eval_datum_repeatability(ctx, dat_rep_analysis_pars):
 
             coords = {"datumed_coords": datumed_coords, "moved_coords": moved_coords}
             errmsg = ""
+            max_residual_datumed=np.max(array(residual_counts["datumed_residuals"]))
+            max_residual_moved=np.max(array(residual_counts["moved_residuals"]))
 
         except ImageAnalysisError as e:
             errmsg = str(e)
@@ -168,6 +184,9 @@ def eval_datum_repeatability(ctx, dat_rep_analysis_pars):
                 datrep_dat_only_std
             ) = datrep_move_dat_max = datrep_move_dat_std = NaN
             datum_repeatability_has_passed = TestResult.NA
+            max_residual_datumed=NaN,
+            max_residual_moved=NaN,
+
 
             if dat_rep_analysis_pars.FIXME_FAKE_RESULT:
                 warnings.warn(
@@ -184,6 +203,8 @@ def eval_datum_repeatability(ctx, dat_rep_analysis_pars):
             datum_repeatability_only_std_mm=datrep_dat_only_std,
             datum_repeatability_move_max_mm=datrep_move_dat_max,
             datum_repeatability_move_std_mm=datrep_move_dat_std,
+            max_residual_datumed=max_residual_datumed,
+            max_residual_moved=max_residual_moved,
             datum_repeatability_has_passed=datum_repeatability_has_passed,
             pass_threshold=dat_rep_analysis_pars.DATUM_REP_PASS,
             errmsg=errmsg,

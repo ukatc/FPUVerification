@@ -12,7 +12,7 @@ from vfr.db.base import (
 RECORD_TYPE = "datum-repeatability"
 
 
-def save_datum_repeatability_images(ctx, fpu_id, images):
+def save_datum_repeatability_images(ctx, fpu_id, images, residuals):
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
@@ -22,7 +22,12 @@ def save_datum_repeatability_images(ctx, fpu_id, images):
 
     def valfunc(fpu_id):
 
-        val = repr({"fpuid": fpu_id, "images": images, "time": timestamp()})
+        val = repr({
+            "fpuid": fpu_id,
+            "images": images,
+            "residual_counts" : residuals,
+            "time": timestamp()
+        })
         return val
 
     save_test_result(ctx, [fpu_id], keyfunc, valfunc)
@@ -48,6 +53,8 @@ def save_datum_repeatability_result(
     datum_repeatability_move_max_mm=None,
     datum_repeatability_move_std_mm=None,
     datum_repeatability_has_passed=None,
+    max_residual_datumed=NaN,
+    max_residual_moved=NaN,
     pass_threshold=NaN,
     errmsg="",
     analysis_version=None,
@@ -68,6 +75,8 @@ def save_datum_repeatability_result(
                 "datum_repeatability_only_std_mm": datum_repeatability_only_std_mm,
                 "datum_repeatability_move_max_mm": datum_repeatability_move_max_mm,
                 "datum_repeatability_move_std_mm": datum_repeatability_move_std_mm,
+                "datum_repeatability_max_residual_datumed" : max_residual_datumed,
+                "datum_repeatability_max_residual_moved" : max_residual_moved,
                 "result": datum_repeatability_has_passed,
                 "pass_threshold": pass_threshold,
                 "error_message": errmsg,
