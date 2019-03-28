@@ -48,7 +48,7 @@ def parse_args():
         "-fmt",
         "--report-format",
         default="terse",
-        choices=["status", "terse", "long", "extended"],
+        choices=["status", "terse", "short", "long", "extended"],
         help="""output format of 'report' task (one of 'status', 'terse', 'short', 'long',
         'extended', default is 'terse'). The options do the following:
 
