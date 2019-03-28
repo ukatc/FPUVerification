@@ -402,7 +402,7 @@ def evaluate_positional_verification(dict_of_coords, pars=None):
     posver_error = {}
 
     for k, va in dict_of_coords.items():
-        alpha, beta, count = k
+        count, alpha, beta, = k
 
         # FIXME: compute somehow nominal coordinates
         warnings.warn("insert computation of nominal target coordinates here")

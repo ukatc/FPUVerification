@@ -85,7 +85,9 @@ if __name__ == "__main__":
         lctrl.switch_ambientlight("off")
         lctrl.switch_silhouettelight("off")
 
-    atexit.register(lamps_off)
+    if not opts.mockup:
+        atexit.register(lamps_off)
+
     context = Namespace(            env=env,
                                     fpudb=None,
                                     vfdb=vfdb,

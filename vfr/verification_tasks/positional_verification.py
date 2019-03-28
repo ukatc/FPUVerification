@@ -130,7 +130,7 @@ def measure_positional_verification(ctx, pars=None):
                         "because there is no passed pupil alignment test \n"
                         "(set option '--skip-fibre' to ignore missing test)" % sn
                     )
-                continue
+                    continue
 
             if not get_positional_repeatability_passed_p(ctx, fpu_id):
                 print(
@@ -311,7 +311,7 @@ def eval_positional_verification(ctx, pos_ver_analysis_pars, pos_ver_evaluation_
             analysis_results_short = {}
 
             for k, v in images.items():
-                alpha_steps, beta_steps, count = k
+                count, alpha_steps, beta_steps, = k
                 ipath = v
                 analysis_results[k] = analysis_func(ipath)
 

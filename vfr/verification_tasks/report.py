@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, print_function
 
 from argparse import Namespace
@@ -146,11 +147,11 @@ def get_data(ctx, fpu_id):
 
 
     if data.positional_verification_result is not None:
-        coords = list(data.positional_repeatability_result["analysis_results"].values())
+        coords = list(data.positional_verification_result["analysis_results"].values())
         data.positional_verification_result["min_quality"] = get_min_quality(coords)
 
         posver_error = data.positional_verification_result["posver_error"]
-        data.positional_verification_result["arg_max_error"] = arg_max_dict(posver_error)
+        data.positional_verification_result["arg_max_error"], _ = arg_max_dict(posver_error)
 
     if data.pupil_alignment_result is not None:
         coords = data.pupil_alignment_result["coords"].values()
@@ -353,7 +354,7 @@ def print_report_terse(
     else:
         print(
             "Limit test              : alpha min = {result}, "
-            "limit = {val:+7.3f} ({diagnostic}), time/record = {time:.16}/{record-count}".format(
+            "limit = {val:+8.4f} ({diagnostic}), time/record = {time:.16}/{record-count}".format(
                 **alpha_min_result
             ),
             file=outfile,
@@ -363,7 +364,7 @@ def print_report_terse(
         print("limit test            :  alpha max n/a", file=outfile)
     else:
         print(
-            "limit test              : alpha max = {result}, limit = {val:+7.3f}"
+            "limit test              : alpha max = {result}, limit = {val:+8.4f}"
             " ({diagnostic}), time/record = {time:.16}/{record-count}".format(
                 **alpha_max_result
             ),
@@ -374,7 +375,7 @@ def print_report_terse(
         print("limit test            : beta min n/a", file=outfile)
     else:
         print(
-            "limit test              : beta min  = {result}, limit = {val:+7.3f} "
+            "limit test              : beta min  = {result}, limit = {val:+8.4f} "
             "({diagnostic}), time/record = {time:.16}/{record-count}".format(
                 **beta_min_result
             ),
@@ -385,7 +386,7 @@ def print_report_terse(
         print("Limit test            : beta max n/a", file=outfile)
     else:
         print(
-            "limit test              : beta max  = {result}, limit = {val:+7.3f}"
+            "limit test              : beta max  = {result}, limit = {val:+8.4f}"
             " ({diagnostic}), time/record = {time:.16}/{record-count}".format(
                 **beta_max_result
             ),
@@ -439,9 +440,9 @@ def print_report_terse(
             print(
                 cleandoc(
                     """
-                metrology calibration   : metcal_fibre_large_target_distance = {metcal_fibre_large_target_distance:7.3f} mm,
-                metrology calibration   : metcal_fibre_small_target_distance = {metcal_fibre_small_target_distance:7.3f} mm,
-                metrology calibration   : metcal_target_vector_angle         = {metcal_target_vector_angle:6.3f} degrees,
+                metrology calibration   : metcal_fibre_large_target_distance = {metcal_fibre_large_target_distance:8.4f} mm,
+                metrology calibration   : metcal_fibre_small_target_distance = {metcal_fibre_small_target_distance:8.4f} mm,
+                metrology calibration   : metcal_target_vector_angle         = {metcal_target_vector_angle:8.4f} degrees,
                 metrology calibration   : time/record={time:.16}/{record-count}, version = {algorithm_version}""".format(
                         **metrology_calibration_result
                     )
@@ -467,8 +468,8 @@ def print_report_terse(
             print(
                 cleandoc(
                     """
-                metrology height        : small target = {small_target_height:6.3f} mm,
-                metrology height        : large target = {small_target_height:6.3f} mm,
+                metrology height        : small target = {small_target_height:8.4f} mm,
+                metrology height        : large target = {small_target_height:8.4f} mm,
                 metrology height        : time/record = {time:.16}/{record-count}, version = {algorithm_version}""".format(
                         **metrology_height_result
                     )
@@ -494,9 +495,9 @@ def print_report_terse(
                 cleandoc(
                     """
                     positional repeatability: passed        = {result},
-                    positional repeatability: alpha_max     = {posrep_alpha_max:6.2f} mm,
-                    positional repeatability: beta_max      = {posrep_beta_max:6.2f} mm,
-                    positional repeatability: posrep_rss_mm = {posrep_rss_mm:6.2f} mm,
+                    positional repeatability: alpha_max     = {posrep_alpha_max:8.4f} mm,
+                    positional repeatability: beta_max      = {posrep_beta_max:8.4f} mm,
+                    positional repeatability: posrep_rss_mm = {posrep_rss_mm:8.4f} mm,
                     positional repeatability: time/record   = {time:.16}/{record-count}, version = {algorithm_version}"""
                 ).format(**positional_repeatability_result),
                 file=outfile,
@@ -587,7 +588,7 @@ def print_report_terse(
                 cleandoc(
                     """
                     positional verification : passed           = {result},
-                    positional verification : posver_error_max = {posver_error_max:6.3f} mm,
+                    positional verification : posver_error_max = {posver_error_max:8.4f} mm,
                     positional verification : time/record      = {time:.16}/{record-count}, version = {algorithm_version}"""
                 ).format(**positional_verification_result),
                 file=outfile,
@@ -704,17 +705,17 @@ def print_report_short(
     print("FPU %s" % serial_number, file=outfile)
     print(file=outfile)
     if datum_result is None:
-        print("Datum test               : n/a", file=outfile)
+        print("datum test              : n/a", file=outfile)
     else:
         print(
             cleandoc(
                 """
+                datum test              : result = {result} / {diagnostic}
                 datum test              : alpha datumed = {datumed[0]}
                 datum test              : beta datumed = {datumed[1]}
                 datum test              : fpu_id/FPU state = {fpuid} / {result_state}
                 datum test              : counter deviations = {counter_deviation!r}
-                datum test              : time/record = {time:.16}/{record-count}
-                datum test              : result = {diagnostic}"""
+                datum test              : time/record = {time:.16}/{record-count}"""
             ).format(**datum_result),
             file=outfile,
         )
@@ -726,7 +727,7 @@ def print_report_short(
     else:
         print(
             "collision detection     : result ="
-            " {result} ({diagnostic}), time/record = {time:.16}/{record-count}".format(
+            " {result} @ {val:+8.4f} ({diagnostic}), time/record = {time:.16}/{record-count}".format(
                 **beta_collision_result
             ),
             file=outfile,
@@ -739,7 +740,7 @@ def print_report_short(
     else:
         print(
             "Limit test              : alpha min = {result}, "
-            "limit = {val:+7.3f} ({diagnostic}), time/record = {time:.16}/{record-count}".format(
+            "limit = {val:+8.4f} ({diagnostic}), time/record = {time:.16}/{record-count}".format(
                 **alpha_min_result
             ),
             file=outfile,
@@ -749,7 +750,7 @@ def print_report_short(
         print("limit test            :  alpha max n/a", file=outfile)
     else:
         print(
-            "limit test              : alpha max = {result}, limit = {val:+7.3f}"
+            "limit test              : alpha max = {result}, limit = {val:+8.4f}"
             " ({diagnostic}), time/record = {time:.16}/{record-count}".format(
                 **alpha_max_result
             ),
@@ -760,7 +761,7 @@ def print_report_short(
         print("limit test            : beta min n/a", file=outfile)
     else:
         print(
-            "limit test              : beta min  = {result}, limit = {val:+7.3f} "
+            "limit test              : beta min  = {result}, limit = {val:+8.4f} "
             "({diagnostic}), time/record = {time:.16}/{record-count}".format(
                 **beta_min_result
             ),
@@ -771,7 +772,7 @@ def print_report_short(
         print("Limit test            : beta max n/a", file=outfile)
     else:
         print(
-            "limit test              : beta max  = {result}, limit = {val:+7.3f}"
+            "limit test              : beta max  = {result}, limit = {val:+8.4f}"
             " ({diagnostic}), time/record = {time:.16}/{record-count}".format(
                 **beta_max_result
             ),
@@ -789,16 +790,18 @@ def print_report_short(
                 cleandoc(
                     """
                 datum repeatability     : {result},
-                datum repeatability     : datum only max                = {datum_repeatability_only_max_mm:7.3} mm,
-                datum repeatability     : datum only std                = {datum_repeatability_only_std_mm:7.3} mm,
-                datum repeatability     : datum only max residual count = {datum_repeatability_max_residual_datumed},
-                datum repeatability     : datum+move max                = {datum_repeatability_move_max_mm:7.3} mm,
-                datum repeatability     : datum+move std                = {datum_repeatability_move_std_mm:7.3} mm,
-                datum repeatability     : datum+move max residual count = {datum_repeatability_max_residual_moved},
-                datum repeatability     : datum only min quality        = {min_quality_datumed:5.3},
-                datum repeatability     : datum+move min quality        = {min_quality_moved:5.3},
-                datum repeatability     : git version                   = {git-version},
-                datum repeatability     : time/record                   = {time:.16}/{record-count}, version = {algorithm_version}""".format(
+                datum repeatability     : threshold                      = {pass_threshold:8.4f}
+                datum repeatability     : datum only max                 = {datum_repeatability_only_max_mm:7.3} mm
+                datum repeatability     : datum only std                 = {datum_repeatability_only_std_mm:7.3} mm
+                datum repeatability     : datum only max residual count  = {datum_repeatability_max_residual_datumed}
+                datum repeatability     : datum+move max                 = {datum_repeatability_move_max_mm:7.3} mm
+                datum repeatability     : datum+move std                 = {datum_repeatability_move_std_mm:7.3} mm
+                datum repeatability     : datum+move max residual count  = {datum_repeatability_max_residual_moved}
+                datum repeatability     : datum only min quality         = {min_quality_datumed:8.4f}
+                datum repeatability     : datum+move min quality         = {min_quality_moved:8.4f}
+                datum repeatability     : time/record                    = {time:.16}/{record-count}
+                datum repeatability     : git version                    = {git-version}
+                datum repeatability     : image algorithm version        = {algorithm_version}""".format(
                         **datum_repeatability_result
                     )
                 ),
@@ -813,7 +816,7 @@ def print_report_short(
         #            )
         else:
             print(
-                "Datum repeatability     : {error_message}, time/record = {time:.16}/{record-count},"
+                "datum repeatability     : {error_message}, time/record = {time:.16}/{record-count},"
                 " version = TBD".format(**datum_repeatability_result),
                 file=outfile,
             )
@@ -828,12 +831,15 @@ def print_report_short(
             print(
                 cleandoc(
                     """
-                metrology calibration   : metcal_fibre_large_target_distance = {metcal_fibre_large_target_distance:7.3f} mm,
-                metrology calibration   : metcal_fibre_small_target_distance = {metcal_fibre_small_target_distance:7.3f} mm,
-                metrology calibration   : metcal_target_vector_angle         = {metcal_target_vector_angle:6.3f} degrees,
-                metrology calibration   : quality small target               = {coords[target_small_q]:5.3f},
-                metrology calibration   : quality big target                 = {coords[target_big_q]:5.3f},
-                metrology calibration   : quality fibre                      = {coords[fibre_q]:5.3f},
+                metrology calibration   : metcal_fibre_large_target_distance = {metcal_fibre_large_target_distance:8.4f} mm
+                metrology calibration   : metcal_fibre_small_target_distance = {metcal_fibre_small_target_distance:8.4f} mm
+                metrology calibration   : metcal_target_vector_angle         = {metcal_target_vector_angle:8.4f} degrees
+                metrology calibration   : coords large target                = {coords[target_big_xy]!r}
+                metrology calibration   : coords small target                = {coords[target_small_xy]!r}
+                metrology calibration   : quality small target               = {coords[target_small_q]:8.4f}
+                metrology calibration   : quality large target               = {coords[target_big_q]:8.4f}
+                    metrology calibration   : quality fibre                      = {coords[fibre_q]:8.4f}
+                metrology calibration   : git version                        = {git_version}
                 metrology calibration   : time/record={time:.16}/{record-count}, version = {algorithm_version}""".format(
                         **metrology_calibration_result
                     )
@@ -842,7 +848,7 @@ def print_report_short(
             )
         else:
             print(
-                "Metrology calibration   : {error_message}, time/record = {time:.16}/{record-count}, "
+                "metrology calibration   : {error_message}, time/record = {time:.16}/{record-count}, "
                 "version = {algorithm_version}".format(metrology_calibration_result),
                 file=outfile,
             )
@@ -859,9 +865,11 @@ def print_report_short(
             print(
                 cleandoc(
                     """
-                metrology height        : small target = {small_target_height:6.3f} mm,
-                metrology height        : large target = {small_target_height:6.3f} mm,
-                metrology height        : time/record = {time:.16}/{record-count}, version = {algorithm_version}""".format(
+                metrology height        : small target = {small_target_height:8.4f} mm
+                metrology height        : large target = {small_target_height:8.4f} mm
+                metrology height        : test result  = {test_result} mm
+                metrology height        : git version  = {git_version}
+                metrology height        : time/record  = {time:.16}/{record-count}, version = {algorithm_version}""".format(
                         **metrology_height_result
                     )
                 ),
@@ -885,15 +893,18 @@ def print_report_short(
             print(
                 cleandoc(
                     """
-                    positional repeatability: passed        = {result},
-                    positional repeatability: alpha_max     = {posrep_alpha_max:6.2f} mm,
-                    positional repeatability: beta_max      = {posrep_beta_max:6.2f} mm,
-                    positional repeatability: posrep_rss_mm = {posrep_rss_mm:6.2f} mm,
-                    positional repeatability: arg_max_alpha = {arg_max_alpha_error:6.2f},
-                    positional repeatability: arg_max_beta  = {arg_max_beta_error:6.2f},
-                    positional repeatability: alpha quality = {min_quality_alpha:5.3},
-                    positional repeatability: beta quality  = {min_quality_beta:5.3},
-                    positional repeatability: time/record   = {time:.16}/{record-count}, version = {algorithm_version}"""
+                    positional repeatability: passed          = {result}
+                    positional repeatability: pass_threshold  = {pass_threshold:8.4f} mm
+                    positional repeatability: alpha_max       = {posrep_alpha_max:8.4f} mm
+                    positional repeatability: beta_max        = {posrep_beta_max:8.4f} mm
+                    positional repeatability: posrep_rss_mm   = {posrep_rss_mm:8.4f} mm
+                    positional repeatability: arg_max_alpha   = {arg_max_alpha_error:8.4f}
+                    positional repeatability: arg_max_beta    = {arg_max_beta_error:8.4f}
+                    positional repeatability: alpha quality   = {min_quality_alpha:8.4f}
+                    positional repeatability: beta quality    = {min_quality_beta:8.4f}
+                    positional repeatability: time/record     = {time:.16}/{record-count}
+                    positional repeatability: anlysis version = {algorithm_version}
+                    positional repeatability: git version     = {git-version}"""
                 ).format(**positional_repeatability_result),
                 file=outfile,
             )
@@ -982,17 +993,20 @@ def print_report_short(
             print(
                 cleandoc(
                     """
-                    positional verification : passed           = {result},
-                    positional verification : posver_error_max = {posver_error_max:6.3f} mm,
-                    positional verification : arg_max_error    = {arg_max_error},
-                    positional verification : alpha quality    = {min_quality:5.3},
-                    positional verification : time/record      = {time:.16}/{record-count}, version = {algorithm_version}"""
+                    positional verification : passed                       = {result}
+                    positional verification : pass_threshold               = {pass_threshold}
+                    positional verification : posver_error_max             = {posver_error_max:8.4f} mm
+                    positional verification : arg_max_error (count, α, β)  = {arg_max_error}
+                    positional verification : min image quality            = {min_quality:8.4f}
+                    positional verification : time/record                  = {time:.16}/{record-count}
+                    positional verification : analysis version             = {algorithm_version}
+                    positional verification : git version                  = {git-version}"""
                 ).format(**positional_verification_result),
                 file=outfile,
             )
             print(
                 fill(
-                    """Positional verification : calibration_pars = {calibration_pars}""".format(
+                    """Positional verification : calibration_pars             = {calibration_pars}""".format(
                         **positional_verification_result
                     )
                 ),
@@ -1043,18 +1057,21 @@ def print_report_short(
             print(
                 cleandoc(
                     """
-                    pupil alignment         : passed        = {result},
-                    pupil alignment         : chassis error =  {measures[chassis_error]} mm,
-                    pupil alignment         : alpha error   =  {measures[alpha_error]} mm,
-                    pupil alignment         : beta error    =  {measures[beta_error]} mm,
-                    pupil alignment         : total error   =  {measures[total_error]} mm,
-                    pupil alignment         : time/record   = {time:.16}/{record-count}"""
+                    pupil alignment         : passed            = {result}
+                    pupil alignment         : pass_threshold    = {pass_threshold:8.4f}
+                    pupil alignment         : chassis error     = {measures[chassis_error]:8.4f} mm
+                    pupil alignment         : alpha error       = {measures[alpha_error]:8.4f} mm
+                    pupil alignment         : beta error        = {measures[beta_error]:8.4f} mm
+                    pupil alignment         : total error       = {measures[total_error]:8.4f} mm
+                    pupil alignment         : time/record       = {time:.16}/{record-count}
+                    pupil alignment         : algorithm version = {algorithm_version}
+                    pupil alignment         : git version       = {git-version}"""
                 ).format(**pupil_alignment_result),
                 file=outfile,
             )
             print(
                 fill(
-                    """pupil alignment    : calibration_pars = {calibration_pars!r}""".format(
+                    """pupil alignment         : calibration_pars  = {calibration_pars!r}""".format(
                         **pupil_alignment_result
                     )
                 ),
@@ -1137,7 +1154,7 @@ def print_report_extended(
     else:
         print(
             "Limit test              : alpha min = {result}, "
-            "limit = {val:+7.3f} ({diagnostic}), time/record = {time:.16}/{record-count}".format(
+            "limit = {val:+8.4f} ({diagnostic}), time/record = {time:.16}/{record-count}".format(
                 **alpha_min_result
             ),
             file=outfile,
@@ -1147,7 +1164,7 @@ def print_report_extended(
         print("limit test            :  alpha max n/a", file=outfile)
     else:
         print(
-            "limit test              : alpha max = {result}, limit = {val:+7.3f}"
+            "limit test              : alpha max = {result}, limit = {val:+8.4f}"
             " ({diagnostic}), time/record = {time:.16}/{record-count}".format(
                 **alpha_max_result
             ),
@@ -1158,7 +1175,7 @@ def print_report_extended(
         print("limit test            : beta min n/a", file=outfile)
     else:
         print(
-            "limit test              : beta min  = {result}, limit = {val:+7.3f} "
+            "limit test              : beta min  = {result}, limit = {val:+8.4f} "
             "({diagnostic}), time/record = {time:.16}/{record-count}".format(
                 **beta_min_result
             ),
@@ -1169,7 +1186,7 @@ def print_report_extended(
         print("Limit test            : beta max n/a", file=outfile)
     else:
         print(
-            "limit test              : beta max  = {result}, limit = {val:+7.3f}"
+            "limit test              : beta max  = {result}, limit = {val:+8.4f}"
             " ({diagnostic}), time/record = {time:.16}/{record-count}".format(
                 **beta_max_result
             ),
@@ -1221,9 +1238,9 @@ def print_report_extended(
             print(
                 cleandoc(
                     """
-                metrology calibration   : metcal_fibre_large_target_distance = {metcal_fibre_large_target_distance:7.3f} mm,
-                metrology calibration   : metcal_fibre_small_target_distance = {metcal_fibre_small_target_distance:7.3f} mm,
-                metrology calibration   : metcal_target_vector_angle         = {metcal_target_vector_angle:6.3f} degrees,
+                metrology calibration   : metcal_fibre_large_target_distance = {metcal_fibre_large_target_distance:8.4f} mm,
+                metrology calibration   : metcal_fibre_small_target_distance = {metcal_fibre_small_target_distance:8.4f} mm,
+                metrology calibration   : metcal_target_vector_angle         = {metcal_target_vector_angle:8.4f} degrees,
                 metrology calibration   : time/record={time:.16}/{record-count}, version = {algorithm_version}""".format(
                         **metrology_calibration_result
                     )
@@ -1249,8 +1266,8 @@ def print_report_extended(
             print(
                 cleandoc(
                     """
-                metrology height        : small target = {small_target_height:6.3f} mm,
-                metrology height        : large target = {small_target_height:6.3f} mm,
+                metrology height        : small target = {small_target_height:8.4f} mm,
+                metrology height        : large target = {small_target_height:8.4f} mm,
                 metrology height        : time/record = {time:.16}/{record-count}, version = {algorithm_version}""".format(
                         **metrology_height_result
                     )
@@ -1276,9 +1293,9 @@ def print_report_extended(
                 cleandoc(
                     """
                     positional repeatability: passed        = {result},
-                    positional repeatability: alpha_max     = {posrep_alpha_max:6.2f} mm,
-                    positional repeatability: beta_max      = {posrep_beta_max:6.2f} mm,
-                    positional repeatability: posrep_rss_mm = {posrep_rss_mm:6.2f} mm,
+                    positional repeatability: alpha_max     = {posrep_alpha_max:8.4f} mm,
+                    positional repeatability: beta_max      = {posrep_beta_max:8.4f} mm,
+                    positional repeatability: posrep_rss_mm = {posrep_rss_mm:8.4f} mm,
                     positional repeatability: time/record   = {time:.16}/{record-count}, version = {algorithm_version}"""
                 ).format(**positional_repeatability_result),
                 file=outfile,
@@ -1369,7 +1386,7 @@ def print_report_extended(
                 cleandoc(
                     """
                     positional verification : passed           = {result},
-                    positional verification : posver_error_max = {posver_error_max:6.3f} mm,
+                    positional verification : posver_error_max = {posver_error_max:8.4f} mm,
                     positional verification : time/record      = {time:.16}/{record-count}, version = {algorithm_version}"""
                 ).format(**positional_verification_result),
                 file=outfile,

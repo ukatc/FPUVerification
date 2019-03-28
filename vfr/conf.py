@@ -234,7 +234,7 @@ POS_VER_MEASUREMENT_PARS = Namespace(
 
 
 POS_VER_EVALUATION_PARS = Namespace(
-    POS_VER_PASS=NaN,  # the maximum angular deviation, in
+    POS_VER_PASS=Inf,  # the maximum angular deviation, in
     # degrees, from an average position of
     # a grouping of measured points at a
     # given nominal position which
@@ -327,5 +327,5 @@ MET_HEIGHT_ANALYSIS_PARS = Namespace(
 )
 
 MET_HEIGHT_EVALUATION_PARS = Namespace(
-    MET_HEIGHT_TOLERANCE=NaN  # maximum allowable height of both targets, in millimeter
+    MET_HEIGHT_TOLERANCE=Inf  # maximum allowable height of both targets, in millimeter
 )
