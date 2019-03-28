@@ -13,7 +13,7 @@ from vfr.conf import DEFAULT_TASKS
 from vfr.db.snset import get_snset
 from vfr.helptext import examples, summary
 from vfr.TaskLogic import T
-
+from vfr.task_config import usertasks
 
 
 def parse_args():
@@ -42,6 +42,14 @@ def parse_args():
         default="fpus_batch0.cfg",
         type=str,
         help="set FPU flashing and measurement configuration file",
+    )
+
+    parser.add_argument(
+        "-l",
+        "--list-tasks",
+        default=False,
+        action="store_true",
+        help="list all task names which can be selected directly",
     )
 
     parser.add_argument(
@@ -261,6 +269,10 @@ def parse_args():
     )
 
     args = parser.parse_args()
+
+    if args.list_tasks:
+        print("available tasks in alphabetic order: %r" % sorted(list(usertasks)))
+        sys.exit(0)
 
     if len(args.tasks) == 0:
         args.tasks = DEFAULT_TASKS

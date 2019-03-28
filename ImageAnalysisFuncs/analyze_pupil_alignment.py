@@ -101,7 +101,6 @@ def evaluate_pupil_alignment(dict_of_coordinates, pars=None):
         - array((pars.PUP_ALGN_CALIBRATED_CENTRE_X, pars.PUP_ALGN_CALIBRATED_CENTRE_Y))
     )
 
-    # ask Steve Watson what the following means - it is from his spec
     pupalnChassisErr = atan(xc / INSTRUMENT_FOCAL_LENGTH)
 
     pupalnTotalErr = sum([pupalnChassisErr, pupalnAlphaErr, pupalnBetaErr])

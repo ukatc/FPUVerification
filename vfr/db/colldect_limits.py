@@ -107,10 +107,10 @@ def set_protection_limit(ctx, fpu_id, which_limit, measured_val):
         val_min = val.min()
         val_max = val.max()
         if is_min:
-            if (val_min == default_val) or ctx.opts.update:
+            if (val_min == default_val) or ctx.opts.update_protection_limits:
                 val_min = measured_val + PROTECTION_TOLERANCE
         else:
-            if (val_max == default_val) or ctx.opts.update:
+            if (val_max == default_val) or ctx.opts.opts.update_protection_limits:
                 val_max = measured_val - PROTECTION_TOLERANCE
 
         new_val = Interval(val_min, val_max)

@@ -83,6 +83,7 @@ usertasks = set(
         T.MEASURE_MET_CAL,
         T.MEASURE_MET_HEIGHT,
         T.MEASURE_POS_REP,
+        T.MEASURE_POS_VER,
         T.MEASURE_PUP_ALGN,
         T.TST_FLASH,
         T.TASK_DUMP,

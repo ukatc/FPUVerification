@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function
 from argparse import Namespace
 from inspect import cleandoc
 from textwrap import TextWrapper
-from numpy import array
+from numpy import array, Inf
 import numpy as np
 
 from vfr.db.base import TestResult
@@ -58,6 +58,27 @@ def get_min_quality(list_of_coords):
     q_large = np.min(cord_array[:,5])
     return min(q_small, q_large)
 
+def get_min_quality_pupil(list_of_coords):
+    """compute minimum quality from a set of coordinate / quality triple
+    pairs, as computed by pupAlgnCoordinates()
+
+    """
+
+    cord_array = array(list_of_coords)
+    return np.min(cord_array[:,2])
+
+
+def arg_max_dict(d):
+    maxval = - Inf
+    maxkey = None
+    for k, v in d.items():
+        if v > maxval:
+            maxval = v
+            maxkey = k
+    return k, v
+
+
+
 
 def get_data(ctx, fpu_id):
     serial_number = ctx.fpu_config[fpu_id]["serialnumber"]
@@ -104,11 +125,37 @@ def get_data(ctx, fpu_id):
         outfile=ctx.opts.output_file,
     )
 
-    datumed_coords = data.datum_repeatability_result["coords"]["datumed_coords"]
-    data.datum_repeatability_result["min_quality_datumed"] = get_min_quality(datumed_coords)
+    if data.datum_repeatability_result is not None:
+        datumed_coords = data.datum_repeatability_result["coords"]["datumed_coords"]
+        data.datum_repeatability_result["min_quality_datumed"] = get_min_quality(datumed_coords)
 
-    moved_coords = data.datum_repeatability_result["coords"]["moved_coords"]
-    data.datum_repeatability_result["min_quality_moved"] = get_min_quality(moved_coords)
+        moved_coords = data.datum_repeatability_result["coords"]["moved_coords"]
+        data.datum_repeatability_result["min_quality_moved"] = get_min_quality(moved_coords)
+
+    if data.positional_repeatability_result is not None:
+        alpha_coords = list(data.positional_repeatability_result["analysis_results_alpha"].values())
+        data.positional_repeatability_result["min_quality_alpha"] = get_min_quality(alpha_coords)
+
+        beta_coords = list(data.positional_repeatability_result["analysis_results_beta"].values())
+        data.positional_repeatability_result["min_quality_beta"] = get_min_quality(beta_coords)
+
+        alpha_max_at_angle = data.positional_repeatability_result["posrep_alpha_max_at_angle"]
+        beta_max_at_angle = data.positional_repeatability_result["posrep_beta_max_at_angle"]
+        data.positional_repeatability_result["arg_max_alpha_error"], _ = arg_max_dict(alpha_max_at_angle)
+        data.positional_repeatability_result["arg_max_beta_error"], _ = arg_max_dict(beta_max_at_angle)
+
+
+    if data.positional_verification_result is not None:
+        coords = list(data.positional_repeatability_result["analysis_results"].values())
+        data.positional_verification_result["min_quality"] = get_min_quality(coords)
+
+        posver_error = data.positional_verification_result["posver_error"]
+        data.positional_verification_result["arg_max_error"] = arg_max_dict(posver_error)
+
+    if data.pupil_alignment_result is not None:
+        coords = data.pupil_alignment_result["coords"].values()
+        data.pupil_alignment_result["min_quality"] = get_min_quality_pupil(coords)
+
     return data
 
 
@@ -784,6 +831,9 @@ def print_report_short(
                 metrology calibration   : metcal_fibre_large_target_distance = {metcal_fibre_large_target_distance:7.3f} mm,
                 metrology calibration   : metcal_fibre_small_target_distance = {metcal_fibre_small_target_distance:7.3f} mm,
                 metrology calibration   : metcal_target_vector_angle         = {metcal_target_vector_angle:6.3f} degrees,
+                metrology calibration   : quality small target               = {coords[target_small_q]:5.3f},
+                metrology calibration   : quality big target                 = {coords[target_big_q]:5.3f},
+                metrology calibration   : quality fibre                      = {coords[fibre_q]:5.3f},
                 metrology calibration   : time/record={time:.16}/{record-count}, version = {algorithm_version}""".format(
                         **metrology_calibration_result
                     )
@@ -839,6 +889,10 @@ def print_report_short(
                     positional repeatability: alpha_max     = {posrep_alpha_max:6.2f} mm,
                     positional repeatability: beta_max      = {posrep_beta_max:6.2f} mm,
                     positional repeatability: posrep_rss_mm = {posrep_rss_mm:6.2f} mm,
+                    positional repeatability: arg_max_alpha = {arg_max_alpha_error:6.2f},
+                    positional repeatability: arg_max_beta  = {arg_max_beta_error:6.2f},
+                    positional repeatability: alpha quality = {min_quality_alpha:5.3},
+                    positional repeatability: beta quality  = {min_quality_beta:5.3},
                     positional repeatability: time/record   = {time:.16}/{record-count}, version = {algorithm_version}"""
                 ).format(**positional_repeatability_result),
                 file=outfile,
@@ -930,6 +984,8 @@ def print_report_short(
                     """
                     positional verification : passed           = {result},
                     positional verification : posver_error_max = {posver_error_max:6.3f} mm,
+                    positional verification : arg_max_error    = {arg_max_error},
+                    positional verification : alpha quality    = {min_quality:5.3},
                     positional verification : time/record      = {time:.16}/{record-count}, version = {algorithm_version}"""
                 ).format(**positional_verification_result),
                 file=outfile,

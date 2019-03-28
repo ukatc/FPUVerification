@@ -239,6 +239,7 @@ def eval_positional_repeatability(ctx, pos_rep_analysis_pars, pos_rep_evaluation
             for k, v in images_alpha.items():
                 alpha_steps, beta_steps, ipath = v
                 analysis_results_alpha[k] = analysis_func(ipath)
+
                 (
                     x_measured_small,
                     y_measured_small,
