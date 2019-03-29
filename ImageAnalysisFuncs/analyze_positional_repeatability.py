@@ -275,16 +275,20 @@ def evaluate_datum_repeatability(datumed_coords, moved_coords, pars=None):
     moved_errors_small = map(norm, xy_moved[:, :2] - moved_mean[:2])
     moved_errors_big = map(norm, xy_moved[:, 2:] - moved_mean[2:])
 
-    datrep_dat_only_max = max(hstack([datumed_errors_big, datumed_errors_small]))
-    datrep_dat_only_std = std(hstack([datumed_errors_big, datumed_errors_small]))
-    datrep_move_dat_max = max(hstack([moved_errors_big, moved_errors_small]))
-    datrep_move_dat_std = std(hstack([moved_errors_big, moved_errors_small]))
+    datumed_errors = hstack([datumed_errors_big, datumed_errors_small])
+    moved_errors = hstack([moved_errors_big, moved_errors_small])
+    datrep_dat_only_max = max(datumed_errors)
+    datrep_dat_only_std = std(datumed_errors)
+    datrep_move_dat_max = max(moved_errors)
+    datrep_move_dat_std = std(moved_errors)
 
     return (
         datrep_dat_only_max,
         datrep_dat_only_std,
         datrep_move_dat_max,
         datrep_move_dat_std,
+        datumed_errors,
+        moved_errors,
     )
 
 

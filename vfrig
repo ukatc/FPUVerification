@@ -63,10 +63,6 @@ if __name__ == "__main__":
 
     fpu_config, measure_fpuset, eval_fpuset = load_config(env, vfdb, opts.setup_file, opts=opts)
 
-    print ("measurement config= %r" % fpu_config)
-
-    print ("fpu_ids = %r" % measure_fpuset)
-
 
     # change current directory to image root folder, so that
     # we can use relative image paths in both measurement
@@ -103,6 +99,41 @@ if __name__ == "__main__":
     # resolve high-level tasks and dependent checks and measurements into
     # low-level actions
     tasks = resolve(opts.tasks, context)
+
+    if not context.measure_fpuset:
+        # no measurements, we remove all related tasks
+        print("No FPUs in measurement set, removing all measurement tasks")
+        tasks -= set([
+            T.TST_GATEWAY_CONNECTION,
+            T.TST_POS_REP_CAM_CONNECTION,
+            T.TST_POS_REP_CAM_CONNECTION,
+            T.TST_MET_CAL_CAM_CONNECTION,
+            T.TST_MET_HEIGHT_CAM_CONNECTION,
+            T.TST_PUP_ALGN_CAM_CONNECTION,
+            T.TASK_INIT_RD,
+            T.TST_CAN_CONNECTION,
+            T.TST_FLASH,
+            T.TST_INITPOS,
+            T.TASK_INIT_GD,
+            T.TST_DATUM_ALPHA,
+            T.TST_DATUM_BETA,
+            T.TST_DATUM_BOTH,
+            T.TASK_REFERENCE,
+            T.TASK_SELFTEST_NONFIBRE,
+            T.TASK_SELFTEST_FIBRE,
+            T.TST_COLLDETECT,
+            T.TST_ALPHA_MIN,
+            T.TST_ALPHA_MAX,
+            T.TST_BETA_MAX,
+            T.TST_BETA_MIN,
+            T.MEASURE_MET_CAL,
+            T.MEASURE_MET_HEIGHT,
+            T.MEASURE_DATUM_REP,
+            T.MEASURE_PUP_ALGN,
+            T.MEASURE_POS_REP,
+            T.MEASURE_POS_VER,
+            T.TASK_PARK_FPUS,
+        ])
 
     if T.TST_GATEWAY_CONNECTION in tasks:
         print ("[%s] ###" % T.TST_GATEWAY_CONNECTION)
@@ -144,14 +175,11 @@ if __name__ == "__main__":
                 opts, "pupil alignment camera", PUP_ALGN_CAMERA_IP_ADDRESS
             )
 
-    if T.TASK_INIT_RD:
+    if T.TASK_INIT_RD in tasks:
 
         print ("[initialize unprotected FPU driver] ###")
 
-        if measure_fpuset :
-            rd, grid_state = init_driver(opts, max(measure_fpuset), protected=False)
-        else:
-            rd, grid_state = None, None
+        rd, grid_state = init_driver(opts, max(measure_fpuset), protected=False)
 
         context.grid_state = grid_state
 
@@ -201,17 +229,14 @@ if __name__ == "__main__":
 
     # switch to protected driver instance, if needed
 
-    if T.TASK_INIT_GD:
+    if T.TASK_INIT_GD in tasks:
 
         if locals().has_key("rd"):
             del rd  # delete raw (unprotected) driver instance
 
         print ("[initialize protected driver] ###")
-        if measure_fpuset :
-            gd, grid_state = init_driver(opts, max(measure_fpuset), env=env, protected=True)
-            gd.readSerialNumbers(grid_state)
-        else:
-            gd, grid_state = None, None
+        gd, grid_state = init_driver(opts, max(measure_fpuset), env=env, protected=True)
+        gd.readSerialNumbers(grid_state)
 
         context.gd = gd
         context.grid_state = grid_state
@@ -412,6 +437,11 @@ if __name__ == "__main__":
             context,
             pars=POS_VER_MEASUREMENT_PARS
         )
+
+    if T.TASK_PARK_FPUS in tasks:
+        print ("[%s] ###" % T.TASK_PARK_FPUS)
+        # move all fpus back to datum
+        find_datum(gd, grid_state, opts=opts, uninitialized=True)
 
     if T.EVAL_POS_VER in tasks:
         print ("[%s] ###" % T.EVAL_POS_VER)

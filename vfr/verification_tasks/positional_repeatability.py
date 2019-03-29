@@ -280,8 +280,8 @@ def eval_positional_repeatability(ctx, pos_rep_analysis_pars, pos_rep_evaluation
                 (
                     posrep_alpha_max_at_angle,
                     posrep_beta_max_at_angle,
-                    posrep_alpha_max,
-                    posrep_beta_max,
+                    posrep_alpha_max_mm,
+                    posrep_beta_max_mm,
                     posrep_rss_mm,
                 ) = evaluate_positional_repeatability(
                     analysis_results_alpha_short,
@@ -304,16 +304,16 @@ def eval_positional_repeatability(ctx, pos_rep_analysis_pars, pos_rep_evaluation
             errmsg = str(e)
             posrep_alpha_max_at_angle = (NaN,)
             posrep_beta_max_at_angle = (NaN,)
-            posrep_alpha_max = (NaN,)
-            posrep_beta_max = (NaN,)
+            posrep_alpha_max_mm = (NaN,)
+            posrep_beta_max_mm = (NaN,)
             posrep_rss_mm = (NaN,)
             positional_repeatability_has_passed = TestResult.NA
             analysis_results_alpha=None
             analysis_results_beta=None
             posrep_alpha_max_at_angle=[]
             posrep_beta_max_at_angle=[]
-            posrep_alpha_max=NaN
-            posrep_beta_max=NaN
+            posrep_alpha_max_mm=NaN
+            posrep_beta_max_mm=NaN
             posrep_rss_mm=NaN
             gearbox_correction=None
 
@@ -325,12 +325,12 @@ def eval_positional_repeatability(ctx, pos_rep_analysis_pars, pos_rep_evaluation
             analysis_results_beta=analysis_results_beta,
             posrep_alpha_max_at_angle=posrep_alpha_max_at_angle,
             posrep_beta_max_at_angle=posrep_beta_max_at_angle,
-            posrep_alpha_max=posrep_alpha_max,
-            posrep_beta_max=posrep_beta_max,
+            posrep_alpha_max_mm=posrep_alpha_max_mm,
+            posrep_beta_max_mm=posrep_beta_max_mm,
             posrep_rss_mm=posrep_rss_mm,
             positional_repeatability_has_passed=positional_repeatability_has_passed,
-            pass_threshold=pos_rep_evaluation_pars.POS_REP_PASS,
+            pass_threshold_mm=pos_rep_evaluation_pars.POS_REP_PASS,
             gearbox_correction=gearbox_correction,
             errmsg=errmsg,
-            analysis_version=POSITIONAL_REPEATABILITY_ALGORITHM_VERSION,
+            algorithm_version=POSITIONAL_REPEATABILITY_ALGORITHM_VERSION,
         )

@@ -36,7 +36,7 @@ def save_positional_verification_images(
                 "images": image_dict,
                 "gearbox_correction": gearbox_correction,
                 "gearbox_algorithm_version": gearbox_algorithm_version,
-                "gearbox_git-version": gearbox_git_version,
+                "gearbox_git_version": gearbox_git_version,
                 "gearbox_record_count": gearbox_record_count,
                 "time": timestamp(),
             }
@@ -63,10 +63,10 @@ def save_positional_verification_result(
     pos_ver_calibration_pars=None,
     analysis_results=None,
     posver_error=[],
-    posver_error_max=None,
-    pass_threshold=NaN,
+    posver_error_max_mm=None,
+    pass_threshold_mm=NaN,
     errmsg="",
-    analysis_version=None,
+    algorithm_version=None,
     positional_verification_has_passed=None,
 ):
 
@@ -83,13 +83,13 @@ def save_positional_verification_result(
                 "calibration_pars": pos_ver_calibration_pars,
                 "analysis_results": analysis_results,
                 "posver_error": posver_error,
-                "posver_error_max": posver_error_max,
+                "posver_error_max_mm": posver_error_max_mm,
                 "result": positional_verification_has_passed,
-                "pass_threshold": pass_threshold,
+                "pass_threshold_mm": pass_threshold_mm,
                 "error_message": errmsg,
-                "algorithm_version": analysis_version,
-                "git-version": GIT_VERSION,
-                "algorithm_version": analysis_version,
+                "algorithm_version": algorithm_version,
+                "git_version": GIT_VERSION,
+                "algorithm_version": algorithm_version,
                 "time": timestamp(),
             }
         )

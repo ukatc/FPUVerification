@@ -161,6 +161,8 @@ def eval_datum_repeatability(ctx, dat_rep_analysis_pars):
                 datrep_dat_only_std,
                 datrep_move_dat_max,
                 datrep_move_dat_std,
+                datumed_errors,
+                moved_errors,
             ) = evaluate_datum_repeatability(datumed_coords, moved_coords)
 
             datum_repeatability_has_passed = (
@@ -183,9 +185,12 @@ def eval_datum_repeatability(ctx, dat_rep_analysis_pars):
             datrep_dat_only_max = (
                 datrep_dat_only_std
             ) = datrep_move_dat_max = datrep_move_dat_std = NaN
+
             datum_repeatability_has_passed = TestResult.NA
-            max_residual_datumed=NaN,
-            max_residual_moved=NaN,
+            max_residual_datumed=NaN
+            max_residual_moved=NaN
+            datumed_errors=None
+            moved_errors = None
 
 
             if dat_rep_analysis_pars.FIXME_FAKE_RESULT:
@@ -203,10 +208,12 @@ def eval_datum_repeatability(ctx, dat_rep_analysis_pars):
             datum_repeatability_only_std_mm=datrep_dat_only_std,
             datum_repeatability_move_max_mm=datrep_move_dat_max,
             datum_repeatability_move_std_mm=datrep_move_dat_std,
+            datumed_errors=datumed_errors,
+            moved_errors=moved_errors,
             max_residual_datumed=max_residual_datumed,
             max_residual_moved=max_residual_moved,
             datum_repeatability_has_passed=datum_repeatability_has_passed,
-            pass_threshold=dat_rep_analysis_pars.DATUM_REP_PASS,
+            pass_threshold_mm=dat_rep_analysis_pars.DATUM_REP_PASS,
             errmsg=errmsg,
-            analysis_version=DATUM_REPEATABILITY_ALGORITHM_VERSION,
+            algorithm_version=DATUM_REPEATABILITY_ALGORITHM_VERSION,
         )

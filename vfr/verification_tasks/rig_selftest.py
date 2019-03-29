@@ -193,7 +193,7 @@ def selftest_metrology_height(
                 met_height_cam, "metrology-height"
             )
 
-        metht_small_target_height, metht_large_target_height = methtHeight(
+        metht_small_target_height_mm, metht_large_target_height_mm = methtHeight(
             ipath_selftest_met_height, pars=MET_HEIGHT_ANALYSIS_PARS
         )
 

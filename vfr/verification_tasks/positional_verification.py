@@ -197,7 +197,7 @@ def measure_positional_verification(ctx, pars=None):
             gearbox_correction = pr_result["gearbox_correction"]
             fpu_coeffs = gearbox_correction["coeffs"]
             gearbox_algorithm_version = pr_result["algorithm_version"]
-            gearbox_git_version = pr_result["git-version"]
+            gearbox_git_version = pr_result["git_version"]
             gearbox_record_count = pr_result["record-count"]
 
             # move rotary stage to POS_VER_POSN_N
@@ -331,12 +331,12 @@ def eval_positional_verification(ctx, pos_ver_analysis_pars, pos_ver_evaluation_
                     y_measured_big,
                 )
 
-                (posver_error, posver_error_max) = evaluate_positional_verification(
+                (posver_error, posver_error_max_mm) = evaluate_positional_verification(
                     analysis_results_short, pars=pos_ver_evaluation_pars
                 )
 
             positional_verification_has_passed = TestResult.OK if (
-                posver_error_max <= pos_ver_evaluation_pars.POS_VER_PASS
+                posver_error_max_mm <= pos_ver_evaluation_pars.POS_VER_PASS
             ) else TestResult.FAILED
 
             errmsg = ""
@@ -345,7 +345,7 @@ def eval_positional_verification(ctx, pos_ver_analysis_pars, pos_ver_evaluation_
             analysis_results = None
             errmsg = str(e)
             posver_error = ([],)
-            posver_error_max = (NaN,)
+            posver_error_max_mm = (NaN,)
             positional_verification_has_passed = TestResult.NA
 
         save_positional_verification_result(
@@ -354,9 +354,9 @@ def eval_positional_verification(ctx, pos_ver_analysis_pars, pos_ver_evaluation_
             pos_ver_calibration_pars=pos_ver_analysis_pars.POS_REP_CALIBRATION_PARS,
             analysis_results=analysis_results,
             posver_error=posver_error,
-            posver_error_max=posver_error_max,
+            posver_error_max_mm=posver_error_max_mm,
             errmsg=errmsg,
-            analysis_version=POSITIONAL_REPEATABILITY_ALGORITHM_VERSION,
+            algorithm_version=POSITIONAL_REPEATABILITY_ALGORITHM_VERSION,
             positional_verification_has_passed=positional_verification_has_passed,
-            pass_threshold=pos_ver_evaluation_pars.POS_VER_PASS,
+            pass_threshold_mm=pos_ver_evaluation_pars.POS_VER_PASS,
         )

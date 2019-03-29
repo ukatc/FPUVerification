@@ -43,11 +43,11 @@ def save_metrology_calibration_result(
     ctx,
     fpu_id,
     coords=None,
-    metcal_fibre_large_target_distance=NaN,
-    metcal_fibre_small_target_distance=NaN,
-    metcal_target_vector_angle=NaN,
+    metcal_fibre_large_target_distance_mm=NaN,
+    metcal_fibre_small_target_distance_mm=NaN,
+    metcal_target_vector_angle_deg=NaN,
     errmsg="",
-    analysis_version=None,
+    algorithm_version=None,
 ):
 
     # define two closures - one for the unique key, another for the stored value
@@ -61,11 +61,11 @@ def save_metrology_calibration_result(
         val = repr(
             {
                 "coords": coords,
-                "metcal_fibre_large_target_distance": metcal_fibre_large_target_distance,
-                "metcal_fibre_small_target_distance": metcal_fibre_small_target_distance,
-                "metcal_target_vector_angle": metcal_target_vector_angle,
+                "metcal_fibre_large_target_distance_mm": metcal_fibre_large_target_distance_mm,
+                "metcal_fibre_small_target_distance_mm": metcal_fibre_small_target_distance_mm,
+                "metcal_target_vector_angle_deg": metcal_target_vector_angle_deg,
                 "error_message": errmsg,
-                "algorithm_version": analysis_version,
+                "algorithm_version": algorithm_version,
                 "git_version": GIT_VERSION,
                 "time": timestamp(),
             }

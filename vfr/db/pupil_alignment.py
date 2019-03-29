@@ -46,9 +46,9 @@ def save_pupil_alignment_result(
     coords=None,
     pupil_alignment_has_passed=None,
     pupil_alignment_measures=None,
-    pass_threshold=NaN,
+    pass_threshold_mm=NaN,
     errmsg="",
-    analysis_version=None,
+    algorithm_version=None,
 ):
 
     # define two closures - one for the unique key, another for the stored value
@@ -65,10 +65,10 @@ def save_pupil_alignment_result(
                 "coords": coords,
                 "measures": pupil_alignment_measures,
                 "result": pupil_alignment_has_passed,
-                "pass_threshold": pass_threshold,
+                "pass_threshold_mm": pass_threshold_mm,
                 "error_message": errmsg,
-                "algorithm_version": analysis_version,
-                "git-version": GIT_VERSION,
+                "algorithm_version": algorithm_version,
+                "git_version": GIT_VERSION,
                 "time": timestamp(),
             }
         )

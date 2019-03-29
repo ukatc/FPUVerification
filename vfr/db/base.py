@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function
 import ast
 import subprocess
 
-from numpy import Inf, NaN, inf, nan # these values are used!!
+from numpy import array, Inf, NaN, inf, nan # these values are used!!
 assert Inf or NaN or inf or nan or True
 
 from vfr.tests_common import timestamp

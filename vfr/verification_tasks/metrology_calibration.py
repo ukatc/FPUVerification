@@ -131,7 +131,7 @@ def eval_metrology_calibration(
                 "fibre_q": fibre_coordinates[2],
             }
 
-            metcal_fibre_large_target_distance, metcal_fibre_small_target_distance, metcal_target_vector_angle = fibre_target_distance(
+            metcal_fibre_large_target_distance_mm, metcal_fibre_small_target_distance_mm, metcal_target_vector_angle_deg = fibre_target_distance(
                 target_coordinates[0:2], target_coordinates[3:5], fibre_coordinates[0:2]
             )
 
@@ -140,17 +140,17 @@ def eval_metrology_calibration(
         except ImageAnalysisError as e:
             errmsg = str(e)
             coords = {}
-            metcal_fibre_large_target_distance = NaN
-            metcal_fibre_small_target_distance = NaN
-            metcal_target_vector_angle = NaN
+            metcal_fibre_large_target_distance_mm = NaN
+            metcal_fibre_small_target_distance_mm = NaN
+            metcal_target_vector_angle_deg = NaN
 
         save_metrology_calibration_result(
             ctx,
             fpu_id,
             coords=coords,
-            metcal_fibre_large_target_distance=metcal_fibre_large_target_distance,
-            metcal_fibre_small_target_distance=metcal_fibre_small_target_distance,
-            metcal_target_vector_angle=metcal_target_vector_angle,
+            metcal_fibre_large_target_distance_mm=metcal_fibre_large_target_distance_mm,
+            metcal_fibre_small_target_distance_mm=metcal_fibre_small_target_distance_mm,
+            metcal_target_vector_angle_deg=metcal_target_vector_angle_deg,
             errmsg=errmsg,
-            analysis_version=METROLOGY_ANALYSIS_ALGORITHM_VERSION,
+            algorithm_version=METROLOGY_ANALYSIS_ALGORITHM_VERSION,
         )

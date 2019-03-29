@@ -41,11 +41,11 @@ def get_metrology_height_images(ctx, fpu_id, count=None):
 def save_metrology_height_result(
     ctx,
     fpu_id,
-    metht_small_target_height=None,
-    metht_large_target_height=None,
+    metht_small_target_height_mm=None,
+    metht_large_target_height_mm=None,
     test_result=None,
     errmsg="",
-    analysis_version=None,
+    algorithm_version=None,
 ):
 
     # define two closures - one for the unique key, another for the stored value
@@ -58,11 +58,11 @@ def save_metrology_height_result(
 
         val = repr(
             {
-                "small_target_height": metht_small_target_height,
-                "large_target_height": metht_large_target_height,
+                "small_target_height_mm": metht_small_target_height_mm,
+                "large_target_height_mm": metht_large_target_height_mm,
                 "test_result": test_result,
                 "error_message": errmsg,
-                "algorithm_version": analysis_version,
+                "algorithm_version": algorithm_version,
                 "git_version": GIT_VERSION,
                 "time": timestamp(),
             }

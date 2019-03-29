@@ -196,7 +196,7 @@ def eval_pupil_alignment(
             coords=coords,
             pupil_alignment_measures=pupil_alignment_measures,
             pupil_alignment_has_passed=pupil_alignment_has_passed,
-            pass_threshold=PUP_ALGN_EVALUATION_PARS.PUP_ALGN_PASS,
+            pass_threshold_mm=PUP_ALGN_EVALUATION_PARS.PUP_ALGN_PASS,
             errmsg=errmsg,
-            analysis_version=PUPIL_ALIGNMENT_ALGORITHM_VERSION,
+            algorithm_version=PUPIL_ALIGNMENT_ALGORITHM_VERSION,
         )

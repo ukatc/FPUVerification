@@ -92,13 +92,13 @@ def eval_metrology_height(ctx, met_height_analysis_pars, met_height_evaluation_p
 
         try:
 
-            metht_small_target_height, metht_large_target_height = methtHeight(
+            metht_small_target_height_mm, metht_large_target_height_mm = methtHeight(
                 images, pars=met_height_analysis_pars
             )
 
             result_in_spec = eval_met_height_inspec(
-                metht_small_target_height,
-                metht_large_target_height,
+                metht_small_target_height_mm,
+                metht_large_target_height_mm,
                 pars=met_height_evaluation_pars,
             )
 
@@ -108,16 +108,16 @@ def eval_metrology_height(ctx, met_height_analysis_pars, met_height_evaluation_p
 
         except ImageAnalysisError as e:
             errmsg = str(e)
-            metht_small_target_height = NaN
-            metht_large_target_height = NaN
+            metht_small_target_height_mm = NaN
+            metht_large_target_height_mm = NaN
             test_result = TestResult.NA
 
         save_metrology_height_result(
             ctx,
             fpu_id,
-            metht_small_target_height=metht_small_target_height,
-            metht_large_target_height=metht_large_target_height,
+            metht_small_target_height_mm=metht_small_target_height_mm,
+            metht_large_target_height_mm=metht_large_target_height_mm,
             test_result=test_result,
             errmsg=errmsg,
-            analysis_version=METROLOGY_HEIGHT_ANALYSIS_ALGORITHM_VERSION,
+            algorithm_version=METROLOGY_HEIGHT_ANALYSIS_ALGORITHM_VERSION,
         )

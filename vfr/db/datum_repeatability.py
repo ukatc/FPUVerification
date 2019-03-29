@@ -53,11 +53,13 @@ def save_datum_repeatability_result(
     datum_repeatability_move_max_mm=None,
     datum_repeatability_move_std_mm=None,
     datum_repeatability_has_passed=None,
+    datumed_errors=None,
+    moved_errors=None,
     max_residual_datumed=NaN,
     max_residual_moved=NaN,
-    pass_threshold=NaN,
+    pass_threshold_mm=NaN,
     errmsg="",
-    analysis_version=None,
+    algorithm_version=None,
 ):
 
     # define two closures - one for the unique key, another for the stored value
@@ -77,11 +79,13 @@ def save_datum_repeatability_result(
                 "datum_repeatability_move_std_mm": datum_repeatability_move_std_mm,
                 "datum_repeatability_max_residual_datumed" : max_residual_datumed,
                 "datum_repeatability_max_residual_moved" : max_residual_moved,
+                "datumed_errors" : datumed_errors,
+                "moved_errors" : moved_errors,
                 "result": datum_repeatability_has_passed,
-                "pass_threshold": pass_threshold,
+                "pass_threshold_mm": pass_threshold_mm,
                 "error_message": errmsg,
-                "git-version": GIT_VERSION,
-                "algorithm_version": analysis_version,
+                "git_version": GIT_VERSION,
+                "algorithm_version": algorithm_version,
                 "time": timestamp(),
             }
         )
