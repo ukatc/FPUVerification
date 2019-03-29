@@ -372,7 +372,8 @@ class Controller(object):
         )
 
         homeparamsmsg = Message(message.MGMSG_MOT_SET_HOMEPARAMS, data=newparams)
-        msgbytes = st.unpack("<BBBBBBBBBBBBBB", newparams)
+        # check data with
+        # msgbytes = st.unpack("<BBBBBBBBBBBBBB", newparams)
         self._send_message(homeparamsmsg, verbose=False)
 
         if wait:
@@ -498,7 +499,7 @@ class Controller(object):
         newpos_mm = curpos + dist_mm
 
         if self.soft_limits and not self._position_in_range(newpos_mm):
-            raise OutOfRangeError(abs_pos_mm, self.linear_range)
+            raise OutOfRangeError(newpos_mm, self.linear_range)
 
         dist_apt = int(dist_mm * self.position_scale)
 

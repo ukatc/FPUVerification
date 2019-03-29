@@ -9,6 +9,8 @@ from vfr.conf import NR360_SERIALNUMBER, MTS50_SERIALNUMBER
 """this module simply bundles all real hardware access functions
 so that they can be easily swapped out by mock-up functions."""
 
+assert GigECamera
+assert lampController
 
 def safe_home_turntable(gd, grid_state, opts=None):
     find_datum(gd, grid_state, opts=opts)

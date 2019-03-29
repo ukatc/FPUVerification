@@ -8,6 +8,7 @@ from vfr.task_config import (
     usertasks,
 )
 
+assert T
 
 def set_empty(set1):
     return len(set1) == 0

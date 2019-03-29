@@ -10,11 +10,11 @@ from fpu_constants import (
 from interval import Interval
 from protectiondb import ProtectionDB
 from vfr.conf import PROTECTION_TOLERANCE
+from vfr.tests_common import timestamp
 from vfr.db.base import (
     TestResult,
     get_test_result,
     save_test_result,
-    timestamp,
 )
 
 

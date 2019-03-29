@@ -1,12 +1,12 @@
 from __future__ import absolute_import, division, print_function
 
 from numpy import NaN
+from vfr.tests_common import timestamp
 from vfr.db.base import (
     GIT_VERSION,
     TestResult,
     get_test_result,
     save_test_result,
-    timestamp,
 )
 
 RECORD_TYPE = "positional-verification"

@@ -25,7 +25,6 @@ Pylon software - PyPylon is just python bindings to the C++ pylon software, the 
 """
 from __future__ import division, print_function
 
-import sys
 
 import numpy as np
 

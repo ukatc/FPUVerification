@@ -6,7 +6,6 @@ from fpu_constants import (
     StepsPerDegreeAlpha,
     StepsPerDegreeBeta,
 )
-from numpy import nan
 
 # exceptions which are raised if image analysis functions fail
 

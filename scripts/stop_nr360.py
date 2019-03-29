@@ -6,8 +6,6 @@ This program homes all APT controllers found, or of the one specified
 """
 from __future__ import absolute_import, print_function
 
-import time
-
 import pyAPT
 from runner import runner_serial
 

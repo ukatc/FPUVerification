@@ -4,9 +4,7 @@ import ast
 import subprocess
 
 from numpy import array, Inf, NaN, inf, nan # these values are used!!
-assert Inf or NaN or inf or nan or True
-
-from vfr.tests_common import timestamp
+assert Inf or NaN or inf or nan or array or True
 
 GIT_VERSION = subprocess.check_output(["git", "describe"]).strip()
 

@@ -11,8 +11,8 @@ from numpy import NaN
 from vfr import hw as real_hw
 from vfr import hwsimulation
 from vfr.conf import MET_HEIGHT_CAMERA_IP_ADDRESS
+from vfr.db.base import TestResult
 from vfr.db.metrology_height import (
-    TestResult,
     get_metrology_height_images,
     save_metrology_height_images,
     save_metrology_height_result,

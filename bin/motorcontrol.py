@@ -10,7 +10,7 @@ from os import environ, path
 
 # import pylibftdi
 import pyAPT
-from pyAPT.controller import Controller  # the generic diver class
+#from pyAPT.controller import Controller  # the generic diver class
 from pyAPT.cr1z7 import CR1Z7
 from pyAPT.lts300 import LTS300
 from pyAPT.mts50 import MTS50
@@ -182,7 +182,7 @@ def get_devicetypes():
         rcpath = path.join(homedir, ".thorlabs_motorcontrolrc")
         cfg = "".join(open(rcpath).readlines())
         typedict = literal_eval(cfg)
-    except IOError, e:
+    except IOError:
         print(
             "warning: configuration file %r not found,  using default device type configuration"
             % rcpath
@@ -247,7 +247,7 @@ def exec_moverel(driver, serialnum, dist):
             print("moved")
             print("\tNew position: %.3f %s" % (con.position(), con.unit))
             return 0
-    except FtdiError as ex:
+    except FtdiError:
         print("\tCould not find APT controller S/N of", serialnum)
         return 1
 
@@ -320,8 +320,8 @@ def exec_moveabs(driver, serialnum, newposition, wait=True, monitor=False):
                 print("\tStatus:", con.status())
             return 0
 
-    except FtdiError as ex:
-        print("\tCould not find APT controller S/N of", serial)
+    except FtdiError:
+        print("\tCould not find APT controller S/N of", serialnum)
         return 1
 
 

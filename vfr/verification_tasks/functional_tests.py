@@ -33,6 +33,8 @@ from vfr.tests_common import (
 )
 from vfr.turntable import go_collision_test_pos
 
+# calm down pyflakes static checker
+assert DASEL_ALPHA or DASEL_BETA or True
 
 class DatumFailure(Exception):
     pass

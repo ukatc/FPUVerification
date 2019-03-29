@@ -7,7 +7,6 @@ position.
 """
 from __future__ import absolute_import, print_function
 
-import sys
 import time
 
 import pyAPT
@@ -46,7 +45,7 @@ def main(args):
             print("\tNew position: %.2fmm" % (con.position()))
             print("\tStatus:", con.status())
             return 0
-    except pylibftdi.FtdiError as ex:
+    except pylibftdi.FtdiError:
         print("\tCould not find APT controller S/N of", serial)
         return 1
 

@@ -7,8 +7,6 @@ distance in mm
 """
 from __future__ import absolute_import, print_function
 
-import time
-
 import pyAPT
 import pylibftdi
 
@@ -28,7 +26,7 @@ def main(args):
             print("OK")
             print("\tNew position: %.2f %s" % (con.position(), con.unit))
             return 0
-    except pylibftdi.FtdiError as ex:
+    except pylibftdi.FtdiError:
         print("\tCould not find APT controller S/N of", serial)
         return 1
 

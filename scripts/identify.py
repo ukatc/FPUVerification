@@ -7,8 +7,6 @@ Finds all APT controllers and flashes their activity lights
 from __future__ import absolute_import, print_function
 
 import sys
-import time
-
 import pyAPT
 from runner import runner_serial
 
