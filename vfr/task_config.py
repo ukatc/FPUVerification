@@ -56,7 +56,7 @@ class T:
     TST_FLASH = "flash"
     TST_FUNCTIONAL = "test_functional"
     TST_GATEWAY_CONNECTION = "test_gateway_conn"
-    TST_INIT = "initialize_fpu"
+    TST_INIT = "initiate"
     TST_INITPOS = "setpos"
     TST_LIMITS = "test_limits"
     TST_MET_CAL = "test_met_cal"
