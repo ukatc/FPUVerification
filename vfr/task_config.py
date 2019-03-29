@@ -230,6 +230,7 @@ task_dependencies = [
             T.TST_MET_HEIGHT_CAM_CONNECTION,
             T.TST_PUP_ALGN_CAM_CONNECTION,
             T.TST_DATUM,
+            T.TST_LIMITS,
             T.MEASURE_DATUM_REP,
             T.TST_MET_CAL,
             T.MEASURE_MET_CAL,
