@@ -76,7 +76,7 @@ def arg_max_dict(d):
         if v > maxval:
             maxval = v
             maxkey = k
-    return k, v
+    return maxkey, maxval
 
 
 
@@ -235,15 +235,18 @@ def get_rlist(
         positional_verification = positional_verification_result["result"]
 
     if skip_fibre:
-        rlist = [(beta_collision, "beta_collision",),
-                 (alpha_min, "alpha min",),
-                 (beta_min, "beta min",),
-                 (alpha_max, "alpha max",),
-                 (beta_max, "beta max",),
-                 (datum_repeatability, "datum repeatability",),
-                 (metrology_height, "metrology height",),
-                 (positional_repeatability, "positional_repeatability",),
-                 (positional_verification, "positional verification",),
+        rlist = [
+            (datum_alpha, "datum_alpha",),
+            (datum_beta, "datum_beta",),
+            (beta_collision, "beta_collision",),
+            (alpha_min, "alpha min",),
+            (beta_min, "beta min",),
+            (alpha_max, "alpha max",),
+            (beta_max, "beta max",),
+            (datum_repeatability, "datum repeatability",),
+            (metrology_height, "metrology height",),
+            (positional_repeatability, "positional_repeatability",),
+            (positional_verification, "positional verification",),
         ]
 
     else:
@@ -257,17 +260,20 @@ def get_rlist(
         else:
             pupil_alignment = pupil_alignment_result["result"]
 
-        rlist = [(beta_collision, "beta_collision",),
-                 (alpha_min, "alpha min",),
-                 (beta_min, "beta min",),
-                 (alpha_max, "alpha max",),
-                 (beta_max, "beta max",),
-                 (datum_repeatability, "datum repeatability",),
-                 (metrology_height, "metrology height",),
-                 (metrology_calibration, "metrology calibration",),
-                 (pupil_alignment, "pupil alignment",),
-                 (positional_repeatability, "positional_repeatability",),
-                 (positional_verification, "positional verification",),
+        rlist = [
+            (datum_alpha, "datum_alpha",),
+            (datum_beta, "datum_beta",),
+            (beta_collision, "beta_collision",),
+            (alpha_min, "alpha min",),
+            (beta_min, "beta min",),
+            (alpha_max, "alpha max",),
+            (beta_max, "beta max",),
+            (datum_repeatability, "datum repeatability",),
+            (metrology_height, "metrology height",),
+            (metrology_calibration, "metrology calibration",),
+            (pupil_alignment, "pupil alignment",),
+            (positional_repeatability, "positional_repeatability",),
+            (positional_verification, "positional verification",),
         ]
 
     return rlist
