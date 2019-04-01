@@ -167,7 +167,7 @@ def measure_positional_repeatability(rig, dbe, pars=None):
                         abs_alpha = alpha0 + step_a * ka
                         abs_beta = beta0 + step_b * kb
 
-                        if rig.opts.verbosity > 1:
+                        if rig.opts.verbosity > 0:
                             print(
                                 "FPU %s measurement [%2i, %2i, %2i]: going to position (%7.2f, %7.2f)"
                                 % (sn, i, j, k, abs_alpha, abs_beta)

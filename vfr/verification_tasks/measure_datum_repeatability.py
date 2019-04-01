@@ -16,6 +16,8 @@ import numpy as np
 from vfr.conf import MET_CAL_CAMERA_IP_ADDRESS
 from vfr.db.datum_repeatability import (
     TestResult,
+    DatumRepeatabilityImages,
+    DatumRepeatabilityResult,
     get_datum_repeatability_images,
     get_datum_repeatability_passed_p,
     save_datum_repeatability_images,
@@ -122,10 +124,18 @@ def measure_datum_repeatability(rig, dbe, pars=None):
                 fpu = rig.grid_state.FPU[fpu_id]
                 moved_residuals.append( (fpu.alpha_deviation, fpu.beta_deviation,) )
 
-            images = {"datumed_images": datumed_images, "moved_images": moved_images}
-            residuals = {"datumed_residuals": datumed_residuals, "moved_residuals": moved_residuals}
 
-            save_datum_repeatability_images(dbe, fpu_id, images, residuals)
+            record = DatumRepeatabilityImages(
+                images = {
+                    "datumed_images": datumed_images,
+                    "moved_images": moved_images
+                },
+                residual_counts = {
+                    "datumed_residuals": datumed_residuals,
+                    "moved_residuals": moved_residuals},
+            )
+
+            save_datum_repeatability_images(dbe, fpu_id, record)
 
 
 def eval_datum_repeatability(dbe, dat_rep_analysis_pars):
@@ -199,22 +209,22 @@ def eval_datum_repeatability(dbe, dat_rep_analysis_pars):
                 )
                 datum_repeatability_has_passed = TestResult.OK
 
-        save_datum_repeatability_result(
-            dbe,
-            fpu_id,
+        record=DatumRepeatabilityResult(
+            algorithm_version=DATUM_REPEATABILITY_ALGORITHM_VERSION,
             coords=coords,
-            datum_repeatability_only_max_mm=datrep_dat_only_max,
-            datum_repeatability_only_std_mm=datrep_dat_only_std,
+            datum_repeatability_max_residual_datumed=max_residual_datumed,
+            datum_repeatability_max_residual_moved=max_residual_moved,
             datum_repeatability_move_max_mm=datrep_move_dat_max,
             datum_repeatability_move_std_mm=datrep_move_dat_std,
+            datum_repeatability_only_max_mm=datrep_dat_only_max,
+            datum_repeatability_only_std_mm=datrep_dat_only_std,
             datumed_errors=datumed_errors,
-            moved_errors=moved_errors,
-            max_residual_datumed=max_residual_datumed,
-            max_residual_moved=max_residual_moved,
+            error_message=errmsg,
             min_quality_datumed=min_quality_datumed,
             min_quality_moved=min_quality_moved,
-            datum_repeatability_has_passed=datum_repeatability_has_passed,
+            moved_errors=moved_errors,
             pass_threshold_mm=dat_rep_analysis_pars.DATUM_REP_PASS,
-            errmsg=errmsg,
-            algorithm_version=DATUM_REPEATABILITY_ALGORITHM_VERSION,
+            result=datum_repeatability_has_passed,
         )
+
+        save_datum_repeatability_result(dbe, fpu_id, record)

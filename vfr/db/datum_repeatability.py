@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
+from collections import namedtuple
 from numpy import NaN
 from vfr.tests_common import timestamp
 from vfr.db.base import (
@@ -11,8 +12,34 @@ from vfr.db.base import (
 
 RECORD_TYPE = "datum-repeatability"
 
+DatumRepeatabilityImages = namedtuple(
+    "DatumRepeatabilityImages",
+    " images"
+    " residual_counts"
+)
 
-def save_datum_repeatability_images(dbe, fpu_id, images, residuals):
+DatumRepeatabilityResult = namedtuple(
+    "DatumRepeatabilityResult",
+    " algorithm_version"
+    " coords"
+    " datum_repeatability_max_residual_datumed"
+    " datum_repeatability_max_residual_moved"
+    " datum_repeatability_move_max_mm"
+    " datum_repeatability_move_std_mm"
+    " datum_repeatability_only_max_mm"
+    " datum_repeatability_only_std_mm"
+    " datumed_errors"
+    " error_message"
+    " min_quality_datumed"
+    " min_quality_moved"
+    " moved_errors"
+    " pass_threshold_mm"
+    " result"
+)
+
+
+
+def save_datum_repeatability_images(dbe, fpu_id, record):
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
@@ -22,13 +49,12 @@ def save_datum_repeatability_images(dbe, fpu_id, images, residuals):
 
     def valfunc(fpu_id):
 
-        val = repr({
+        val = dict(**vars(record))
+        val.update({
             "fpuid": fpu_id,
-            "images": images,
-            "residual_counts" : residuals,
             "time": timestamp()
         })
-        return val
+        return repr(val)
 
     save_test_result(dbe, [fpu_id], keyfunc, valfunc)
 
@@ -47,21 +73,7 @@ def get_datum_repeatability_images(dbe, fpu_id, count=None):
 def save_datum_repeatability_result(
     dbe,
     fpu_id,
-    coords=None,
-    datum_repeatability_only_max_mm=None,
-    datum_repeatability_only_std_mm=None,
-    datum_repeatability_move_max_mm=None,
-    datum_repeatability_move_std_mm=None,
-    datum_repeatability_has_passed=None,
-    min_quality_datumed=NaN,
-    min_quality_moved=NaN,
-    datumed_errors=None,
-    moved_errors=None,
-    max_residual_datumed=NaN,
-    max_residual_moved=NaN,
-    pass_threshold_mm=NaN,
-    errmsg="",
-    algorithm_version=None,
+    record,
 ):
 
     # define two closures - one for the unique key, another for the stored value
@@ -72,28 +84,12 @@ def save_datum_repeatability_result(
 
     def valfunc(fpu_id):
 
-        val = repr(
-            {
-                "coords": coords,
-                "datum_repeatability_only_max_mm": datum_repeatability_only_max_mm,
-                "datum_repeatability_only_std_mm": datum_repeatability_only_std_mm,
-                "datum_repeatability_move_max_mm": datum_repeatability_move_max_mm,
-                "datum_repeatability_move_std_mm": datum_repeatability_move_std_mm,
-                "datum_repeatability_max_residual_datumed" : max_residual_datumed,
-                "datum_repeatability_max_residual_moved" : max_residual_moved,
-                "min_quality_datumed" : min_quality_datumed,
-                "min_quality_moved" : min_quality_moved,
-                "datumed_errors" : datumed_errors,
-                "moved_errors" : moved_errors,
-                "result": datum_repeatability_has_passed,
-                "pass_threshold_mm": pass_threshold_mm,
-                "error_message": errmsg,
+        val = dict(**vars(record))
+        val.update({
                 "git_version": GIT_VERSION,
-                "algorithm_version": algorithm_version,
                 "time": timestamp(),
-            }
-        )
-        return val
+        })
+        return repr(val)
 
     save_test_result(dbe, [fpu_id], keyfunc, valfunc)
 
