@@ -48,35 +48,6 @@ tw = TextWrapper(
 
 fill = tw.fill
 
-def get_min_quality(list_of_coords):
-    """compute minimum quality from a set of coordinate / quality triple
-    pairs, as computed by posRepCoordinates()
-
-    """
-
-    cord_array = array(list_of_coords)
-    q_small = np.min(cord_array[:,2])
-    q_large = np.min(cord_array[:,5])
-    return min(q_small, q_large)
-
-def get_min_quality_pupil(list_of_coords):
-    """compute minimum quality from a set of coordinate / quality triple
-    pairs, as computed by pupAlgnCoordinates()
-
-    """
-
-    cord_array = array(list_of_coords)
-    return np.min(cord_array[:,2])
-
-
-def arg_max_dict(d):
-    maxval = - Inf
-    maxkey = None
-    for k, v in d.items():
-        if v > maxval:
-            maxval = v
-            maxkey = k
-    return maxkey, maxval
 
 
 
@@ -125,37 +96,6 @@ def get_data(dbe, fpu_id):
         pupil_alignment_images=get_pupil_alignment_images(dbe, fpu_id, count=count),
         outfile=dbe.opts.output_file,
     )
-
-    if data.datum_repeatability_result is not None:
-        datumed_coords = data.datum_repeatability_result["coords"]["datumed_coords"]
-        data.datum_repeatability_result["min_quality_datumed"] = get_min_quality(datumed_coords)
-
-        moved_coords = data.datum_repeatability_result["coords"]["moved_coords"]
-        data.datum_repeatability_result["min_quality_moved"] = get_min_quality(moved_coords)
-
-    if data.positional_repeatability_result is not None:
-        alpha_coords = list(data.positional_repeatability_result["analysis_results_alpha"].values())
-        data.positional_repeatability_result["min_quality_alpha"] = get_min_quality(alpha_coords)
-
-        beta_coords = list(data.positional_repeatability_result["analysis_results_beta"].values())
-        data.positional_repeatability_result["min_quality_beta"] = get_min_quality(beta_coords)
-
-        alpha_max_at_angle = data.positional_repeatability_result["posrep_alpha_max_at_angle"]
-        beta_max_at_angle = data.positional_repeatability_result["posrep_beta_max_at_angle"]
-        data.positional_repeatability_result["arg_max_alpha_error"], _ = arg_max_dict(alpha_max_at_angle)
-        data.positional_repeatability_result["arg_max_beta_error"], _ = arg_max_dict(beta_max_at_angle)
-
-
-    if data.positional_verification_result is not None:
-        coords = list(data.positional_verification_result["analysis_results"].values())
-        data.positional_verification_result["min_quality"] = get_min_quality(coords)
-
-        posver_error = data.positional_verification_result["posver_error"]
-        data.positional_verification_result["arg_max_error"], _ = arg_max_dict(posver_error)
-
-    if data.pupil_alignment_result is not None:
-        coords = data.pupil_alignment_result["coords"].values()
-        data.pupil_alignment_result["min_quality"] = get_min_quality_pupil(coords)
 
     return data
 

@@ -7,6 +7,7 @@ from DistortionCorrection import correct
 from ImageAnalysisFuncs.base import ImageAnalysisError
 from numpy import array, mean
 from numpy.linalg import norm
+import numpy as np
 from vfr.conf import INSTRUMENT_FOCAL_LENGTH
 
 # exceptions which are raised if image analysis functions fail
@@ -114,3 +115,13 @@ def evaluate_pupil_alignment(dict_of_coordinates, pars=None):
         pupalnTotalErr,
         pupalnErrorBars,
     )
+
+
+def get_min_quality_pupil(list_of_coords):
+    """compute minimum quality from a set of coordinate / quality triple
+    pairs, as computed by pupAlgnCoordinates()
+
+    """
+
+    cord_array = array(list_of_coords)
+    return np.min(cord_array[:,2])

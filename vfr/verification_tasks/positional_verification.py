@@ -9,6 +9,7 @@ from Gearbox.gear_correction import (
     apply_gearbox_correction,
 )
 from GigE.GigECamera import BASLER_DEVICE_CLASS, DEVICE_CLASS, IP_ADDRESS
+from ImageAnalysisFuncs.base import get_min_quality, arg_max_dict
 from ImageAnalysisFuncs.analyze_positional_repeatability import (
     POSITIONAL_REPEATABILITY_ALGORITHM_VERSION,
     ImageAnalysisError,
@@ -329,6 +330,11 @@ def eval_positional_verification(dbe, pos_ver_analysis_pars, pos_ver_evaluation_
                 posver_error_max_mm <= pos_ver_evaluation_pars.POS_VER_PASS
             ) else TestResult.FAILED
 
+
+            coords = list(analysis_results.values())
+            min_quality = get_min_quality(coords)
+            arg_max_error, _ = arg_max_dict(posver_error)
+
             errmsg = ""
 
         except (ImageAnalysisError, GearboxFitError) as e:
@@ -337,6 +343,8 @@ def eval_positional_verification(dbe, pos_ver_analysis_pars, pos_ver_evaluation_
             posver_error = ([],)
             posver_error_max_mm = (NaN,)
             positional_verification_has_passed = TestResult.NA
+            min_quality = NaN
+            arg_max_error = NaN
 
         save_positional_verification_result(
             dbe,
@@ -345,6 +353,8 @@ def eval_positional_verification(dbe, pos_ver_analysis_pars, pos_ver_evaluation_
             analysis_results=analysis_results,
             posver_error=posver_error,
             posver_error_max_mm=posver_error_max_mm,
+            min_quality=min_quality,
+            arg_max_error=arg_max_error,
             errmsg=errmsg,
             algorithm_version=POSITIONAL_REPEATABILITY_ALGORITHM_VERSION,
             positional_verification_has_passed=positional_verification_has_passed,

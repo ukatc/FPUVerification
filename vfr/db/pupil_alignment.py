@@ -47,6 +47,7 @@ def save_pupil_alignment_result(
     pupil_alignment_has_passed=None,
     pupil_alignment_measures=None,
     pass_threshold_mm=NaN,
+    min_quality=NaN,
     errmsg="",
     algorithm_version=None,
 ):
@@ -65,6 +66,7 @@ def save_pupil_alignment_result(
                 "coords": coords,
                 "measures": pupil_alignment_measures,
                 "result": pupil_alignment_has_passed,
+                "min_quality" : min_quality,
                 "pass_threshold_mm": pass_threshold_mm,
                 "error_message": errmsg,
                 "algorithm_version": algorithm_version,

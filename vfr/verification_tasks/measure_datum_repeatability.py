@@ -4,6 +4,7 @@ import warnings
 
 from fpu_commands import gen_wf
 from GigE.GigECamera import BASLER_DEVICE_CLASS, DEVICE_CLASS, IP_ADDRESS
+from ImageAnalysisFuncs.base import get_min_quality
 from ImageAnalysisFuncs.analyze_positional_repeatability import (
     DATUM_REPEATABILITY_ALGORITHM_VERSION,
     ImageAnalysisError,
@@ -170,6 +171,11 @@ def eval_datum_repeatability(dbe, dat_rep_analysis_pars):
             max_residual_datumed=np.max(array(residual_counts["datumed_residuals"]))
             max_residual_moved=np.max(array(residual_counts["moved_residuals"]))
 
+            min_quality_datumed = get_min_quality(datumed_coords)
+
+            min_quality_moved = get_min_quality(moved_coords)
+
+
         except ImageAnalysisError as e:
             errmsg = str(e)
             coords = {}
@@ -180,6 +186,8 @@ def eval_datum_repeatability(dbe, dat_rep_analysis_pars):
             datum_repeatability_has_passed = TestResult.NA
             max_residual_datumed=NaN
             max_residual_moved=NaN
+            min_quality_datumed=NaN
+            min_quality_moved=NaN
             datumed_errors=None
             moved_errors = None
 
@@ -203,6 +211,8 @@ def eval_datum_repeatability(dbe, dat_rep_analysis_pars):
             moved_errors=moved_errors,
             max_residual_datumed=max_residual_datumed,
             max_residual_moved=max_residual_moved,
+            min_quality_datumed=min_quality_datumed,
+            min_quality_moved=min_quality_moved,
             datum_repeatability_has_passed=datum_repeatability_has_passed,
             pass_threshold_mm=dat_rep_analysis_pars.DATUM_REP_PASS,
             errmsg=errmsg,

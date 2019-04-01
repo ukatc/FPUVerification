@@ -4,6 +4,7 @@ import warnings
 
 from Gearbox.gear_correction import GearboxFitError, fit_gearbox_correction
 from GigE.GigECamera import BASLER_DEVICE_CLASS, DEVICE_CLASS, IP_ADDRESS
+from ImageAnalysisFuncs.base import get_min_quality, arg_max_dict
 from ImageAnalysisFuncs.analyze_positional_repeatability import (
     POSITIONAL_REPEATABILITY_ALGORITHM_VERSION,
     ImageAnalysisError,
@@ -291,6 +292,16 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
             )
             errmsg = ""
 
+            alpha_coords = list(analysis_results_alpha.values())
+            min_quality_alpha = get_min_quality(alpha_coords)
+
+            beta_coords = list(analysis_results_beta.values())
+            min_quality_beta = get_min_quality(beta_coords)
+
+            arg_max_alpha_error, _ = arg_max_dict(posrep_alpha_max_at_angle)
+            arg_max_beta_error, _ = arg_max_dict(posrep_beta_max_at_angle)
+
+
         except (ImageAnalysisError, GearboxFitError) as e:
             errmsg = str(e)
             posrep_alpha_max_at_angle = (NaN,)
@@ -307,6 +318,11 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
             posrep_beta_max_mm=NaN
             posrep_rss_mm=NaN
             gearbox_correction=None
+            min_quality_alpha=NaN
+            min_quality_beta=NaN
+            arg_max_alpha_error=NaN
+            arg_max_beta_error=NaN
+
 
         save_positional_repeatability_result(
             dbe,
@@ -316,6 +332,10 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
             analysis_results_beta=analysis_results_beta,
             posrep_alpha_max_at_angle=posrep_alpha_max_at_angle,
             posrep_beta_max_at_angle=posrep_beta_max_at_angle,
+            min_quality_alpha=min_quality_alpha,
+            min_quality_beta=min_quality_beta,
+            arg_max_alpha_error=arg_max_alpha_error,
+            arg_max_beta_error=arg_max_beta_error,
             posrep_alpha_max_mm=posrep_alpha_max_mm,
             posrep_beta_max_mm=posrep_beta_max_mm,
             posrep_rss_mm=posrep_rss_mm,

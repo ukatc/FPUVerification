@@ -68,6 +68,8 @@ def save_positional_verification_result(
     errmsg="",
     algorithm_version=None,
     positional_verification_has_passed=None,
+    min_quality=NaN,
+    arg_max_error=NaN,
 ):
 
     # define two closures - one for the unique key, another for the stored value
@@ -86,6 +88,8 @@ def save_positional_verification_result(
                 "posver_error_max_mm": posver_error_max_mm,
                 "result": positional_verification_has_passed,
                 "pass_threshold_mm": pass_threshold_mm,
+                "min_quality" : min_quality,
+                "arg_max_error" : arg_max_error,
                 "error_message": errmsg,
                 "algorithm_version": algorithm_version,
                 "git_version": GIT_VERSION,

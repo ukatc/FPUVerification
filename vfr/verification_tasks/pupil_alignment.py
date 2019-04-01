@@ -5,6 +5,7 @@ from ImageAnalysisFuncs.analyze_pupil_alignment import (
     PUPIL_ALIGNMENT_ALGORITHM_VERSION,
     ImageAnalysisError,
     evaluate_pupil_alignment,
+    get_min_quality_pupil,
     pupalnCoordinates,
 )
 from numpy import NaN
@@ -163,11 +164,17 @@ def eval_pupil_alignment(
 
             errmsg = ""
 
+            min_quality = get_min_quality_pupil(coords.values())
+
         except ImageAnalysisError as e:
             errmsg = str(e)
             coords = {}
-            pupalnChassisErr = pupalnAlphaErr = pupalnBetaErr = pupalnTotalErr = NaN
+            pupalnChassisErr = NaN
+            pupalnAlphaErr = NaN
+            pupalnBetaErr = NaN
+            pupalnTotalErr = NaN
             pupil_alignment_has_passed = TestResult.NA
+            min_quality=NaN
 
         pupil_alignment_measures = {
             "chassis_error": pupalnChassisErr,
@@ -184,6 +191,7 @@ def eval_pupil_alignment(
             pupil_alignment_measures=pupil_alignment_measures,
             pupil_alignment_has_passed=pupil_alignment_has_passed,
             pass_threshold_mm=PUP_ALGN_EVALUATION_PARS.PUP_ALGN_PASS,
+            min_quality=min_quality,
             errmsg=errmsg,
             algorithm_version=PUPIL_ALIGNMENT_ALGORITHM_VERSION,
         )
