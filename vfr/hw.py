@@ -2,15 +2,17 @@ from __future__ import absolute_import, division, print_function
 
 import pyAPT
 from GigE.GigECamera import GigECamera
-from Lamps.lctrl import lampController
+from Lamps.lctrl import lampController, manualLampController
 from vfr.tests_common import find_datum
 from vfr.conf import NR360_SERIALNUMBER, MTS50_SERIALNUMBER
 
 """this module simply bundles all real hardware access functions
 so that they can be easily swapped out by mock-up functions."""
 
+# these assertions are there to make pyflakes happy
 assert GigECamera
 assert lampController
+assert manualLampController
 
 def safe_home_turntable(gd, grid_state, opts=None):
     find_datum(gd, grid_state, opts=opts)

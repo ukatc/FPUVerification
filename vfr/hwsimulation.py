@@ -27,50 +27,49 @@ class lampController:
     def __init__(self):
         print("initializing mocked-up lamp controller...")
 
-    def switch_fibre_backlight(self, state, manual_lamp_control=False):
+    def switch_fibre_backlight(self, state):
         print("'switch state of backlight to %r and presse <enter>'" % state)
 
-
-    def switch_fibre_backlight_voltage(self, voltage, manual_lamp_control=False):
+    def switch_fibre_backlight_voltage(self, voltage):
         print("'switch voltage of backlight to %3.1f and presse <enter>'" % voltage)
 
-    def switch_ambientlight(self, state, manual_lamp_control=False):
+    def switch_ambientlight(self, state):
         print("'switch state of ambient light to %r and presse <enter>'" % state)
 
     def switch_silhouettelight(self, state, manual_lamp_control=False):
         print("'switch state of silhouette light to %r and presse <enter>'" % state)
 
     @contextmanager
-    def use_silhouettelight(self, manual_lamp_control=False):
-        self.switch_silhouettelight("on", manual_lamp_control=manual_lamp_control)
+    def use_silhouettelight(self):
+        self.switch_silhouettelight("on")
         time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
         try:
             yield None
 
         finally:
-            self.switch_silhouettelight("off", manual_lamp_control=manual_lamp_control)
+            self.switch_silhouettelight("off")
             time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
 
     @contextmanager
-    def use_backlight(self, voltage, manual_lamp_control=False):
-        self.switch_fibre_backlight_voltage(voltage, manual_lamp_control=manual_lamp_control)
+    def use_backlight(self, voltage):
+        self.switch_fibre_backlight_voltage(voltage)
         time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
         try:
             yield None
 
         finally:
-            self.switch_fibre_backlight("off", manual_lamp_control=manual_lamp_control)
+            self.switch_fibre_backlight("off")
             time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
 
     @contextmanager
-    def use_ambientlight(self, manual_lamp_control=False):
-        self.switch_ambientlight("on", manual_lamp_control=manual_lamp_control)
+    def use_ambientlight(self):
+        self.switch_ambientlight("on")
         time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
         try:
             yield None
 
         finally:
-            self.switch_ambientlight("off", manual_lamp_control=manual_lamp_control)
+            self.switch_ambientlight("off")
             time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
 
 

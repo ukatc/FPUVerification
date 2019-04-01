@@ -73,7 +73,10 @@ if __name__ == "__main__":
     if opts.mockup:
         lctrl = hwsimulation.lampController()
     else:
-        lctrl = hw.lampController()
+        if opts.manual_lamp_control:
+            lctrl = real_hw.manualLampController()
+        else:
+            lctrl = real_hw.lampController()
 
     # make sure that lamps are switched off on program exit
     def lamps_off():

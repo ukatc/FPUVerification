@@ -35,12 +35,10 @@ def measure_datum_repeatability(rig, dbe, pars=None):
     # home turntable
     rig.hw.safe_home_turntable(rig.gd, rig.grid_state)
 
-    rig.lctrl.switch_fibre_backlight("off", manual_lamp_control=rig.opts.manual_lamp_control)
-    rig.lctrl.switch_fibre_backlight_voltage(
-        0.0, manual_lamp_control=rig.opts.manual_lamp_control
-    )
+    rig.lctrl.switch_fibre_backlight("off")
+    rig.lctrl.switch_fibre_backlight_voltage(0.0)
 
-    with rig.lctrl.use_ambientlight(manual_lamp_control=rig.opts.manual_lamp_control):
+    with rig.lctrl.use_ambientlight():
 
         # get sorted positions (this is needed because the turntable can only
         # move into one direction)

@@ -127,91 +127,135 @@ class lampController:
 
         self.analog_output_range = self.analog_device.get_info().get_ranges()[0]
 
-    def switch_fibre_backlight(self, state, manual_lamp_control=False):
-        if manual_lamp_control:
-            raw_input("switch state of backlight to %r and presse <enter>" % state)
+    def switch_fibre_backlight(self, state):
+        if state == "on":
+            value = BACKLIGHT_WRITE_VALUE
+        elif state == "off":
+            value = 0
         else:
-            if state == "on":
-                value = BACKLIGHT_WRITE_VALUE
-            elif state == "off":
-                value = 0
-            else:
-                raise LampDAQError(
-                    "Bad state value, should be on or off, recivievd {}".format(state)
-                )
-            self.analog_device.a_out(
-                BACKLIGHT_CHANNEL, self.analog_output_range, AOutFlag.DEFAULT, value
+            raise LampDAQError(
+                "Bad state value, should be on or off, recivievd {}".format(state)
             )
+        self.analog_device.a_out(
+            BACKLIGHT_CHANNEL, self.analog_output_range, AOutFlag.DEFAULT, value
+        )
+
+    def switch_fibre_backlight_voltage(self, voltage):
+        self.analog_device.a_out(
+            BACKLIGHT_CHANNEL, self.analog_output_range, AOutFlag.DEFAULT, voltage
+        )
+
+    def switch_ambientlight(self, state):
+        if state == "on":
+            value = AMBIENT_WRITE_VALUE
+        elif state == "off":
+            value = 0
+        else:
+            raise LampDAQError(
+                "Bad state value, should be on or off, recivievd {}".format(state)
+            )
+        self.digital_device.d_out(self.ambient_port, value)
+
+    def switch_silhouettelight(self, state):
+        if state == "on":
+            value = SILHOUETTE_WRITE_VALUE
+        elif state == "off":
+            value = 0
+        else:
+            raise LampDAQError(
+                "Bad state value, should be on or off, recivievd {}".format(state)
+            )
+        self.digital_device.d_out(self.silhouette_port, value)
+
+    @contextmanager
+    def use_silhouettelight(self):
+        self.switch_silhouettelight("on")
+        time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
+        try:
+            yield None
+
+        finally:
+            self.switch_silhouettelight("off")
+            time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
+
+    @contextmanager
+    def use_backlight(self, voltage):
+        self.switch_fibre_backlight_voltage(voltage)
+        time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
+        try:
+            yield None
+
+        finally:
+            self.switch_fibre_backlight("off")
+            time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
+
+    @contextmanager
+    def use_ambientlight(self):
+        self.switch_ambientlight("on")
+        time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
+        try:
+            yield None
+
+        finally:
+            self.switch_ambientlight("off")
+            time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
+
+
+
+class manualLampController:
+    """ Class to control lamps manually. This is important for test purpuses.
+
+    """
+
+    def __init__(self):
+        """this does nothing.
+
+        """
+        pass
+
+    def switch_fibre_backlight(self, state, manual_lamp_control=False):
+        raw_input("switch state of backlight to %r and press <enter> $" % state)
 
     def switch_fibre_backlight_voltage(self, voltage, manual_lamp_control=False):
-        if manual_lamp_control:
-            raw_input("switch voltage of backlight to %r and presse <enter>" % voltage)
-        else:
-            self.analog_device.a_out(
-                BACKLIGHT_CHANNEL, self.analog_output_range, AOutFlag.DEFAULT, voltage
-            )
+        raw_input("switch voltage of backlight to %r and press <enter> $" % voltage)
 
     def switch_ambientlight(self, state, manual_lamp_control=False):
-        if manual_lamp_control:
-            raw_input("switch state of ambient light to %r and presse <enter>" % state)
-        else:
-            if state == "on":
-                value = AMBIENT_WRITE_VALUE
-            elif state == "off":
-                value = 0
-            else:
-                raise LampDAQError(
-                    "Bad state value, should be on or off, recivievd {}".format(state)
-                )
-            self.digital_device.d_out(self.ambient_port, value)
+        raw_input("switch state of ambient light to %r and press <enter> $" % state)
 
     def switch_silhouettelight(self, state, manual_lamp_control=False):
-        if manual_lamp_control:
-            raw_input(
-                "switch state of silhouette light to %r and presse <enter>" % state
-            )
-        else:
-            if state == "on":
-                value = SILHOUETTE_WRITE_VALUE
-            elif state == "off":
-                value = 0
-            else:
-                raise LampDAQError(
-                    "Bad state value, should be on or off, recivievd {}".format(state)
-                )
-            self.digital_device.d_out(self.silhouette_port, value)
-
-    @contextmanager
-    def use_silhouettelight(self, manual_lamp_control=False):
-        self.switch_silhouettelight("on", manual_lamp_control=manual_lamp_control)
-        time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
-        try:
-            yield None
-
-        finally:
-            self.switch_silhouettelight("off", manual_lamp_control=manual_lamp_control)
-            time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
-
-    @contextmanager
-    def use_backlight(self, voltage, manual_lamp_control=False):
-        self.switch_fibre_backlight_voltage(
-            voltage, manual_lamp_control=manual_lamp_control
+        raw_input(
+            "switch state of silhouette light to %r and press <enter> $" % state
         )
+
+    @contextmanager
+    def use_silhouettelight(self):
+        self.switch_silhouettelight("on")
         time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
         try:
             yield None
 
         finally:
-            self.switch_fibre_backlight("off", manual_lamp_control=manual_lamp_control)
+            self.switch_silhouettelight("off")
             time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
 
     @contextmanager
-    def use_ambientlight(self, manual_lamp_control=False):
-        self.switch_ambientlight("on", manual_lamp_control=manual_lamp_control)
+    def use_backlight(self, voltage):
+        self.switch_fibre_backlight_voltage(voltage)
         time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
         try:
             yield None
 
         finally:
-            self.switch_ambientlight("off", manual_lamp_control=manual_lamp_control)
+            self.switch_fibre_backlight("off")
+            time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
+
+    @contextmanager
+    def use_ambientlight(self):
+        self.switch_ambientlight("on")
+        time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
+        try:
+            yield None
+
+        finally:
+            self.switch_ambientlight("off")
             time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)

@@ -33,12 +33,10 @@ def selftest_pup_algn(rig, pars=None, PUP_ALGN_ANALYSIS_PARS=None, capture_image
         rig.hw.safe_home_turntable(rig.gd, rig.grid_state)
         rig.hw.home_linear_stage()
 
-        rig.lctrl.switch_ambientlight("off", manual_lamp_control=rig.opts.manual_lamp_control)
-        rig.lctrl.switch_silhouettelight(
-            "off", manual_lamp_control=rig.opts.manual_lamp_control
-        )
+        rig.lctrl.switch_ambientlight("off")
+        rig.lctrl.switch_silhouettelight("off")
 
-        with rig.lctrl.use_backlight(5.0, manual_lamp_control=rig.opts.manual_lamp_control):
+        with rig.lctrl.use_backlight(5.0):
 
             # initialize pos_rep camera
             # set pos_rep camera exposure time to DATUM_REP_EXPOSURE milliseconds
@@ -83,13 +81,9 @@ def selftest_metrology_calibration(
         # home turntable
         rig.hw.safe_home_turntable(rig.gd, rig.grid_state)
 
-        rig.lctrl.switch_fibre_backlight(
-            "off", manual_lamp_control=rig.opts.manual_lamp_control
-        )
-        rig.lctrl.switch_ambientlight("off", manual_lamp_control=rig.opts.manual_lamp_control)
-        rig.lctrl.switch_fibre_backlight_voltage(
-            0.0, manual_lamp_control=rig.opts.manual_lamp_control
-        )
+        rig.lctrl.switch_fibre_backlight("off")
+        rig.lctrl.switch_ambientlight("off")
+        rig.lctrl.switch_fibre_backlight_voltage(0.0)
 
         MET_CAL_CAMERA_CONF = {
             DEVICE_CLASS: BASLER_DEVICE_CLASS,
@@ -108,25 +102,20 @@ def selftest_metrology_calibration(
         rig.hw.turntable_safe_goto(rig.gd, rig.grid_state, stage_position)
 
         met_cal_cam.SetExposureTime(pars.METROLOGY_CAL_TARGET_EXPOSURE_MS)
-        rig.lctrl.switch_fibre_backlight(
-            "off", manual_lamp_control=rig.opts.manual_lamp_control
-        )
-        rig.lctrl.switch_fibre_backlight_voltage(
-            0.0, manual_lamp_control=rig.opts.manual_lamp_control
-        )
+        rig.lctrl.switch_fibre_backlight("off")
+        rig.lctrl.switch_fibre_backlight_voltage(0.0)
 
         # use context manager to switch lamp on
         # and guarantee it is switched off after the
         # measurement (even if exceptions occur)
-        with rig.lctrl.use_ambientlight(manual_lamp_control=rig.opts.manual_lamp_control):
+        with rig.lctrl.use_ambientlight():
             ipath_selftest_met_cal_target = capture_image(met_cal_cam, "met-cal-target")
 
         met_cal_cam.SetExposureTime(pars.METROLOGY_CAL_FIBRE_EXPOSURE_MS)
-        rig.lctrl.switch_ambientlight("off", manual_lamp_control=rig.opts.manual_lamp_control)
+        rig.lctrl.switch_ambientlight("off")
 
         with rig.lctrl.use_backlight(
             pars.METROLOGY_CAL_BACKLIGHT_VOLTAGE,
-            manual_lamp_control=rig.opts.manual_lamp_control,
         ):
             ipath_selftest_met_cal_fibre = capture_image(met_cal_cam, "met-cal-fibre")
 
@@ -153,13 +142,9 @@ def selftest_metrology_height(
     try:
         rig.hw.safe_home_turntable(rig.gd, rig.grid_state)
 
-        rig.lctrl.switch_fibre_backlight(
-            "off", manual_lamp_control=rig.opts.manual_lamp_control
-        )
-        rig.lctrl.switch_ambientlight("off", manual_lamp_control=rig.opts.manual_lamp_control)
-        rig.lctrl.switch_fibre_backlight_voltage(
-            0.0, manual_lamp_control=rig.opts.manual_lamp_control
-        )
+        rig.lctrl.switch_fibre_backlight("off")
+        rig.lctrl.switch_ambientlight("off")
+        rig.lctrl.switch_fibre_backlight_voltage(0.0)
 
         MET_HEIGHT_CAMERA_CONF = {
             DEVICE_CLASS: BASLER_DEVICE_CLASS,
@@ -175,7 +160,7 @@ def selftest_metrology_height(
         # move rotary stage to POS_REP_POSN_N
         rig.hw.turntable_safe_goto(rig.gd, rig.grid_state, stage_position)
 
-        with rig.lctrl.use_silhouettelight(manual_lamp_control=rig.opts.manual_lamp_control):
+        with rig.lctrl.use_silhouettelight():
             ipath_selftest_met_height = capture_image(
                 met_height_cam, "metrology-height"
             )
@@ -198,12 +183,8 @@ def selftest_positional_repeatability(
     try:
         rig.hw.safe_home_turntable(rig.gd, rig.grid_state)
 
-        rig.lctrl.switch_fibre_backlight(
-            "off", manual_lamp_control=rig.opts.manual_lamp_control
-        )
-        rig.lctrl.switch_fibre_backlight_voltage(
-            0.0, manual_lamp_control=rig.opts.manual_lamp_control
-        )
+        rig.lctrl.switch_fibre_backlight("off")
+        rig.lctrl.switch_fibre_backlight_voltage(0.0)
 
         POS_REP_CAMERA_CONF = {
             DEVICE_CLASS: BASLER_DEVICE_CLASS,
@@ -219,7 +200,7 @@ def selftest_positional_repeatability(
 
         rig.hw.turntable_safe_goto(rig.gd, rig.grid_state, stage_position)
 
-        with rig.lctrl.use_ambientlight(manual_lamp_control=rig.opts.manual_lamp_control):
+        with rig.lctrl.use_ambientlight():
 
             selftest_ipath_pos_rep = capture_image(
                 pos_rep_cam, "positional-repeatability"

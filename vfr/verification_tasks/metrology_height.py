@@ -29,13 +29,11 @@ def measure_metrology_height(rig, dbe, pars=None):
     # home turntable
     rig.hw.safe_home_turntable(rig.gd, rig.grid_state)
 
-    rig.lctrl.switch_fibre_backlight("off", manual_lamp_control=rig.opts.manual_lamp_control)
-    rig.lctrl.switch_ambientlight("off", manual_lamp_control=rig.opts.manual_lamp_control)
-    rig.lctrl.switch_fibre_backlight_voltage(
-        0.0, manual_lamp_control=rig.opts.manual_lamp_control
-    )
+    rig.lctrl.switch_fibre_backlight("off")
+    rig.lctrl.switch_ambientlight("off")
+    rig.lctrl.switch_fibre_backlight_voltage(0.0)
 
-    with rig.lctrl.use_silhouettelight(manual_lamp_control=rig.opts.manual_lamp_control):
+    with rig.lctrl.use_silhouettelight():
 
         MET_HEIGHT_CAMERA_CONF = {
             DEVICE_CLASS: BASLER_DEVICE_CLASS,

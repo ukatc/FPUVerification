@@ -79,13 +79,11 @@ def measure_positional_verification(rig, dbe, pars=None):
 
     rig.hw.safe_home_turntable(gd, grid_state)
 
-    rig.lctrl.switch_fibre_backlight("off", manual_lamp_control=opts.manual_lamp_control)
-    rig.lctrl.switch_ambientlight("on", manual_lamp_control=opts.manual_lamp_control)
-    rig.lctrl.switch_fibre_backlight_voltage(
-        0.0, manual_lamp_control=opts.manual_lamp_control
-    )
+    rig.lctrl.switch_fibre_backlight("off")
+    rig.lctrl.switch_ambientlight("on")
+    rig.lctrl.switch_fibre_backlight_voltage(0.0)
 
-    with rig.lctrl.use_ambientlight(manual_lamp_control=opts.manual_lamp_control):
+    with rig.lctrl.use_ambientlight():
         # initialize pos_rep camera
         # set pos_rep camera exposure time to POS_VER_EXPOSURE milliseconds
         POS_VER_CAMERA_CONF = {

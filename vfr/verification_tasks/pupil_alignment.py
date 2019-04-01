@@ -51,16 +51,11 @@ def measure_pupil_alignment(rig, dbe, pars=None):
     rig.hw.safe_home_turntable(rig.gd, rig.grid_state)
     rig.hw.home_linear_stage()
 
-    rig.lctrl.switch_ambientlight("off", manual_lamp_control=rig.opts.manual_lamp_control)
-    rig.lctrl.switch_silhouettelight("off", manual_lamp_control=rig.opts.manual_lamp_control)
-    rig.lctrl.switch_fibre_backlight_voltage(
-        5.0, manual_lamp_control=rig.opts.manual_lamp_control
-    )
+    rig.lctrl.switch_ambientlight("off")
+    rig.lctrl.switch_silhouettelight("off")
+    rig.lctrl.switch_fibre_backlight_voltage(5.0)
 
-    with rig.lctrl.use_backlight(
-        pars.PUP_ALGN_LAMP_VOLTAGE, manual_lamp_control=rig.opts.manual_lamp_control
-
-    ):
+    with rig.lctrl.use_backlight(pars.PUP_ALGN_LAMP_VOLTAGE):
 
         # initialize pos_rep camera
         # set pos_rep camera exposure time to DATUM_REP_EXPOSURE milliseconds
