@@ -198,7 +198,7 @@ task_dependencies = [
         ],
     ),
     (
-        T.TST_POS_VER,
+        T.MEASURE_POS_VER,
         [
             T.TASK_SELFTEST_NONFIBRE,
             T.TST_POS_REP_CAM_CONNECTION,
