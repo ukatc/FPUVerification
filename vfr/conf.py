@@ -8,7 +8,9 @@ from os import environ
 
 from numpy import Inf, NaN
 
+# if you want to exclude fibres, uncomment the line below
 DEFAULT_TASKS = ["selftest", "test_functional", "measure_all", "eval_all", "report"]
+#DEFAULT_TASKS = ["selftest", "test_functional", "measure_nonfibre", "eval_nonfibre", "report"]
 
 # a few parameters are defined globally because they are
 # used in many different places

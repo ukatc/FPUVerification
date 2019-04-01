@@ -6,7 +6,7 @@ from GigE.GigECamera import BASLER_DEVICE_CLASS, DEVICE_CLASS, IP_ADDRESS
 from ImageAnalysisFuncs.analyze_metrology_calibration import (
     metcalFibreCoordinates,
     metcalTargetCoordinates,
-)
+    )
 from ImageAnalysisFuncs.analyze_metrology_height import methtHeight
 from ImageAnalysisFuncs.analyze_positional_repeatability import posrepCoordinates
 from ImageAnalysisFuncs.analyze_pupil_alignment import (
@@ -25,20 +25,20 @@ from vfr.tests_common import (
 )
 
 
-def selftest_pup_algn(ctx, pars=None, PUP_ALGN_ANALYSIS_PARS=None, capture_image=None):
+def selftest_pup_algn(rig, pars=None, PUP_ALGN_ANALYSIS_PARS=None, capture_image=None):
     print("selftest: pupil alignment")
 
     try:
         # home turntable
-        ctx.hw.safe_home_turntable(ctx.gd, ctx.grid_state)
-        ctx.hw.home_linear_stage()
+        rig.hw.safe_home_turntable(rig.gd, rig.grid_state)
+        rig.hw.home_linear_stage()
 
-        ctx.lctrl.switch_ambientlight("off", manual_lamp_control=ctx.opts.manual_lamp_control)
-        ctx.lctrl.switch_silhouettelight(
-            "off", manual_lamp_control=ctx.opts.manual_lamp_control
+        rig.lctrl.switch_ambientlight("off", manual_lamp_control=rig.opts.manual_lamp_control)
+        rig.lctrl.switch_silhouettelight(
+            "off", manual_lamp_control=rig.opts.manual_lamp_control
         )
 
-        with ctx.lctrl.use_backlight(5.0, manual_lamp_control=ctx.opts.manual_lamp_control):
+        with rig.lctrl.use_backlight(5.0, manual_lamp_control=rig.opts.manual_lamp_control):
 
             # initialize pos_rep camera
             # set pos_rep camera exposure time to DATUM_REP_EXPOSURE milliseconds
@@ -47,16 +47,16 @@ def selftest_pup_algn(ctx, pars=None, PUP_ALGN_ANALYSIS_PARS=None, capture_image
                 IP_ADDRESS: PUP_ALGN_CAMERA_IP_ADDRESS,
             }
 
-            pup_aln_cam = ctx.hw.GigECamera(PUP_ALGN_CAMERA_CONF)
+            pup_aln_cam = rig.hw.GigECamera(PUP_ALGN_CAMERA_CONF)
             pup_aln_cam.SetExposureTime(pars.PUP_ALGN_EXPOSURE_MS)
 
             fpu_id, stage_position = get_sorted_positions(
-                ctx.measure_fpuset, pars.PUP_ALGN_POSITIONS
+                rig.measure_fpuset, pars.PUP_ALGN_POSITIONS
             )[0]
 
             # move rotary stage to PUP_ALN_POSN_N
-            ctx.hw.turntable_safe_goto(ctx.gd, ctx.grid_state, stage_position)
-            ctx.hw.linear_stage_goto(pars.PUP_ALGN_LINPOSITIONS[fpu_id])
+            rig.hw.turntable_safe_goto(rig.gd, rig.grid_state, stage_position)
+            rig.hw.linear_stage_goto(pars.PUP_ALGN_LINPOSITIONS[fpu_id])
 
             ipath_selftest_pup_algn = capture_image(pup_aln_cam, "pupil-alignment")
 
@@ -65,12 +65,12 @@ def selftest_pup_algn(ctx, pars=None, PUP_ALGN_ANALYSIS_PARS=None, capture_image
             )
             del result
     finally:
-        ctx.hw.safe_home_turntable(ctx.gd, ctx.grid_state)
-        ctx.hw.home_linear_stage()
+        rig.hw.safe_home_turntable(rig.gd, rig.grid_state)
+        rig.hw.home_linear_stage()
 
 
 def selftest_metrology_calibration(
-    ctx,
+    rig,
     pars=None,
     MET_CAL_TARGET_ANALYSIS_PARS=None,
     MET_CAL_FIBRE_ANALYSIS_PARS=None,
@@ -81,14 +81,14 @@ def selftest_metrology_calibration(
 
     try:
         # home turntable
-        ctx.hw.safe_home_turntable(ctx.gd, ctx.grid_state)
+        rig.hw.safe_home_turntable(rig.gd, rig.grid_state)
 
-        ctx.lctrl.switch_fibre_backlight(
-            "off", manual_lamp_control=ctx.opts.manual_lamp_control
+        rig.lctrl.switch_fibre_backlight(
+            "off", manual_lamp_control=rig.opts.manual_lamp_control
         )
-        ctx.lctrl.switch_ambientlight("off", manual_lamp_control=ctx.opts.manual_lamp_control)
-        ctx.lctrl.switch_fibre_backlight_voltage(
-            0.0, manual_lamp_control=ctx.opts.manual_lamp_control
+        rig.lctrl.switch_ambientlight("off", manual_lamp_control=rig.opts.manual_lamp_control)
+        rig.lctrl.switch_fibre_backlight_voltage(
+            0.0, manual_lamp_control=rig.opts.manual_lamp_control
         )
 
         MET_CAL_CAMERA_CONF = {
@@ -96,37 +96,37 @@ def selftest_metrology_calibration(
             IP_ADDRESS: MET_CAL_CAMERA_IP_ADDRESS,
         }
 
-        met_cal_cam = ctx.hw.GigECamera(MET_CAL_CAMERA_CONF)
+        met_cal_cam = rig.hw.GigECamera(MET_CAL_CAMERA_CONF)
 
         # get sorted positions (this is needed because the turntable can only
         # move into one direction)
         fpu_id, stage_position = get_sorted_positions(
-            ctx.measure_fpuset, pars.METROLOGY_CAL_POSITIONS
+            rig.measure_fpuset, pars.METROLOGY_CAL_POSITIONS
         )[0]
 
         # move rotary stage to POS_REP_POSN_0
-        ctx.hw.turntable_safe_goto(ctx.gd, ctx.grid_state, stage_position)
+        rig.hw.turntable_safe_goto(rig.gd, rig.grid_state, stage_position)
 
         met_cal_cam.SetExposureTime(pars.METROLOGY_CAL_TARGET_EXPOSURE_MS)
-        ctx.lctrl.switch_fibre_backlight(
-            "off", manual_lamp_control=ctx.opts.manual_lamp_control
+        rig.lctrl.switch_fibre_backlight(
+            "off", manual_lamp_control=rig.opts.manual_lamp_control
         )
-        ctx.lctrl.switch_fibre_backlight_voltage(
-            0.0, manual_lamp_control=ctx.opts.manual_lamp_control
+        rig.lctrl.switch_fibre_backlight_voltage(
+            0.0, manual_lamp_control=rig.opts.manual_lamp_control
         )
 
         # use context manager to switch lamp on
         # and guarantee it is switched off after the
         # measurement (even if exceptions occur)
-        with ctx.lctrl.use_ambientlight(manual_lamp_control=ctx.opts.manual_lamp_control):
+        with rig.lctrl.use_ambientlight(manual_lamp_control=rig.opts.manual_lamp_control):
             ipath_selftest_met_cal_target = capture_image(met_cal_cam, "met-cal-target")
 
         met_cal_cam.SetExposureTime(pars.METROLOGY_CAL_FIBRE_EXPOSURE_MS)
-        ctx.lctrl.switch_ambientlight("off", manual_lamp_control=ctx.opts.manual_lamp_control)
+        rig.lctrl.switch_ambientlight("off", manual_lamp_control=rig.opts.manual_lamp_control)
 
-        with ctx.lctrl.use_backlight(
+        with rig.lctrl.use_backlight(
             pars.METROLOGY_CAL_BACKLIGHT_VOLTAGE,
-            manual_lamp_control=ctx.opts.manual_lamp_control,
+            manual_lamp_control=rig.opts.manual_lamp_control,
         ):
             ipath_selftest_met_cal_fibre = capture_image(met_cal_cam, "met-cal-fibre")
 
@@ -141,24 +141,24 @@ def selftest_metrology_calibration(
         del fibre_coordinates
 
     finally:
-        ctx.hw.safe_home_turntable(ctx.gd, ctx.grid_state)
+        rig.hw.safe_home_turntable(rig.gd, rig.grid_state)
 
 
 def selftest_metrology_height(
-    ctx, MET_HEIGHT_ANALYSIS_PARS=None, pars=None, capture_image=None
+    rig, MET_HEIGHT_ANALYSIS_PARS=None, pars=None, capture_image=None
 ):
 
     print("selftest: metrology height")
 
     try:
-        ctx.hw.safe_home_turntable(ctx.gd, ctx.grid_state)
+        rig.hw.safe_home_turntable(rig.gd, rig.grid_state)
 
-        ctx.lctrl.switch_fibre_backlight(
-            "off", manual_lamp_control=ctx.opts.manual_lamp_control
+        rig.lctrl.switch_fibre_backlight(
+            "off", manual_lamp_control=rig.opts.manual_lamp_control
         )
-        ctx.lctrl.switch_ambientlight("off", manual_lamp_control=ctx.opts.manual_lamp_control)
-        ctx.lctrl.switch_fibre_backlight_voltage(
-            0.0, manual_lamp_control=ctx.opts.manual_lamp_control
+        rig.lctrl.switch_ambientlight("off", manual_lamp_control=rig.opts.manual_lamp_control)
+        rig.lctrl.switch_fibre_backlight_voltage(
+            0.0, manual_lamp_control=rig.opts.manual_lamp_control
         )
 
         MET_HEIGHT_CAMERA_CONF = {
@@ -166,16 +166,16 @@ def selftest_metrology_height(
             IP_ADDRESS: MET_HEIGHT_CAMERA_IP_ADDRESS,
         }
 
-        met_height_cam = ctx.hw.GigECamera(MET_HEIGHT_CAMERA_CONF)
+        met_height_cam = rig.hw.GigECamera(MET_HEIGHT_CAMERA_CONF)
 
         fpu_id, stage_position = get_sorted_positions(
-            ctx.measure_fpuset, pars.MET_HEIGHT_POSITIONS
+            rig.measure_fpuset, pars.MET_HEIGHT_POSITIONS
         )[0]
 
         # move rotary stage to POS_REP_POSN_N
-        ctx.hw.turntable_safe_goto(ctx.gd, ctx.grid_state, stage_position)
+        rig.hw.turntable_safe_goto(rig.gd, rig.grid_state, stage_position)
 
-        with ctx.lctrl.use_silhouettelight(manual_lamp_control=ctx.opts.manual_lamp_control):
+        with rig.lctrl.use_silhouettelight(manual_lamp_control=rig.opts.manual_lamp_control):
             ipath_selftest_met_height = capture_image(
                 met_height_cam, "metrology-height"
             )
@@ -185,24 +185,24 @@ def selftest_metrology_height(
         )
 
     finally:
-        ctx.hw.safe_home_turntable(ctx.gd, ctx.grid_state)
+        rig.hw.safe_home_turntable(rig.gd, rig.grid_state)
 
 
 def selftest_positional_repeatability(
-    ctx, pars=None, POS_REP_ANALYSIS_PARS=None, capture_image=None
+    rig, pars=None, POS_REP_ANALYSIS_PARS=None, capture_image=None
 ):
 
     print("selftest: positional repeatability")
 
 
     try:
-        ctx.hw.safe_home_turntable(ctx.gd, ctx.grid_state)
+        rig.hw.safe_home_turntable(rig.gd, rig.grid_state)
 
-        ctx.lctrl.switch_fibre_backlight(
-            "off", manual_lamp_control=ctx.opts.manual_lamp_control
+        rig.lctrl.switch_fibre_backlight(
+            "off", manual_lamp_control=rig.opts.manual_lamp_control
         )
-        ctx.lctrl.switch_fibre_backlight_voltage(
-            0.0, manual_lamp_control=ctx.opts.manual_lamp_control
+        rig.lctrl.switch_fibre_backlight_voltage(
+            0.0, manual_lamp_control=rig.opts.manual_lamp_control
         )
 
         POS_REP_CAMERA_CONF = {
@@ -210,16 +210,16 @@ def selftest_positional_repeatability(
             IP_ADDRESS: POS_REP_CAMERA_IP_ADDRESS,
         }
 
-        pos_rep_cam = ctx.hw.GigECamera(POS_REP_CAMERA_CONF)
+        pos_rep_cam = rig.hw.GigECamera(POS_REP_CAMERA_CONF)
         pos_rep_cam.SetExposureTime(pars.POS_REP_EXPOSURE_MS)
 
         fpu_id, stage_position = get_sorted_positions(
-            ctx.measure_fpuset, pars.POS_REP_POSITIONS
+            rig.measure_fpuset, pars.POS_REP_POSITIONS
         )[0]
 
-        ctx.hw.turntable_safe_goto(ctx.gd, ctx.grid_state, stage_position)
+        rig.hw.turntable_safe_goto(rig.gd, rig.grid_state, stage_position)
 
-        with ctx.lctrl.use_ambientlight(manual_lamp_control=ctx.opts.manual_lamp_control):
+        with rig.lctrl.use_ambientlight(manual_lamp_control=rig.opts.manual_lamp_control):
 
             selftest_ipath_pos_rep = capture_image(
                 pos_rep_cam, "positional-repeatability"
@@ -229,11 +229,11 @@ def selftest_positional_repeatability(
         del coords
 
     finally:
-        ctx.hw.safe_home_turntable(ctx.gd, ctx.grid_state)
+        rig.hw.safe_home_turntable(rig.gd, rig.grid_state)
 
 
 def selftest_nonfibre(
-    ctx,
+    rig,
     MET_HEIGHT_ANALYSIS_PARS=None,
     MET_HEIGHT_MEASUREMENT_PARS=None,
     POS_REP_ANALYSIS_PARS=None,
@@ -252,7 +252,7 @@ def selftest_nonfibre(
 
     try:
         selftest_metrology_height(
-            ctx,
+            rig,
             MET_HEIGHT_ANALYSIS_PARS=MET_HEIGHT_ANALYSIS_PARS,
             capture_image=capture_image,
             pars=MET_HEIGHT_MEASUREMENT_PARS,
@@ -265,7 +265,7 @@ def selftest_nonfibre(
 
     try:
         selftest_positional_repeatability(
-            ctx,
+            rig,
             POS_REP_ANALYSIS_PARS=POS_REP_ANALYSIS_PARS,
             capture_image=capture_image,
             pars=POS_REP_MEASUREMENT_PARS,
@@ -277,7 +277,7 @@ def selftest_nonfibre(
 
 
 def selftest_fibre(
-    ctx,
+    rig,
     MET_CAL_MEASUREMENT_PARS=None,
     MET_CAL_FIBRE_ANALYSIS_PARS=None,
     MET_CAL_TARGET_ANALYSIS_PARS=None,
@@ -295,7 +295,7 @@ def selftest_fibre(
 
     try:
         selftest_pup_algn(
-            ctx,
+            rig,
             PUP_ALGN_ANALYSIS_PARS=PUP_ALGN_ANALYSIS_PARS,
             capture_image=capture_image,
             pars=PUP_ALGN_MEASUREMENT_PARS,
@@ -307,7 +307,7 @@ def selftest_fibre(
 
     try:
         selftest_metrology_calibration(
-            ctx,
+            rig,
             MET_CAL_TARGET_ANALYSIS_PARS=MET_CAL_TARGET_ANALYSIS_PARS,
             MET_CAL_FIBRE_ANALYSIS_PARS=MET_CAL_FIBRE_ANALYSIS_PARS,
             capture_image=capture_image,

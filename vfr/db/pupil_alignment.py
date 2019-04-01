@@ -12,11 +12,11 @@ from vfr.db.base import (
 RECORD_TYPE = "pupil-alignment"
 
 
-def save_pupil_alignment_images(ctx, fpu_id, images=None):
+def save_pupil_alignment_images(dbe, fpu_id, images=None):
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
-        serialnumber = ctx.fpu_config[fpu_id]["serialnumber"]
+        serialnumber = dbe.fpu_config[fpu_id]["serialnumber"]
         keybase = (serialnumber, RECORD_TYPE, "images")
         return keybase
 
@@ -25,22 +25,22 @@ def save_pupil_alignment_images(ctx, fpu_id, images=None):
         val = repr({"fpuid": fpu_id, "images": images, "time": timestamp()})
         return val
 
-    save_test_result(ctx, [fpu_id], keyfunc, valfunc)
+    save_test_result(dbe, [fpu_id], keyfunc, valfunc)
 
 
-def get_pupil_alignment_images(ctx, fpu_id, count=None):
+def get_pupil_alignment_images(dbe, fpu_id, count=None):
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
-        serialnumber = ctx.fpu_config[fpu_id]["serialnumber"]
+        serialnumber = dbe.fpu_config[fpu_id]["serialnumber"]
         keybase = (serialnumber, RECORD_TYPE, "images")
         return keybase
 
-    return get_test_result(ctx, fpu_id, keyfunc, count=count)
+    return get_test_result(dbe, fpu_id, keyfunc, count=count)
 
 
 def save_pupil_alignment_result(
-    ctx,
+    dbe,
     fpu_id,
     calibration_pars=None,
     coords=None,
@@ -53,7 +53,7 @@ def save_pupil_alignment_result(
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
-        serialnumber = ctx.fpu_config[fpu_id]["serialnumber"]
+        serialnumber = dbe.fpu_config[fpu_id]["serialnumber"]
         keybase = (serialnumber, RECORD_TYPE, "result")
         return keybase
 
@@ -74,25 +74,25 @@ def save_pupil_alignment_result(
         )
         return val
 
-    save_test_result(ctx, [fpu_id], keyfunc, valfunc)
+    save_test_result(dbe, [fpu_id], keyfunc, valfunc)
 
 
-def get_pupil_alignment_result(ctx, fpu_id, count=None):
+def get_pupil_alignment_result(dbe, fpu_id, count=None):
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
-        serialnumber = ctx.fpu_config[fpu_id]["serialnumber"]
+        serialnumber = dbe.fpu_config[fpu_id]["serialnumber"]
         keybase = (serialnumber, RECORD_TYPE, "result")
         return keybase
 
-    return get_test_result(ctx, fpu_id, keyfunc, count=count)
+    return get_test_result(dbe, fpu_id, keyfunc, count=count)
 
 
-def get_pupil_alignment_passed_p(ctx, fpu_id, count=None):
+def get_pupil_alignment_passed_p(dbe, fpu_id, count=None):
     """returns True if the latest datum repeatability test for this FPU
     was passed successfully."""
 
-    val = get_pupil_alignment_result(ctx, fpu_id, count=count)
+    val = get_pupil_alignment_result(dbe, fpu_id, count=count)
 
     if val is None:
         return False

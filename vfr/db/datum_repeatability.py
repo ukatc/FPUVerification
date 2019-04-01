@@ -12,11 +12,11 @@ from vfr.db.base import (
 RECORD_TYPE = "datum-repeatability"
 
 
-def save_datum_repeatability_images(ctx, fpu_id, images, residuals):
+def save_datum_repeatability_images(dbe, fpu_id, images, residuals):
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
-        serialnumber = ctx.fpu_config[fpu_id]["serialnumber"]
+        serialnumber = dbe.fpu_config[fpu_id]["serialnumber"]
         keybase = (serialnumber, RECORD_TYPE, "images")
         return keybase
 
@@ -30,22 +30,22 @@ def save_datum_repeatability_images(ctx, fpu_id, images, residuals):
         })
         return val
 
-    save_test_result(ctx, [fpu_id], keyfunc, valfunc)
+    save_test_result(dbe, [fpu_id], keyfunc, valfunc)
 
 
-def get_datum_repeatability_images(ctx, fpu_id, count=None):
+def get_datum_repeatability_images(dbe, fpu_id, count=None):
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
-        serialnumber = ctx.fpu_config[fpu_id]["serialnumber"]
+        serialnumber = dbe.fpu_config[fpu_id]["serialnumber"]
         keybase = (serialnumber, RECORD_TYPE, "images")
         return keybase
 
-    return get_test_result(ctx, fpu_id, keyfunc, count=count)
+    return get_test_result(dbe, fpu_id, keyfunc, count=count)
 
 
 def save_datum_repeatability_result(
-    ctx,
+    dbe,
     fpu_id,
     coords=None,
     datum_repeatability_only_max_mm=None,
@@ -64,7 +64,7 @@ def save_datum_repeatability_result(
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
-        serialnumber = ctx.fpu_config[fpu_id]["serialnumber"]
+        serialnumber = dbe.fpu_config[fpu_id]["serialnumber"]
         keybase = (serialnumber, RECORD_TYPE, "result")
         return keybase
 
@@ -91,25 +91,25 @@ def save_datum_repeatability_result(
         )
         return val
 
-    save_test_result(ctx, [fpu_id], keyfunc, valfunc)
+    save_test_result(dbe, [fpu_id], keyfunc, valfunc)
 
 
-def get_datum_repeatability_result(ctx, fpu_id, count=None):
+def get_datum_repeatability_result(dbe, fpu_id, count=None):
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
-        serialnumber = ctx.fpu_config[fpu_id]["serialnumber"]
+        serialnumber = dbe.fpu_config[fpu_id]["serialnumber"]
         keybase = (serialnumber, RECORD_TYPE, "result")
         return keybase
 
-    return get_test_result(ctx, fpu_id, keyfunc, count=count)
+    return get_test_result(dbe, fpu_id, keyfunc, count=count)
 
 
-def get_datum_repeatability_passed_p(ctx, fpu_id, count=None):
+def get_datum_repeatability_passed_p(dbe, fpu_id, count=None):
     """returns True if the latest datum repeatability test for this FPU
     was passed successfully."""
 
-    val = get_datum_repeatability_result(ctx, fpu_id, count=count)
+    val = get_datum_repeatability_result(dbe, fpu_id, count=count)
 
     if val is None:
         return False

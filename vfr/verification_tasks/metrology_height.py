@@ -22,35 +22,35 @@ from vfr.tests_common import (
 )
 
 
-def measure_metrology_height(ctx, pars=None):
+def measure_metrology_height(rig, dbe, pars=None):
 
     tstamp = timestamp()
 
     # home turntable
-    ctx.hw.safe_home_turntable(ctx.gd, ctx.grid_state)
+    rig.hw.safe_home_turntable(rig.gd, rig.grid_state)
 
-    ctx.lctrl.switch_fibre_backlight("off", manual_lamp_control=ctx.opts.manual_lamp_control)
-    ctx.lctrl.switch_ambientlight("off", manual_lamp_control=ctx.opts.manual_lamp_control)
-    ctx.lctrl.switch_fibre_backlight_voltage(
-        0.0, manual_lamp_control=ctx.opts.manual_lamp_control
+    rig.lctrl.switch_fibre_backlight("off", manual_lamp_control=rig.opts.manual_lamp_control)
+    rig.lctrl.switch_ambientlight("off", manual_lamp_control=rig.opts.manual_lamp_control)
+    rig.lctrl.switch_fibre_backlight_voltage(
+        0.0, manual_lamp_control=rig.opts.manual_lamp_control
     )
 
-    with ctx.lctrl.use_silhouettelight(manual_lamp_control=ctx.opts.manual_lamp_control):
+    with rig.lctrl.use_silhouettelight(manual_lamp_control=rig.opts.manual_lamp_control):
 
         MET_HEIGHT_CAMERA_CONF = {
             DEVICE_CLASS: BASLER_DEVICE_CLASS,
             IP_ADDRESS: MET_HEIGHT_CAMERA_IP_ADDRESS,
         }
 
-        met_height_cam = ctx.hw.GigECamera(MET_HEIGHT_CAMERA_CONF)
+        met_height_cam = rig.hw.GigECamera(MET_HEIGHT_CAMERA_CONF)
 
         # get sorted positions (this is needed because the turntable can only
         # move into one direction)
         for fpu_id, stage_position in get_sorted_positions(
-            ctx.measure_fpuset, pars.MET_HEIGHT_POSITIONS
+            rig.measure_fpuset, pars.MET_HEIGHT_POSITIONS
         ):
             # move rotary stage to POS_REP_POSN_N
-            ctx.hw.turntable_safe_goto(ctx.gd, ctx.grid_state, stage_position)
+            rig.hw.turntable_safe_goto(rig.gd, rig.grid_state, stage_position)
 
             # initialize pos_rep camera
             # set pos_rep camera exposure time to DATUM_REP_EXPOSURE milliseconds
@@ -60,7 +60,7 @@ def measure_metrology_height(ctx, pars=None):
                 ipath = store_image(
                     camera,
                     "{sn}/{tn}/{ts}.bmp",
-                    sn=ctx.fpu_config[fpu_id]["serialnumber"],
+                    sn=rig.fpu_config[fpu_id]["serialnumber"],
                     tn="metrology-height",
                     ts=tstamp,
                 )
@@ -69,13 +69,13 @@ def measure_metrology_height(ctx, pars=None):
 
             images = capture_image(met_height_cam)
 
-            save_metrology_height_images(ctx, fpu_id, images)
+            save_metrology_height_images(dbe, fpu_id, images)
 
 
-def eval_metrology_height(ctx, met_height_analysis_pars, met_height_evaluation_pars):
+def eval_metrology_height(dbe, met_height_analysis_pars, met_height_evaluation_pars):
 
-    for fpu_id in ctx.eval_fpuset:
-        measurement = get_metrology_height_images(ctx, fpu_id)
+    for fpu_id in dbe.eval_fpuset:
+        measurement = get_metrology_height_images(dbe, fpu_id)
 
         if measurement is None:
             print("FPU %s: no metrology height measurement data found" % fpu_id)
@@ -106,7 +106,7 @@ def eval_metrology_height(ctx, met_height_analysis_pars, met_height_evaluation_p
             test_result = TestResult.NA
 
         save_metrology_height_result(
-            ctx,
+            dbe,
             fpu_id,
             metht_small_target_height_mm=metht_small_target_height_mm,
             metht_large_target_height_mm=metht_large_target_height_mm,

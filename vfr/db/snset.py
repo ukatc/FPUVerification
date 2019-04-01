@@ -16,16 +16,16 @@ def _get_set(txn, key):
     return existing_serial_numbers
 
 
-def add_sns_to_set(ctx, new_serialnumbers):
+def add_sns_to_set(dbe, new_serialnumbers):
     """Adds a serial number to the set of FPUs in the database.
 
     This is needed so that we can iterate over the records for all
     processed FPUs.
 
     """
-    verbosity = ctx.opts.verbosity
+    verbosity = dbe.opts.verbosity
 
-    with ctx.env.begin(write=True, db=ctx.vfdb) as txn:
+    with dbe.env.begin(write=True, db=dbe.vfdb) as txn:
         existing_serial_numbers = _get_set(txn, KEY)
 
         new_set = set(new_serialnumbers)

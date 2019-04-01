@@ -28,31 +28,31 @@ from vfr.tests_common import (
 )
 
 
-def measure_datum_repeatability(ctx, pars=None):
+def measure_datum_repeatability(rig, dbe, pars=None):
 
     tstamp = timestamp()
 
     # home turntable
-    ctx.hw.safe_home_turntable(ctx.gd, ctx.grid_state)
+    rig.hw.safe_home_turntable(rig.gd, rig.grid_state)
 
-    ctx.lctrl.switch_fibre_backlight("off", manual_lamp_control=ctx.opts.manual_lamp_control)
-    ctx.lctrl.switch_fibre_backlight_voltage(
-        0.0, manual_lamp_control=ctx.opts.manual_lamp_control
+    rig.lctrl.switch_fibre_backlight("off", manual_lamp_control=rig.opts.manual_lamp_control)
+    rig.lctrl.switch_fibre_backlight_voltage(
+        0.0, manual_lamp_control=rig.opts.manual_lamp_control
     )
 
-    with ctx.lctrl.use_ambientlight(manual_lamp_control=ctx.opts.manual_lamp_control):
+    with rig.lctrl.use_ambientlight(manual_lamp_control=rig.opts.manual_lamp_control):
 
         # get sorted positions (this is needed because the turntable can only
         # move into one direction)
         for fpu_id, stage_position in get_sorted_positions(
-            ctx.measure_fpuset, pars.DATUM_REP_POSITIONS
+            rig.measure_fpuset, pars.DATUM_REP_POSITIONS
         ):
 
-            if get_datum_repeatability_passed_p(ctx, fpu_id) and (
-                not ctx.opts.repeat_passed_tests
+            if get_datum_repeatability_passed_p(dbe, fpu_id) and (
+                not rig.opts.repeat_passed_tests
             ):
 
-                sn = ctx.fpu_config[fpu_id]["serialnumber"]
+                sn = rig.fpu_config[fpu_id]["serialnumber"]
                 print(
                     "FPU %s : datum repeatability test already passed, skipping test"
                     % sn
@@ -60,7 +60,7 @@ def measure_datum_repeatability(ctx, pars=None):
                 continue
 
             # move rotary stage to POS_REP_POSN_N
-            ctx.hw.turntable_safe_goto(ctx.gd, ctx.grid_state, stage_position)
+            rig.hw.turntable_safe_goto(rig.gd, rig.grid_state, stage_position)
 
             # initialize pos_rep camera
             # set pos_rep camera exposure time to DATUM_REP_EXPOSURE milliseconds
@@ -69,7 +69,7 @@ def measure_datum_repeatability(ctx, pars=None):
                 IP_ADDRESS: MET_CAL_CAMERA_IP_ADDRESS,
             }
 
-            met_cal_cam = ctx.hw.GigECamera(MET_CAL_CAMERA_CONF)
+            met_cal_cam = rig.hw.GigECamera(MET_CAL_CAMERA_CONF)
             met_cal_cam.SetExposureTime(pars.DATUM_REP_EXPOSURE_MS)
 
             datumed_images = []
@@ -82,7 +82,7 @@ def measure_datum_repeatability(ctx, pars=None):
                 ipath = store_image(
                     met_cal_cam,
                     "{sn}/{tn}/{ts}/{tp}-{ct:03d}.bmp",
-                    sn=ctx.fpu_config[fpu_id]["serialnumber"],
+                    sn=rig.fpu_config[fpu_id]["serialnumber"],
                     tn="datum-repeatability",
                     ts=tstamp,
                     tp=subtest,
@@ -93,22 +93,22 @@ def measure_datum_repeatability(ctx, pars=None):
 
             for count in range(pars.DATUM_REP_ITERATIONS):
                 print("capturing datumed-%02i" % count)
-                ctx.gd.findDatum(ctx.grid_state, fpuset=[fpu_id])
+                rig.gd.findDatum(rig.grid_state, fpuset=[fpu_id])
                 ipath = capture_image("datumed", count)
                 datumed_images.append(ipath)
-                ctx.gd.getCounterDeviation(ctx.grid_state, fpuset=[fpu_id])
-                fpu = ctx.grid_state.FPU[fpu_id]
+                rig.gd.getCounterDeviation(rig.grid_state, fpuset=[fpu_id])
+                fpu = rig.grid_state.FPU[fpu_id]
                 datumed_residuals.append( (fpu.alpha_deviation, fpu.beta_deviation,) )
 
 
-            ctx.gd.findDatum(ctx.grid_state)
+            rig.gd.findDatum(rig.grid_state)
             for count in range(pars.DATUM_REP_ITERATIONS):
-                if ctx.opts.verbosity > 0:
+                if rig.opts.verbosity > 0:
                     print("moving FPU %i to (30,30) and back" % fpu_id)
-                wf = gen_wf(30 * dirac(fpu_id, ctx.opts.N), 30)
-                verbosity = max(ctx.opts.verbosity - 3, 0)
-                gd = ctx.gd
-                grid_state = ctx.grid_state
+                wf = gen_wf(30 * dirac(fpu_id, rig.opts.N), 30)
+                verbosity = max(rig.opts.verbosity - 3, 0)
+                gd = rig.gd
+                grid_state = rig.grid_state
 
                 gd.configMotion(wf, grid_state, verbosity=verbosity)
                 gd.executeMotion(grid_state, fpuset=[fpu_id])
@@ -119,20 +119,20 @@ def measure_datum_repeatability(ctx, pars=None):
                 ipath = capture_image("moved+datumed", count)
                 moved_images.append(ipath)
 
-                ctx.gd.getCounterDeviation(ctx.grid_state, fpuset=[fpu_id])
-                fpu = ctx.grid_state.FPU[fpu_id]
+                rig.gd.getCounterDeviation(rig.grid_state, fpuset=[fpu_id])
+                fpu = rig.grid_state.FPU[fpu_id]
                 moved_residuals.append( (fpu.alpha_deviation, fpu.beta_deviation,) )
 
             images = {"datumed_images": datumed_images, "moved_images": moved_images}
             residuals = {"datumed_residuals": datumed_residuals, "moved_residuals": moved_residuals}
 
-            save_datum_repeatability_images(ctx, fpu_id, images, residuals)
+            save_datum_repeatability_images(dbe, fpu_id, images, residuals)
 
 
-def eval_datum_repeatability(ctx, dat_rep_analysis_pars):
+def eval_datum_repeatability(dbe, dat_rep_analysis_pars):
 
-    for fpu_id in ctx.eval_fpuset:
-        measurement = get_datum_repeatability_images(ctx, fpu_id)
+    for fpu_id in dbe.eval_fpuset:
+        measurement = get_datum_repeatability_images(dbe, fpu_id)
         if measurement is None:
             print("FPU %s: no datum repeatability measurement data found" % fpu_id)
             continue
@@ -194,7 +194,7 @@ def eval_datum_repeatability(ctx, dat_rep_analysis_pars):
                 datum_repeatability_has_passed = TestResult.OK
 
         save_datum_repeatability_result(
-            ctx,
+            dbe,
             fpu_id,
             coords=coords,
             datum_repeatability_only_max_mm=datrep_dat_only_max,

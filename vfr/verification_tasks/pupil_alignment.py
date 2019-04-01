@@ -39,26 +39,26 @@ def generate_positions():
     yield (a_near, b_near), False
 
 
-def measure_pupil_alignment(ctx, pars=None):
+def measure_pupil_alignment(rig, dbe, pars=None):
 
     tstamp = timestamp()
 
-    if ctx.opts.skip_fibre:
+    if rig.opts.skip_fibre:
         print("option '--skip-fibre' is set -- skipping pupil alignment test")
         return
 
     # home turntable
-    ctx.hw.safe_home_turntable(ctx.gd, ctx.grid_state)
-    ctx.hw.home_linear_stage()
+    rig.hw.safe_home_turntable(rig.gd, rig.grid_state)
+    rig.hw.home_linear_stage()
 
-    ctx.lctrl.switch_ambientlight("off", manual_lamp_control=ctx.opts.manual_lamp_control)
-    ctx.lctrl.switch_silhouettelight("off", manual_lamp_control=ctx.opts.manual_lamp_control)
-    ctx.lctrl.switch_fibre_backlight_voltage(
-        5.0, manual_lamp_control=ctx.opts.manual_lamp_control
+    rig.lctrl.switch_ambientlight("off", manual_lamp_control=rig.opts.manual_lamp_control)
+    rig.lctrl.switch_silhouettelight("off", manual_lamp_control=rig.opts.manual_lamp_control)
+    rig.lctrl.switch_fibre_backlight_voltage(
+        5.0, manual_lamp_control=rig.opts.manual_lamp_control
     )
 
-    with ctx.lctrl.use_backlight(
-        pars.PUP_ALGN_LAMP_VOLTAGE, manual_lamp_control=ctx.opts.manual_lamp_control
+    with rig.lctrl.use_backlight(
+        pars.PUP_ALGN_LAMP_VOLTAGE, manual_lamp_control=rig.opts.manual_lamp_control
 
     ):
 
@@ -69,20 +69,20 @@ def measure_pupil_alignment(ctx, pars=None):
             IP_ADDRESS: PUP_ALGN_CAMERA_IP_ADDRESS,
         }
 
-        pup_aln_cam = ctx.hw.GigECamera(PUP_ALGN_CAMERA_CONF)
+        pup_aln_cam = rig.hw.GigECamera(PUP_ALGN_CAMERA_CONF)
         pup_aln_cam.SetExposureTime(pars.PUP_ALGN_EXPOSURE_MS)
 
         # get sorted positions (this is needed because the turntable can only
         # move into one direction)
         for fpu_id, stage_position in get_sorted_positions(
-            ctx.measure_fpuset, pars.PUP_ALGN_POSITIONS
+            rig.measure_fpuset, pars.PUP_ALGN_POSITIONS
         ):
 
-            if get_pupil_alignment_passed_p(ctx, fpu_id) and (
-                not ctx.opts.repeat_passed_tests
+            if get_pupil_alignment_passed_p(dbe, fpu_id) and (
+                not rig.opts.repeat_passed_tests
             ):
 
-                sn = ctx.fpu_config[fpu_id]["serialnumber"]
+                sn = rig.fpu_config[fpu_id]["serialnumber"]
                 print(
                     "FPU %s : pupil alignment test already passed,"
                     " skipping test for this FPU" % sn
@@ -90,10 +90,10 @@ def measure_pupil_alignment(ctx, pars=None):
                 continue
 
             # move rotary stage to PUP_ALGN_POSN_N
-            ctx.hw.turntable_safe_goto(ctx.gd, ctx.grid_state, stage_position)
-            ctx.hw.linear_stage_goto(pars.PUP_ALGN_LINPOSITIONS[fpu_id])
+            rig.hw.turntable_safe_goto(rig.gd, rig.grid_state, stage_position)
+            rig.hw.linear_stage_goto(pars.PUP_ALGN_LINPOSITIONS[fpu_id])
 
-            sn = ctx.fpu_config[fpu_id]["serialnumber"]
+            sn = rig.fpu_config[fpu_id]["serialnumber"]
 
             def capture_image(count, alpha, beta):
 
@@ -113,18 +113,18 @@ def measure_pupil_alignment(ctx, pars=None):
             images = {}
             for count, (coords, do_capture) in enumerate(generate_positions()):
                 abs_alpha, abs_beta = coords
-                if ctx.opts.verbosity > 3:
+                if rig.opts.verbosity > 3:
                     print(
                         "FPU %s: go to position (%7.2f, %7.2f)"
                         % (sn, abs_alpha, abs_beta)
                     )
 
                 goto_position(
-                    ctx.gd, abs_alpha, abs_beta, ctx.grid_state, fpuset=[fpu_id]
+                    rig.gd, abs_alpha, abs_beta, rig.grid_state, fpuset=[fpu_id]
                 )
 
                 if do_capture:
-                    if ctx.opts.verbosity > 0:
+                    if rig.opts.verbosity > 0:
                         print(
                             "FPU %s: saving image for (%7.2f, %7.2f)"
                             % (sn, abs_alpha, abs_beta)
@@ -132,17 +132,17 @@ def measure_pupil_alignment(ctx, pars=None):
                     ipath = capture_image(count, abs_alpha, abs_beta)
                     images[(abs_alpha, abs_beta)] = ipath
 
-            find_datum(ctx.gd, ctx.grid_state, ctx.opts)
+            find_datum(rig.gd, rig.grid_state, rig.opts)
 
-            save_pupil_alignment_images(ctx, fpu_id, images=images)
+            save_pupil_alignment_images(dbe, fpu_id, images=images)
 
 
 def eval_pupil_alignment(
-    ctx, PUP_ALGN_ANALYSIS_PARS=None, PUP_ALGN_EVALUATION_PARS=None
+    dbe, PUP_ALGN_ANALYSIS_PARS=None, PUP_ALGN_EVALUATION_PARS=None
 ):
 
-    for fpu_id in ctx.eval_fpuset:
-        measurement = get_pupil_alignment_images(ctx, fpu_id)
+    for fpu_id in dbe.eval_fpuset:
+        measurement = get_pupil_alignment_images(dbe, fpu_id)
 
         if measurement is None:
             print("FPU %s: no pupil alignment measurement data found" % fpu_id)
@@ -182,7 +182,7 @@ def eval_pupil_alignment(
         }
 
         save_pupil_alignment_result(
-            ctx,
+            dbe,
             fpu_id,
             calibration_pars=PUP_ALGN_ANALYSIS_PARS.PUP_ALGN_CALIBRATION_PARS,
             coords=coords,

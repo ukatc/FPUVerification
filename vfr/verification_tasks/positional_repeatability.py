@@ -33,19 +33,19 @@ from vfr.verification_tasks.measure_datum_repeatability import (
 )
 
 
-def measure_positional_repeatability(ctx, pars=None):
+def measure_positional_repeatability(rig, dbe, pars=None):
 
     tstamp = timestamp()
 
     # home turntable
-    ctx.hw.safe_home_turntable(ctx.gd, ctx.grid_state)
+    rig.hw.safe_home_turntable(rig.gd, rig.grid_state)
 
-    ctx.lctrl.switch_fibre_backlight("off", manual_lamp_control=ctx.opts.manual_lamp_control)
-    ctx.lctrl.switch_fibre_backlight_voltage(
-        0.0, manual_lamp_control=ctx.opts.manual_lamp_control
+    rig.lctrl.switch_fibre_backlight("off", manual_lamp_control=rig.opts.manual_lamp_control)
+    rig.lctrl.switch_fibre_backlight_voltage(
+        0.0, manual_lamp_control=rig.opts.manual_lamp_control
     )
 
-    with ctx.lctrl.use_ambientlight(manual_lamp_control=ctx.opts.manual_lamp_control):
+    with rig.lctrl.use_ambientlight(manual_lamp_control=rig.opts.manual_lamp_control):
         # initialize pos_rep camera
         # set pos_rep camera exposure time to POSITIONAL_REP_EXPOSURE milliseconds
         POS_REP_CAMERA_CONF = {
@@ -53,25 +53,25 @@ def measure_positional_repeatability(ctx, pars=None):
             IP_ADDRESS: POS_REP_CAMERA_IP_ADDRESS,
         }
 
-        pos_rep_cam = ctx.hw.GigECamera(POS_REP_CAMERA_CONF)
+        pos_rep_cam = rig.hw.GigECamera(POS_REP_CAMERA_CONF)
         pos_rep_cam.SetExposureTime(pars.POS_REP_EXPOSURE_MS)
 
         # get sorted positions (this is needed because the turntable can only
         # move into one direction)
         for fpu_id, stage_position in get_sorted_positions(
-            ctx.measure_fpuset, pars.POS_REP_POSITIONS
+            rig.measure_fpuset, pars.POS_REP_POSITIONS
         ):
 
-            sn = ctx.fpu_config[fpu_id]["serialnumber"]
-            if not get_datum_repeatability_passed_p(ctx, fpu_id):
+            sn = rig.fpu_config[fpu_id]["serialnumber"]
+            if not get_datum_repeatability_passed_p(dbe, fpu_id):
                 print(
                     "FPU %s: skipping positional repeatability measurement because"
                     " there is no passed datum repeatability test" % sn
                 )
                 continue
 
-            if not get_pupil_alignment_passed_p(ctx, fpu_id):
-                if ctx.opts.skip_fibre:
+            if not get_pupil_alignment_passed_p(dbe, fpu_id):
+                if rig.opts.skip_fibre:
                     warnings.warn(
                         "skipping check for pupil alignment because '--skip-fibre' flag is set"
                     )
@@ -83,8 +83,8 @@ def measure_positional_repeatability(ctx, pars=None):
                     )
                     continue
 
-            if get_positional_repeatability_passed_p(ctx, fpu_id) and (
-                not ctx.opts.repeat_passed_tests
+            if get_positional_repeatability_passed_p(dbe, fpu_id) and (
+                not rig.opts.repeat_passed_tests
             ):
 
                 print(
@@ -93,10 +93,10 @@ def measure_positional_repeatability(ctx, pars=None):
                 )
                 continue
 
-            _alpha_min = get_angular_limit(ctx, fpu_id, "alpha_min")
-            _alpha_max = get_angular_limit(ctx, fpu_id, "alpha_max")
-            _beta_min = get_angular_limit(ctx, fpu_id, "beta_min")
-            _beta_max = get_angular_limit(ctx, fpu_id, "beta_max")
+            _alpha_min = get_angular_limit(dbe, fpu_id, "alpha_min")
+            _alpha_max = get_angular_limit(dbe, fpu_id, "alpha_max")
+            _beta_min = get_angular_limit(dbe, fpu_id, "beta_min")
+            _beta_max = get_angular_limit(dbe, fpu_id, "beta_max")
 
             if (
                 (_alpha_min is None)
@@ -113,7 +113,7 @@ def measure_positional_repeatability(ctx, pars=None):
             beta_max = _beta_max["val"]
 
             # move rotary stage to POS_REP_POSN_N
-            ctx.hw.turntable_safe_goto(ctx.gd, ctx.grid_state, stage_position)
+            rig.hw.turntable_safe_goto(rig.gd, rig.grid_state, stage_position)
 
             image_dict_alpha = {}
             image_dict_beta = {}
@@ -136,7 +136,7 @@ def measure_positional_repeatability(ctx, pars=None):
                 return ipath
 
             for i in range(pars.POS_REP_ITERATIONS):
-                find_datum(ctx.gd, ctx.grid_state, opts=ctx.opts)
+                find_datum(rig.gd, rig.grid_state, opts=rig.opts)
 
                 step_a = (
                     alpha_max - alpha_min - 2 * pars.POS_REP_SAFETY_MARGIN
@@ -168,25 +168,25 @@ def measure_positional_repeatability(ctx, pars=None):
                         abs_alpha = alpha0 + step_a * ka
                         abs_beta = beta0 + step_b * kb
 
-                        if ctx.opts.verbosity > 1:
+                        if rig.opts.verbosity > 1:
                             print(
                                 "FPU %s measurement [%2i, %2i, %2i]: going to position (%7.2f, %7.2f)"
                                 % (sn, i, j, k, abs_alpha, abs_beta)
                             )
 
                         goto_position(
-                            ctx.gd, abs_alpha, abs_beta, ctx.grid_state, fpuset=[fpu_id]
+                            rig.gd, abs_alpha, abs_beta, rig.grid_state, fpuset=[fpu_id]
                         )
 
                         # to get the angles, we need to pass all connected FPUs
-                        fpuset = range(ctx.opts.N)
-                        angles = ctx.gd.countedAngles(ctx.grid_state, fpuset=fpuset)
+                        fpuset = range(rig.opts.N)
+                        angles = rig.gd.countedAngles(rig.grid_state, fpuset=fpuset)
 
                         alpha_count = angles[fpu_id][0]
                         beta_count = angles[fpu_id][1]
 
-                        alpha_steps = ctx.grid_state.FPU[fpu_id].alpha_steps
-                        beta_steps = ctx.grid_state.FPU[fpu_id].beta_steps
+                        alpha_steps = rig.grid_state.FPU[fpu_id].alpha_steps
+                        beta_steps = rig.grid_state.FPU[fpu_id].beta_steps
 
                         ipath = capture_image(i, j, k, alpha_count, beta_count)
                         if j in [0, 1]:
@@ -203,7 +203,7 @@ def measure_positional_repeatability(ctx, pars=None):
                             )
 
             save_positional_repeatability_images(
-                ctx,
+                dbe,
                 fpu_id,
                 image_dict_alpha=image_dict_alpha,
                 image_dict_beta=image_dict_beta,
@@ -211,12 +211,12 @@ def measure_positional_repeatability(ctx, pars=None):
             )
 
 
-def eval_positional_repeatability(ctx, pos_rep_analysis_pars, pos_rep_evaluation_pars):
+def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation_pars):
     def analysis_func(ipath):
         return posrepCoordinates(ipath, pars=pos_rep_analysis_pars)
 
-    for fpu_id in ctx.eval_fpuset:
-        measurement = get_positional_repeatability_images(ctx, fpu_id)
+    for fpu_id in dbe.eval_fpuset:
+        measurement = get_positional_repeatability_images(dbe, fpu_id)
 
         if measurement is None:
             print("FPU %s: no positional repeatability measurement data found" % fpu_id)
@@ -311,7 +311,7 @@ def eval_positional_repeatability(ctx, pos_rep_analysis_pars, pos_rep_evaluation
             gearbox_correction=None
 
         save_positional_repeatability_result(
-            ctx,
+            dbe,
             fpu_id,
             pos_rep_calibration_pars=pos_rep_analysis_pars.POS_REP_CALIBRATION_PARS,
             analysis_results_alpha=analysis_results_alpha,

@@ -13,12 +13,12 @@ RECORD_TYPE = "positional-repeatability"
 
 
 def save_positional_repeatability_images(
-    ctx, fpu_id, image_dict_alpha=None, image_dict_beta=None, waveform_pars={}
+    dbe, fpu_id, image_dict_alpha=None, image_dict_beta=None, waveform_pars={}
 ):
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
-        serialnumber = ctx.fpu_config[fpu_id]["serialnumber"]
+        serialnumber = dbe.fpu_config[fpu_id]["serialnumber"]
         keybase = (serialnumber, RECORD_TYPE, "images")
         return keybase
 
@@ -35,24 +35,24 @@ def save_positional_repeatability_images(
         )
         return val
 
-    verbosity = max(ctx.opts.verbosity - 4, 0)
-    save_test_result(ctx, [fpu_id], keyfunc, valfunc, verbosity=verbosity)
+    verbosity = max(dbe.opts.verbosity - 4, 0)
+    save_test_result(dbe, [fpu_id], keyfunc, valfunc, verbosity=verbosity)
 
 
-def get_positional_repeatability_images(ctx, fpu_id, count=None):
+def get_positional_repeatability_images(dbe, fpu_id, count=None):
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
-        serialnumber = ctx.fpu_config[fpu_id]["serialnumber"]
+        serialnumber = dbe.fpu_config[fpu_id]["serialnumber"]
         keybase = (serialnumber, RECORD_TYPE, "images")
         return keybase
 
-    verbosity = max(ctx.opts.verbosity - 3, 0)
-    return get_test_result(ctx, fpu_id, keyfunc, verbosity=verbosity, count=count)
+    verbosity = max(dbe.opts.verbosity - 3, 0)
+    return get_test_result(dbe, fpu_id, keyfunc, verbosity=verbosity, count=count)
 
 
 def save_positional_repeatability_result(
-    ctx,
+    dbe,
     fpu_id,
     pos_rep_calibration_pars=None,
     analysis_results_alpha=None,
@@ -71,7 +71,7 @@ def save_positional_repeatability_result(
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
-        serialnumber = ctx.fpu_config[fpu_id]["serialnumber"]
+        serialnumber = dbe.fpu_config[fpu_id]["serialnumber"]
         keybase = (serialnumber, RECORD_TYPE, "result")
         return keybase
 
@@ -98,28 +98,28 @@ def save_positional_repeatability_result(
         )
         return val
 
-    verbosity = max(ctx.opts.verbosity - 3, 0)
+    verbosity = max(dbe.opts.verbosity - 3, 0)
     if verbosity > 3:
         print("saving positional repetabilty result..")
-    save_test_result(ctx, [fpu_id], keyfunc, valfunc, verbosity=verbosity)
+    save_test_result(dbe, [fpu_id], keyfunc, valfunc, verbosity=verbosity)
 
 
-def get_positional_repeatability_result(ctx, fpu_id, count=None):
+def get_positional_repeatability_result(dbe, fpu_id, count=None):
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
-        serialnumber = ctx.fpu_config[fpu_id]["serialnumber"]
+        serialnumber = dbe.fpu_config[fpu_id]["serialnumber"]
         keybase = (serialnumber, RECORD_TYPE, "result")
         return keybase
 
-    return get_test_result(ctx, fpu_id, keyfunc, count=count)
+    return get_test_result(dbe, fpu_id, keyfunc, count=count)
 
 
-def get_positional_repeatability_passed_p(ctx, fpu_id, count=None):
+def get_positional_repeatability_passed_p(dbe, fpu_id, count=None):
     """returns True if the latest positional repeatability test for this FPU
     was passed successfully."""
 
-    val = get_positional_repeatability_result(ctx, fpu_id, count=count)
+    val = get_positional_repeatability_result(dbe, fpu_id, count=count)
 
     if val is None:
         return False

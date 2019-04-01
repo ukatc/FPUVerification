@@ -152,7 +152,9 @@ summary = cleandoc(
 
     {MEASURE_PUP_ALGN!r:<20}  - measure, but don't evaluate pupil alignment
 
-    {MEASURE_ALL!r:<20}  - measure, but don't evaluate all specifications
+    {TASK_MEASURE_ALL!r:<20}  - measure everything, but don't evaluate specifications
+
+    {TASK_MEASURE_NONFIBRE!r:<20}  - perform all measurements except those involving fibres
 
 
     3c) EVALUATION ALONE
@@ -170,6 +172,7 @@ summary = cleandoc(
     {EVAL_PUP_ALGN!r:<20}  - evaluate pupil alignment
     {TASK_EVAL_ALL!r:<20}  - evaluate all measurements again (for example,
                             after code updates)
+    {TASK_EVAL_NONFIBRE!r:<20}  - evaluate all non-fibre measurements
 
 
 

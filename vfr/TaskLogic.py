@@ -37,10 +37,10 @@ def expand_tasks(tasks, goal, expansion, delete=False):
     return tasks
 
 
-def resolve(tasks, ctx):
+def resolve(tasks, rig, dbe):
     tasks = set(tasks)
 
-    fpuset = set(ctx.measure_fpuset) | set(ctx.eval_fpuset)
+    fpuset = set(rig.measure_fpuset) | set(dbe.eval_fpuset)
 
     for tsk in tasks:
         if tsk not in usertasks:
@@ -62,8 +62,8 @@ def resolve(tasks, ctx):
         # and are not already passed by all FPUs)
         for tsk, testfun, cond_expansion in conditional_dependencies:
             if tsk in tasks:
-                tfun = lambda fpu_id: testfun(ctx, fpu_id)
-                if (not all_true(tfun, fpuset)) or ctx.opts.repeat_passed_tests:
+                tfun = lambda fpu_id: testfun(dbe, fpu_id)
+                if (not all_true(tfun, fpuset)) or rig.opts.repeat_passed_tests:
                     tasks = expand_tasks(tasks, tsk, cond_expansion, delete=True)
 
         # check for equality with last iteration

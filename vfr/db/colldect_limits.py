@@ -19,7 +19,7 @@ from vfr.db.base import (
 
 
 def save_angular_limit(
-    ctx, fpu_id, serialnumber, which_limit, test_succeeded, limit_val, diagnostic
+    dbe, fpu_id, serialnumber, which_limit, test_succeeded, limit_val, diagnostic
 ):
 
     print("saving limit value")
@@ -48,12 +48,12 @@ def save_angular_limit(
         )
         return val
 
-    save_test_result(ctx, [fpu_id], keyfunc, valfunc)
+    save_test_result(dbe, [fpu_id], keyfunc, valfunc)
 
 
-def get_angular_limit(ctx, fpu_id, which_limit, count=None):
+def get_angular_limit(dbe, fpu_id, which_limit, count=None):
 
-    serialnumber = ctx.fpu_config[fpu_id]["serialnumber"]
+    serialnumber = dbe.fpu_config[fpu_id]["serialnumber"]
 
     def keyfunc(fpu_id):
         if which_limit == "beta_collision":
@@ -62,23 +62,23 @@ def get_angular_limit(ctx, fpu_id, which_limit, count=None):
             keybase = (serialnumber, "limit", which_limit)
         return keybase
 
-    return get_test_result(ctx, fpu_id, keyfunc, count=count)
+    return get_test_result(dbe, fpu_id, keyfunc, count=count)
 
 
-def get_anglimit_passed_p(ctx, fpu_id, which_limit, count=None):
+def get_anglimit_passed_p(dbe, fpu_id, which_limit, count=None):
 
-    result = get_angular_limit(ctx, fpu_id, which_limit, count=count)
+    result = get_angular_limit(dbe, fpu_id, which_limit, count=count)
 
     if result is None:
         return False
     return result["result"] == TestResult.OK
 
 
-def get_colldect_passed_p(ctx, fpu_id, count=None):
-    return get_anglimit_passed_p(ctx, fpu_id, "beta_collision", count=count)
+def get_colldect_passed_p(dbe, fpu_id, count=None):
+    return get_anglimit_passed_p(dbe, fpu_id, "beta_collision", count=count)
 
 
-def set_protection_limit(ctx, fpu_id, which_limit, measured_val):
+def set_protection_limit(rig, dbe, fpu_id, which_limit, measured_val):
 
     """This replaces the corresponding entry in the protection database if
     either the update flag is True, or the current entry is the default value.
@@ -99,18 +99,18 @@ def set_protection_limit(ctx, fpu_id, which_limit, measured_val):
     else:
         default_val = default_max
 
-    fpu = ctx.grid_state.FPU[fpu_id]
-    serialnumber = ctx.fpu_config[fpu_id]["serialnumber"]
-    with ctx.env.begin(write=True, db=ctx.fpudb) as txn:
+    fpu = rig.grid_state.FPU[fpu_id]
+    serialnumber = rig.fpu_config[fpu_id]["serialnumber"]
+    with dbe.env.begin(write=True, db=dbe.fpudb) as txn:
         val = ProtectionDB.getField(txn, fpu, subkey) + offset
 
         val_min = val.min()
         val_max = val.max()
         if is_min:
-            if (val_min == default_val) or ctx.opts.update_protection_limits:
+            if (val_min == default_val) or dbe.opts.update_protection_limits:
                 val_min = measured_val + PROTECTION_TOLERANCE
         else:
-            if (val_max == default_val) or ctx.opts.update_protection_limits:
+            if (val_max == default_val) or dbe.opts.update_protection_limits:
                 val_max = measured_val - PROTECTION_TOLERANCE
 
         new_val = Interval(val_min, val_max)

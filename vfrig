@@ -87,25 +87,62 @@ if __name__ == "__main__":
         hw = real_hw
         atexit.register(lamps_off)
 
-    context = Namespace(
+    rig_opts = Namespace(**{ k : vars(opts)[k] for k in [
+        'verbosity',
+        'mockup',
+        'manual_lamp_control',
+        'always_reset_fpus',
+        're_initialize',
+        'repeat_passed_tests',
+        'skip_fibre',
+        'rewind_fpus',
+        'N',
+        'bus_repeat_dummy_delay'
+    ]})
+
+    db_opts = Namespace(**{ k : vars(opts)[k] for k in [
+        'report_format',
+        'verbosity',
+        're_initialize',
+        'output_file',
+        'reuse_serialnum',
+        'update_protection_limits',
+        'protection_tolerance',
+        'display_alpha_max',
+        'display_alpha_min',
+        'display_beta_max',
+        'display_beta_min',
+        'record_count',
+    ]})
+
+    # we define two structs which group hardware
+    # access and database access.
+    rig = Namespace(
         hw=hw,
-        env=env,
-        fpudb=None,
-        vfdb=vfdb,
         gd=None,
         lctrl=lctrl,
         grid_state=None,
         measure_fpuset=measure_fpuset,
+        fpu_config=fpu_config,
+        opts=rig_opts,
+    )
+
+    fpudb = env.open_db("fpu")
+
+    dbe = Namespace(
+        env=env,
+        fpudb=fpudb,
+        vfdb=vfdb,
         eval_fpuset=eval_fpuset,
         fpu_config=fpu_config,
-        opts=opts,
+        opts=db_opts,
     )
 
     # resolve high-level tasks and dependent checks and measurements into
     # low-level actions
-    tasks = resolve(opts.tasks, context)
+    tasks = resolve(opts.tasks, rig, dbe)
 
-    if not context.measure_fpuset:
+    if not rig.measure_fpuset:
         # no measurements, we remove all related tasks
         print("No FPUs in measurement set, removing all measurement tasks")
         tasks -= set([
@@ -186,7 +223,7 @@ if __name__ == "__main__":
 
         rd, grid_state = init_driver(opts, max(measure_fpuset), protected=False)
 
-        context.grid_state = grid_state
+        rig.grid_state = grid_state
 
     if T.TST_CAN_CONNECTION in tasks:
         print ("[test_can_connection] ###")
@@ -195,7 +232,7 @@ if __name__ == "__main__":
 
     if T.TST_FLASH in tasks:
         print ("[flash_snum] ###")
-        check_sns_unique(context)
+        check_sns_unique(rig, dbe)
         flashed_numbers = []
         for fpu_id in measure_fpuset:
             serial_number = fpu_config[fpu_id]["serialnumber"]
@@ -211,11 +248,10 @@ if __name__ == "__main__":
             rd.readSerialNumbers(grid_state)
         # we update the set of FPUs which are in the database,
         # so that we can iterate over existing data when generating reports.
-        add_sns_to_set(context, flashed_numbers)
+        add_sns_to_set(dbe, flashed_numbers)
 
 
 
-    context.fpudb = env.open_db("fpu")
 
     if T.TST_INITPOS in tasks:
         print ("[init_positions] ###")
@@ -225,7 +261,7 @@ if __name__ == "__main__":
             serialnumber = fpu_config[fpu_id]["serialnumber"]
 
             init_position(
-                context,
+                dbe,
                 fpu_id,
                 serialnumber,
                 alpha_start,
@@ -243,8 +279,8 @@ if __name__ == "__main__":
         gd, grid_state = init_driver(opts, max(measure_fpuset), env=env, protected=True)
         gd.readSerialNumbers(grid_state)
 
-        context.gd = gd
-        context.grid_state = grid_state
+        rig.gd = gd
+        rig.grid_state = grid_state
 
         for fpu_id in measure_fpuset:
             actual_sn = grid_state.FPU[fpu_id].serial_number
@@ -270,7 +306,7 @@ if __name__ == "__main__":
             gd.trackedAngles(grid_state, retrieve=True),
         )
         test_datum(
-            context, DASEL_ALPHA
+            rig, dbe, DASEL_ALPHA
         )
 
     if T.TST_DATUM_BETA in tasks:
@@ -282,7 +318,7 @@ if __name__ == "__main__":
             gd.trackedAngles(grid_state, retrieve=True),
         )
         test_datum(
-            context, DASEL_BETA
+            rig, dbe, DASEL_BETA
         )
 
     if T.TST_DATUM_BOTH in tasks:
@@ -294,7 +330,7 @@ if __name__ == "__main__":
             gd.trackedAngles(grid_state, retrieve=True),
         )
         test_datum(
-            context, DASEL_BOTH
+            rig, dbe, DASEL_BOTH
         )
 
     if T.TASK_REFERENCE in tasks:
@@ -306,7 +342,7 @@ if __name__ == "__main__":
 
     if T.TASK_SELFTEST_NONFIBRE in tasks:
         print ("[%s] ###" % T.TASK_SELFTEST_NONFIBRE)
-        selftest_nonfibre(context,
+        selftest_nonfibre(rig,
             POS_REP_MEASUREMENT_PARS=POS_REP_MEASUREMENT_PARS,
             MET_HEIGHT_MEASUREMENT_PARS=MET_HEIGHT_MEASUREMENT_PARS,
             MET_HEIGHT_ANALYSIS_PARS=MET_HEIGHT_ANALYSIS_PARS,
@@ -316,7 +352,7 @@ if __name__ == "__main__":
     if T.TASK_SELFTEST_FIBRE in tasks:
         print ("[%s] ###" % T.TASK_SELFTEST_FIBRE)
         selftest_fibre(
-            context,
+            rig,
             MET_CAL_MEASUREMENT_PARS=MET_CAL_MEASUREMENT_PARS,
             MET_CAL_TARGET_ANALYSIS_PARS=MET_CAL_TARGET_ANALYSIS_PARS,
             MET_CAL_FIBRE_ANALYSIS_PARS=MET_CAL_FIBRE_ANALYSIS_PARS,
@@ -327,7 +363,7 @@ if __name__ == "__main__":
     if T.TST_COLLDETECT in tasks:
         print ("[test_collision_detection] ###")
         test_limit(
-            context,
+            rig, dbe,
             "beta_collision",
             pars=COLLDECT_MEASUREMENT_PARS
         )
@@ -335,7 +371,7 @@ if __name__ == "__main__":
     if T.TST_ALPHA_MIN in tasks:
         print ("[test_limit_alpha_min] ###")
         test_limit(
-            context,
+            rig, dbe,
             "alpha_min",
             pars=COLLDECT_MEASUREMENT_PARS
         )
@@ -343,7 +379,7 @@ if __name__ == "__main__":
     if T.TST_ALPHA_MAX in tasks:
         print ("[test_limit_alpha_max] ###")
         test_limit(
-            context,
+            rig, dbe,
             "alpha_max",
             pars=COLLDECT_MEASUREMENT_PARS
         )
@@ -351,7 +387,7 @@ if __name__ == "__main__":
     if T.TST_BETA_MAX in tasks:
         print ("[test_limit_beta_max] ###")
         test_limit(
-            context,
+            rig, dbe,
             "beta_max",
             pars=COLLDECT_MEASUREMENT_PARS
         )
@@ -359,7 +395,7 @@ if __name__ == "__main__":
     if T.TST_BETA_MIN in tasks:
         print ("[test_limit_beta_min] ###")
         test_limit(
-            context,
+            rig, dbe,
             "beta_min",
             pars=COLLDECT_MEASUREMENT_PARS
         )
@@ -367,13 +403,13 @@ if __name__ == "__main__":
     if T.MEASURE_MET_CAL in tasks:
         print ("[%s] ###" % T.MEASURE_MET_CAL)
         measure_metrology_calibration(
-            context,
+            rig, dbe,
             pars=MET_CAL_MEASUREMENT_PARS
         )
     if T.EVAL_MET_CAL in tasks:
         print ("[%s] ###" % T.EVAL_MET_CAL)
         eval_metrology_calibration(
-            context,
+            dbe,
             MET_CAL_TARGET_ANALYSIS_PARS,
             MET_CAL_FIBRE_ANALYSIS_PARS,
         )
@@ -381,14 +417,14 @@ if __name__ == "__main__":
     if T.MEASURE_MET_HEIGHT in tasks:
         print ("[%s] ###" % T.MEASURE_MET_HEIGHT)
         measure_metrology_height(
-            context,
+            rig, dbe,
             pars=MET_HEIGHT_MEASUREMENT_PARS
         )
 
     if T.EVAL_MET_HEIGHT in tasks:
         print ("[%s] ###" % T.EVAL_MET_HEIGHT)
         eval_metrology_height(
-            context,
+            dbe,
             MET_HEIGHT_ANALYSIS_PARS,
             MET_HEIGHT_EVALUATION_PARS,
         )
@@ -396,27 +432,27 @@ if __name__ == "__main__":
     if T.MEASURE_DATUM_REP in tasks:
         print ("[%s] ###" % T.MEASURE_DATUM_REP)
         measure_datum_repeatability(
-            context,
+            rig, dbe,
             pars=DATUM_REP_MEASUREMENT_PARS
         )
 
     if T.EVAL_DATUM_REP in tasks:
         print ("[%s] ###" % T.EVAL_DATUM_REP)
         eval_datum_repeatability(
-            context,
+            dbe,
             DATUM_REP_ANALYSIS_PARS,
         )
 
     if T.MEASURE_PUP_ALGN in tasks:
         print ("[%s] ###" % T.MEASURE_PUP_ALGN)
         measure_pupil_alignment(
-            context,
+            rig, dbe,
             pars=PUP_ALGN_MEASUREMENT_PARS
         )
     if T.EVAL_PUP_ALGN in tasks:
         print ("[%s] ###" % T.EVAL_PUP_ALGN)
         eval_pupil_alignment(
-            context,
+            dbe,
             PUP_ALGN_ANALYSIS_PARS=PUP_ALGN_ANALYSIS_PARS,
             PUP_ALGN_EVALUATION_PARS=PUP_ALGN_EVALUATION_PARS
         )
@@ -424,14 +460,14 @@ if __name__ == "__main__":
     if T.MEASURE_POS_REP in tasks:
         print ("[%s] ###" % T.MEASURE_POS_REP)
         measure_positional_repeatability(
-            context,
+            rig, dbe,
             pars=POS_REP_MEASUREMENT_PARS
         )
 
     if T.EVAL_POS_REP in tasks:
         print ("[%s] ###" % T.EVAL_POS_REP)
         eval_positional_repeatability(
-            context,
+            dbe,
             POS_REP_ANALYSIS_PARS,
             POS_REP_EVALUATION_PARS,
         )
@@ -439,7 +475,7 @@ if __name__ == "__main__":
     if T.MEASURE_POS_VER in tasks:
         print ("[%s] ###" % T.MEASURE_POS_VER)
         measure_positional_verification(
-            context,
+            rig, dbe,
             pars=POS_VER_MEASUREMENT_PARS
         )
 
@@ -451,15 +487,15 @@ if __name__ == "__main__":
     if T.EVAL_POS_VER in tasks:
         print ("[%s] ###" % T.EVAL_POS_VER)
         eval_positional_verification(
-            context,
+            dbe,
             POS_REP_ANALYSIS_PARS,
             POS_VER_EVALUATION_PARS,
         )
 
     if T.TASK_REPORT in tasks:
         print ("[%s] ###" % T.TASK_REPORT)
-        report(context)
+        report(dbe)
 
     if T.TASK_DUMP in tasks:
         print ("[%s] ###" % T.TASK_DUMP)
-        dump_data(context)
+        dump_data(dbe)

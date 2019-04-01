@@ -93,8 +93,8 @@ def parse_args():
     )
 
     parser.add_argument(
-        "-ar",
-        "--alwaysResetFPUs",
+        "-awr",
+        "--always-reset-fpus",
         default=False,
         action="store_true",
         help="reset FPUs between each step of functional tests so that previous aborts / collisions are ignored",
@@ -421,12 +421,12 @@ def load_config(env, vfdb, config_file_name, opts=None):
     return fpu_config, sorted(measure_fpuset), sorted(eval_fpuset)
 
 
-def check_sns_unique(ctx):
-    if not ctx.opts.reuse_serialnum:
+def check_sns_unique(rig, dbe):
+    if not dbe.opts.reuse_serialnum:
         config_sns = set(
-            [ctx.fpu_config[fpu_id]["serialnumber"] for fpu_id in ctx.measure_fpuset]
+            [rig.fpu_config[fpu_id]["serialnumber"] for fpu_id in rig.measure_fpuset]
         )
-        used_sns = get_snset(ctx.env, ctx.vfdb, ctx.opts)
+        used_sns = get_snset(dbe.env, dbe.vfdb, dbe.opts)
         reused_sns = config_sns & used_sns
         print(
             "config_sns=%r, used_sns=%r, reused_sns=%r"

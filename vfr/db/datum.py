@@ -11,22 +11,22 @@ from vfr.db.base import (
 RECORD_TYPE = "findDatum"
 
 
-def save_datum_result(ctx, dasel, rigstate):
+def save_datum_result(rig, dbe, dasel, rigstate):
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
-        serialnumber = ctx.fpu_config[fpu_id]["serialnumber"]
+        serialnumber = dbe.fpu_config[fpu_id]["serialnumber"]
         keybase = (serialnumber, RECORD_TYPE, str(dasel))
         return keybase
 
     def valfunc(fpu_id):
 
         if CAN_PROTOCOL_VERSION == 1:
-            a_ok = ctx.grid_state.FPU[fpu_id].alpha_was_zeroed
-            b_ok = ctx.grid_state.FPU[fpu_id].beta_was_zeroed
+            a_ok = rig.grid_state.FPU[fpu_id].alpha_was_zeroed
+            b_ok = rig.grid_state.FPU[fpu_id].beta_was_zeroed
         else:
-            a_ok = ctx.grid_state.FPU[fpu_id].alpha_was_calibrated
-            b_ok = ctx.grid_state.FPU[fpu_id].beta_was_calibrated
+            a_ok = rig.grid_state.FPU[fpu_id].alpha_was_calibrated
+            b_ok = rig.grid_state.FPU[fpu_id].beta_was_calibrated
 
         print("%i : (alpha datumed=%s, beta datumed = %s)" % (fpu_id, a_ok, b_ok))
 
@@ -40,7 +40,7 @@ def save_datum_result(ctx, dasel, rigstate):
         else:
             fsuccess = TestResult.FAILED
 
-        fpu = ctx.grid_state.FPU[fpu_id]
+        fpu = rig.grid_state.FPU[fpu_id]
         val = repr(
             {
                 "result": fsuccess,
@@ -54,25 +54,25 @@ def save_datum_result(ctx, dasel, rigstate):
         )
         return val
 
-    save_test_result(ctx, ctx.measure_fpuset, keyfunc, valfunc)
+    save_test_result(dbe, rig.measure_fpuset, keyfunc, valfunc)
 
 
-def get_datum_result(ctx, fpu_id, dasel=DASEL_BOTH, count=None):
+def get_datum_result(dbe, fpu_id, dasel=DASEL_BOTH, count=None):
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
-        serialnumber = ctx.fpu_config[fpu_id]["serialnumber"]
+        serialnumber = dbe.fpu_config[fpu_id]["serialnumber"]
         keybase = (serialnumber, RECORD_TYPE, str(dasel))
         return keybase
 
-    return get_test_result(ctx, fpu_id, keyfunc, count=count)
+    return get_test_result(dbe, fpu_id, keyfunc, count=count)
 
 
-def get_datum_passed_p(ctx, fpu_id, count=None):
+def get_datum_passed_p(dbe, fpu_id, count=None):
     """returns True if the latest datum repeatability test for this FPU
     was passed successfully."""
 
-    val = get_datum_result(ctx, fpu_id, count=count)
+    val = get_datum_result(dbe, fpu_id, count=count)
 
     if val is None:
         return False

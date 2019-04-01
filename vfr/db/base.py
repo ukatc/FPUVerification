@@ -15,12 +15,12 @@ class TestResult:
     NA = "NA"
 
 
-def save_test_result(ctx, fpuset, keyfunc, valfunc, verbosity=None):
+def save_test_result(dbe, fpuset, keyfunc, valfunc, verbosity=None):
 
     if verbosity is None:
-        verbosity = ctx.opts
+        verbosity = dbe.opts
 
-    with ctx.env.begin(write=True, db=ctx.vfdb) as txn:
+    with dbe.env.begin(write=True, db=dbe.vfdb) as txn:
 
         for fpu_id in fpuset:
 
@@ -45,12 +45,12 @@ def save_test_result(ctx, fpuset, keyfunc, valfunc, verbosity=None):
             txn.put(key2, val)
 
 
-def get_test_result(ctx, fpu_id, keyfunc, count=None, verbosity=None):
+def get_test_result(dbe, fpu_id, keyfunc, count=None, verbosity=None):
 
     if verbosity is None:
-        verbosity = ctx.opts.verbosity
+        verbosity = dbe.opts.verbosity
 
-    with ctx.env.begin(write=False, db=ctx.vfdb) as txn:
+    with dbe.env.begin(write=False, db=dbe.vfdb) as txn:
 
         keybase = keyfunc(fpu_id)
 

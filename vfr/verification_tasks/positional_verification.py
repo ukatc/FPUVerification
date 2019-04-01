@@ -68,24 +68,24 @@ def generate_tested_positions(
     return positions
 
 
-def measure_positional_verification(ctx, pars=None):
+def measure_positional_verification(rig, dbe, pars=None):
 
     # home turntable
     tstamp = timestamp()
 
-    opts = ctx.opts
-    gd = ctx.gd
-    grid_state = ctx.grid_state
+    opts = rig.opts
+    gd = rig.gd
+    grid_state = rig.grid_state
 
-    ctx.hw.safe_home_turntable(gd, grid_state)
+    rig.hw.safe_home_turntable(gd, grid_state)
 
-    ctx.lctrl.switch_fibre_backlight("off", manual_lamp_control=opts.manual_lamp_control)
-    ctx.lctrl.switch_ambientlight("on", manual_lamp_control=opts.manual_lamp_control)
-    ctx.lctrl.switch_fibre_backlight_voltage(
+    rig.lctrl.switch_fibre_backlight("off", manual_lamp_control=opts.manual_lamp_control)
+    rig.lctrl.switch_ambientlight("on", manual_lamp_control=opts.manual_lamp_control)
+    rig.lctrl.switch_fibre_backlight_voltage(
         0.0, manual_lamp_control=opts.manual_lamp_control
     )
 
-    with ctx.lctrl.use_ambientlight(manual_lamp_control=opts.manual_lamp_control):
+    with rig.lctrl.use_ambientlight(manual_lamp_control=opts.manual_lamp_control):
         # initialize pos_rep camera
         # set pos_rep camera exposure time to POS_VER_EXPOSURE milliseconds
         POS_VER_CAMERA_CONF = {
@@ -93,24 +93,24 @@ def measure_positional_verification(ctx, pars=None):
             IP_ADDRESS: POS_REP_CAMERA_IP_ADDRESS,
         }
 
-        pos_rep_cam = ctx.hw.GigECamera(POS_VER_CAMERA_CONF)
+        pos_rep_cam = rig.hw.GigECamera(POS_VER_CAMERA_CONF)
         pos_rep_cam.SetExposureTime(pars.POS_VER_EXPOSURE_MS)
 
         # get sorted positions (this is needed because the turntable can only
         # move into one direction)
         for fpu_id, stage_position in get_sorted_positions(
-            ctx.measure_fpuset, pars.POS_REP_POSITIONS
+            rig.measure_fpuset, pars.POS_REP_POSITIONS
         ):
 
-            sn = ctx.fpu_config[fpu_id]["serialnumber"]
-            if not get_datum_repeatability_passed_p(ctx, fpu_id):
+            sn = rig.fpu_config[fpu_id]["serialnumber"]
+            if not get_datum_repeatability_passed_p(dbe, fpu_id):
                 print(
                     "FPU %s: skipping positional verification measurement because"
                     " there is no passed datum verification test" % sn
                 )
                 continue
 
-            if get_pupil_alignment_passed_p(ctx, fpu_id):
+            if get_pupil_alignment_passed_p(dbe, fpu_id):
                 if opts.skip_fibre:
                     print(
                         "FPU %s: ignoring missing pupil alignment test,\n"
@@ -124,14 +124,14 @@ def measure_positional_verification(ctx, pars=None):
                     )
                     continue
 
-            if not get_positional_repeatability_passed_p(ctx, fpu_id):
+            if not get_positional_repeatability_passed_p(dbe, fpu_id):
                 print(
                     "FPU %s: skipping positional verification measurement because"
                     " there is no passed positional repeatability test" % sn
                 )
                 continue
 
-            if get_positional_verification_passed_p(ctx, fpu_id) and (
+            if get_positional_verification_passed_p(dbe, fpu_id) and (
                 not opts.repeat_passed_tests
             ):
 
@@ -141,10 +141,10 @@ def measure_positional_verification(ctx, pars=None):
                 )
                 continue
 
-            _alpha_min = get_angular_limit(ctx, fpu_id, "alpha_min")
-            _alpha_max = get_angular_limit(ctx, fpu_id, "alpha_max")
-            _beta_min = get_angular_limit(ctx, fpu_id, "beta_min")
-            _beta_max = get_angular_limit(ctx, fpu_id, "beta_max")
+            _alpha_min = get_angular_limit(dbe, fpu_id, "alpha_min")
+            _alpha_max = get_angular_limit(dbe, fpu_id, "alpha_max")
+            _beta_min = get_angular_limit(dbe, fpu_id, "beta_min")
+            _beta_max = get_angular_limit(dbe, fpu_id, "beta_max")
 
             if (
                 (_alpha_min is None)
@@ -176,7 +176,7 @@ def measure_positional_verification(ctx, pars=None):
                 )
                 continue
 
-            pr_result = get_positional_repeatability_result(ctx, fpu_id)
+            pr_result = get_positional_repeatability_result(dbe, fpu_id)
             if (
                 pr_result["algorithm_version"]
                 < POSITIONAL_REPEATABILITY_ALGORITHM_VERSION
@@ -193,7 +193,7 @@ def measure_positional_verification(ctx, pars=None):
             gearbox_record_count = pr_result["record-count"]
 
             # move rotary stage to POS_VER_POSN_N
-            ctx.hw.turntable_safe_goto(gd, grid_state, stage_position)
+            rig.hw.turntable_safe_goto(gd, grid_state, stage_position)
 
             image_dict = {}
 
@@ -275,7 +275,7 @@ def measure_positional_verification(ctx, pars=None):
             # store dict of image paths, together with all data and algorithms
             # which are relevant to assess result later
             save_positional_verification_images(
-                ctx,
+                dbe,
                 fpu_id,
                 image_dict=image_dict,
                 gearbox_correction=gearbox_correction,
@@ -285,12 +285,12 @@ def measure_positional_verification(ctx, pars=None):
             )
 
 
-def eval_positional_verification(ctx, pos_ver_analysis_pars, pos_ver_evaluation_pars):
+def eval_positional_verification(dbe, pos_ver_analysis_pars, pos_ver_evaluation_pars):
     def analysis_func(ipath):
         return posrepCoordinates(ipath, pars=pos_ver_analysis_pars)
 
-    for fpu_id in ctx.eval_fpuset:
-        measurement = get_positional_verification_images(ctx, fpu_id)
+    for fpu_id in dbe.eval_fpuset:
+        measurement = get_positional_verification_images(dbe, fpu_id)
 
         if measurement is None:
             print("FPU %s: no positional verification measurement data found" % fpu_id)
@@ -341,7 +341,7 @@ def eval_positional_verification(ctx, pos_ver_analysis_pars, pos_ver_evaluation_
             positional_verification_has_passed = TestResult.NA
 
         save_positional_verification_result(
-            ctx,
+            dbe,
             fpu_id,
             pos_ver_calibration_pars=pos_ver_analysis_pars.POS_REP_CALIBRATION_PARS,
             analysis_results=analysis_results,

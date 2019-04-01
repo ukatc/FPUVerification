@@ -81,49 +81,49 @@ def arg_max_dict(d):
 
 
 
-def get_data(ctx, fpu_id):
-    serial_number = ctx.fpu_config[fpu_id]["serialnumber"]
-    count = ctx.opts.record_count
+def get_data(dbe, fpu_id):
+    serial_number = dbe.fpu_config[fpu_id]["serialnumber"]
+    count = dbe.opts.record_count
 
     data = Namespace(
         serial_number=serial_number,
-        datum_result=get_datum_result(ctx, fpu_id, count=count),
-        alpha_min_result=get_angular_limit(ctx, fpu_id, "alpha_min", count=count),
-        alpha_max_result=get_angular_limit(ctx, fpu_id, "alpha_max", count=count),
-        beta_min_result=get_angular_limit(ctx, fpu_id, "beta_min", count=count),
-        beta_max_result=get_angular_limit(ctx, fpu_id, "beta_max", count=count),
+        datum_result=get_datum_result(dbe, fpu_id, count=count),
+        alpha_min_result=get_angular_limit(dbe, fpu_id, "alpha_min", count=count),
+        alpha_max_result=get_angular_limit(dbe, fpu_id, "alpha_max", count=count),
+        beta_min_result=get_angular_limit(dbe, fpu_id, "beta_min", count=count),
+        beta_max_result=get_angular_limit(dbe, fpu_id, "beta_max", count=count),
         beta_collision_result=get_angular_limit(
-            ctx, fpu_id, "beta_collision", count=count
+            dbe, fpu_id, "beta_collision", count=count
         ),
         datum_repeatability_result=get_datum_repeatability_result(
-            ctx, fpu_id, count=count
+            dbe, fpu_id, count=count
         ),
         datum_repeatability_images=get_datum_repeatability_images(
-            ctx, fpu_id, count=count
+            dbe, fpu_id, count=count
         ),
         metrology_calibration_result=get_metrology_calibration_result(
-            ctx, fpu_id, count=count
+            dbe, fpu_id, count=count
         ),
         metrology_calibration_images=get_metrology_calibration_images(
-            ctx, fpu_id, count=count
+            dbe, fpu_id, count=count
         ),
-        metrology_height_result=get_metrology_height_result(ctx, fpu_id, count=count),
-        metrology_height_images=get_metrology_height_images(ctx, fpu_id, count=count),
+        metrology_height_result=get_metrology_height_result(dbe, fpu_id, count=count),
+        metrology_height_images=get_metrology_height_images(dbe, fpu_id, count=count),
         positional_repeatability_result=get_positional_repeatability_result(
-            ctx, fpu_id, count=count
+            dbe, fpu_id, count=count
         ),
         positional_repeatability_images=get_positional_repeatability_images(
-            ctx, fpu_id, count=count
+            dbe, fpu_id, count=count
         ),
         positional_verification_result=get_positional_verification_result(
-            ctx, fpu_id, count=count
+            dbe, fpu_id, count=count
         ),
         positional_verification_images=get_positional_verification_images(
-            ctx, fpu_id, count=count
+            dbe, fpu_id, count=count
         ),
-        pupil_alignment_result=get_pupil_alignment_result(ctx, fpu_id, count=count),
-        pupil_alignment_images=get_pupil_alignment_images(ctx, fpu_id, count=count),
-        outfile=ctx.opts.output_file,
+        pupil_alignment_result=get_pupil_alignment_result(dbe, fpu_id, count=count),
+        pupil_alignment_images=get_pupil_alignment_images(dbe, fpu_id, count=count),
+        outfile=dbe.opts.output_file,
     )
 
     if data.datum_repeatability_result is not None:
@@ -2079,17 +2079,17 @@ def print_report_extended(
 
 
 
-def report(ctx):
+def report(dbe):
 
-    report_format = ctx.opts.report_format
-    for count, fpu_id in enumerate(ctx.eval_fpuset):
-        ddict = vars(get_data(ctx, fpu_id))
+    report_format = dbe.opts.report_format
+    for count, fpu_id in enumerate(dbe.eval_fpuset):
+        ddict = vars(get_data(dbe, fpu_id))
 
         if (count > 0) and report_format != "status":
-            print("\n", file=ctx.opts.output_file)
+            print("\n", file=dbe.opts.output_file)
 
         if report_format == "status":
-            print_report_status(skip_fibre=ctx.opts.skip_fibre, **ddict)
+            print_report_status(skip_fibre=dbe.opts.skip_fibre, **ddict)
         elif report_format == "brief":
             print_report_brief(**ddict)
         elif report_format == "terse":
@@ -2102,13 +2102,13 @@ def report(ctx):
             print_report_extended(**ddict)
 
 
-def dump_data(ctx):
+def dump_data(dbe):
 
-    print("{", file=ctx.opts.output_file)
-    for count, fpu_id in enumerate(ctx.eval_fpuset):
-        ddict = vars(get_data(ctx, fpu_id))
+    print("{", file=dbe.opts.output_file)
+    for count, fpu_id in enumerate(dbe.eval_fpuset):
+        ddict = vars(get_data(dbe, fpu_id))
         if count > 0:
-            print("\n\n", file=ctx.opts.output_file)
-        print("%r : %r," % (fpu_id, ddict), file=ctx.opts.output_file)
+            print("\n\n", file=dbe.opts.output_file)
+        print("%r : %r," % (fpu_id, ddict), file=dbe.opts.output_file)
 
-    print("}", file=ctx.opts.output_file)
+    print("}", file=dbe.opts.output_file)

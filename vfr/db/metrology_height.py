@@ -10,11 +10,11 @@ from vfr.db.base import (
 RECORD_TYPE = "metrology-height"
 
 
-def save_metrology_height_images(ctx, fpu_id, images):
+def save_metrology_height_images(dbe, fpu_id, images):
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
-        serialnumber = ctx.fpu_config[fpu_id]["serialnumber"]
+        serialnumber = dbe.fpu_config[fpu_id]["serialnumber"]
         keybase = (serialnumber, RECORD_TYPE, "images")
         return keybase
 
@@ -23,22 +23,22 @@ def save_metrology_height_images(ctx, fpu_id, images):
         val = repr({"fpuid": fpu_id, "images": images, "time": timestamp()})
         return val
 
-    save_test_result(ctx, [fpu_id], keyfunc, valfunc)
+    save_test_result(dbe, [fpu_id], keyfunc, valfunc)
 
 
-def get_metrology_height_images(ctx, fpu_id, count=None):
+def get_metrology_height_images(dbe, fpu_id, count=None):
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
-        serialnumber = ctx.fpu_config[fpu_id]["serialnumber"]
+        serialnumber = dbe.fpu_config[fpu_id]["serialnumber"]
         keybase = (serialnumber, RECORD_TYPE, "images")
         return keybase
 
-    return get_test_result(ctx, fpu_id, keyfunc, count=count)
+    return get_test_result(dbe, fpu_id, keyfunc, count=count)
 
 
 def save_metrology_height_result(
-    ctx,
+    dbe,
     fpu_id,
     metht_small_target_height_mm=None,
     metht_large_target_height_mm=None,
@@ -49,7 +49,7 @@ def save_metrology_height_result(
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
-        serialnumber = ctx.fpu_config[fpu_id]["serialnumber"]
+        serialnumber = dbe.fpu_config[fpu_id]["serialnumber"]
         keybase = (serialnumber, RECORD_TYPE, "result")
         return keybase
 
@@ -68,15 +68,15 @@ def save_metrology_height_result(
         )
         return val
 
-    save_test_result(ctx, [fpu_id], keyfunc, valfunc)
+    save_test_result(dbe, [fpu_id], keyfunc, valfunc)
 
 
-def get_metrology_height_result(ctx, fpu_id, count=None):
+def get_metrology_height_result(dbe, fpu_id, count=None):
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
-        serialnumber = ctx.fpu_config[fpu_id]["serialnumber"]
+        serialnumber = dbe.fpu_config[fpu_id]["serialnumber"]
         keybase = (serialnumber, RECORD_TYPE, "result")
         return keybase
 
-    return get_test_result(ctx, fpu_id, keyfunc, count=count)
+    return get_test_result(dbe, fpu_id, keyfunc, count=count)

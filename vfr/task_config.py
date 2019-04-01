@@ -16,7 +16,6 @@ class T:
     EVAL_POS_VER = "eval_pos_ver"
     EVAL_PUP_ALGN = "eval_pup_aln"
     # measurements
-    MEASURE_ALL = "measure_all"
     MEASURE_DATUM_REP = "measure_datum_rep"
     MEASURE_MET_CAL = "measure_met_cal"
     MEASURE_MET_HEIGHT = "measure_met_height"
@@ -31,10 +30,12 @@ class T:
     REQ_POS_REP_PASSED = "req_positional_repeatability_passed"
     REQ_PUP_ALGN_PASSED = "req_pupil_alnment_passed"
     # tasks which pack measurements and evaluation in pairs
+    TASK_MEASURE_NONFIBRE = "measure_nonfibre"
+    TASK_MEASURE_ALL = "measure_all"
     TASK_EVAL_ALL = "eval_all"
+    TASK_EVAL_NONFIBRE = "eval_nonfibre"
     TASK_INIT_GD = "initialize_grid_driver"
     TASK_INIT_RD = "initialize_unprotected_fpu_driver"
-    TASK_MEASURE_ALL = "measure_all"
     TASK_REFERENCE = "reference"
     TASK_SELFTEST = "selftest"
     TASK_SELFTEST_NONFIBRE = "selftest_nonfibre"
@@ -80,6 +81,8 @@ usertasks = set(
         T.EVAL_POS_VER,
         T.EVAL_PUP_ALGN,
         T.TASK_EVAL_ALL,
+        T.TASK_EVAL_NONFIBRE,
+        T.TASK_MEASURE_ALL,
         T.MEASURE_DATUM_REP,
         T.MEASURE_MET_CAL,
         T.MEASURE_MET_HEIGHT,
@@ -88,7 +91,7 @@ usertasks = set(
         T.MEASURE_PUP_ALGN,
         T.TST_FLASH,
         T.TASK_DUMP,
-        T.TASK_MEASURE_ALL,
+        T.TASK_MEASURE_NONFIBRE,
         T.TASK_REFERENCE,
         T.TASK_REPORT,
         T.TASK_SELFTEST,
@@ -220,7 +223,7 @@ task_dependencies = [
         ],
     ),
     (
-        T.MEASURE_ALL,
+        T.TASK_MEASURE_ALL,
         [
             T.TASK_SELFTEST,
             T.TST_GATEWAY_CONNECTION,
@@ -243,13 +246,42 @@ task_dependencies = [
         ],
     ),
     (
+        T.TASK_MEASURE_NONFIBRE,
+        [
+            T.TASK_SELFTEST,
+            T.TST_GATEWAY_CONNECTION,
+            T.TST_CAN_CONNECTION,
+            T.TST_POS_REP_CAM_CONNECTION,
+            T.TST_MET_CAL_CAM_CONNECTION,
+            T.TST_MET_HEIGHT_CAM_CONNECTION,
+            T.TST_PUP_ALGN_CAM_CONNECTION,
+            T.TST_DATUM,
+            T.TST_LIMITS,
+            T.MEASURE_DATUM_REP,
+            T.TST_POS_REP,
+            T.MEASURE_POS_REP,
+            T.TST_POS_VER,
+            T.MEASURE_MET_HEIGHT,
+        ],
+    ),
+    (
         T.TASK_EVAL_ALL,
         [
             T.EVAL_DATUM_REP,
             T.EVAL_MET_CAL,
             T.EVAL_POS_REP,
+            T.EVAL_POS_VER,
             T.EVAL_MET_HEIGHT,
             T.EVAL_PUP_ALGN,
+        ],
+    ),
+    (
+        T.TASK_EVAL_NONFIBRE,
+        [
+            T.EVAL_DATUM_REP,
+            T.EVAL_POS_REP,
+            T.EVAL_POS_VER,
+            T.EVAL_MET_HEIGHT,
         ],
     ),
 ]

@@ -22,17 +22,17 @@ from vfr.tests_common import (
 )
 
 
-def measure_metrology_calibration(ctx, pars=None):
+def measure_metrology_calibration(rig, dbe, pars=None):
 
     tstamp = timestamp()
 
     # home turntable
-    ctx.hw.safe_home_turntable(ctx.gd, ctx.grid_state)
+    rig.hw.safe_home_turntable(rig.gd, rig.grid_state)
 
-    ctx.lctrl.switch_fibre_backlight("off", manual_lamp_control=ctx.opts.manual_lamp_control)
-    ctx.lctrl.switch_ambientlight("off", manual_lamp_control=ctx.opts.manual_lamp_control)
-    ctx.lctrl.switch_fibre_backlight_voltage(
-        0.0, manual_lamp_control=ctx.opts.manual_lamp_control
+    rig.lctrl.switch_fibre_backlight("off", manual_lamp_control=rig.opts.manual_lamp_control)
+    rig.lctrl.switch_ambientlight("off", manual_lamp_control=rig.opts.manual_lamp_control)
+    rig.lctrl.switch_fibre_backlight_voltage(
+        0.0, manual_lamp_control=rig.opts.manual_lamp_control
     )
 
     MET_CAL_CAMERA_CONF = {
@@ -40,15 +40,15 @@ def measure_metrology_calibration(ctx, pars=None):
         IP_ADDRESS: MET_CAL_CAMERA_IP_ADDRESS,
     }
 
-    met_cal_cam = ctx.hw.GigECamera(MET_CAL_CAMERA_CONF)
+    met_cal_cam = rig.hw.GigECamera(MET_CAL_CAMERA_CONF)
 
     # get sorted positions (this is needed because the turntable can only
     # move into one direction)
     for fpu_id, stage_position in get_sorted_positions(
-        ctx.measure_fpuset, pars.METROLOGY_CAL_POSITIONS
+        rig.measure_fpuset, pars.METROLOGY_CAL_POSITIONS
     ):
         # move rotary stage to POS_REP_POSN_N
-        ctx.hw.turntable_safe_goto(ctx.gd, ctx.grid_state, stage_position)
+        rig.hw.turntable_safe_goto(rig.gd, rig.grid_state, stage_position)
 
         # initialize pos_rep camera
         # set pos_rep camera exposure time to DATUM_REP_EXPOSURE milliseconds
@@ -58,7 +58,7 @@ def measure_metrology_calibration(ctx, pars=None):
             ipath = store_image(
                 camera,
                 "{sn}/{tn}/{ts}/{st}.bmp",
-                sn=ctx.fpu_config[fpu_id]["serialnumber"],
+                sn=rig.fpu_config[fpu_id]["serialnumber"],
                 tn="metrology-calibration",
                 ts=tstamp,
                 st=subtest,
@@ -67,38 +67,38 @@ def measure_metrology_calibration(ctx, pars=None):
             return ipath
 
         met_cal_cam.SetExposureTime(pars.METROLOGY_CAL_TARGET_EXPOSURE_MS)
-        ctx.lctrl.switch_fibre_backlight(
-            "off", manual_lamp_control=ctx.opts.manual_lamp_control
+        rig.lctrl.switch_fibre_backlight(
+            "off", manual_lamp_control=rig.opts.manual_lamp_control
         )
-        ctx.lctrl.switch_fibre_backlight_voltage(
-            0.0, manual_lamp_control=ctx.opts.manual_lamp_control
+        rig.lctrl.switch_fibre_backlight_voltage(
+            0.0, manual_lamp_control=rig.opts.manual_lamp_control
         )
 
         # use context manager to switch lamp on
         # and guarantee it is switched off after the
         # measurement (even if exceptions occur)
-        with ctx.lctrl.use_ambientlight(manual_lamp_control=ctx.opts.manual_lamp_control):
+        with rig.lctrl.use_ambientlight(manual_lamp_control=rig.opts.manual_lamp_control):
             target_ipath = capture_image(met_cal_cam, "target")
 
         met_cal_cam.SetExposureTime(pars.METROLOGY_CAL_FIBRE_EXPOSURE_MS)
 
-        with ctx.lctrl.use_backlight(
+        with rig.lctrl.use_backlight(
             pars.METROLOGY_CAL_BACKLIGHT_VOLTAGE,
-            manual_lamp_control=ctx.opts.manual_lamp_control,
+            manual_lamp_control=rig.opts.manual_lamp_control,
         ):
             fibre_ipath = capture_image(met_cal_cam, "fibre")
 
         images = {"target": target_ipath, "fibre": fibre_ipath}
 
-        save_metrology_calibration_images(ctx, fpu_id, images)
+        save_metrology_calibration_images(dbe, fpu_id, images)
 
 
 def eval_metrology_calibration(
-    ctx, metcal_target_analysis_pars, metcal_fibre_analysis_pars
+    dbe, metcal_target_analysis_pars, metcal_fibre_analysis_pars
 ):
 
-    for fpu_id in ctx.eval_fpuset:
-        measurement = get_metrology_calibration_images(ctx, fpu_id)
+    for fpu_id in dbe.eval_fpuset:
+        measurement = get_metrology_calibration_images(dbe, fpu_id)
 
         if measurement is None:
             print("FPU %s: no metrology calibration measurement data found" % fpu_id)
@@ -138,7 +138,7 @@ def eval_metrology_calibration(
             metcal_target_vector_angle_deg = NaN
 
         save_metrology_calibration_result(
-            ctx,
+            dbe,
             fpu_id,
             coords=coords,
             metcal_fibre_large_target_distance_mm=metcal_fibre_large_target_distance_mm,
