@@ -8,8 +8,6 @@ from ImageAnalysisFuncs.analyze_metrology_height import (
     methtHeight,
 )
 from numpy import NaN
-from vfr import hw as real_hw
-from vfr import hwsimulation
 from vfr.conf import MET_HEIGHT_CAMERA_IP_ADDRESS
 from vfr.db.base import TestResult
 from vfr.db.metrology_height import (
@@ -27,14 +25,9 @@ from vfr.tests_common import (
 def measure_metrology_height(ctx, pars=None):
 
     tstamp = timestamp()
-    if ctx.opts.mockup:
-        # replace all hardware functions by mock-up interfaces
-        hw = hwsimulation
-    else:
-        hw = real_hw
 
     # home turntable
-    hw.safe_home_turntable(ctx.gd, ctx.grid_state)
+    ctx.hw.safe_home_turntable(ctx.gd, ctx.grid_state)
 
     ctx.lctrl.switch_fibre_backlight("off", manual_lamp_control=ctx.opts.manual_lamp_control)
     ctx.lctrl.switch_ambientlight("off", manual_lamp_control=ctx.opts.manual_lamp_control)
@@ -49,7 +42,7 @@ def measure_metrology_height(ctx, pars=None):
             IP_ADDRESS: MET_HEIGHT_CAMERA_IP_ADDRESS,
         }
 
-        met_height_cam = hw.GigECamera(MET_HEIGHT_CAMERA_CONF)
+        met_height_cam = ctx.hw.GigECamera(MET_HEIGHT_CAMERA_CONF)
 
         # get sorted positions (this is needed because the turntable can only
         # move into one direction)
@@ -57,7 +50,7 @@ def measure_metrology_height(ctx, pars=None):
             ctx.measure_fpuset, pars.MET_HEIGHT_POSITIONS
         ):
             # move rotary stage to POS_REP_POSN_N
-            hw.turntable_safe_goto(ctx.gd, ctx.grid_state, stage_position)
+            ctx.hw.turntable_safe_goto(ctx.gd, ctx.grid_state, stage_position)
 
             # initialize pos_rep camera
             # set pos_rep camera exposure time to DATUM_REP_EXPOSURE milliseconds

@@ -6,7 +6,7 @@ import atexit
 from argparse import Namespace
 
 from protectiondb import open_database_env
-from vfr import hw
+from vfr import hw as real_hw
 from vfr import hwsimulation
 from vfr.conf import (COLLDECT_MEASUREMENT_PARS,
                       DATUM_REP_ANALYSIS_PARS, DATUM_REP_MEASUREMENT_PARS,
@@ -81,19 +81,24 @@ if __name__ == "__main__":
         lctrl.switch_ambientlight("off")
         lctrl.switch_silhouettelight("off")
 
-    if not opts.mockup:
+    if opts.mockup:
+        hw = hwsimulation
+    else:
+        hw = real_hw
         atexit.register(lamps_off)
 
-    context = Namespace(            env=env,
-                                    fpudb=None,
-                                    vfdb=vfdb,
-                                    gd=None,
-                                    lctrl=lctrl,
-                                    grid_state=None,
-                                    measure_fpuset=measure_fpuset,
-                                    eval_fpuset=eval_fpuset,
-                                    fpu_config=fpu_config,
-                                    opts=opts,
+    context = Namespace(
+        hw=hw,
+        env=env,
+        fpudb=None,
+        vfdb=vfdb,
+        gd=None,
+        lctrl=lctrl,
+        grid_state=None,
+        measure_fpuset=measure_fpuset,
+        eval_fpuset=eval_fpuset,
+        fpu_config=fpu_config,
+        opts=opts,
     )
 
     # resolve high-level tasks and dependent checks and measurements into

@@ -12,8 +12,6 @@ from ImageAnalysisFuncs.analyze_positional_repeatability import posrepCoordinate
 from ImageAnalysisFuncs.analyze_pupil_alignment import (
     pupalnCoordinates,
 )
-from vfr import hw as real_hw
-from vfr import hwsimulation
 from vfr.conf import (
     MET_CAL_CAMERA_IP_ADDRESS,
     MET_HEIGHT_CAMERA_IP_ADDRESS,
@@ -29,16 +27,11 @@ from vfr.tests_common import (
 
 def selftest_pup_algn(ctx, pars=None, PUP_ALGN_ANALYSIS_PARS=None, capture_image=None):
     print("selftest: pupil alignment")
-    if ctx.opts.mockup:
-        # replace all hardware functions by mock-up interfaces
-        hw = hwsimulation
-    else:
-        hw =  real_hw
 
     try:
         # home turntable
-        hw.safe_home_turntable(ctx.gd, ctx.grid_state)
-        hw.home_linear_stage()
+        ctx.hw.safe_home_turntable(ctx.gd, ctx.grid_state)
+        ctx.hw.home_linear_stage()
 
         ctx.lctrl.switch_ambientlight("off", manual_lamp_control=ctx.opts.manual_lamp_control)
         ctx.lctrl.switch_silhouettelight(
@@ -54,7 +47,7 @@ def selftest_pup_algn(ctx, pars=None, PUP_ALGN_ANALYSIS_PARS=None, capture_image
                 IP_ADDRESS: PUP_ALGN_CAMERA_IP_ADDRESS,
             }
 
-            pup_aln_cam = hw.GigECamera(PUP_ALGN_CAMERA_CONF)
+            pup_aln_cam = ctx.hw.GigECamera(PUP_ALGN_CAMERA_CONF)
             pup_aln_cam.SetExposureTime(pars.PUP_ALGN_EXPOSURE_MS)
 
             fpu_id, stage_position = get_sorted_positions(
@@ -62,8 +55,8 @@ def selftest_pup_algn(ctx, pars=None, PUP_ALGN_ANALYSIS_PARS=None, capture_image
             )[0]
 
             # move rotary stage to PUP_ALN_POSN_N
-            hw.turntable_safe_goto(ctx.gd, ctx.grid_state, stage_position)
-            hw.linear_stage_goto(pars.PUP_ALGN_LINPOSITIONS[fpu_id])
+            ctx.hw.turntable_safe_goto(ctx.gd, ctx.grid_state, stage_position)
+            ctx.hw.linear_stage_goto(pars.PUP_ALGN_LINPOSITIONS[fpu_id])
 
             ipath_selftest_pup_algn = capture_image(pup_aln_cam, "pupil-alignment")
 
@@ -72,8 +65,8 @@ def selftest_pup_algn(ctx, pars=None, PUP_ALGN_ANALYSIS_PARS=None, capture_image
             )
             del result
     finally:
-        hw.safe_home_turntable(ctx.gd, ctx.grid_state)
-        hw.home_linear_stage()
+        ctx.hw.safe_home_turntable(ctx.gd, ctx.grid_state)
+        ctx.hw.home_linear_stage()
 
 
 def selftest_metrology_calibration(
@@ -85,13 +78,10 @@ def selftest_metrology_calibration(
 ):
 
     print("selftest: metrology calibration")
-    if ctx.opts.mockup:
-        # replace all hardware functions by mock-up interfaces
-        hw = hwsimulation
 
     try:
         # home turntable
-        hw.safe_home_turntable(ctx.gd, ctx.grid_state)
+        ctx.hw.safe_home_turntable(ctx.gd, ctx.grid_state)
 
         ctx.lctrl.switch_fibre_backlight(
             "off", manual_lamp_control=ctx.opts.manual_lamp_control
@@ -106,7 +96,7 @@ def selftest_metrology_calibration(
             IP_ADDRESS: MET_CAL_CAMERA_IP_ADDRESS,
         }
 
-        met_cal_cam = hw.GigECamera(MET_CAL_CAMERA_CONF)
+        met_cal_cam = ctx.hw.GigECamera(MET_CAL_CAMERA_CONF)
 
         # get sorted positions (this is needed because the turntable can only
         # move into one direction)
@@ -115,7 +105,7 @@ def selftest_metrology_calibration(
         )[0]
 
         # move rotary stage to POS_REP_POSN_0
-        hw.turntable_safe_goto(ctx.gd, ctx.grid_state, stage_position)
+        ctx.hw.turntable_safe_goto(ctx.gd, ctx.grid_state, stage_position)
 
         met_cal_cam.SetExposureTime(pars.METROLOGY_CAL_TARGET_EXPOSURE_MS)
         ctx.lctrl.switch_fibre_backlight(
@@ -151,7 +141,7 @@ def selftest_metrology_calibration(
         del fibre_coordinates
 
     finally:
-        hw.safe_home_turntable(ctx.gd, ctx.grid_state)
+        ctx.hw.safe_home_turntable(ctx.gd, ctx.grid_state)
 
 
 def selftest_metrology_height(
@@ -159,12 +149,9 @@ def selftest_metrology_height(
 ):
 
     print("selftest: metrology height")
-    if ctx.opts.mockup:
-        # replace all hardware functions by mock-up interfaces
-        hw = hwsimulation
 
     try:
-        hw.safe_home_turntable(ctx.gd, ctx.grid_state)
+        ctx.hw.safe_home_turntable(ctx.gd, ctx.grid_state)
 
         ctx.lctrl.switch_fibre_backlight(
             "off", manual_lamp_control=ctx.opts.manual_lamp_control
@@ -179,14 +166,14 @@ def selftest_metrology_height(
             IP_ADDRESS: MET_HEIGHT_CAMERA_IP_ADDRESS,
         }
 
-        met_height_cam = hw.GigECamera(MET_HEIGHT_CAMERA_CONF)
+        met_height_cam = ctx.hw.GigECamera(MET_HEIGHT_CAMERA_CONF)
 
         fpu_id, stage_position = get_sorted_positions(
             ctx.measure_fpuset, pars.MET_HEIGHT_POSITIONS
         )[0]
 
         # move rotary stage to POS_REP_POSN_N
-        hw.turntable_safe_goto(ctx.gd, ctx.grid_state, stage_position)
+        ctx.hw.turntable_safe_goto(ctx.gd, ctx.grid_state, stage_position)
 
         with ctx.lctrl.use_silhouettelight(manual_lamp_control=ctx.opts.manual_lamp_control):
             ipath_selftest_met_height = capture_image(
@@ -198,7 +185,7 @@ def selftest_metrology_height(
         )
 
     finally:
-        hw.safe_home_turntable(ctx.gd, ctx.grid_state)
+        ctx.hw.safe_home_turntable(ctx.gd, ctx.grid_state)
 
 
 def selftest_positional_repeatability(
@@ -207,12 +194,9 @@ def selftest_positional_repeatability(
 
     print("selftest: positional repeatability")
 
-    if ctx.opts.mockup:
-        # replace all hardware functions by mock-up interfaces
-        hw = hwsimulation
 
     try:
-        hw.safe_home_turntable(ctx.gd, ctx.grid_state)
+        ctx.hw.safe_home_turntable(ctx.gd, ctx.grid_state)
 
         ctx.lctrl.switch_fibre_backlight(
             "off", manual_lamp_control=ctx.opts.manual_lamp_control
@@ -226,14 +210,14 @@ def selftest_positional_repeatability(
             IP_ADDRESS: POS_REP_CAMERA_IP_ADDRESS,
         }
 
-        pos_rep_cam = hw.GigECamera(POS_REP_CAMERA_CONF)
+        pos_rep_cam = ctx.hw.GigECamera(POS_REP_CAMERA_CONF)
         pos_rep_cam.SetExposureTime(pars.POS_REP_EXPOSURE_MS)
 
         fpu_id, stage_position = get_sorted_positions(
             ctx.measure_fpuset, pars.POS_REP_POSITIONS
         )[0]
 
-        hw.turntable_safe_goto(ctx.gd, ctx.grid_state, stage_position)
+        ctx.hw.turntable_safe_goto(ctx.gd, ctx.grid_state, stage_position)
 
         with ctx.lctrl.use_ambientlight(manual_lamp_control=ctx.opts.manual_lamp_control):
 
@@ -245,7 +229,7 @@ def selftest_positional_repeatability(
         del coords
 
     finally:
-        hw.safe_home_turntable(ctx.gd, ctx.grid_state)
+        ctx.hw.safe_home_turntable(ctx.gd, ctx.grid_state)
 
 
 def selftest_nonfibre(

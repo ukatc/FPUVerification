@@ -17,8 +17,6 @@ from FpuGridDriver import (
     MovementError,
 )
 from numpy import NaN
-from vfr import hw as real_hw
-from vfr import hwsimulation
 from vfr.db.colldect_limits import (
     get_anglimit_passed_p,
     save_angular_limit,
@@ -115,10 +113,6 @@ def test_datum(ctx, dasel=DASEL_BOTH):
 
 def test_limit(ctx, which_limit, pars=None):
 
-    if ctx.opts.mockup:
-        hw = hwsimulation
-    else:
-        hw = real_hw
 
     failed_fpus = []
 
@@ -159,7 +153,7 @@ def test_limit(ctx, which_limit, pars=None):
 
     if which_limit != "beta_collision":
         # home turntable
-        hw.safe_home_turntable(ctx.gd, ctx.grid_state)
+        ctx.hw.safe_home_turntable(ctx.gd, ctx.grid_state)
 
     for fpu_id, stage_position in get_sorted_positions(
         ctx.measure_fpuset, pars.COLDECT_POSITIONS
@@ -182,7 +176,7 @@ def test_limit(ctx, which_limit, pars=None):
                 print("pre-finding datum....")
                 ctx.gd.findDatum(ctx.grid_state)
                 print("OK")
-                hw.safe_home_turntable(ctx.gd, ctx.grid_state, opts=ctx.opts)
+                ctx.hw.safe_home_turntable(ctx.gd, ctx.grid_state, opts=ctx.opts)
                 go_collision_test_pos(fpu_id, ctx.opts)
 
             print(
@@ -192,7 +186,7 @@ def test_limit(ctx, which_limit, pars=None):
 
             if which_limit == "beta_collision":
                 # move rotary stage to POS_REP_POSN_N
-                hw.turntable_safe_goto(ctx.gd, ctx.grid_state, stage_position)
+                ctx.hw.turntable_safe_goto(ctx.gd, ctx.grid_state, stage_position)
 
             if which_limit == "beta_collision":
                 goto_position(
@@ -319,7 +313,7 @@ def test_limit(ctx, which_limit, pars=None):
 
     if which_limit == "beta_collision":
         # home turntable
-        hw.safe_home_turntable(ctx.gd, ctx.grid_state)
+        ctx.hw.safe_home_turntable(ctx.gd, ctx.grid_state)
 
     if failed_fpus:
         if which_limit == "beta_collision":

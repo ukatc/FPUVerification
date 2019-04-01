@@ -12,8 +12,6 @@ from ImageAnalysisFuncs.analyze_positional_repeatability import (
 )
 from numpy import NaN, array
 import numpy as np
-from vfr import hw as real_hw
-from vfr import hwsimulation
 from vfr.conf import MET_CAL_CAMERA_IP_ADDRESS
 from vfr.db.datum_repeatability import (
     TestResult,
@@ -33,14 +31,9 @@ from vfr.tests_common import (
 def measure_datum_repeatability(ctx, pars=None):
 
     tstamp = timestamp()
-    if ctx.opts.mockup:
-        # replace all hardware functions by mock-up interfaces
-        hw = hwsimulation
-    else:
-        hw = real_hw
 
     # home turntable
-    hw.safe_home_turntable(ctx.gd, ctx.grid_state)
+    ctx.hw.safe_home_turntable(ctx.gd, ctx.grid_state)
 
     ctx.lctrl.switch_fibre_backlight("off", manual_lamp_control=ctx.opts.manual_lamp_control)
     ctx.lctrl.switch_fibre_backlight_voltage(
@@ -67,7 +60,7 @@ def measure_datum_repeatability(ctx, pars=None):
                 continue
 
             # move rotary stage to POS_REP_POSN_N
-            hw.turntable_safe_goto(ctx.gd, ctx.grid_state, stage_position)
+            ctx.hw.turntable_safe_goto(ctx.gd, ctx.grid_state, stage_position)
 
             # initialize pos_rep camera
             # set pos_rep camera exposure time to DATUM_REP_EXPOSURE milliseconds
@@ -76,7 +69,7 @@ def measure_datum_repeatability(ctx, pars=None):
                 IP_ADDRESS: MET_CAL_CAMERA_IP_ADDRESS,
             }
 
-            met_cal_cam = hw.GigECamera(MET_CAL_CAMERA_CONF)
+            met_cal_cam = ctx.hw.GigECamera(MET_CAL_CAMERA_CONF)
             met_cal_cam.SetExposureTime(pars.DATUM_REP_EXPOSURE_MS)
 
             datumed_images = []

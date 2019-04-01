@@ -11,8 +11,6 @@ from ImageAnalysisFuncs.analyze_positional_repeatability import (
     posrepCoordinates,
 )
 from numpy import NaN
-from vfr import hw as real_hw
-from vfr import hwsimulation
 from vfr.conf import POS_REP_CAMERA_IP_ADDRESS
 from vfr.db.colldect_limits import get_angular_limit
 from vfr.db.positional_repeatability import (
@@ -38,14 +36,9 @@ from vfr.verification_tasks.measure_datum_repeatability import (
 def measure_positional_repeatability(ctx, pars=None):
 
     tstamp = timestamp()
-    if ctx.opts.mockup:
-        # replace all hardware functions by mock-up interfaces
-        hw = hwsimulation
-    else:
-        hw = real_hw
 
     # home turntable
-    hw.safe_home_turntable(ctx.gd, ctx.grid_state)
+    ctx.hw.safe_home_turntable(ctx.gd, ctx.grid_state)
 
     ctx.lctrl.switch_fibre_backlight("off", manual_lamp_control=ctx.opts.manual_lamp_control)
     ctx.lctrl.switch_fibre_backlight_voltage(
@@ -60,7 +53,7 @@ def measure_positional_repeatability(ctx, pars=None):
             IP_ADDRESS: POS_REP_CAMERA_IP_ADDRESS,
         }
 
-        pos_rep_cam = hw.GigECamera(POS_REP_CAMERA_CONF)
+        pos_rep_cam = ctx.hw.GigECamera(POS_REP_CAMERA_CONF)
         pos_rep_cam.SetExposureTime(pars.POS_REP_EXPOSURE_MS)
 
         # get sorted positions (this is needed because the turntable can only
@@ -120,7 +113,7 @@ def measure_positional_repeatability(ctx, pars=None):
             beta_max = _beta_max["val"]
 
             # move rotary stage to POS_REP_POSN_N
-            hw.turntable_safe_goto(ctx.gd, ctx.grid_state, stage_position)
+            ctx.hw.turntable_safe_goto(ctx.gd, ctx.grid_state, stage_position)
 
             image_dict_alpha = {}
             image_dict_beta = {}

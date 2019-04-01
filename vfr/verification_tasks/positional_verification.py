@@ -16,8 +16,6 @@ from ImageAnalysisFuncs.analyze_positional_repeatability import (
     posrepCoordinates,
 )
 from numpy import NaN
-from vfr import hw as real_hw
-from vfr import hwsimulation
 from vfr.conf import POS_REP_CAMERA_IP_ADDRESS
 from vfr.db.colldect_limits import get_angular_limit
 from vfr.db.datum_repeatability import get_datum_repeatability_passed_p
@@ -79,13 +77,7 @@ def measure_positional_verification(ctx, pars=None):
     gd = ctx.gd
     grid_state = ctx.grid_state
 
-    if opts.mockup:
-        # replace all hardware functions by mock-up interfaces
-        hw = hwsimulation
-    else:
-        hw = real_hw
-
-    hw.safe_home_turntable(gd, grid_state)
+    ctx.hw.safe_home_turntable(gd, grid_state)
 
     ctx.lctrl.switch_fibre_backlight("off", manual_lamp_control=opts.manual_lamp_control)
     ctx.lctrl.switch_ambientlight("on", manual_lamp_control=opts.manual_lamp_control)
@@ -101,7 +93,7 @@ def measure_positional_verification(ctx, pars=None):
             IP_ADDRESS: POS_REP_CAMERA_IP_ADDRESS,
         }
 
-        pos_rep_cam = hw.GigECamera(POS_VER_CAMERA_CONF)
+        pos_rep_cam = ctx.hw.GigECamera(POS_VER_CAMERA_CONF)
         pos_rep_cam.SetExposureTime(pars.POS_VER_EXPOSURE_MS)
 
         # get sorted positions (this is needed because the turntable can only
@@ -201,7 +193,7 @@ def measure_positional_verification(ctx, pars=None):
             gearbox_record_count = pr_result["record-count"]
 
             # move rotary stage to POS_VER_POSN_N
-            hw.turntable_safe_goto(gd, grid_state, stage_position)
+            ctx.hw.turntable_safe_goto(gd, grid_state, stage_position)
 
             image_dict = {}
 

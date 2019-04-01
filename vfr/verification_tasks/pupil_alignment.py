@@ -8,8 +8,6 @@ from ImageAnalysisFuncs.analyze_pupil_alignment import (
     pupalnCoordinates,
 )
 from numpy import NaN
-from vfr import hw as real_hw
-from vfr import hwsimulation
 from vfr.conf import PUP_ALGN_CAMERA_IP_ADDRESS
 from vfr.db.pupil_alignment import (
     TestResult,
@@ -45,19 +43,13 @@ def measure_pupil_alignment(ctx, pars=None):
 
     tstamp = timestamp()
 
-    if ctx.opts.mockup:
-        # replace all hardware functions by mock-up interfaces
-        hw = hwsimulation
-    else:
-        hw = real_hw
-
     if ctx.opts.skip_fibre:
         print("option '--skip-fibre' is set -- skipping pupil alignment test")
         return
 
     # home turntable
-    hw.safe_home_turntable(ctx.gd, ctx.grid_state)
-    hw.home_linear_stage()
+    ctx.hw.safe_home_turntable(ctx.gd, ctx.grid_state)
+    ctx.hw.home_linear_stage()
 
     ctx.lctrl.switch_ambientlight("off", manual_lamp_control=ctx.opts.manual_lamp_control)
     ctx.lctrl.switch_silhouettelight("off", manual_lamp_control=ctx.opts.manual_lamp_control)
@@ -77,7 +69,7 @@ def measure_pupil_alignment(ctx, pars=None):
             IP_ADDRESS: PUP_ALGN_CAMERA_IP_ADDRESS,
         }
 
-        pup_aln_cam = hw.GigECamera(PUP_ALGN_CAMERA_CONF)
+        pup_aln_cam = ctx.hw.GigECamera(PUP_ALGN_CAMERA_CONF)
         pup_aln_cam.SetExposureTime(pars.PUP_ALGN_EXPOSURE_MS)
 
         # get sorted positions (this is needed because the turntable can only
@@ -98,8 +90,8 @@ def measure_pupil_alignment(ctx, pars=None):
                 continue
 
             # move rotary stage to PUP_ALGN_POSN_N
-            hw.turntable_safe_goto(ctx.gd, ctx.grid_state, stage_position)
-            hw.linear_stage_goto(pars.PUP_ALGN_LINPOSITIONS[fpu_id])
+            ctx.hw.turntable_safe_goto(ctx.gd, ctx.grid_state, stage_position)
+            ctx.hw.linear_stage_goto(pars.PUP_ALGN_LINPOSITIONS[fpu_id])
 
             sn = ctx.fpu_config[fpu_id]["serialnumber"]
 
