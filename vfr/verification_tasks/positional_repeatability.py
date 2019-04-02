@@ -16,6 +16,8 @@ from vfr.conf import POS_REP_CAMERA_IP_ADDRESS
 from vfr.db.colldect_limits import get_angular_limit
 from vfr.db.positional_repeatability import (
     TestResult,
+    PositionalRepeatabilityImages,
+    PositionalRepeatabilityResults,
     get_positional_repeatability_images,
     get_positional_repeatability_passed_p,
     save_positional_repeatability_images,
@@ -201,13 +203,13 @@ def measure_positional_repeatability(rig, dbe, pars=None):
                                 ipath,
                             )
 
-            save_positional_repeatability_images(
-                dbe,
-                fpu_id,
-                image_dict_alpha=image_dict_alpha,
-                image_dict_beta=image_dict_beta,
+            record = PositionalRepeatabilityImages(
+                images_alpha=image_dict_alpha,
+                images_beta=image_dict_beta,
                 waveform_pars=pars.POS_REP_WAVEFORM_PARS,
             )
+
+            save_positional_repeatability_images(dbe, fpu_id, record)
 
 
 def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation_pars):
@@ -301,7 +303,6 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
             arg_max_alpha_error, _ = arg_max_dict(posrep_alpha_max_at_angle)
             arg_max_beta_error, _ = arg_max_dict(posrep_beta_max_at_angle)
 
-
         except (ImageAnalysisError, GearboxFitError) as e:
             errmsg = str(e)
             posrep_alpha_max_at_angle = (NaN,)
@@ -310,38 +311,37 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
             posrep_beta_max_mm = (NaN,)
             posrep_rss_mm = (NaN,)
             positional_repeatability_has_passed = TestResult.NA
-            analysis_results_alpha=None
-            analysis_results_beta=None
-            posrep_alpha_max_at_angle=[]
-            posrep_beta_max_at_angle=[]
-            posrep_alpha_max_mm=NaN
-            posrep_beta_max_mm=NaN
-            posrep_rss_mm=NaN
-            gearbox_correction=None
-            min_quality_alpha=NaN
-            min_quality_beta=NaN
-            arg_max_alpha_error=NaN
-            arg_max_beta_error=NaN
+            analysis_results_alpha = None
+            analysis_results_beta = None
+            posrep_alpha_max_at_angle = []
+            posrep_beta_max_at_angle = []
+            posrep_alpha_max_mm = NaN
+            posrep_beta_max_mm = NaN
+            posrep_rss_mm = NaN
+            gearbox_correction = None
+            min_quality_alpha = NaN
+            min_quality_beta = NaN
+            arg_max_alpha_error = NaN
+            arg_max_beta_error = NaN
 
-
-        save_positional_repeatability_result(
-            dbe,
-            fpu_id,
-            pos_rep_calibration_pars=pos_rep_analysis_pars.POS_REP_CALIBRATION_PARS,
+        record = PositionalRepeatabilityResults(
+            calibration_pars=pos_rep_analysis_pars.POS_REP_CALIBRATION_PARS,
             analysis_results_alpha=analysis_results_alpha,
             analysis_results_beta=analysis_results_beta,
             posrep_alpha_max_at_angle=posrep_alpha_max_at_angle,
             posrep_beta_max_at_angle=posrep_beta_max_at_angle,
-            min_quality_alpha=min_quality_alpha,
-            min_quality_beta=min_quality_beta,
             arg_max_alpha_error=arg_max_alpha_error,
             arg_max_beta_error=arg_max_beta_error,
+            min_quality_alpha=min_quality_alpha,
+            min_quality_beta=min_quality_beta,
             posrep_alpha_max_mm=posrep_alpha_max_mm,
             posrep_beta_max_mm=posrep_beta_max_mm,
             posrep_rss_mm=posrep_rss_mm,
-            positional_repeatability_has_passed=positional_repeatability_has_passed,
+            result=positional_repeatability_has_passed,
             pass_threshold_mm=pos_rep_evaluation_pars.POS_REP_PASS,
             gearbox_correction=gearbox_correction,
-            errmsg=errmsg,
+            error_message=errmsg,
             algorithm_version=POSITIONAL_REPEATABILITY_ALGORITHM_VERSION,
         )
+
+        save_positional_repeatability_result(dbe, fpu_id, record)

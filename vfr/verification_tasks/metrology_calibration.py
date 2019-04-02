@@ -11,15 +11,13 @@ from ImageAnalysisFuncs.analyze_metrology_calibration import (
 from numpy import NaN
 from vfr.conf import MET_CAL_CAMERA_IP_ADDRESS
 from vfr.db.metrology_calibration import (
+    MetrologyCalibrationImages,
+    MetrologyCalibrationResult,
     get_metrology_calibration_images,
     save_metrology_calibration_images,
     save_metrology_calibration_result,
 )
-from vfr.tests_common import (
-    get_sorted_positions,
-    store_image,
-    timestamp,
-)
+from vfr.tests_common import get_sorted_positions, store_image, timestamp
 
 
 def measure_metrology_calibration(rig, dbe, pars=None):
@@ -76,14 +74,14 @@ def measure_metrology_calibration(rig, dbe, pars=None):
 
         met_cal_cam.SetExposureTime(pars.METROLOGY_CAL_FIBRE_EXPOSURE_MS)
 
-        with rig.lctrl.use_backlight(
-            pars.METROLOGY_CAL_BACKLIGHT_VOLTAGE,
-        ):
+        with rig.lctrl.use_backlight(pars.METROLOGY_CAL_BACKLIGHT_VOLTAGE):
             fibre_ipath = capture_image(met_cal_cam, "fibre")
 
         images = {"target": target_ipath, "fibre": fibre_ipath}
 
-        save_metrology_calibration_images(dbe, fpu_id, images)
+        record = MetrologyCalibrationImages(images=images)
+
+        save_metrology_calibration_images(dbe, fpu_id, record)
 
 
 def eval_metrology_calibration(
@@ -130,13 +128,13 @@ def eval_metrology_calibration(
             metcal_fibre_small_target_distance_mm = NaN
             metcal_target_vector_angle_deg = NaN
 
-        save_metrology_calibration_result(
-            dbe,
-            fpu_id,
+        record = MetrologyCalibrationResult(
             coords=coords,
             metcal_fibre_large_target_distance_mm=metcal_fibre_large_target_distance_mm,
             metcal_fibre_small_target_distance_mm=metcal_fibre_small_target_distance_mm,
             metcal_target_vector_angle_deg=metcal_target_vector_angle_deg,
-            errmsg=errmsg,
+            error_message=errmsg,
             algorithm_version=METROLOGY_ANALYSIS_ALGORITHM_VERSION,
         )
+
+        save_metrology_calibration_result(dbe, fpu_id, record)

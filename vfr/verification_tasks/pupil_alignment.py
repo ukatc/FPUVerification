@@ -11,6 +11,8 @@ from ImageAnalysisFuncs.analyze_pupil_alignment import (
 from numpy import NaN
 from vfr.conf import PUP_ALGN_CAMERA_IP_ADDRESS
 from vfr.db.pupil_alignment import (
+    PupilAlignmentImages,
+    PupilAlignmentResult,
     TestResult,
     get_pupil_alignment_images,
     get_pupil_alignment_passed_p,
@@ -130,7 +132,8 @@ def measure_pupil_alignment(rig, dbe, pars=None):
 
             find_datum(rig.gd, rig.grid_state, rig.opts)
 
-            save_pupil_alignment_images(dbe, fpu_id, images=images)
+            record = PupilAlignmentImages(images=images)
+            save_pupil_alignment_images(dbe, fpu_id, record)
 
 
 def eval_pupil_alignment(
@@ -174,7 +177,7 @@ def eval_pupil_alignment(
             pupalnBetaErr = NaN
             pupalnTotalErr = NaN
             pupil_alignment_has_passed = TestResult.NA
-            min_quality=NaN
+            min_quality = NaN
 
         pupil_alignment_measures = {
             "chassis_error": pupalnChassisErr,
@@ -183,15 +186,14 @@ def eval_pupil_alignment(
             "total_error": pupalnTotalErr,
         }
 
-        save_pupil_alignment_result(
-            dbe,
-            fpu_id,
+        record = PupilAlignmentResult(
             calibration_pars=PUP_ALGN_ANALYSIS_PARS.PUP_ALGN_CALIBRATION_PARS,
             coords=coords,
-            pupil_alignment_measures=pupil_alignment_measures,
-            pupil_alignment_has_passed=pupil_alignment_has_passed,
-            pass_threshold_mm=PUP_ALGN_EVALUATION_PARS.PUP_ALGN_PASS,
+            measures=pupil_alignment_measures,
+            result=pupil_alignment_has_passed,
             min_quality=min_quality,
-            errmsg=errmsg,
+            pass_threshold_mm=PUP_ALGN_EVALUATION_PARS.PUP_ALGN_PASS,
+            error_message=errmsg,
             algorithm_version=PUPIL_ALIGNMENT_ALGORITHM_VERSION,
         )
+        save_pupil_alignment_result(dbe, fpu_id, record)

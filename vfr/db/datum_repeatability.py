@@ -3,19 +3,12 @@ from __future__ import absolute_import, division, print_function
 from collections import namedtuple
 from numpy import NaN
 from vfr.tests_common import timestamp
-from vfr.db.base import (
-    GIT_VERSION,
-    TestResult,
-    get_test_result,
-    save_test_result,
-)
+from vfr.db.base import GIT_VERSION, TestResult, get_test_result, save_test_result
 
 RECORD_TYPE = "datum-repeatability"
 
 DatumRepeatabilityImages = namedtuple(
-    "DatumRepeatabilityImages",
-    " images"
-    " residual_counts"
+    "DatumRepeatabilityImages", " images" " residual_counts"
 )
 
 DatumRepeatabilityResult = namedtuple(
@@ -34,9 +27,8 @@ DatumRepeatabilityResult = namedtuple(
     " min_quality_moved"
     " moved_errors"
     " pass_threshold_mm"
-    " result"
+    " result",
 )
-
 
 
 def save_datum_repeatability_images(dbe, fpu_id, record):
@@ -50,10 +42,7 @@ def save_datum_repeatability_images(dbe, fpu_id, record):
     def valfunc(fpu_id):
 
         val = dict(**vars(record))
-        val.update({
-            "fpuid": fpu_id,
-            "time": timestamp()
-        })
+        val.update({"fpuid": fpu_id, "time": timestamp()})
         return repr(val)
 
     save_test_result(dbe, [fpu_id], keyfunc, valfunc)
@@ -70,11 +59,7 @@ def get_datum_repeatability_images(dbe, fpu_id, count=None):
     return get_test_result(dbe, fpu_id, keyfunc, count=count)
 
 
-def save_datum_repeatability_result(
-    dbe,
-    fpu_id,
-    record,
-):
+def save_datum_repeatability_result(dbe, fpu_id, record):
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
@@ -85,10 +70,7 @@ def save_datum_repeatability_result(
     def valfunc(fpu_id):
 
         val = dict(**vars(record))
-        val.update({
-                "git_version": GIT_VERSION,
-                "time": timestamp(),
-        })
+        val.update({"git_version": GIT_VERSION, "time": timestamp()})
         return repr(val)
 
     save_test_result(dbe, [fpu_id], keyfunc, valfunc)

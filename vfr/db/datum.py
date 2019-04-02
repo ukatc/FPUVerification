@@ -2,11 +2,7 @@ from __future__ import absolute_import, division, print_function
 
 from FpuGridDriver import CAN_PROTOCOL_VERSION, DASEL_ALPHA, DASEL_BETA, DASEL_BOTH
 from vfr.tests_common import timestamp
-from vfr.db.base import (
-    TestResult,
-    get_test_result,
-    save_test_result,
-)
+from vfr.db.base import TestResult, get_test_result, save_test_result
 
 RECORD_TYPE = "findDatum"
 

@@ -11,15 +11,13 @@ from numpy import NaN
 from vfr.conf import MET_HEIGHT_CAMERA_IP_ADDRESS
 from vfr.db.base import TestResult
 from vfr.db.metrology_height import (
+    MetrologyHeightImages,
+    MetrologyHeightResult,
     get_metrology_height_images,
     save_metrology_height_images,
     save_metrology_height_result,
 )
-from vfr.tests_common import (
-    get_sorted_positions,
-    store_image,
-    timestamp,
-)
+from vfr.tests_common import get_sorted_positions, store_image, timestamp
 
 
 def measure_metrology_height(rig, dbe, pars=None):
@@ -66,8 +64,8 @@ def measure_metrology_height(rig, dbe, pars=None):
                 return ipath
 
             images = capture_image(met_height_cam)
-
-            save_metrology_height_images(dbe, fpu_id, images)
+            record = MetrologyHeightImages(images=images)
+            save_metrology_height_images(dbe, fpu_id, record)
 
 
 def eval_metrology_height(dbe, met_height_analysis_pars, met_height_evaluation_pars):
@@ -103,12 +101,11 @@ def eval_metrology_height(dbe, met_height_analysis_pars, met_height_evaluation_p
             metht_large_target_height_mm = NaN
             test_result = TestResult.NA
 
-        save_metrology_height_result(
-            dbe,
-            fpu_id,
-            metht_small_target_height_mm=metht_small_target_height_mm,
-            metht_large_target_height_mm=metht_large_target_height_mm,
+        record = MetrologyHeightResult(
+            small_target_height_mm=metht_small_target_height_mm,
+            large_target_height_mm=metht_large_target_height_mm,
             test_result=test_result,
-            errmsg=errmsg,
+            error_message=errmsg,
             algorithm_version=METROLOGY_HEIGHT_ANALYSIS_ALGORITHM_VERSION,
         )
+        save_metrology_height_result(dbe, fpu_id, record)

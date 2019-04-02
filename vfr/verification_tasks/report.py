@@ -9,9 +9,7 @@ import numpy as np
 
 from vfr.db.base import TestResult
 
-from vfr.db.colldect_limits import (
-    get_angular_limit,
-)
+from vfr.db.colldect_limits import get_angular_limit
 from vfr.db.datum import get_datum_result
 from vfr.db.datum_repeatability import (
     get_datum_repeatability_images,
@@ -47,9 +45,6 @@ tw = TextWrapper(
 )
 
 fill = tw.fill
-
-
-
 
 
 def get_data(dbe, fpu_id):
@@ -99,6 +94,7 @@ def get_data(dbe, fpu_id):
 
     return data
 
+
 def get_rlist(
     serial_number=None,
     datum_result=None,
@@ -124,10 +120,10 @@ def get_rlist(
 ):
     if datum_result is None:
         datum_alpha = TestResult.NA
-        datum_beta  = TestResult.NA
+        datum_beta = TestResult.NA
     else:
         datum_alpha = TestResult.OK if datum_result["datumed"][0] else TestResult.FAILED
-        datum_beta = TestResult.OK if datum_result["datumed"][1]  else TestResult.FAILED
+        datum_beta = TestResult.OK if datum_result["datumed"][1] else TestResult.FAILED
 
     if beta_collision_result is None:
         beta_collision = TestResult.NA
@@ -140,7 +136,7 @@ def get_rlist(
         alpha_min = alpha_min_result["result"]
 
     if alpha_max_result is None:
-        alpha_max  = TestResult.NA
+        alpha_max = TestResult.NA
     else:
         alpha_max = alpha_max_result["result"]
 
@@ -150,7 +146,7 @@ def get_rlist(
         beta_min = beta_min_result["result"]
 
     if beta_max_result is None:
-        beta_max  = TestResult.NA
+        beta_max = TestResult.NA
     else:
         beta_max = beta_max_result["result"]
 
@@ -162,7 +158,11 @@ def get_rlist(
     if metrology_height_result is None:
         metrology_height = TestResult.NA
     else:
-        metrology_height = TestResult.OK if not (metrology_height_result["error_message"]) else TestResult.FAILED
+        metrology_height = (
+            TestResult.OK
+            if not (metrology_height_result["error_message"])
+            else TestResult.FAILED
+        )
 
     if positional_repeatability_result is None:
         positional_repeatability = TestResult.NA
@@ -176,24 +176,28 @@ def get_rlist(
 
     if skip_fibre:
         rlist = [
-            (datum_alpha, "datum_alpha",),
-            (datum_beta, "datum_beta",),
-            (beta_collision, "beta_collision",),
-            (alpha_min, "alpha min",),
-            (beta_min, "beta min",),
-            (alpha_max, "alpha max",),
-            (beta_max, "beta max",),
-            (datum_repeatability, "datum repeatability",),
-            (metrology_height, "metrology height",),
-            (positional_repeatability, "positional_repeatability",),
-            (positional_verification, "positional verification",),
+            (datum_alpha, "datum_alpha"),
+            (datum_beta, "datum_beta"),
+            (beta_collision, "beta_collision"),
+            (alpha_min, "alpha min"),
+            (beta_min, "beta min"),
+            (alpha_max, "alpha max"),
+            (beta_max, "beta max"),
+            (datum_repeatability, "datum repeatability"),
+            (metrology_height, "metrology height"),
+            (positional_repeatability, "positional_repeatability"),
+            (positional_verification, "positional verification"),
         ]
 
     else:
         if metrology_calibration_result is None:
-            metrology_calibration  = TestResult.NA
+            metrology_calibration = TestResult.NA
         else:
-            metrology_calibration = TestResult.OK if not (metrology_calibration_result["error_message"]) else TestResult.FAILED
+            metrology_calibration = (
+                TestResult.OK
+                if not (metrology_calibration_result["error_message"])
+                else TestResult.FAILED
+            )
 
         if pupil_alignment_result is None:
             pupil_alignment = TestResult.NA
@@ -201,19 +205,19 @@ def get_rlist(
             pupil_alignment = pupil_alignment_result["result"]
 
         rlist = [
-            (datum_alpha, "datum_alpha",),
-            (datum_beta, "datum_beta",),
-            (beta_collision, "beta_collision",),
-            (alpha_min, "alpha min",),
-            (beta_min, "beta min",),
-            (alpha_max, "alpha max",),
-            (beta_max, "beta max",),
-            (datum_repeatability, "datum repeatability",),
-            (metrology_height, "metrology height",),
-            (metrology_calibration, "metrology calibration",),
-            (pupil_alignment, "pupil alignment",),
-            (positional_repeatability, "positional_repeatability",),
-            (positional_verification, "positional verification",),
+            (datum_alpha, "datum_alpha"),
+            (datum_beta, "datum_beta"),
+            (beta_collision, "beta_collision"),
+            (alpha_min, "alpha min"),
+            (beta_min, "beta min"),
+            (alpha_max, "alpha max"),
+            (beta_max, "beta max"),
+            (datum_repeatability, "datum repeatability"),
+            (metrology_height, "metrology height"),
+            (metrology_calibration, "metrology calibration"),
+            (pupil_alignment, "pupil alignment"),
+            (positional_repeatability, "positional_repeatability"),
+            (positional_verification, "positional verification"),
         ]
 
     return rlist
@@ -243,7 +247,6 @@ def print_report_status(
     skip_fibre=None,
 ):
 
-
     rlist = get_rlist(**locals())
     sum_status = TestResult.OK
     failed_name = ""
@@ -259,11 +262,14 @@ def print_report_status(
                 sum_status = TestResult.FAILED
                 failed_name = name
 
-
     if sum_status == TestResult.OK:
         print("FPU %s : %s" % (serial_number, sum_status), file=outfile)
     else:
-        print("FPU %s : %s (failed in %s)" % (serial_number, sum_status, failed_name), file=outfile)
+        print(
+            "FPU %s : %s (failed in %s)" % (serial_number, sum_status, failed_name),
+            file=outfile,
+        )
+
 
 def print_report_brief(
     serial_number=None,
@@ -288,7 +294,6 @@ def print_report_brief(
     outfile=None,
     skip_fibre=None,
 ):
-
 
     rlist = get_rlist(**locals())
     for val, name in rlist:
@@ -680,6 +685,7 @@ def print_report_terse(
                 ),
                 file=outfile,
             )
+
 
 def print_report_short(
     serial_number=None,
@@ -1095,6 +1101,7 @@ def print_report_short(
                 file=outfile,
             )
 
+
 def print_report_long(
     serial_number=None,
     datum_result=None,
@@ -1325,34 +1332,34 @@ def print_report_long(
                 ).format(**positional_repeatability_result),
                 file=outfile,
             )
-            error_by_alpha = positional_repeatability_result["posrep_alpha_max_at_angle"]
+            error_by_alpha = positional_repeatability_result[
+                "posrep_alpha_max_at_angle"
+            ]
             print(
-                """\nPositional repeatability: max error by alpha angle""",
-                file=outfile,
+                """\nPositional repeatability: max error by alpha angle""", file=outfile
             )
             error_max = positional_repeatability_result["arg_max_alpha_error"]
             for alpha in sorted(error_by_alpha.keys()):
-                val=error_by_alpha[alpha]
+                val = error_by_alpha[alpha]
                 tag = " <<<" if val == error_max else ""
                 print(
                     """Positional repeatability:     {alpha:7.2f} = {val:8.4f} {tag}""".format(
-                        alpha=alpha, val=val, tag=tag,
+                        alpha=alpha, val=val, tag=tag
                     ),
                     file=outfile,
                 )
             error_by_beta = positional_repeatability_result["posrep_beta_max_at_angle"]
             print("error_by_beta=", repr(error_by_beta))
             print(
-                """\nPositional repeatability: max error by beta angle""",
-                file=outfile,
+                """\nPositional repeatability: max error by beta angle""", file=outfile
             )
             error_max = positional_repeatability_result["arg_max_beta_error"]
             for beta in sorted(error_by_beta.keys()):
-                val=error_by_beta[beta]
+                val = error_by_beta[beta]
                 tag = " <<<" if val == error_max else ""
                 print(
                     """Positional repeatability:     {beta:7.2f} = {val:8.4f} {tag}""".format(
-                        beta=beta, val=val, tag=tag,
+                        beta=beta, val=val, tag=tag
                     ),
                     file=outfile,
                 )
@@ -1454,13 +1461,10 @@ def print_report_long(
                 file=outfile,
             )
             error_by_coords = positional_verification_result["posver_error"]
-            print(
-                """Positional verification : max error by coordinate""",
-                file=outfile,
-            )
+            print("""Positional verification : max error by coordinate""", file=outfile)
             error_max = positional_verification_result["posver_error_max_mm"]
             for coord in sorted(error_by_coords.keys()):
-                val=error_by_coords[coord]
+                val = error_by_coords[coord]
                 tag = " <<<" if val == error_max else ""
                 print(
                     """Positional verification :     # {coord[0]:03d} ({coord[1]:+8.2f}, {coord[2]:+8.2f}) = {val:8.4f} {tag}""".format(
@@ -1555,6 +1559,7 @@ def print_report_long(
                 ),
                 file=outfile,
             )
+
 
 def print_report_extended(
     serial_number=None,
@@ -1686,10 +1691,12 @@ def print_report_extended(
                 file=outfile,
             )
 
-            print(fill(
-                "Datum repeatability     : coords = {coords}".format(
-                    **datum_repeatability_result
-                )),
+            print(
+                fill(
+                    "Datum repeatability     : coords = {coords}".format(
+                        **datum_repeatability_result
+                    )
+                ),
                 file=outfile,
             )
         else:
@@ -1731,7 +1738,9 @@ def print_report_extended(
                 file=outfile,
             )
 
-    print(fill("metrology calibration images: {!r}".format(metrology_calibration_images)))
+    print(
+        fill("metrology calibration images: {!r}".format(metrology_calibration_images))
+    )
 
     print(file=outfile)
 
@@ -1786,34 +1795,34 @@ def print_report_extended(
                 ).format(**positional_repeatability_result),
                 file=outfile,
             )
-            error_by_alpha = positional_repeatability_result["posrep_alpha_max_at_angle"]
+            error_by_alpha = positional_repeatability_result[
+                "posrep_alpha_max_at_angle"
+            ]
             print(
-                """\nPositional repeatability: max error by alpha angle""",
-                file=outfile,
+                """\nPositional repeatability: max error by alpha angle""", file=outfile
             )
             error_max = positional_repeatability_result["arg_max_alpha_error"]
             for alpha in sorted(error_by_alpha.keys()):
-                val=error_by_alpha[alpha]
+                val = error_by_alpha[alpha]
                 tag = " <<<" if val == error_max else ""
                 print(
                     """Positional repeatability:     {alpha:7.2f} = {val:8.4f} {tag}""".format(
-                        alpha=alpha, val=val, tag=tag,
+                        alpha=alpha, val=val, tag=tag
                     ),
                     file=outfile,
                 )
             error_by_beta = positional_repeatability_result["posrep_beta_max_at_angle"]
             print("error_by_beta=", repr(error_by_beta))
             print(
-                """\nPositional repeatability: max error by beta angle""",
-                file=outfile,
+                """\nPositional repeatability: max error by beta angle""", file=outfile
             )
             error_max = positional_repeatability_result["arg_max_beta_error"]
             for beta in sorted(error_by_beta.keys()):
-                val=error_by_beta[beta]
+                val = error_by_beta[beta]
                 tag = " <<<" if val == error_max else ""
                 print(
                     """Positional repeatability:     {beta:7.2f} = {val:8.4f} {tag}""".format(
-                        beta=beta, val=val, tag=tag,
+                        beta=beta, val=val, tag=tag
                     ),
                     file=outfile,
                 )
@@ -1844,44 +1853,66 @@ def print_report_extended(
             )
             print(
                 fill(
-                    """Positional repeatability: alpha_max_at_angle = {posrep_alpha_max_at_angle!r}"""
-                .format(**positional_repeatability_result)),
+                    """Positional repeatability: alpha_max_at_angle = {posrep_alpha_max_at_angle!r}""".format(
+                        **positional_repeatability_result
+                    )
+                ),
                 file=outfile,
             )
             print(
                 fill(
-                    """Positional repeatability: beta_max_at_angle = {posrep_beta_max_at_angle!r}"""
-                .format(**positional_repeatability_result)),
+                    """Positional repeatability: beta_max_at_angle = {posrep_beta_max_at_angle!r}""".format(
+                        **positional_repeatability_result
+                    )
+                ),
                 file=outfile,
             )
             print(
                 fill(
-                    """Positional repeatability: analysis_results_alpha = {analysis_results_alpha!r}"""
-                .format(**positional_repeatability_result)),
+                    """Positional repeatability: analysis_results_alpha = {analysis_results_alpha!r}""".format(
+                        **positional_repeatability_result
+                    )
+                ),
                 file=outfile,
             )
             print(
                 fill(
-                    """Positional repeatability: analysis_results_beta = {analysis_results_beta!r}"""
-                .format(**positional_repeatability_result)),
+                    """Positional repeatability: analysis_results_beta = {analysis_results_beta!r}""".format(
+                        **positional_repeatability_result
+                    )
+                ),
                 file=outfile,
             )
             print(
                 fill(
-                    """Positional repeatability: gearbox_correction = {gearbox_correction!r}"""
-                .format(**positional_repeatability_result)),
+                    """Positional repeatability: gearbox_correction = {gearbox_correction!r}""".format(
+                        **positional_repeatability_result
+                    )
+                ),
                 file=outfile,
             )
-            print(fill("positional repeatability images: {images_alpha!r}".format(
-                    **positional_repeatability_images)),
+            print(
+                fill(
+                    "positional repeatability images: {images_alpha!r}".format(
+                        **positional_repeatability_images
+                    )
+                ),
                 file=outfile,
             )
-            print(fill("positional repeatability images: {images_beta!r}".format(
-                    **positional_repeatability_images)),
+            print(
+                fill(
+                    "positional repeatability images: {images_beta!r}".format(
+                        **positional_repeatability_images
+                    )
+                ),
                 file=outfile,
             )
-            print(fill("positional repeatability images / waveform parameters: {waveform_pars!r}".format(
-                    **positional_repeatability_images)),
+            print(
+                fill(
+                    "positional repeatability images / waveform parameters: {waveform_pars!r}".format(
+                        **positional_repeatability_images
+                    )
+                ),
                 file=outfile,
             )
         else:
@@ -1915,13 +1946,10 @@ def print_report_extended(
                 file=outfile,
             )
             error_by_coords = positional_verification_result["posver_error"]
-            print(
-                """Positional verification : max error by coordinate""",
-                file=outfile,
-            )
+            print("""Positional verification : max error by coordinate""", file=outfile)
             error_max = positional_verification_result["posver_error_max_mm"]
             for coord in sorted(error_by_coords.keys()):
-                val=error_by_coords[coord]
+                val = error_by_coords[coord]
                 tag = " <<<" if val == error_max else ""
                 print(
                     """Positional verification :     # {coord[0]:03d} ({coord[1]:+8.2f}, {coord[2]:+8.2f}) = {val:8.4f} {tag}""".format(
@@ -1939,29 +1967,35 @@ def print_report_extended(
             )
             print(
                 fill(
-                    """Positional verification : posver_errors = {posver_error}"""
-                .format(**positional_verification_result)),
+                    """Positional verification : posver_errors = {posver_error}""".format(
+                        **positional_verification_result
+                    )
+                ),
                 file=outfile,
             )
             print(
                 fill(
-                    """Positional verification : analysis_results = {analysis_results}"""
-                .format(**positional_verification_result)),
+                    """Positional verification : analysis_results = {analysis_results}""".format(
+                        **positional_verification_result
+                    )
+                ),
                 file=outfile,
             )
             if "gearbox_correction" not in positional_verification_images:
                 positional_verification_images["gearbox_correction"] = None
             print(
                 fill(
-                "positional verification images : {images!r}".format(
-                    **positional_verification_images
-                ))
+                    "positional verification images : {images!r}".format(
+                        **positional_verification_images
+                    )
+                )
             )
             print(
                 fill(
-                "gearbox correction = {gearbox_correction!r}".format(
-                    **positional_verification_images
-                ))
+                    "gearbox correction = {gearbox_correction!r}".format(
+                        **positional_verification_images
+                    )
+                )
             )
         else:
             print(
@@ -2004,8 +2038,10 @@ def print_report_extended(
             )
             print(
                 fill(
-                    """pupil alignment    : coords = {coords!r}"""
-                .format(**pupil_alignment_result)),
+                    """pupil alignment    : coords = {coords!r}""".format(
+                        **pupil_alignment_result
+                    )
+                ),
                 file=outfile,
             )
             print(fill("pupil alignment images: {!r}".format(pupil_alignment_images)))
@@ -2016,7 +2052,6 @@ def print_report_extended(
                 ),
                 file=outfile,
             )
-
 
 
 def report(dbe):

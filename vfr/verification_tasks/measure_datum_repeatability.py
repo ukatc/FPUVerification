@@ -23,12 +23,7 @@ from vfr.db.datum_repeatability import (
     save_datum_repeatability_images,
     save_datum_repeatability_result,
 )
-from vfr.tests_common import (
-    dirac,
-    get_sorted_positions,
-    store_image,
-    timestamp,
-)
+from vfr.tests_common import dirac, get_sorted_positions, store_image, timestamp
 
 
 def measure_datum_repeatability(rig, dbe, pars=None):
@@ -99,8 +94,7 @@ def measure_datum_repeatability(rig, dbe, pars=None):
                 datumed_images.append(ipath)
                 rig.gd.getCounterDeviation(rig.grid_state, fpuset=[fpu_id])
                 fpu = rig.grid_state.FPU[fpu_id]
-                datumed_residuals.append( (fpu.alpha_deviation, fpu.beta_deviation,) )
-
+                datumed_residuals.append((fpu.alpha_deviation, fpu.beta_deviation))
 
             rig.gd.findDatum(rig.grid_state)
             for count in range(pars.DATUM_REP_ITERATIONS):
@@ -122,17 +116,14 @@ def measure_datum_repeatability(rig, dbe, pars=None):
 
                 rig.gd.getCounterDeviation(rig.grid_state, fpuset=[fpu_id])
                 fpu = rig.grid_state.FPU[fpu_id]
-                moved_residuals.append( (fpu.alpha_deviation, fpu.beta_deviation,) )
-
+                moved_residuals.append((fpu.alpha_deviation, fpu.beta_deviation))
 
             record = DatumRepeatabilityImages(
-                images = {
-                    "datumed_images": datumed_images,
-                    "moved_images": moved_images
-                },
-                residual_counts = {
+                images={"datumed_images": datumed_images, "moved_images": moved_images},
+                residual_counts={
                     "datumed_residuals": datumed_residuals,
-                    "moved_residuals": moved_residuals},
+                    "moved_residuals": moved_residuals,
+                },
             )
 
             save_datum_repeatability_images(dbe, fpu_id, record)
@@ -178,13 +169,12 @@ def eval_datum_repeatability(dbe, dat_rep_analysis_pars):
 
             coords = {"datumed_coords": datumed_coords, "moved_coords": moved_coords}
             errmsg = ""
-            max_residual_datumed=np.max(array(residual_counts["datumed_residuals"]))
-            max_residual_moved=np.max(array(residual_counts["moved_residuals"]))
+            max_residual_datumed = np.max(array(residual_counts["datumed_residuals"]))
+            max_residual_moved = np.max(array(residual_counts["moved_residuals"]))
 
             min_quality_datumed = get_min_quality(datumed_coords)
 
             min_quality_moved = get_min_quality(moved_coords)
-
 
         except ImageAnalysisError as e:
             errmsg = str(e)
@@ -194,13 +184,12 @@ def eval_datum_repeatability(dbe, dat_rep_analysis_pars):
             ) = datrep_move_dat_max = datrep_move_dat_std = NaN
 
             datum_repeatability_has_passed = TestResult.NA
-            max_residual_datumed=NaN
-            max_residual_moved=NaN
-            min_quality_datumed=NaN
-            min_quality_moved=NaN
-            datumed_errors=None
+            max_residual_datumed = NaN
+            max_residual_moved = NaN
+            min_quality_datumed = NaN
+            min_quality_moved = NaN
+            datumed_errors = None
             moved_errors = None
-
 
             if dat_rep_analysis_pars.FIXME_FAKE_RESULT:
                 warnings.warn(
@@ -209,7 +198,7 @@ def eval_datum_repeatability(dbe, dat_rep_analysis_pars):
                 )
                 datum_repeatability_has_passed = TestResult.OK
 
-        record=DatumRepeatabilityResult(
+        record = DatumRepeatabilityResult(
             algorithm_version=DATUM_REPEATABILITY_ALGORITHM_VERSION,
             coords=coords,
             datum_repeatability_max_residual_datumed=max_residual_datumed,

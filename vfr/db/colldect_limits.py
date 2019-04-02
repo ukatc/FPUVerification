@@ -1,5 +1,7 @@
 from __future__ import absolute_import, division, print_function
 
+from collections import namedtuple
+
 from fpu_constants import (
     ALPHA_DATUM_OFFSET,
     ALPHA_MAX_DEGREE,
@@ -11,18 +13,20 @@ from interval import Interval
 from protectiondb import ProtectionDB
 from vfr.conf import PROTECTION_TOLERANCE
 from vfr.tests_common import timestamp
-from vfr.db.base import (
-    TestResult,
-    get_test_result,
-    save_test_result,
+from vfr.db.base import TestResult, get_test_result, save_test_result
+
+LimitTestResult = namedtuple(
+    "LimitTestResult", " fpu_id" " serialnumber" " result" " val" " diagnostic"
 )
 
 
-def save_angular_limit(
-    dbe, fpu_id, serialnumber, which_limit, test_succeeded, limit_val, diagnostic
-):
+def save_angular_limit(dbe, which_limit, record):
 
-    print("saving limit value")
+    if dbe.opts.verbosity > 3:
+        print("saving limit value")
+
+    serialnumber = record.serialnumber
+    fpu_id = record.fpu_id
 
     def keyfunc(fpu_id):
         if which_limit == "beta_collision":
@@ -33,20 +37,9 @@ def save_angular_limit(
 
     def valfunc(fpu_id):
 
-        if test_succeeded:
-            fsuccess = TestResult.OK
-        else:
-            fsuccess = TestResult.FAILED
-
-        val = repr(
-            {
-                "result": fsuccess,
-                "val": limit_val,
-                "diagnostic": diagnostic,
-                "time": timestamp(),
-            }
-        )
-        return val
+        val = dict(**vars(record))
+        val.update({"time": timestamp()})
+        return repr(val)
 
     save_test_result(dbe, [fpu_id], keyfunc, valfunc)
 
@@ -78,11 +71,15 @@ def get_colldect_passed_p(dbe, fpu_id, count=None):
     return get_anglimit_passed_p(dbe, fpu_id, "beta_collision", count=count)
 
 
-def set_protection_limit(rig, dbe, fpu_id, which_limit, measured_val):
+def set_protection_limit(dbe, grid_state, which_limit, record):
 
     """This replaces the corresponding entry in the protection database if
     either the update flag is True, or the current entry is the default value.
     """
+    fpu_id = record.fpu_id
+    measured_val = record.val
+    serialnumber = record.serialnumber
+
     if which_limit in ["alpha_max", "alpha_min"]:
         subkey = ProtectionDB.alpha_limits
         offset = ALPHA_DATUM_OFFSET
@@ -99,8 +96,8 @@ def set_protection_limit(rig, dbe, fpu_id, which_limit, measured_val):
     else:
         default_val = default_max
 
-    fpu = rig.grid_state.FPU[fpu_id]
-    serialnumber = rig.fpu_config[fpu_id]["serialnumber"]
+    fpu = grid_state.FPU[fpu_id]
+
     with dbe.env.begin(write=True, db=dbe.fpudb) as txn:
         val = ProtectionDB.getField(txn, fpu, subkey) + offset
 

@@ -6,23 +6,17 @@ from GigE.GigECamera import BASLER_DEVICE_CLASS, DEVICE_CLASS, IP_ADDRESS
 from ImageAnalysisFuncs.analyze_metrology_calibration import (
     metcalFibreCoordinates,
     metcalTargetCoordinates,
-    )
+)
 from ImageAnalysisFuncs.analyze_metrology_height import methtHeight
 from ImageAnalysisFuncs.analyze_positional_repeatability import posrepCoordinates
-from ImageAnalysisFuncs.analyze_pupil_alignment import (
-    pupalnCoordinates,
-)
+from ImageAnalysisFuncs.analyze_pupil_alignment import pupalnCoordinates
 from vfr.conf import (
     MET_CAL_CAMERA_IP_ADDRESS,
     MET_HEIGHT_CAMERA_IP_ADDRESS,
     POS_REP_CAMERA_IP_ADDRESS,
     PUP_ALGN_CAMERA_IP_ADDRESS,
 )
-from vfr.tests_common import (
-    get_sorted_positions,
-    store_image,
-    timestamp,
-)
+from vfr.tests_common import get_sorted_positions, store_image, timestamp
 
 
 def selftest_pup_algn(rig, pars=None, PUP_ALGN_ANALYSIS_PARS=None, capture_image=None):
@@ -114,9 +108,7 @@ def selftest_metrology_calibration(
         met_cal_cam.SetExposureTime(pars.METROLOGY_CAL_FIBRE_EXPOSURE_MS)
         rig.lctrl.switch_ambientlight("off")
 
-        with rig.lctrl.use_backlight(
-            pars.METROLOGY_CAL_BACKLIGHT_VOLTAGE,
-        ):
+        with rig.lctrl.use_backlight(pars.METROLOGY_CAL_BACKLIGHT_VOLTAGE):
             ipath_selftest_met_cal_fibre = capture_image(met_cal_cam, "met-cal-fibre")
 
         target_coordinates = metcalTargetCoordinates(
@@ -178,7 +170,6 @@ def selftest_positional_repeatability(
 ):
 
     print("selftest: positional repeatability")
-
 
     try:
         rig.hw.safe_home_turntable(rig.gd, rig.grid_state)

@@ -4,10 +4,7 @@ import random
 import warnings
 
 from fpu_commands import gen_wf
-from Gearbox.gear_correction import (
-    GearboxFitError,
-    apply_gearbox_correction,
-)
+from Gearbox.gear_correction import GearboxFitError, apply_gearbox_correction
 from GigE.GigECamera import BASLER_DEVICE_CLASS, DEVICE_CLASS, IP_ADDRESS
 from ImageAnalysisFuncs.base import get_min_quality, arg_max_dict
 from ImageAnalysisFuncs.analyze_positional_repeatability import (
@@ -26,6 +23,8 @@ from vfr.db.positional_repeatability import (
     get_positional_repeatability_result,
 )
 from vfr.db.positional_verification import (
+    PositionalVerificationImages,
+    PositionalVerificationResult,
     get_positional_verification_images,
     get_positional_verification_passed_p,
     save_positional_verification_images,
@@ -273,15 +272,14 @@ def measure_positional_verification(rig, dbe, pars=None):
 
             # store dict of image paths, together with all data and algorithms
             # which are relevant to assess result later
-            save_positional_verification_images(
-                dbe,
-                fpu_id,
-                image_dict=image_dict,
+            record = PositionalVerificationImages(
+                images=image_dict,
                 gearbox_correction=gearbox_correction,
                 gearbox_algorithm_version=gearbox_algorithm_version,
                 gearbox_git_version=gearbox_git_version,
                 gearbox_record_count=gearbox_record_count,
             )
+            save_positional_verification_images(dbe, fpu_id, record)
 
 
 def eval_positional_verification(dbe, pos_ver_analysis_pars, pos_ver_evaluation_pars):
@@ -326,10 +324,11 @@ def eval_positional_verification(dbe, pos_ver_analysis_pars, pos_ver_evaluation_
                     analysis_results_short, pars=pos_ver_evaluation_pars
                 )
 
-            positional_verification_has_passed = TestResult.OK if (
-                posver_error_max_mm <= pos_ver_evaluation_pars.POS_VER_PASS
-            ) else TestResult.FAILED
-
+            positional_verification_has_passed = (
+                TestResult.OK
+                if (posver_error_max_mm <= pos_ver_evaluation_pars.POS_VER_PASS)
+                else TestResult.FAILED
+            )
 
             coords = list(analysis_results.values())
             min_quality = get_min_quality(coords)
@@ -346,17 +345,16 @@ def eval_positional_verification(dbe, pos_ver_analysis_pars, pos_ver_evaluation_
             min_quality = NaN
             arg_max_error = NaN
 
-        save_positional_verification_result(
-            dbe,
-            fpu_id,
-            pos_ver_calibration_pars=pos_ver_analysis_pars.POS_REP_CALIBRATION_PARS,
+        record = PositionalVerificationResult(
+            calibration_pars=pos_ver_analysis_pars.POS_REP_CALIBRATION_PARS,
             analysis_results=analysis_results,
             posver_error=posver_error,
             posver_error_max_mm=posver_error_max_mm,
+            result=positional_verification_has_passed,
+            pass_threshold_mm=pos_ver_evaluation_pars.POS_VER_PASS,
             min_quality=min_quality,
             arg_max_error=arg_max_error,
-            errmsg=errmsg,
+            error_message=errmsg,
             algorithm_version=POSITIONAL_REPEATABILITY_ALGORITHM_VERSION,
-            positional_verification_has_passed=positional_verification_has_passed,
-            pass_threshold_mm=pos_ver_evaluation_pars.POS_VER_PASS,
         )
+        save_positional_verification_result(dbe, fpu_id, record)

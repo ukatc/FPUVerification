@@ -1,17 +1,26 @@
 from __future__ import absolute_import, division, print_function
 
+from collections import namedtuple
 from numpy import NaN
 from vfr.tests_common import timestamp
-from vfr.db.base import (
-    GIT_VERSION,
-    get_test_result,
-    save_test_result,
-)
+from vfr.db.base import GIT_VERSION, get_test_result, save_test_result
 
 RECORD_TYPE = "metrology-calibration"
 
+MetrologyCalibrationImages = namedtuple("MetrologyCalibrationImages", " images")
 
-def save_metrology_calibration_images(dbe, fpu_id, images):
+MetrologyCalibrationResult = namedtuple(
+    "MetrologyCalibrationResult",
+    " coords"
+    " metcal_fibre_large_target_distance_mm"
+    " metcal_fibre_small_target_distance_mm"
+    " metcal_target_vector_angle_deg"
+    " error_message"
+    " algorithm_version",
+)
+
+
+def save_metrology_calibration_images(dbe, fpu_id, record):
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
@@ -21,8 +30,9 @@ def save_metrology_calibration_images(dbe, fpu_id, images):
 
     def valfunc(fpu_id):
 
-        val = repr({"fpuid": fpu_id, "images": images, "time": timestamp()})
-        return val
+        val = dict(**vars(record))
+        val.update({"fpu_id": fpu_id, "time": timestamp()})
+        return repr(val)
 
     save_test_result(dbe, [fpu_id], keyfunc, valfunc)
 
@@ -38,16 +48,7 @@ def get_metrology_calibration_images(dbe, fpu_id, count=None):
     return get_test_result(dbe, fpu_id, keyfunc, count=count)
 
 
-def save_metrology_calibration_result(
-    dbe,
-    fpu_id,
-    coords=None,
-    metcal_fibre_large_target_distance_mm=NaN,
-    metcal_fibre_small_target_distance_mm=NaN,
-    metcal_target_vector_angle_deg=NaN,
-    errmsg="",
-    algorithm_version=None,
-):
+def save_metrology_calibration_result(dbe, fpu_id, record):
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
@@ -57,19 +58,9 @@ def save_metrology_calibration_result(
 
     def valfunc(fpu_id):
 
-        val = repr(
-            {
-                "coords": coords,
-                "metcal_fibre_large_target_distance_mm": metcal_fibre_large_target_distance_mm,
-                "metcal_fibre_small_target_distance_mm": metcal_fibre_small_target_distance_mm,
-                "metcal_target_vector_angle_deg": metcal_target_vector_angle_deg,
-                "error_message": errmsg,
-                "algorithm_version": algorithm_version,
-                "git_version": GIT_VERSION,
-                "time": timestamp(),
-            }
-        )
-        return val
+        val = dict(**vars(record))
+        val.update({"git_version": GIT_VERSION, "time": timestamp()})
+        return repr(val)
 
     save_test_result(dbe, [fpu_id], keyfunc, valfunc)
 

@@ -17,22 +17,20 @@ from FpuGridDriver import (
     MovementError,
 )
 from numpy import NaN
+from vfr.db.base import TestResult
 from vfr.db.colldect_limits import (
+    LimitTestResult,
     get_anglimit_passed_p,
     save_angular_limit,
     set_protection_limit,
 )
 from vfr.db.datum import save_datum_result
-from vfr.tests_common import (
-    dirac,
-    flush,
-    get_sorted_positions,
-    goto_position,
-)
+from vfr.tests_common import dirac, flush, get_sorted_positions, goto_position
 from vfr.turntable import go_collision_test_pos
 
 # calm down pyflakes static checker
 assert DASEL_ALPHA or DASEL_BETA or True
+
 
 class DatumFailure(Exception):
     pass
@@ -112,7 +110,6 @@ def test_datum(rig, dbe, dasel=DASEL_BOTH):
 
 
 def test_limit(rig, dbe, which_limit, pars=None):
-
 
     failed_fpus = []
 
@@ -247,9 +244,15 @@ def test_limit(rig, dbe, which_limit, pars=None):
             limit_val = NaN
 
         if test_valid:
-            save_angular_limit(
-                dbe, fpu_id, sn, which_limit, test_succeeded, limit_val, diagnostic
+            record = LimitTestResult(
+                fpu_id=fpu_id,
+                serialnumber=sn,
+                result=TestResult.OK if test_succeeded else TestResult.FAILED,
+                val=limit_val,
+                diagnostic=diagnostic,
             )
+
+            save_angular_limit(dbe, which_limit, record)
 
         if test_valid and test_succeeded and (which_limit != "beta_collision"):
             if rig.opts.verbosity > 0:
@@ -263,7 +266,7 @@ def test_limit(rig, dbe, which_limit, pars=None):
                     )
                 )
 
-            set_protection_limit(rig, dbe, fpu_id, which_limit, limit_val)
+            set_protection_limit(dbe, rig.grid_state, which_limit, record)
 
         if test_succeeded:
             # bring FPU back into valid range and protected state
