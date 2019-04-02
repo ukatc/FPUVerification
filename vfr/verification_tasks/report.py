@@ -223,7 +223,7 @@ def get_rlist(
     return rlist
 
 
-def print_report_status(
+def format_report_status(
     serial_number=None,
     datum_result=None,
     alpha_min_result=None,
@@ -263,15 +263,12 @@ def print_report_status(
                 failed_name = name
 
     if sum_status == TestResult.OK:
-        print("FPU %s : %s" % (serial_number, sum_status), file=outfile)
+        yield "FPU %s : %s" % (serial_number, sum_status)
     else:
-        print(
-            "FPU %s : %s (failed in %s)" % (serial_number, sum_status, failed_name),
-            file=outfile,
-        )
+        yield ("FPU %s : %s (failed in %s)" % (serial_number, sum_status, failed_name))
 
 
-def print_report_brief(
+def format_report_brief(
     serial_number=None,
     datum_result=None,
     alpha_min_result=None,
@@ -297,10 +294,10 @@ def print_report_brief(
 
     rlist = get_rlist(**locals())
     for val, name in rlist:
-        print("{}    {:25.25s}: {}".format(serial_number, name, val), file=outfile)
+        yield "{}    {:25.25s}: {}".format(serial_number, name, val)
 
 
-def print_report_terse(
+def format_report_terse(
     serial_number=None,
     datum_result=None,
     alpha_min_result=None,
@@ -323,13 +320,13 @@ def print_report_terse(
     outfile=None,
 ):
 
-    print("*" * 60, file=outfile)
-    print("FPU %s" % serial_number, file=outfile)
-    print(file=outfile)
+    yield ("*" * 60)
+    yield ("FPU %s" % serial_number)
+    yield ""
     if datum_result is None:
-        print("Datum test               : n/a", file=outfile)
+        yield ("Datum test               : n/a")
     else:
-        print(
+        yield (
             cleandoc(
                 """
                 datum test              : alpha datumed = {datumed[0]}
@@ -338,77 +335,71 @@ def print_report_terse(
                 datum test              : counter deviations = {counter_deviation!r}
                 datum test              : time/record = {time:.16}/{record-count}
                 datum test              : result = {diagnostic}"""
-            ).format(**datum_result),
-            file=outfile,
+            ).format(**datum_result)
         )
 
-    print(file=outfile)
+    yield ""
 
     if beta_collision_result is None:
-        print("beta collision  test     : n/a", file=outfile)
+        yield ("beta collision  test     : n/a")
     else:
-        print(
+        yield (
             "collision detection     : result ="
             " {result} ({diagnostic}), time/record = {time:.16}/{record-count}".format(
                 **beta_collision_result
-            ),
-            file=outfile,
+            )
         )
 
-    print(file=outfile)
+    yield ""
 
     if alpha_min_result is None:
-        print("limit test            :  alpha min n/a", file=outfile)
+        yield ("limit test            :  alpha min n/a")
     else:
-        print(
+        yield (
             "Limit test              : alpha min = {result}, "
             "limit = {val:+8.4f} ({diagnostic}), time/record = {time:.16}/{record-count}".format(
                 **alpha_min_result
-            ),
-            file=outfile,
+            )
         )
 
     if alpha_max_result is None:
-        print("limit test            :  alpha max n/a", file=outfile)
+        yield ("limit test            :  alpha max n/a")
     else:
-        print(
+        yield (
             "limit test              : alpha max = {result}, limit = {val:+8.4f}"
             " ({diagnostic}), time/record = {time:.16}/{record-count}".format(
                 **alpha_max_result
-            ),
-            file=outfile,
+            )
         )
 
     if beta_min_result is None:
-        print("limit test            : beta min n/a", file=outfile)
+        yield ("limit test            : beta min n/a")
     else:
-        print(
+        yield (
             "limit test              : beta min  = {result}, limit = {val:+8.4f} "
             "({diagnostic}), time/record = {time:.16}/{record-count}".format(
                 **beta_min_result
-            ),
-            file=outfile,
+            )
         )
 
     if beta_max_result is None:
-        print("Limit test            : beta max n/a", file=outfile)
+        yield ("Limit test            : beta max n/a")
     else:
-        print(
+        yield (
             "limit test              : beta max  = {result}, limit = {val:+8.4f}"
             " ({diagnostic}), time/record = {time:.16}/{record-count}".format(
                 **beta_max_result
-            ),
-            file=outfile,
+            )
         )
 
-    print(file=outfile)
+    yield ""
 
     if datum_repeatability_result is None:
-        print("datum repeatability       : n/a", file=outfile)
+        yield ("datum repeatability       : n/a")
     else:
         err_msg = datum_repeatability_result["error_message"]
         if not err_msg:
-            print(
+            yield (
                 cleandoc(
                     """
                 datum repeatability     : {result},
@@ -421,31 +412,29 @@ def print_report_terse(
                 datum repeatability     : time/record                   = {time:.16}/{record-count}, version = {algorithm_version}""".format(
                         **datum_repeatability_result
                     )
-                ),
-                file=outfile,
+                )
             )
 
-        #            print(fill(
+        #            yield(fill(
         #                "Datum repeatability     : coords = {coords}".format(
         #                    **datum_repeatability_result
-        #                )),
-        #                file=outfile,
+        #                ))
+        #
         #            )
         else:
-            print(
+            yield (
                 "Datum repeatability     : {error_message}, time/record = {time:.16}/{record-count},"
-                " version = TBD".format(**datum_repeatability_result),
-                file=outfile,
+                " version = TBD".format(**datum_repeatability_result)
             )
 
-    print(file=outfile)
+    yield ""
 
     if metrology_calibration_result is None:
-        print("metrology calibration     : n/a", file=outfile)
+        yield ("metrology calibration     : n/a")
     else:
         err_msg = metrology_calibration_result["error_message"]
         if not err_msg:
-            print(
+            yield (
                 cleandoc(
                     """
                 metrology calibration   : metcal_fibre_large_target_distance = {metcal_fibre_large_target_distance_mm:8.4f} mm,
@@ -454,26 +443,24 @@ def print_report_terse(
                 metrology calibration   : time/record={time:.16}/{record-count}, version = {algorithm_version}""".format(
                         **metrology_calibration_result
                     )
-                ),
-                file=outfile,
+                )
             )
         else:
-            print(
+            yield (
                 "Metrology calibration   : {error_message}, time/record = {time:.16}/{record-count}, "
-                "version = {algorithm_version}".format(metrology_calibration_result),
-                file=outfile,
+                "version = {algorithm_version}".format(metrology_calibration_result)
             )
 
-    #    print(fill("metrology calibration images: {!r}".format(metrology_calibration_images)))
+    #    yield(fill("metrology calibration images: {!r}".format(metrology_calibration_images)))
 
-    print(file=outfile)
+    yield ""
 
     if metrology_height_result is None:
-        print("metrology_height          : n/a", file=outfile)
+        yield ("metrology_height          : n/a")
     else:
         err_msg = metrology_height_result["error_message"]
         if not err_msg:
-            print(
+            yield (
                 cleandoc(
                     """
                 metrology height        : small target = {small_target_height_mm:8.4f} mm,
@@ -481,25 +468,23 @@ def print_report_terse(
                 metrology height        : time/record = {time:.16}/{record-count}, version = {algorithm_version}""".format(
                         **metrology_height_result
                     )
-                ),
-                file=outfile,
+                )
             )
-        #            print("metrology height images : {!r}".format(metrology_height_images))
+        #            yield("metrology height images : {!r}".format(metrology_height_images))
         else:
-            print(
+            yield (
                 "Metrology height      : fibre_distance = {error_message}, time/record = {time:.16}/{record-count},"
-                " version = {algorithm_version}".format(**metrology_height_result),
-                file=outfile,
+                " version = {algorithm_version}".format(**metrology_height_result)
             )
 
-    print(file=outfile)
+    yield ""
 
     if positional_repeatability_result is None:
-        print("positional repeatability: n/a", file=outfile)
+        yield ("positional repeatability: n/a")
     else:
         err_msg = positional_repeatability_result["error_message"]
         if not err_msg:
-            print(
+            yield (
                 cleandoc(
                     """
                     positional repeatability: passed        = {result},
@@ -507,151 +492,143 @@ def print_report_terse(
                     positional repeatability: beta_max      = {posrep_beta_max_mm:8.4f} mm,
                     positional repeatability: posrep_rss_mm = {posrep_rss_mm:8.4f} mm,
                     positional repeatability: time/record   = {time:.16}/{record-count}, version = {algorithm_version}"""
-                ).format(**positional_repeatability_result),
-                file=outfile,
+                ).format(**positional_repeatability_result)
             )
-            print(
+            yield (
                 fill(
                     """Positional repeatability: calibration_pars = {calibration_pars!r}""".format(
                         **positional_repeatability_result
                     )
-                ),
-                file=outfile,
+                )
             )
-            print(file=outfile)
-            print(
+            yield ""
+            yield (
                 fill(
                     """positional repeatability: gearbox correction = {gearbox_correction}""".format(
                         **positional_repeatability_result
                     )
-                ),
-                file=outfile,
+                )
             )
-            print(
+            yield (
                 cleandoc(
                     """
                     positional repeatability: gearbox correction algorithm version = {algorithm_version}"""
-                ).format(**positional_repeatability_result),
-                file=outfile,
+                ).format(**positional_repeatability_result)
             )
-        #            print(
+        #            yield(
         #                fill(
         #                    """Positional repeatability: alpha_max_at_angle = {posrep_alpha_max_at_angle!r}"""
-        #                .format(**positional_repeatability_result)),
-        #                file=outfile,
+        #                .format(**positional_repeatability_result))
+        #
         #            )
-        #            print(
+        #            yield(
         #                fill(
         #                    """Positional repeatability: beta_max_at_angle = {posrep_beta_max_at_angle!r}"""
-        #                .format(**positional_repeatability_result)),
-        #                file=outfile,
+        #                .format(**positional_repeatability_result))
+        #
         #            )
-        #            print(
+        #            yield(
         #                fill(
         #                    """Positional repeatability: analysis_results_alpha = {analysis_results_alpha!r}"""
-        #                .format(**positional_repeatability_result)),
-        #                file=outfile,
+        #                .format(**positional_repeatability_result))
+        #
         #            )
-        #            print(
+        #            yield(
         #                fill(
         #                    """Positional repeatability: analysis_results_beta = {analysis_results_beta!r}"""
-        #                .format(**positional_repeatability_result)),
-        #                file=outfile,
+        #                .format(**positional_repeatability_result))
+        #
         #            )
-        #            print(
+        #            yield(
         #                fill(
         #                    """Positional repeatability: gearbox_correction = {gearbox_correction!r}"""
-        #                .format(**positional_repeatability_result)),
-        #                file=outfile,
+        #                .format(**positional_repeatability_result))
+        #
         #            )
-        #            print(fill("positional repeatability images: {images_alpha!r}".format(
-        #                    **positional_repeatability_images)),
-        #                file=outfile,
+        #            yield(fill("positional repeatability images: {images_alpha!r}".format(
+        #                    **positional_repeatability_images))
+        #
         #            )
-        #            print(fill("positional repeatability images: {images_beta!r}".format(
-        #                    **positional_repeatability_images)),
-        #                file=outfile,
+        #            yield(fill("positional repeatability images: {images_beta!r}".format(
+        #                    **positional_repeatability_images))
+        #
         #            )
-        #            print(fill("positional repeatability images: {waveform_pars!r}".format(
-        #                    **positional_repeatability_images)),
-        #                file=outfile,
+        #            yield(fill("positional repeatability images: {waveform_pars!r}".format(
+        #                    **positional_repeatability_images))
+        #
         #            )
         else:
-            print(
+            yield (
                 "Positional repeatability: message = {error_message}, time/record = {time:.16}/{record-count},"
                 " version = {algorithm_version}".format(
                     **positional_repeatability_result
-                ),
-                file=outfile,
+                )
             )
 
-    print(file=outfile)
+    yield ""
 
     if positional_verification_result is None:
-        print("positional verification : n/a", file=outfile)
+        yield ("positional verification : n/a")
     else:
         err_msg = positional_verification_result["error_message"]
         if not err_msg:
-            print(
+            yield (
                 cleandoc(
                     """
                     positional verification : passed           = {result},
                     positional verification : posver_error_max = {posver_error_max_mm:8.4f} mm,
                     positional verification : time/record      = {time:.16}/{record-count}, version = {algorithm_version}"""
-                ).format(**positional_verification_result),
-                file=outfile,
+                ).format(**positional_verification_result)
             )
-            print(
+            yield (
                 fill(
                     """Positional verification : calibration_pars = {calibration_pars}""".format(
                         **positional_verification_result
                     )
-                ),
-                file=outfile,
+                )
             )
-        #           print(
+        #           yield(
         #               fill(
         #                   """Positional verification : posver_errors = {posver_error}"""
-        #               .format(**positional_verification_result)),
-        #               file=outfile,
+        #               .format(**positional_verification_result))
+        #
         #           )
-        #           print(
+        #           yield(
         #               fill(
         #                   """Positional verification : analysis_results = {analysis_results}"""
-        #               .format(**positional_verification_result)),
-        #               file=outfile,
+        #               .format(**positional_verification_result))
+        #
         #           )
         #           if "gearbox_correction" not in positional_verification_images:
         #               positional_verification_images["gearbox_correction"] = None
-        #           print(
+        #           yield(
         #               fill(
         #               "positional verification images : {images!r}".format(
         #                   **positional_verification_images
         #               ))
         #           )
-        #           print(
+        #           yield(
         #               fill(
         #               "gearbox correction = {gearbox_correction!r}".format(
         #                   **positional_verification_images
         #               ))
         #           )
         else:
-            print(
+            yield (
                 "Positional verification : message = {error_message}, time/record = {time:.16}/{record-count},"
                 " version = {algorithm_version}".format(
                     **positional_verification_result
-                ),
-                file=outfile,
+                )
             )
 
-    print(file=outfile)
+    yield ""
 
     if pupil_alignment_result is None:
-        print("pupil_alignment test    : n/a", file=outfile)
+        yield ("pupil_alignment test    : n/a")
     else:
         err_msg = pupil_alignment_result["error_message"]
         if not err_msg:
-            print(
+            yield (
                 cleandoc(
                     """
                     pupil alignment         : passed        = {result},
@@ -660,34 +637,31 @@ def print_report_terse(
                     pupil alignment         : beta error    =  {measures[beta_error]} mm,
                     pupil alignment         : total error   =  {measures[total_error]} mm,
                     pupil alignment         : time/record   = {time:.16}/{record-count}"""
-                ).format(**pupil_alignment_result),
-                file=outfile,
+                ).format(**pupil_alignment_result)
             )
-            print(
+            yield (
                 fill(
                     """pupil alignment    : calibration_pars = {calibration_pars!r}""".format(
                         **pupil_alignment_result
                     )
-                ),
-                file=outfile,
+                )
             )
-        #            print(
+        #            yield(
         #                fill(
         #                    """pupil alignment    : coords = {coords!r}"""
-        #                .format(**pupil_alignment_result)),
-        #                file=outfile,
+        #                .format(**pupil_alignment_result))
+        #
         #            )
-        #            print(fill("pupil alignment images: {!r}".format(pupil_alignment_images)))
+        #            yield(fill("pupil alignment images: {!r}".format(pupil_alignment_images)))
         else:
-            print(
+            yield (
                 "pupil alignment: message = {error_message}, time/record = {time:.16}/{record-count}".format(
                     **pupil_alignment_result
-                ),
-                file=outfile,
+                )
             )
 
 
-def print_report_short(
+def format_report_short(
     serial_number=None,
     datum_result=None,
     alpha_min_result=None,
@@ -710,13 +684,13 @@ def print_report_short(
     outfile=None,
 ):
 
-    print("*" * 60, file=outfile)
-    print("FPU %s" % serial_number, file=outfile)
-    print(file=outfile)
+    yield ("*" * 60)
+    yield ("FPU %s" % serial_number)
+    yield ""
     if datum_result is None:
-        print("datum test              : n/a", file=outfile)
+        yield ("datum test              : n/a")
     else:
-        print(
+        yield (
             cleandoc(
                 """
                 datum test              : result = {result} / {diagnostic}
@@ -725,77 +699,71 @@ def print_report_short(
                 datum test              : fpu_id/FPU state = {fpuid} / {result_state}
                 datum test              : counter deviations = {counter_deviation!r}
                 datum test              : time/record = {time:.16}/{record-count}"""
-            ).format(**datum_result),
-            file=outfile,
+            ).format(**datum_result)
         )
 
-    print(file=outfile)
+    yield ""
 
     if beta_collision_result is None:
-        print("beta collision  test     : n/a", file=outfile)
+        yield ("beta collision  test     : n/a")
     else:
-        print(
+        yield (
             "collision detection     : result ="
             " {result} @ {val:+8.4f} ({diagnostic}), time/record = {time:.16}/{record-count}".format(
                 **beta_collision_result
-            ),
-            file=outfile,
+            )
         )
 
-    print(file=outfile)
+    yield ""
 
     if alpha_min_result is None:
-        print("limit test            :  alpha min n/a", file=outfile)
+        yield ("limit test            :  alpha min n/a")
     else:
-        print(
+        yield (
             "Limit test              : alpha min = {result}, "
             "limit = {val:+8.4f} ({diagnostic}), time/record = {time:.16}/{record-count}".format(
                 **alpha_min_result
-            ),
-            file=outfile,
+            )
         )
 
     if alpha_max_result is None:
-        print("limit test            :  alpha max n/a", file=outfile)
+        yield ("limit test            :  alpha max n/a")
     else:
-        print(
+        yield (
             "limit test              : alpha max = {result}, limit = {val:+8.4f}"
             " ({diagnostic}), time/record = {time:.16}/{record-count}".format(
                 **alpha_max_result
-            ),
-            file=outfile,
+            )
         )
 
     if beta_min_result is None:
-        print("limit test            : beta min n/a", file=outfile)
+        yield ("limit test            : beta min n/a")
     else:
-        print(
+        yield (
             "limit test              : beta min  = {result}, limit = {val:+8.4f} "
             "({diagnostic}), time/record = {time:.16}/{record-count}".format(
                 **beta_min_result
-            ),
-            file=outfile,
+            )
         )
 
     if beta_max_result is None:
-        print("Limit test            : beta max n/a", file=outfile)
+        yield ("Limit test            : beta max n/a")
     else:
-        print(
+        yield (
             "limit test              : beta max  = {result}, limit = {val:+8.4f}"
             " ({diagnostic}), time/record = {time:.16}/{record-count}".format(
                 **beta_max_result
-            ),
-            file=outfile,
+            )
         )
 
-    print(file=outfile)
+    yield ""
 
     if datum_repeatability_result is None:
-        print("datum repeatability       : n/a", file=outfile)
+        yield ("datum repeatability       : n/a")
     else:
         err_msg = datum_repeatability_result["error_message"]
         if not err_msg:
-            print(
+            yield (
                 cleandoc(
                     """
                 datum repeatability     : {result},
@@ -813,31 +781,29 @@ def print_report_short(
                 datum repeatability     : image algorithm version        = {algorithm_version}""".format(
                         **datum_repeatability_result
                     )
-                ),
-                file=outfile,
+                )
             )
 
-        #            print(fill(
+        #            yield(fill(
         #                "Datum repeatability     : coords = {coords}".format(
         #                    **datum_repeatability_result
-        #                )),
-        #                file=outfile,
+        #                ))
+        #
         #            )
         else:
-            print(
+            yield (
                 "datum repeatability     : {error_message}, time/record = {time:.16}/{record-count},"
-                " version = TBD".format(**datum_repeatability_result),
-                file=outfile,
+                " version = TBD".format(**datum_repeatability_result)
             )
 
-    print(file=outfile)
+    yield ""
 
     if metrology_calibration_result is None:
-        print("metrology calibration     : n/a", file=outfile)
+        yield ("metrology calibration     : n/a")
     else:
         err_msg = metrology_calibration_result["error_message"]
         if not err_msg:
-            print(
+            yield (
                 cleandoc(
                     """
                 metrology calibration   : metcal_fibre_large_target_distance = {metcal_fibre_large_target_distance_mm:8.4f} mm
@@ -852,26 +818,24 @@ def print_report_short(
                 metrology calibration   : time/record={time:.16}/{record-count}, version = {algorithm_version}""".format(
                         **metrology_calibration_result
                     )
-                ),
-                file=outfile,
+                )
             )
         else:
-            print(
+            yield (
                 "metrology calibration   : {error_message}, time/record = {time:.16}/{record-count}, "
-                "version = {algorithm_version}".format(metrology_calibration_result),
-                file=outfile,
+                "version = {algorithm_version}".format(metrology_calibration_result)
             )
 
-    #    print(fill("metrology calibration images: {!r}".format(metrology_calibration_images)))
+    #    yield(fill("metrology calibration images: {!r}".format(metrology_calibration_images)))
 
-    print(file=outfile)
+    yield ""
 
     if metrology_height_result is None:
-        print("metrology_height          : n/a", file=outfile)
+        yield ("metrology_height          : n/a")
     else:
         err_msg = metrology_height_result["error_message"]
         if not err_msg:
-            print(
+            yield (
                 cleandoc(
                     """
                 metrology height        : small target = {small_target_height_mm:8.4f} mm
@@ -881,25 +845,23 @@ def print_report_short(
                 metrology height        : time/record  = {time:.16}/{record-count}, version = {algorithm_version}""".format(
                         **metrology_height_result
                     )
-                ),
-                file=outfile,
+                )
             )
-        #            print("metrology height images : {!r}".format(metrology_height_images))
+        #            yield("metrology height images : {!r}".format(metrology_height_images))
         else:
-            print(
+            yield (
                 "Metrology height      : fibre_distance = {error_message}, time/record = {time:.16}/{record-count},"
-                " version = {algorithm_version}".format(**metrology_height_result),
-                file=outfile,
+                " version = {algorithm_version}".format(**metrology_height_result)
             )
 
-    print(file=outfile)
+    yield ""
 
     if positional_repeatability_result is None:
-        print("positional repeatability: n/a", file=outfile)
+        yield ("positional repeatability: n/a")
     else:
         err_msg = positional_repeatability_result["error_message"]
         if not err_msg:
-            print(
+            yield (
                 cleandoc(
                     """
                     positional repeatability: passed          = {result}
@@ -914,92 +876,87 @@ def print_report_short(
                     positional repeatability: time/record     = {time:.16}/{record-count}
                     positional repeatability: anlysis version = {algorithm_version}
                     positional repeatability: git version     = {git_version}"""
-                ).format(**positional_repeatability_result),
-                file=outfile,
+                ).format(**positional_repeatability_result)
             )
-            print(
+            yield (
                 fill(
                     """Positional repeatability: calibration_pars = {calibration_pars!r}""".format(
                         **positional_repeatability_result
                     )
-                ),
-                file=outfile,
+                )
             )
-            print(file=outfile)
-            print(
+            yield ""
+            yield (
                 fill(
                     """positional repeatability: gearbox correction = {gearbox_correction}""".format(
                         **positional_repeatability_result
                     )
-                ),
-                file=outfile,
+                )
             )
-            print(
+            yield (
                 cleandoc(
                     """
                     positional repeatability: gearbox correction algorithm version = {algorithm_version}"""
-                ).format(**positional_repeatability_result),
-                file=outfile,
+                ).format(**positional_repeatability_result)
             )
-        #            print(
+        #            yield(
         #                fill(
         #                    """Positional repeatability: alpha_max_at_angle = {posrep_alpha_max_at_angle!r}"""
-        #                .format(**positional_repeatability_result)),
-        #                file=outfile,
+        #                .format(**positional_repeatability_result))
+        #
         #            )
-        #            print(
+        #            yield(
         #                fill(
         #                    """Positional repeatability: beta_max_at_angle = {posrep_beta_max_at_angle!r}"""
-        #                .format(**positional_repeatability_result)),
-        #                file=outfile,
+        #                .format(**positional_repeatability_result))
+        #
         #            )
-        #            print(
+        #            yield(
         #                fill(
         #                    """Positional repeatability: analysis_results_alpha = {analysis_results_alpha!r}"""
-        #                .format(**positional_repeatability_result)),
-        #                file=outfile,
+        #                .format(**positional_repeatability_result))
+        #
         #            )
-        #            print(
+        #            yield(
         #                fill(
         #                    """Positional repeatability: analysis_results_beta = {analysis_results_beta!r}"""
-        #                .format(**positional_repeatability_result)),
-        #                file=outfile,
+        #                .format(**positional_repeatability_result))
+        #
         #            )
-        #            print(
+        #            yield(
         #                fill(
         #                    """Positional repeatability: gearbox_correction = {gearbox_correction!r}"""
-        #                .format(**positional_repeatability_result)),
-        #                file=outfile,
+        #                .format(**positional_repeatability_result))
+        #
         #            )
-        #            print(fill("positional repeatability images: {images_alpha!r}".format(
-        #                    **positional_repeatability_images)),
-        #                file=outfile,
+        #            yield(fill("positional repeatability images: {images_alpha!r}".format(
+        #                    **positional_repeatability_images))
+        #
         #            )
-        #            print(fill("positional repeatability images: {images_beta!r}".format(
-        #                    **positional_repeatability_images)),
-        #                file=outfile,
+        #            yield(fill("positional repeatability images: {images_beta!r}".format(
+        #                    **positional_repeatability_images))
+        #
         #            )
-        #            print(fill("positional repeatability images: {waveform_pars!r}".format(
-        #                    **positional_repeatability_images)),
-        #                file=outfile,
+        #            yield(fill("positional repeatability images: {waveform_pars!r}".format(
+        #                    **positional_repeatability_images))
+        #
         #            )
         else:
-            print(
+            yield (
                 "Positional repeatability: message = {error_message}, time/record = {time:.16}/{record-count},"
                 " version = {algorithm_version}".format(
                     **positional_repeatability_result
-                ),
-                file=outfile,
+                )
             )
 
-    print(file=outfile)
+    yield ""
 
     if positional_verification_result is None:
-        print("positional verification : n/a", file=outfile)
+        yield ("positional verification : n/a")
     else:
         err_msg = positional_verification_result["error_message"]
         if not err_msg:
-            print(
+            yield (
                 cleandoc(
                     """
                     positional verification : passed                       = {result}
@@ -1010,60 +967,57 @@ def print_report_short(
                     positional verification : time/record                  = {time:.16}/{record-count}
                     positional verification : analysis version             = {algorithm_version}
                     positional verification : git version                  = {git_version}"""
-                ).format(**positional_verification_result),
-                file=outfile,
+                ).format(**positional_verification_result)
             )
-            print(
+            yield (
                 fill(
                     """Positional verification : calibration_pars             = {calibration_pars}""".format(
                         **positional_verification_result
                     )
-                ),
-                file=outfile,
+                )
             )
-        #           print(
+        #           yield(
         #               fill(
         #                   """Positional verification : posver_errors = {posver_error}"""
-        #               .format(**positional_verification_result)),
-        #               file=outfile,
+        #               .format(**positional_verification_result))
+        #
         #           )
-        #           print(
+        #           yield(
         #               fill(
         #                   """Positional verification : analysis_results = {analysis_results}"""
-        #               .format(**positional_verification_result)),
-        #               file=outfile,
+        #               .format(**positional_verification_result))
+        #
         #           )
         #           if "gearbox_correction" not in positional_verification_images:
         #               positional_verification_images["gearbox_correction"] = None
-        #           print(
+        #           yield(
         #               fill(
         #               "positional verification images : {images!r}".format(
         #                   **positional_verification_images
         #               ))
         #           )
-        #           print(
+        #           yield(
         #               fill(
         #               "gearbox correction = {gearbox_correction!r}".format(
         #                   **positional_verification_images
         #               ))
         #           )
         else:
-            print(
+            yield (
                 "Positional verification : message = {error_message}, time/record = {time:.16}/{record-count},"
                 " version = {algorithm_version}".format(
                     **positional_verification_result
-                ),
-                file=outfile,
+                )
             )
 
-    print(file=outfile)
+    yield ""
 
     if pupil_alignment_result is None:
-        print("pupil_alignment test    : n/a", file=outfile)
+        yield ("pupil_alignment test    : n/a")
     else:
         err_msg = pupil_alignment_result["error_message"]
         if not err_msg:
-            print(
+            yield (
                 cleandoc(
                     """
                     pupil alignment         : passed            = {result}
@@ -1075,34 +1029,31 @@ def print_report_short(
                     pupil alignment         : time/record       = {time:.16}/{record-count}
                     pupil alignment         : algorithm version = {algorithm_version}
                     pupil alignment         : git version       = {git_version}"""
-                ).format(**pupil_alignment_result),
-                file=outfile,
+                ).format(**pupil_alignment_result)
             )
-            print(
+            yield (
                 fill(
                     """pupil alignment         : calibration_pars  = {calibration_pars!r}""".format(
                         **pupil_alignment_result
                     )
-                ),
-                file=outfile,
+                )
             )
-        #            print(
+        #            yield(
         #                fill(
         #                    """pupil alignment    : coords = {coords!r}"""
-        #                .format(**pupil_alignment_result)),
-        #                file=outfile,
+        #                .format(**pupil_alignment_result))
+        #
         #            )
-        #            print(fill("pupil alignment images: {!r}".format(pupil_alignment_images)))
+        #            yield(fill("pupil alignment images: {!r}".format(pupil_alignment_images)))
         else:
-            print(
+            yield (
                 "pupil alignment: message = {error_message}, time/record = {time:.16}/{record-count}".format(
                     **pupil_alignment_result
-                ),
-                file=outfile,
+                )
             )
 
 
-def print_report_long(
+def format_report_long(
     serial_number=None,
     datum_result=None,
     alpha_min_result=None,
@@ -1125,13 +1076,13 @@ def print_report_long(
     outfile=None,
 ):
 
-    print("*" * 60, file=outfile)
-    print("FPU %s" % serial_number, file=outfile)
-    print(file=outfile)
+    yield ("*" * 60)
+    yield ("FPU %s" % serial_number)
+    yield ""
     if datum_result is None:
-        print("datum test              : n/a", file=outfile)
+        yield ("datum test              : n/a")
     else:
-        print(
+        yield (
             cleandoc(
                 """
                 datum test              : result = {result} / {diagnostic}
@@ -1140,77 +1091,71 @@ def print_report_long(
                 datum test              : fpu_id/FPU state = {fpuid} / {result_state}
                 datum test              : counter deviations = {counter_deviation!r}
                 datum test              : time/record = {time:.16}/{record-count}"""
-            ).format(**datum_result),
-            file=outfile,
+            ).format(**datum_result)
         )
 
-    print(file=outfile)
+    yield ""
 
     if beta_collision_result is None:
-        print("beta collision  test     : n/a", file=outfile)
+        yield ("beta collision  test     : n/a")
     else:
-        print(
+        yield (
             "collision detection     : result ="
             " {result} @ {val:+8.4f} ({diagnostic}), time/record = {time:.16}/{record-count}".format(
                 **beta_collision_result
-            ),
-            file=outfile,
+            )
         )
 
-    print(file=outfile)
+    yield ""
 
     if alpha_min_result is None:
-        print("limit test            :  alpha min n/a", file=outfile)
+        yield ("limit test            :  alpha min n/a")
     else:
-        print(
+        yield (
             "Limit test              : alpha min = {result}, "
             "limit = {val:+8.4f} ({diagnostic}), time/record = {time:.16}/{record-count}".format(
                 **alpha_min_result
-            ),
-            file=outfile,
+            )
         )
 
     if alpha_max_result is None:
-        print("limit test            :  alpha max n/a", file=outfile)
+        yield ("limit test            :  alpha max n/a")
     else:
-        print(
+        yield (
             "limit test              : alpha max = {result}, limit = {val:+8.4f}"
             " ({diagnostic}), time/record = {time:.16}/{record-count}".format(
                 **alpha_max_result
-            ),
-            file=outfile,
+            )
         )
 
     if beta_min_result is None:
-        print("limit test            : beta min n/a", file=outfile)
+        yield ("limit test            : beta min n/a")
     else:
-        print(
+        yield (
             "limit test              : beta min  = {result}, limit = {val:+8.4f} "
             "({diagnostic}), time/record = {time:.16}/{record-count}".format(
                 **beta_min_result
-            ),
-            file=outfile,
+            )
         )
 
     if beta_max_result is None:
-        print("Limit test            : beta max n/a", file=outfile)
+        yield ("Limit test            : beta max n/a")
     else:
-        print(
+        yield (
             "limit test              : beta max  = {result}, limit = {val:+8.4f}"
             " ({diagnostic}), time/record = {time:.16}/{record-count}".format(
                 **beta_max_result
-            ),
-            file=outfile,
+            )
         )
 
-    print(file=outfile)
+    yield ""
 
     if datum_repeatability_result is None:
-        print("datum repeatability       : n/a", file=outfile)
+        yield ("datum repeatability       : n/a")
     else:
         err_msg = datum_repeatability_result["error_message"]
         if not err_msg:
-            print(
+            yield (
                 cleandoc(
                     """
                 datum repeatability     : {result},
@@ -1228,31 +1173,29 @@ def print_report_long(
                 datum repeatability     : image algorithm version        = {algorithm_version}""".format(
                         **datum_repeatability_result
                     )
-                ),
-                file=outfile,
+                )
             )
 
-        #            print(fill(
+        #            yield(fill(
         #                "Datum repeatability     : coords = {coords}".format(
         #                    **datum_repeatability_result
-        #                )),
-        #                file=outfile,
+        #                ))
+        #
         #            )
         else:
-            print(
+            yield (
                 "datum repeatability     : {error_message}, time/record = {time:.16}/{record-count},"
-                " version = TBD".format(**datum_repeatability_result),
-                file=outfile,
+                " version = TBD".format(**datum_repeatability_result)
             )
 
-    print(file=outfile)
+    yield ""
 
     if metrology_calibration_result is None:
-        print("metrology calibration     : n/a", file=outfile)
+        yield ("metrology calibration     : n/a")
     else:
         err_msg = metrology_calibration_result["error_message"]
         if not err_msg:
-            print(
+            yield (
                 cleandoc(
                     """
                 metrology calibration   : metcal_fibre_large_target_distance = {metcal_fibre_large_target_distance_mm:8.4f} mm
@@ -1267,26 +1210,24 @@ def print_report_long(
                 metrology calibration   : time/record={time:.16}/{record-count}, version = {algorithm_version}""".format(
                         **metrology_calibration_result
                     )
-                ),
-                file=outfile,
+                )
             )
         else:
-            print(
+            yield (
                 "metrology calibration   : {error_message}, time/record = {time:.16}/{record-count}, "
-                "version = {algorithm_version}".format(metrology_calibration_result),
-                file=outfile,
+                "version = {algorithm_version}".format(metrology_calibration_result)
             )
 
-    #    print(fill("metrology calibration images: {!r}".format(metrology_calibration_images)))
+    #    yield(fill("metrology calibration images: {!r}".format(metrology_calibration_images)))
 
-    print(file=outfile)
+    yield ""
 
     if metrology_height_result is None:
-        print("metrology_height          : n/a", file=outfile)
+        yield ("metrology_height          : n/a")
     else:
         err_msg = metrology_height_result["error_message"]
         if not err_msg:
-            print(
+            yield (
                 cleandoc(
                     """
                 metrology height        : small target = {small_target_height_mm:8.4f} mm
@@ -1296,25 +1237,23 @@ def print_report_long(
                 metrology height        : time/record  = {time:.16}/{record-count}, version = {algorithm_version}""".format(
                         **metrology_height_result
                     )
-                ),
-                file=outfile,
+                )
             )
-        #            print("metrology height images : {!r}".format(metrology_height_images))
+        #            yield("metrology height images : {!r}".format(metrology_height_images))
         else:
-            print(
+            yield (
                 "Metrology height      : fibre_distance = {error_message}, time/record = {time:.16}/{record-count},"
-                " version = {algorithm_version}".format(**metrology_height_result),
-                file=outfile,
+                " version = {algorithm_version}".format(**metrology_height_result)
             )
 
-    print(file=outfile)
+    yield ""
 
     if positional_repeatability_result is None:
-        print("positional repeatability: n/a", file=outfile)
+        yield ("positional repeatability: n/a")
     else:
         err_msg = positional_repeatability_result["error_message"]
         if not err_msg:
-            print(
+            yield (
                 cleandoc(
                     """
                     positional repeatability: passed          = {result}
@@ -1329,124 +1268,113 @@ def print_report_long(
                     positional repeatability: time/record     = {time:.16}/{record-count}
                     positional repeatability: anlysis version = {algorithm_version}
                     positional repeatability: git version     = {git_version}"""
-                ).format(**positional_repeatability_result),
-                file=outfile,
+                ).format(**positional_repeatability_result)
             )
             error_by_alpha = positional_repeatability_result[
                 "posrep_alpha_max_at_angle"
             ]
-            print(
-                """\nPositional repeatability: max error by alpha angle""", file=outfile
-            )
+            yield ("""\nPositional repeatability: max error by alpha angle""")
             error_max = positional_repeatability_result["arg_max_alpha_error"]
             for alpha in sorted(error_by_alpha.keys()):
                 val = error_by_alpha[alpha]
                 tag = " <<<" if val == error_max else ""
-                print(
+                yield (
                     """Positional repeatability:     {alpha:7.2f} = {val:8.4f} {tag}""".format(
                         alpha=alpha, val=val, tag=tag
-                    ),
-                    file=outfile,
+                    )
                 )
             error_by_beta = positional_repeatability_result["posrep_beta_max_at_angle"]
-            print("error_by_beta=", repr(error_by_beta))
-            print(
-                """\nPositional repeatability: max error by beta angle""", file=outfile
-            )
+            yield ("error_by_beta= {}".format(error_by_beta))
+            yield ("""\nPositional repeatability: max error by beta angle""")
             error_max = positional_repeatability_result["arg_max_beta_error"]
             for beta in sorted(error_by_beta.keys()):
                 val = error_by_beta[beta]
                 tag = " <<<" if val == error_max else ""
-                print(
+                yield (
                     """Positional repeatability:     {beta:7.2f} = {val:8.4f} {tag}""".format(
                         beta=beta, val=val, tag=tag
-                    ),
-                    file=outfile,
+                    )
                 )
 
-            print(
+            yield (
                 fill(
                     """Positional repeatability: calibration_pars = {calibration_pars!r}""".format(
                         **positional_repeatability_result
                     )
-                ),
-                file=outfile,
+                )
             )
-            print(file=outfile)
-            print(
+            yield ""
+            yield (
                 fill(
                     """positional repeatability: gearbox correction = {gearbox_correction}""".format(
                         **positional_repeatability_result
                     )
-                ),
-                file=outfile,
+                )
             )
-            print(
+            yield (
                 cleandoc(
                     """
                     positional repeatability: gearbox correction algorithm version = {algorithm_version}"""
-                ).format(**positional_repeatability_result),
-                file=outfile,
+                ).format(**positional_repeatability_result)
             )
-        #            print(
+        #            yield(
         #                fill(
         #                    """Positional repeatability: alpha_max_at_angle = {posrep_alpha_max_at_angle!r}"""
-        #                .format(**positional_repeatability_result)),
-        #                file=outfile,
+        #                .format(**positional_repeatability_result))
+        #
         #            )
-        #            print(
+        #            yield(
         #                fill(
         #                    """Positional repeatability: beta_max_at_angle = {posrep_beta_max_at_angle!r}"""
-        #                .format(**positional_repeatability_result)),
-        #                file=outfile,
+        #                .format(**positional_repeatability_result))
+        #
         #            )
-        #            print(
+        #            yield(
         #                fill(
         #                    """Positional repeatability: analysis_results_alpha = {analysis_results_alpha!r}"""
-        #                .format(**positional_repeatability_result)),
-        #                file=outfile,
+        #                .format(**positional_repeatability_result))
+        #
         #            )
-        #            print(
+        #            yield(
         #                fill(
         #                    """Positional repeatability: analysis_results_beta = {analysis_results_beta!r}"""
-        #                .format(**positional_repeatability_result)),
-        #                file=outfile,
+        #                .format(**positional_repeatability_result))
+        #
         #            )
-        #            print(
+        #            yield(
         #                fill(
         #                    """Positional repeatability: gearbox_correction = {gearbox_correction!r}"""
-        #                .format(**positional_repeatability_result)),
-        #                file=outfile,
+        #                .format(**positional_repeatability_result))
+        #
         #            )
-        #            print(fill("positional repeatability images: {images_alpha!r}".format(
-        #                    **positional_repeatability_images)),
-        #                file=outfile,
+        #            yield(fill("positional repeatability images: {images_alpha!r}".format(
+        #                    **positional_repeatability_images))
+        #
         #            )
-        #            print(fill("positional repeatability images: {images_beta!r}".format(
-        #                    **positional_repeatability_images)),
-        #                file=outfile,
+        #            yield(fill("positional repeatability images: {images_beta!r}".format(
+        #                    **positional_repeatability_images))
+        #
         #            )
-        #            print(fill("positional repeatability images: {waveform_pars!r}".format(
-        #                    **positional_repeatability_images)),
-        #                file=outfile,
+        #            yield(fill("positional repeatability images: {waveform_pars!r}".format(
+        #                    **positional_repeatability_images))
+        #
         #            )
         else:
-            print(
+            yield (
                 "Positional repeatability: message = {error_message}, time/record = {time:.16}/{record-count},"
                 " version = {algorithm_version}".format(
                     **positional_repeatability_result
-                ),
-                file=outfile,
+                )
             )
 
-    print(file=outfile)
+    yield ""
 
     if positional_verification_result is None:
-        print("positional verification : n/a", file=outfile)
+        yield ("positional verification : n/a")
     else:
         err_msg = positional_verification_result["error_message"]
         if not err_msg:
-            print(
+            yield (
                 cleandoc(
                     """
                     positional verification : passed                       = {result}
@@ -1457,72 +1385,68 @@ def print_report_long(
                     positional verification : time/record                  = {time:.16}/{record-count}
                     positional verification : analysis version             = {algorithm_version}
                     positional verification : git version                  = {git_version}"""
-                ).format(**positional_verification_result),
-                file=outfile,
+                ).format(**positional_verification_result)
             )
             error_by_coords = positional_verification_result["posver_error"]
-            print("""Positional verification : max error by coordinate""", file=outfile)
+            yield ("""Positional verification : max error by coordinate""")
             error_max = positional_verification_result["posver_error_max_mm"]
             for coord in sorted(error_by_coords.keys()):
                 val = error_by_coords[coord]
                 tag = " <<<" if val == error_max else ""
-                print(
+                yield (
                     """Positional verification :     # {coord[0]:03d} ({coord[1]:+8.2f}, {coord[2]:+8.2f}) = {val:8.4f} {tag}""".format(
                         coord=coord, val=val, tag=tag
-                    ),
-                    file=outfile,
+                    )
                 )
-            print(
+            yield (
                 fill(
                     """Positional verification : calibration_pars             = {calibration_pars}""".format(
                         **positional_verification_result
                     )
-                ),
-                file=outfile,
+                )
             )
-        #           print(
+        #           yield(
         #               fill(
         #                   """Positional verification : posver_errors = {posver_error}"""
-        #               .format(**positional_verification_result)),
-        #               file=outfile,
+        #               .format(**positional_verification_result))
+        #
         #           )
-        #           print(
+        #           yield(
         #               fill(
         #                   """Positional verification : analysis_results = {analysis_results}"""
-        #               .format(**positional_verification_result)),
-        #               file=outfile,
+        #               .format(**positional_verification_result))
+        #
         #           )
         #           if "gearbox_correction" not in positional_verification_images:
         #               positional_verification_images["gearbox_correction"] = None
-        #           print(
+        #           yield(
         #               fill(
         #               "positional verification images : {images!r}".format(
         #                   **positional_verification_images
         #               ))
         #           )
-        #           print(
+        #           yield(
         #               fill(
         #               "gearbox correction = {gearbox_correction!r}".format(
         #                   **positional_verification_images
         #               ))
         #           )
         else:
-            print(
+            yield (
                 "Positional verification : message = {error_message}, time/record = {time:.16}/{record-count},"
                 " version = {algorithm_version}".format(
                     **positional_verification_result
-                ),
-                file=outfile,
+                )
             )
 
-    print(file=outfile)
+    yield ""
 
     if pupil_alignment_result is None:
-        print("pupil_alignment test    : n/a", file=outfile)
+        yield ("pupil_alignment test    : n/a")
     else:
         err_msg = pupil_alignment_result["error_message"]
         if not err_msg:
-            print(
+            yield (
                 cleandoc(
                     """
                     pupil alignment         : passed            = {result}
@@ -1534,34 +1458,31 @@ def print_report_long(
                     pupil alignment         : time/record       = {time:.16}/{record-count}
                     pupil alignment         : algorithm version = {algorithm_version}
                     pupil alignment         : git version       = {git_version}"""
-                ).format(**pupil_alignment_result),
-                file=outfile,
+                ).format(**pupil_alignment_result)
             )
-            print(
+            yield (
                 fill(
                     """pupil alignment         : calibration_pars  = {calibration_pars!r}""".format(
                         **pupil_alignment_result
                     )
-                ),
-                file=outfile,
+                )
             )
-        #            print(
+        #            yield(
         #                fill(
         #                    """pupil alignment    : coords = {coords!r}"""
-        #                .format(**pupil_alignment_result)),
-        #                file=outfile,
+        #                .format(**pupil_alignment_result))
+        #
         #            )
-        #            print(fill("pupil alignment images: {!r}".format(pupil_alignment_images)))
+        #            yield(fill("pupil alignment images: {!r}".format(pupil_alignment_images)))
         else:
-            print(
+            yield (
                 "pupil alignment: message = {error_message}, time/record = {time:.16}/{record-count}".format(
                     **pupil_alignment_result
-                ),
-                file=outfile,
+                )
             )
 
 
-def print_report_extended(
+def format_report_extended(
     serial_number=None,
     datum_result=None,
     alpha_min_result=None,
@@ -1584,13 +1505,13 @@ def print_report_extended(
     outfile=None,
 ):
 
-    print("*" * 60, file=outfile)
-    print("FPU %s" % serial_number, file=outfile)
-    print(file=outfile)
+    yield ("*" * 60)
+    yield ("FPU %s" % serial_number)
+    yield ""
     if datum_result is None:
-        print("datum test              : n/a", file=outfile)
+        yield ("datum test              : n/a")
     else:
-        print(
+        yield (
             cleandoc(
                 """
                 datum test              : result = {result} / {diagnostic}
@@ -1599,77 +1520,71 @@ def print_report_extended(
                 datum test              : fpu_id/FPU state = {fpuid} / {result_state}
                 datum test              : counter deviations = {counter_deviation!r}
                 datum test              : time/record = {time:.16}/{record-count}"""
-            ).format(**datum_result),
-            file=outfile,
+            ).format(**datum_result)
         )
 
-    print(file=outfile)
+    yield ""
 
     if beta_collision_result is None:
-        print("beta collision  test     : n/a", file=outfile)
+        yield ("beta collision  test     : n/a")
     else:
-        print(
+        yield (
             "collision detection     : result ="
             " {result} @ {val:+8.4f} ({diagnostic}), time/record = {time:.16}/{record-count}".format(
                 **beta_collision_result
-            ),
-            file=outfile,
+            )
         )
 
-    print(file=outfile)
+    yield ""
 
     if alpha_min_result is None:
-        print("limit test            :  alpha min n/a", file=outfile)
+        yield ("limit test            :  alpha min n/a")
     else:
-        print(
+        yield (
             "Limit test              : alpha min = {result}, "
             "limit = {val:+8.4f} ({diagnostic}), time/record = {time:.16}/{record-count}".format(
                 **alpha_min_result
-            ),
-            file=outfile,
+            )
         )
 
     if alpha_max_result is None:
-        print("limit test            :  alpha max n/a", file=outfile)
+        yield ("limit test            :  alpha max n/a")
     else:
-        print(
+        yield (
             "limit test              : alpha max = {result}, limit = {val:+8.4f}"
             " ({diagnostic}), time/record = {time:.16}/{record-count}".format(
                 **alpha_max_result
-            ),
-            file=outfile,
+            )
         )
 
     if beta_min_result is None:
-        print("limit test            : beta min n/a", file=outfile)
+        yield ("limit test            : beta min n/a")
     else:
-        print(
+        yield (
             "limit test              : beta min  = {result}, limit = {val:+8.4f} "
             "({diagnostic}), time/record = {time:.16}/{record-count}".format(
                 **beta_min_result
-            ),
-            file=outfile,
+            )
         )
 
     if beta_max_result is None:
-        print("Limit test            : beta max n/a", file=outfile)
+        yield ("Limit test            : beta max n/a")
     else:
-        print(
+        yield (
             "limit test              : beta max  = {result}, limit = {val:+8.4f}"
             " ({diagnostic}), time/record = {time:.16}/{record-count}".format(
                 **beta_max_result
-            ),
-            file=outfile,
+            )
         )
 
-    print(file=outfile)
+    yield ""
 
     if datum_repeatability_result is None:
-        print("datum repeatability       : n/a", file=outfile)
+        yield ("datum repeatability       : n/a")
     else:
         err_msg = datum_repeatability_result["error_message"]
         if not err_msg:
-            print(
+            yield (
                 cleandoc(
                     """
                 datum repeatability     : {result},
@@ -1687,33 +1602,30 @@ def print_report_extended(
                 datum repeatability     : image algorithm version        = {algorithm_version}""".format(
                         **datum_repeatability_result
                     )
-                ),
-                file=outfile,
+                )
             )
 
-            print(
+            yield (
                 fill(
                     "Datum repeatability     : coords = {coords}".format(
                         **datum_repeatability_result
                     )
-                ),
-                file=outfile,
+                )
             )
         else:
-            print(
+            yield (
                 "datum repeatability     : {error_message}, time/record = {time:.16}/{record-count},"
-                " version = TBD".format(**datum_repeatability_result),
-                file=outfile,
+                " version = TBD".format(**datum_repeatability_result)
             )
 
-    print(file=outfile)
+    yield ""
 
     if metrology_calibration_result is None:
-        print("metrology calibration     : n/a", file=outfile)
+        yield ("metrology calibration     : n/a")
     else:
         err_msg = metrology_calibration_result["error_message"]
         if not err_msg:
-            print(
+            yield (
                 cleandoc(
                     """
                 metrology calibration   : metcal_fibre_large_target_distance = {metcal_fibre_large_target_distance_mm:8.4f} mm
@@ -1728,28 +1640,26 @@ def print_report_extended(
                 metrology calibration   : time/record={time:.16}/{record-count}, version = {algorithm_version}""".format(
                         **metrology_calibration_result
                     )
-                ),
-                file=outfile,
+                )
             )
         else:
-            print(
+            yield (
                 "metrology calibration   : {error_message}, time/record = {time:.16}/{record-count}, "
-                "version = {algorithm_version}".format(metrology_calibration_result),
-                file=outfile,
+                "version = {algorithm_version}".format(metrology_calibration_result)
             )
 
-    print(
+    yield (
         fill("metrology calibration images: {!r}".format(metrology_calibration_images))
     )
 
-    print(file=outfile)
+    yield ""
 
     if metrology_height_result is None:
-        print("metrology_height          : n/a", file=outfile)
+        yield ("metrology_height          : n/a")
     else:
         err_msg = metrology_height_result["error_message"]
         if not err_msg:
-            print(
+            yield (
                 cleandoc(
                     """
                 metrology height        : small target = {small_target_height_mm:8.4f} mm
@@ -1759,25 +1669,23 @@ def print_report_extended(
                 metrology height        : time/record  = {time:.16}/{record-count}, version = {algorithm_version}""".format(
                         **metrology_height_result
                     )
-                ),
-                file=outfile,
+                )
             )
-            print("metrology height images : {!r}".format(metrology_height_images))
+            yield ("metrology height images : {!r}".format(metrology_height_images))
         else:
-            print(
+            yield (
                 "Metrology height      : fibre_distance = {error_message}, time/record = {time:.16}/{record-count},"
-                " version = {algorithm_version}".format(**metrology_height_result),
-                file=outfile,
+                " version = {algorithm_version}".format(**metrology_height_result)
             )
 
-    print(file=outfile)
+    yield ""
 
     if positional_repeatability_result is None:
-        print("positional repeatability: n/a", file=outfile)
+        yield ("positional repeatability: n/a")
     else:
         err_msg = positional_repeatability_result["error_message"]
         if not err_msg:
-            print(
+            yield (
                 cleandoc(
                     """
                     positional repeatability: passed          = {result}
@@ -1792,146 +1700,127 @@ def print_report_extended(
                     positional repeatability: time/record     = {time:.16}/{record-count}
                     positional repeatability: anlysis version = {algorithm_version}
                     positional repeatability: git version     = {git_version}"""
-                ).format(**positional_repeatability_result),
-                file=outfile,
+                ).format(**positional_repeatability_result)
             )
             error_by_alpha = positional_repeatability_result[
                 "posrep_alpha_max_at_angle"
             ]
-            print(
-                """\nPositional repeatability: max error by alpha angle""", file=outfile
-            )
+            yield ("""\nPositional repeatability: max error by alpha angle""")
             error_max = positional_repeatability_result["arg_max_alpha_error"]
             for alpha in sorted(error_by_alpha.keys()):
                 val = error_by_alpha[alpha]
                 tag = " <<<" if val == error_max else ""
-                print(
+                yield (
                     """Positional repeatability:     {alpha:7.2f} = {val:8.4f} {tag}""".format(
                         alpha=alpha, val=val, tag=tag
-                    ),
-                    file=outfile,
+                    )
                 )
             error_by_beta = positional_repeatability_result["posrep_beta_max_at_angle"]
-            print("error_by_beta=", repr(error_by_beta))
-            print(
-                """\nPositional repeatability: max error by beta angle""", file=outfile
-            )
+            yield ("error_by_beta={}".format(error_by_beta))
+            yield ("""\nPositional repeatability: max error by beta angle""")
             error_max = positional_repeatability_result["arg_max_beta_error"]
             for beta in sorted(error_by_beta.keys()):
                 val = error_by_beta[beta]
                 tag = " <<<" if val == error_max else ""
-                print(
+                yield (
                     """Positional repeatability:     {beta:7.2f} = {val:8.4f} {tag}""".format(
                         beta=beta, val=val, tag=tag
-                    ),
-                    file=outfile,
+                    )
                 )
 
-            print(
+            yield (
                 fill(
                     """Positional repeatability: calibration_pars = {calibration_pars!r}""".format(
                         **positional_repeatability_result
                     )
-                ),
-                file=outfile,
+                )
             )
-            print(file=outfile)
-            print(
+            yield ""
+            yield (
                 fill(
                     """positional repeatability: gearbox correction = {gearbox_correction}""".format(
                         **positional_repeatability_result
                     )
-                ),
-                file=outfile,
+                )
             )
-            print(
+            yield (
                 cleandoc(
                     """
                     positional repeatability: gearbox correction algorithm version = {algorithm_version}"""
-                ).format(**positional_repeatability_result),
-                file=outfile,
+                ).format(**positional_repeatability_result)
             )
-            print(
+            yield (
                 fill(
                     """Positional repeatability: alpha_max_at_angle = {posrep_alpha_max_at_angle!r}""".format(
                         **positional_repeatability_result
                     )
-                ),
-                file=outfile,
+                )
             )
-            print(
+            yield (
                 fill(
                     """Positional repeatability: beta_max_at_angle = {posrep_beta_max_at_angle!r}""".format(
                         **positional_repeatability_result
                     )
-                ),
-                file=outfile,
+                )
             )
-            print(
+            yield (
                 fill(
                     """Positional repeatability: analysis_results_alpha = {analysis_results_alpha!r}""".format(
                         **positional_repeatability_result
                     )
-                ),
-                file=outfile,
+                )
             )
-            print(
+            yield (
                 fill(
                     """Positional repeatability: analysis_results_beta = {analysis_results_beta!r}""".format(
                         **positional_repeatability_result
                     )
-                ),
-                file=outfile,
+                )
             )
-            print(
+            yield (
                 fill(
                     """Positional repeatability: gearbox_correction = {gearbox_correction!r}""".format(
                         **positional_repeatability_result
                     )
-                ),
-                file=outfile,
+                )
             )
-            print(
+            yield (
                 fill(
                     "positional repeatability images: {images_alpha!r}".format(
                         **positional_repeatability_images
                     )
-                ),
-                file=outfile,
+                )
             )
-            print(
+            yield (
                 fill(
                     "positional repeatability images: {images_beta!r}".format(
                         **positional_repeatability_images
                     )
-                ),
-                file=outfile,
+                )
             )
-            print(
+            yield (
                 fill(
                     "positional repeatability images / waveform parameters: {waveform_pars!r}".format(
                         **positional_repeatability_images
                     )
-                ),
-                file=outfile,
+                )
             )
         else:
-            print(
+            yield (
                 "Positional repeatability: message = {error_message}, time/record = {time:.16}/{record-count},"
                 " version = {algorithm_version}".format(
                     **positional_repeatability_result
-                ),
-                file=outfile,
+                )
             )
 
-    print(file=outfile)
+    yield ""
 
     if positional_verification_result is None:
-        print("positional verification : n/a", file=outfile)
+        yield ("positional verification : n/a")
     else:
         err_msg = positional_verification_result["error_message"]
         if not err_msg:
-            print(
+            yield (
                 cleandoc(
                     """
                     positional verification : passed                       = {result}
@@ -1942,55 +1831,50 @@ def print_report_extended(
                     positional verification : time/record                  = {time:.16}/{record-count}
                     positional verification : analysis version             = {algorithm_version}
                     positional verification : git version                  = {git_version}"""
-                ).format(**positional_verification_result),
-                file=outfile,
+                ).format(**positional_verification_result)
             )
             error_by_coords = positional_verification_result["posver_error"]
-            print("""Positional verification : max error by coordinate""", file=outfile)
+            yield ("""Positional verification : max error by coordinate""")
             error_max = positional_verification_result["posver_error_max_mm"]
             for coord in sorted(error_by_coords.keys()):
                 val = error_by_coords[coord]
                 tag = " <<<" if val == error_max else ""
-                print(
+                yield (
                     """Positional verification :     # {coord[0]:03d} ({coord[1]:+8.2f}, {coord[2]:+8.2f}) = {val:8.4f} {tag}""".format(
                         coord=coord, val=val, tag=tag
-                    ),
-                    file=outfile,
+                    )
                 )
-            print(
+            yield (
                 fill(
                     """Positional verification : calibration_pars             = {calibration_pars}""".format(
                         **positional_verification_result
                     )
-                ),
-                file=outfile,
+                )
             )
-            print(
+            yield (
                 fill(
                     """Positional verification : posver_errors = {posver_error}""".format(
                         **positional_verification_result
                     )
-                ),
-                file=outfile,
+                )
             )
-            print(
+            yield (
                 fill(
                     """Positional verification : analysis_results = {analysis_results}""".format(
                         **positional_verification_result
                     )
-                ),
-                file=outfile,
+                )
             )
             if "gearbox_correction" not in positional_verification_images:
                 positional_verification_images["gearbox_correction"] = None
-            print(
+            yield (
                 fill(
                     "positional verification images : {images!r}".format(
                         **positional_verification_images
                     )
                 )
             )
-            print(
+            yield (
                 fill(
                     "gearbox correction = {gearbox_correction!r}".format(
                         **positional_verification_images
@@ -1998,22 +1882,21 @@ def print_report_extended(
                 )
             )
         else:
-            print(
+            yield (
                 "Positional verification : message = {error_message}, time/record = {time:.16}/{record-count},"
                 " version = {algorithm_version}".format(
                     **positional_verification_result
-                ),
-                file=outfile,
+                )
             )
 
-    print(file=outfile)
+    yield ""
 
     if pupil_alignment_result is None:
-        print("pupil_alignment test    : n/a", file=outfile)
+        yield ("pupil_alignment test    : n/a")
     else:
         err_msg = pupil_alignment_result["error_message"]
         if not err_msg:
-            print(
+            yield (
                 cleandoc(
                     """
                     pupil alignment         : passed            = {result}
@@ -2025,56 +1908,59 @@ def print_report_extended(
                     pupil alignment         : time/record       = {time:.16}/{record-count}
                     pupil alignment         : algorithm version = {algorithm_version}
                     pupil alignment         : git version       = {git_version}"""
-                ).format(**pupil_alignment_result),
-                file=outfile,
+                ).format(**pupil_alignment_result)
             )
-            print(
+            yield (
                 fill(
                     """pupil alignment         : calibration_pars  = {calibration_pars!r}""".format(
                         **pupil_alignment_result
                     )
-                ),
-                file=outfile,
+                )
             )
-            print(
+            yield (
                 fill(
                     """pupil alignment    : coords = {coords!r}""".format(
                         **pupil_alignment_result
                     )
-                ),
-                file=outfile,
+                )
             )
-            print(fill("pupil alignment images: {!r}".format(pupil_alignment_images)))
+            yield (fill("pupil alignment images: {!r}".format(pupil_alignment_images)))
         else:
-            print(
+            yield (
                 "pupil alignment: message = {error_message}, time/record = {time:.16}/{record-count}".format(
                     **pupil_alignment_result
-                ),
-                file=outfile,
+                )
             )
 
 
-def report(dbe):
+def report(dbe, opts):
 
     report_format = dbe.opts.report_format
     for count, fpu_id in enumerate(dbe.eval_fpuset):
         ddict = vars(get_data(dbe, fpu_id))
 
         if (count > 0) and report_format != "status":
-            print("\n", file=dbe.opts.output_file)
+            dbe.opts.output_file.write("\n")
 
         if report_format == "status":
-            print_report_status(skip_fibre=dbe.opts.skip_fibre, **ddict)
+            lines = format_report_status(skip_fibre=opts.skip_fibre, **ddict)
         elif report_format == "brief":
-            print_report_brief(**ddict)
+            lines = format_report_brief(**ddict)
         elif report_format == "terse":
-            print_report_terse(**ddict)
+            lines = format_report_terse(**ddict)
         elif report_format == "short":
-            print_report_short(**ddict)
+            lines = format_report_short(**ddict)
         elif report_format == "long":
-            print_report_long(**ddict)
+            lines = format_report_long(**ddict)
         else:
-            print_report_extended(**ddict)
+            lines = format_report_extended(**ddict)
+        try:
+            #dbe.opts.output_file.writelines(line + "\n" for line in lines)
+            for line in lines:
+                dbe.opts.output_file.write(line + "\n")
+        except TypeError:
+            print("error in line = %r" % repr(line))
+            raise
 
 
 def dump_data(dbe):

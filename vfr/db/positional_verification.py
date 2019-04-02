@@ -2,12 +2,9 @@ from __future__ import absolute_import, division, print_function
 
 from collections import namedtuple
 from functools import partial
-from vfr.tests_common import timestamp
 from vfr.db.base import (TestResult,
                          save_named_record,
                          get_named_record,
-                         get_test_result,
-                         save_test_result,
 )
 
 
@@ -37,33 +34,9 @@ PositionalVerificationResult = namedtuple(
 )
 
 
-def save_positional_verification_images(dbe, fpu_id, record):
+save_positional_verification_images = partial(save_named_record, (RECORD_TYPE, "images"), include_fpu_id=True)
 
-    # define two closures - one for the unique key, another for the stored value
-    def keyfunc(fpu_id):
-        serialnumber = dbe.fpu_config[fpu_id]["serialnumber"]
-        keybase = (serialnumber, RECORD_TYPE, "images")
-        return keybase
-
-    def valfunc(fpu_id):
-
-        val = dict(**vars(record))
-        val.update({"fpuid": fpu_id, "time": timestamp()})
-        return repr(val)
-
-    save_test_result(dbe, [fpu_id], keyfunc, valfunc)
-
-
-def get_positional_verification_images(dbe, fpu_id, count=None):
-
-    # define two closures - one for the unique key, another for the stored value
-    def keyfunc(fpu_id):
-        serialnumber = dbe.fpu_config[fpu_id]["serialnumber"]
-        keybase = (serialnumber, RECORD_TYPE, "images")
-        return keybase
-
-    return get_test_result(dbe, fpu_id, keyfunc, count=count)
-
+get_positional_verification_images = partial(get_named_record, (RECORD_TYPE, "images"))
 
 save_positional_verification_result = partial(save_named_record, (RECORD_TYPE, "result"))
 

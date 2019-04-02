@@ -497,7 +497,7 @@ if __name__ == "__main__":
 
     if T.TASK_REPORT in tasks:
         print ("[%s] ###" % T.TASK_REPORT)
-        report(dbe)
+        report(dbe, opts)
 
     if T.TASK_DUMP in tasks:
         print ("[%s] ###" % T.TASK_DUMP)
