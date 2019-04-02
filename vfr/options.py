@@ -8,7 +8,12 @@ import warnings
 from ast import literal_eval
 from os import environ
 
-from fpu_constants import ALPHA_MIN_DEGREE, ALPHA_MAX_DEGREE, BETA_MIN_DEGREE, BETA_MAX_DEGREE
+from fpu_constants import (
+    ALPHA_MIN_DEGREE,
+    ALPHA_MAX_DEGREE,
+    BETA_MIN_DEGREE,
+    BETA_MAX_DEGREE,
+)
 from vfr.conf import DEFAULT_TASKS
 from vfr.db.snset import get_snset
 from vfr.helptext import examples, summary
@@ -65,7 +70,7 @@ def parse_args():
         'terse' : print essential information
         'short' : print additional information, like angles with maximum errors
         'long'  : in addition, list values for each angle
-        'extended' : print nearly full information, including a list of images"""
+        'extended' : print nearly full information, including a list of images""",
     )
 
     parser.add_argument(
@@ -382,7 +387,9 @@ def get_sets(env, vfdb, fpu_config, opts):
             N = 0
 
         if N < opts.N:
-            warnings.warn("Subset selected. Adjusting number of addressed FPUs to %i." % N)
+            warnings.warn(
+                "Subset selected. Adjusting number of addressed FPUs to %i." % N
+            )
             opts.N = N
 
     return fpu_config, sorted(measure_fpuset), sorted(eval_fpuset)

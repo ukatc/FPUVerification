@@ -14,6 +14,7 @@ assert GigECamera
 assert lampController
 assert manualLampController
 
+
 def safe_home_turntable(gd, grid_state, opts=None):
     find_datum(gd, grid_state, opts=opts)
 

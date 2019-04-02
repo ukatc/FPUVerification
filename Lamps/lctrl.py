@@ -38,7 +38,9 @@ try:
         get_daq_device_inventory,
     )
 except ImportError:
-    print(">>>>>>>>>>> Warning: Could not import uldaq module -- probably a setup problem or running in simulation context")
+    print(
+        ">>>>>>>>>>> Warning: Could not import uldaq module -- probably a setup problem or running in simulation context"
+    )
     AOutFlag = None
     DaqDevice = None
     DigitalDirection = None
@@ -201,7 +203,6 @@ class lampController:
             time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
 
 
-
 class manualLampController:
     """ Class to control lamps manually. This is important for test purpuses.
 
@@ -223,9 +224,7 @@ class manualLampController:
         raw_input("switch state of ambient light to %r and press <enter> $" % state)
 
     def switch_silhouettelight(self, state, manual_lamp_control=False):
-        raw_input(
-            "switch state of silhouette light to %r and press <enter> $" % state
-        )
+        raw_input("switch state of silhouette light to %r and press <enter> $" % state)
 
     @contextmanager
     def use_silhouettelight(self):

@@ -10,7 +10,8 @@ from os import environ, path
 
 # import pylibftdi
 import pyAPT
-#from pyAPT.controller import Controller  # the generic diver class
+
+# from pyAPT.controller import Controller  # the generic diver class
 from pyAPT.cr1z7 import CR1Z7
 from pyAPT.lts300 import LTS300
 from pyAPT.mts50 import MTS50

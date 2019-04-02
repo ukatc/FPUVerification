@@ -153,7 +153,7 @@ task_dependencies = [
             T.TST_GATEWAY_CONNECTION,
         ],
     ),
-    (T.TASK_INIT_GD, [T.TASK_PARK_FPUS, ]),
+    (T.TASK_INIT_GD, [T.TASK_PARK_FPUS]),
     (T.TST_DATUM_ALPHA, [T.TASK_INIT_GD, T.TST_CAN_CONNECTION]),
     (T.TST_DATUM_BETA, [T.TASK_INIT_GD, T.TST_CAN_CONNECTION]),
     (T.TST_DATUM_BOTH, [T.TASK_INIT_GD, T.TST_CAN_CONNECTION]),
@@ -277,12 +277,7 @@ task_dependencies = [
     ),
     (
         T.TASK_EVAL_NONFIBRE,
-        [
-            T.EVAL_DATUM_REP,
-            T.EVAL_POS_REP,
-            T.EVAL_POS_VER,
-            T.EVAL_MET_HEIGHT,
-        ],
+        [T.EVAL_DATUM_REP, T.EVAL_POS_REP, T.EVAL_POS_VER, T.EVAL_MET_HEIGHT],
     ),
 ]
 

@@ -124,4 +124,4 @@ def get_min_quality_pupil(list_of_coords):
     """
 
     cord_array = array(list_of_coords)
-    return np.min(cord_array[:,2])
+    return np.min(cord_array[:, 2])

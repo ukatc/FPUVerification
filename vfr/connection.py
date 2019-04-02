@@ -3,9 +3,7 @@ from __future__ import absolute_import, division, print_function
 import os
 
 import FpuGridDriver
-from FpuGridDriver import (
-    ProtectionError,
-)
+from FpuGridDriver import ProtectionError
 from vfr.tests_common import flush
 
 

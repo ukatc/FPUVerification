@@ -20,13 +20,13 @@ def get_min_quality(list_of_coords):
     """
 
     cord_array = array(list_of_coords)
-    q_small = np.min(cord_array[:,2])
-    q_large = np.min(cord_array[:,5])
+    q_small = np.min(cord_array[:, 2])
+    q_large = np.min(cord_array[:, 5])
     return min(q_small, q_large)
 
 
 def arg_max_dict(d):
-    maxval = - Inf
+    maxval = -Inf
     maxkey = None
     for k, v in d.items():
         if v > maxval:
