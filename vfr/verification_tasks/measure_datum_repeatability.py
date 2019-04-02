@@ -14,8 +14,8 @@ from ImageAnalysisFuncs.analyze_positional_repeatability import (
 from numpy import NaN, array
 import numpy as np
 from vfr.conf import MET_CAL_CAMERA_IP_ADDRESS
+from vfr.db.base import TestResult
 from vfr.db.datum_repeatability import (
-    TestResult,
     DatumRepeatabilityImages,
     DatumRepeatabilityResult,
     get_datum_repeatability_images,

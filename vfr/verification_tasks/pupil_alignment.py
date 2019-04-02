@@ -10,10 +10,10 @@ from ImageAnalysisFuncs.analyze_pupil_alignment import (
 )
 from numpy import NaN
 from vfr.conf import PUP_ALGN_CAMERA_IP_ADDRESS
+from vfr.db.base import TestResult
 from vfr.db.pupil_alignment import (
     PupilAlignmentImages,
     PupilAlignmentResult,
-    TestResult,
     get_pupil_alignment_images,
     get_pupil_alignment_passed_p,
     save_pupil_alignment_images,

@@ -1,9 +1,15 @@
 from __future__ import absolute_import, division, print_function
 
 from collections import namedtuple
-from numpy import NaN
+from functools import partial
 from vfr.tests_common import timestamp
-from vfr.db.base import GIT_VERSION, get_test_result, save_test_result
+from vfr.db.base import (save_named_record,
+                         get_named_record,
+                         get_test_result,
+                         save_test_result,
+)
+
+
 
 RECORD_TYPE = "metrology-calibration"
 
@@ -48,31 +54,6 @@ def get_metrology_calibration_images(dbe, fpu_id, count=None):
     return get_test_result(dbe, fpu_id, keyfunc, count=count)
 
 
-def save_metrology_calibration_result(dbe, fpu_id, record):
+save_metrology_calibration_result = partial(save_named_record, (RECORD_TYPE, "result"))
 
-    # define two closures - one for the unique key, another for the stored value
-    def keyfunc(fpu_id):
-        serialnumber = dbe.fpu_config[fpu_id]["serialnumber"]
-        keybase = (serialnumber, RECORD_TYPE, "result")
-        return keybase
-
-    def valfunc(fpu_id):
-
-        val = dict(**vars(record))
-        val.update({"git_version": GIT_VERSION, "time": timestamp()})
-        return repr(val)
-
-    save_test_result(dbe, [fpu_id], keyfunc, valfunc)
-
-
-def get_metrology_calibration_result(dbe, fpu_id, count=None):
-
-    # define two closures - one for the unique key, another for the stored value
-    def keyfunc(fpu_id):
-        serialnumber = dbe.fpu_config[fpu_id]["serialnumber"]
-        keybase = (serialnumber, RECORD_TYPE, "result")
-        return keybase
-
-    return get_test_result(
-        dbe, fpu_id, keyfunc, verbosity=dbe.opts.verbosity, count=count
-    )
+get_metrology_calibration_result = partial(get_named_record, (RECORD_TYPE, "result"))

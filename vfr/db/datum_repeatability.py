@@ -1,9 +1,14 @@
 from __future__ import absolute_import, division, print_function
 
 from collections import namedtuple
-from numpy import NaN
+from functools import partial
 from vfr.tests_common import timestamp
-from vfr.db.base import GIT_VERSION, TestResult, get_test_result, save_test_result
+from vfr.db.base import (TestResult,
+                         save_named_record,
+                         get_named_record,
+                         get_test_result,
+                         save_test_result,
+)
 
 RECORD_TYPE = "datum-repeatability"
 
@@ -58,33 +63,9 @@ def get_datum_repeatability_images(dbe, fpu_id, count=None):
 
     return get_test_result(dbe, fpu_id, keyfunc, count=count)
 
+save_datum_repeatability_result = partial(save_named_record, (RECORD_TYPE, "result"))
 
-def save_datum_repeatability_result(dbe, fpu_id, record):
-
-    # define two closures - one for the unique key, another for the stored value
-    def keyfunc(fpu_id):
-        serialnumber = dbe.fpu_config[fpu_id]["serialnumber"]
-        keybase = (serialnumber, RECORD_TYPE, "result")
-        return keybase
-
-    def valfunc(fpu_id):
-
-        val = dict(**vars(record))
-        val.update({"git_version": GIT_VERSION, "time": timestamp()})
-        return repr(val)
-
-    save_test_result(dbe, [fpu_id], keyfunc, valfunc)
-
-
-def get_datum_repeatability_result(dbe, fpu_id, count=None):
-
-    # define two closures - one for the unique key, another for the stored value
-    def keyfunc(fpu_id):
-        serialnumber = dbe.fpu_config[fpu_id]["serialnumber"]
-        keybase = (serialnumber, RECORD_TYPE, "result")
-        return keybase
-
-    return get_test_result(dbe, fpu_id, keyfunc, count=count)
+get_datum_repeatability_result = partial(get_named_record, (RECORD_TYPE, "result"))
 
 
 def get_datum_repeatability_passed_p(dbe, fpu_id, count=None):

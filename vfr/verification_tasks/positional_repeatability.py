@@ -13,9 +13,9 @@ from ImageAnalysisFuncs.analyze_positional_repeatability import (
 )
 from numpy import NaN
 from vfr.conf import POS_REP_CAMERA_IP_ADDRESS
+from vfr.db.base import TestResult
 from vfr.db.colldect_limits import get_angular_limit
 from vfr.db.positional_repeatability import (
-    TestResult,
     PositionalRepeatabilityImages,
     PositionalRepeatabilityResults,
     get_positional_repeatability_images,
