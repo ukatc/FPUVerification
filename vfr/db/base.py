@@ -1,6 +1,8 @@
 from __future__ import absolute_import, division, print_function
 
 import ast
+import inspect
+import os.path
 import subprocess
 
 from numpy import array, Inf, NaN, inf, nan  # these values are used!!
@@ -8,7 +10,15 @@ from numpy import array, Inf, NaN, inf, nan  # these values are used!!
 assert Inf or NaN or inf or nan or array or True
 from vfr.tests_common import timestamp
 
-GIT_VERSION = subprocess.check_output(["git", "describe"]).strip()
+def get_version():
+    start_dir = os.getcwd()
+    source_dir = os.path.dirname(inspect.getsourcefile(get_version))
+    os.chdir(source_dir)
+    version = subprocess.check_output(["git", "describe"]).strip()
+    os.chdir(start_dir)
+
+GIT_VERSION = get_version()
+
 
 
 class TestResult:

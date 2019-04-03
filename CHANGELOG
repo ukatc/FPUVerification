@@ -1,0 +1,9 @@
+	CHANGELOG
+
+	Version 0.4.1
+	=============
+	* it is now possible to run the program from another
+	directory than the source diractory
+
+	Version 0.4.0 / 2019-04-03 - first tested version
+	=================================================
