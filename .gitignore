@@ -9,4 +9,4 @@ include/
 lib/
 man/
 .~lock*
-
+mock-*.cfg
