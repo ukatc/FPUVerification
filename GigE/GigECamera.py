@@ -111,7 +111,7 @@ class GigECamera(object):
             sets the raw exposure time in ms.
         """
 
-        if genicam.isWritable(self.camera.ExposureTimeRaw):
+        if genicam.IsWritable(self.camera.ExposureTimeRaw):
             self.camera.ExposureTimeRaw.SetValue(exposure_time)
         else:
             print(
