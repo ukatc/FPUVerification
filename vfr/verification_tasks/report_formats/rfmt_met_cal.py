@@ -56,7 +56,7 @@ MET_CAL_RESULT_EXTENDED = cleandoc(
 )
 
 MET_CAL_ERRMSG = (
-    "Metrology calibration   : {error_message}, time/record = {time:.16}/{record-count}, "
+    "metrology calibration   : {error_message}, time/record = {time:.16}/{record-count}, "
     "version = {algorithm_version}"
 )
 

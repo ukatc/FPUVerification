@@ -23,7 +23,7 @@ CDECT_RESULT_EXTENDED = CDECT_RESULT_LONG
 LIMIT_RESULT_NA = "limit test {limit_name:9.9}      : n/a"
 
 LIMIT_RESULT_TERSE = (
-    "Limit test              : {limit_name:9.9s} = {result}, "
+    "limit test              : {limit_name:9.9s} = {result}, "
     "limit = {val:+8.4f} ({diagnostic}), time/record = {time:.16}/{record-count}"
 )
 

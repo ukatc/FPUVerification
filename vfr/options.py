@@ -294,7 +294,7 @@ def parse_args():
     if args.mockup:
         args.gateway_address = "127.0.0.1"
         args.gateway_port = 4700
-        args.setup_file = 'mock-' + args.setup_file
+        args.setup_file = "mock-" + args.setup_file
 
     if args.output_file is None:
         args.output_file = sys.stdout

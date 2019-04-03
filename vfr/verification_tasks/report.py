@@ -921,7 +921,6 @@ def format_report_extended(
     else:
         yield (fill(rfmt_met_cal.MET_CAL_IMAGES.format("no images found")))
 
-
     yield EMPTY_LINE
 
     if metrology_height_result is None:
@@ -932,7 +931,6 @@ def format_report_extended(
             yield rfmt_met_hgt.MET_HEIGHT_RESULT_EXTENDED.format(
                 **metrology_height_result
             )
-
 
         else:
             yield rfmt_met_hgt.MET_HEIGHT_ERRMSG.format(**metrology_height_result)
@@ -973,28 +971,19 @@ def format_report_extended(
                 yield line
 
             yield fill(
-                    rfmt_pos_rep.ALPHA_MAX_ANGLE.format(
-                        **positional_repeatability_result
-                    )
-                )
+                rfmt_pos_rep.ALPHA_MAX_ANGLE.format(**positional_repeatability_result)
+            )
             yield fill(
-                    rfmt_pos_rep.BETA_MAX_ANGLE.format(
-                        **positional_repeatability_result
-                    )
-                )
+                rfmt_pos_rep.BETA_MAX_ANGLE.format(**positional_repeatability_result)
+            )
 
             yield fill(
-                    rfmt_pos_rep.AN_RESULTS_ALPHA.format(
-                        **positional_repeatability_result
-                    )
-                )
+                rfmt_pos_rep.AN_RESULTS_ALPHA.format(**positional_repeatability_result)
+            )
 
             yield fill(
-                    rfmt_pos_rep.AN_RESULTS_BETA.format(
-                        **positional_repeatability_result
-                    )
-                )
-
+                rfmt_pos_rep.AN_RESULTS_BETA.format(**positional_repeatability_result)
+            )
 
             yield fill(
                 rfmt_pos_rep.POS_REP_CALPARS.format(**positional_repeatability_result)
@@ -1033,21 +1022,14 @@ def format_report_extended(
 
     if positional_repeatability_images:
         yield fill(
-            rfmt_pos_rep.POS_REP_IMAGES_ALPHA.format(
-                **positional_repeatability_images
-            )
+            rfmt_pos_rep.POS_REP_IMAGES_ALPHA.format(**positional_repeatability_images)
         )
 
         yield fill(
-            rfmt_pos_rep.POS_REP_IMAGES_BETA.format(
-                **positional_repeatability_images
-            )
+            rfmt_pos_rep.POS_REP_IMAGES_BETA.format(**positional_repeatability_images)
         )
     else:
-        yield fill(
-            rfmt_pos_rep.POS_REP_IMAGES.format("no images found")
-        )
-
+        yield fill(rfmt_pos_rep.POS_REP_IMAGES.format("no images found"))
 
     yield EMPTY_LINE
 
@@ -1069,16 +1051,13 @@ def format_report_extended(
             for line in list_posver_err_by_coord(error_by_coords, error_max):
                 yield line
 
-            yield fill( rfmt_pos_ver.POS_VER_ERRVALS.format(
-                        **positional_verification_result
-                    )
-                )
+            yield fill(
+                rfmt_pos_ver.POS_VER_ERRVALS.format(**positional_verification_result)
+            )
 
             yield fill(
-                rfmt_pos_ver.POS_VER_ARESULTS.format(
-                        **positional_verification_result
-                    )
-                )
+                rfmt_pos_ver.POS_VER_ARESULTS.format(**positional_verification_result)
+            )
 
         else:
             yield rfmt_pos_ver.POS_VER_ERRMSG.format(**positional_verification_result)
@@ -1088,22 +1067,15 @@ def format_report_extended(
             positional_verification_images["gearbox_correction"] = None
 
             yield fill(
-                    rfmt_pos_ver.POS_VER_IMAGES.format(
-                        **positional_verification_images
-                    )
-                )
+                rfmt_pos_ver.POS_VER_IMAGES.format(**positional_verification_images)
+            )
 
-            yield fill(rfmt_pos_ver.POS_VER_GEARCORR.format(
-                        **positional_verification_images
-                    )
-                )
+            yield fill(
+                rfmt_pos_ver.POS_VER_GEARCORR.format(**positional_verification_images)
+            )
 
     else:
-        yield rfmt_pos_ver.POS_VER_NOIMAGES.format(
-            "no images found"
-        )
-
-
+        yield rfmt_pos_ver.POS_VER_NOIMAGES.format("no images found")
 
     yield EMPTY_LINE
 

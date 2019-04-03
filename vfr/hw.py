@@ -38,22 +38,22 @@ def turntable_safe_goto(gd, grid_state, stage_position, wait=True, monitor=False
         print("Found APT controller S/N", NR360_SERIALNUMBER)
         st = time.time()
         con.goto(stage_position, wait=wait)
-#        if monitor:
-#            stat = con.status()
-#            while stat.moving:
-#                out = "        pos %3.2f %s vel %3.2f %s/s" % (
-#                    stat.position,
-#                    con.unit,
-#                    stat.velocity,
-#                    con.unit,
-#                )
-#                sys.stdout.write(out)
-#                time.sleep(0.01)
-#                stat = con.status()
-#                l = len(out)
-#                sys.stdout.write("\b" * l)
-#                sys.stdout.write(" " * l)
-#                sys.stdout.write("\b" * l)
+        #        if monitor:
+        #            stat = con.status()
+        #            while stat.moving:
+        #                out = "        pos %3.2f %s vel %3.2f %s/s" % (
+        #                    stat.position,
+        #                    con.unit,
+        #                    stat.velocity,
+        #                    con.unit,
+        #                )
+        #                sys.stdout.write(out)
+        #                time.sleep(0.01)
+        #                stat = con.status()
+        #                l = len(out)
+        #                sys.stdout.write("\b" * l)
+        #                sys.stdout.write(" " * l)
+        #                sys.stdout.write("\b" * l)
         print("\tMove completed in %.2fs" % (time.time() - st))
         print("\tNew position: %.2f %s" % (con.position(), con.unit))
         if monitor:
@@ -82,4 +82,3 @@ def linear_stage_goto(stage_position):
         print("\tNew position: %.2fmm %s" % (con.position(), con.unit))
         print("\tStatus:", con.status())
     print("OK")
-

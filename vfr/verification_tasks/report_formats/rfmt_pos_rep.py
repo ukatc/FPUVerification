@@ -6,7 +6,7 @@ from inspect import cleandoc
 POS_REP_NA = "positional repeatability  : n/a"
 
 POS_REP_CALPARS = (
-    """Positional repeatability: calibration_pars = {calibration_pars!r}"""
+    """positional repeatability: calibration_pars = {calibration_pars!r}"""
 )
 
 POS_REP_GEARCOR = (
@@ -93,10 +93,18 @@ POS_REP_WAVEFORM_PARS = (
 )
 
 
-ALPHA_MAX_ANGLE = "positional repeatability: alpha_max_at_angle = {posrep_alpha_max_at_angle!r}"
+ALPHA_MAX_ANGLE = (
+    "positional repeatability: alpha_max_at_angle = {posrep_alpha_max_at_angle!r}"
+)
 
-BETA_MAX_ANGLE = "positional repeatability: beta_max_at_angle = {posrep_beta_max_at_angle!r}"
+BETA_MAX_ANGLE = (
+    "positional repeatability: beta_max_at_angle = {posrep_beta_max_at_angle!r}"
+)
 
-AN_RESULTS_ALPHA = "Positional repeatability: analysis_results_alpha = {analysis_results_alpha!r}"
+AN_RESULTS_ALPHA = (
+    "positional repeatability: analysis_results_alpha = {analysis_results_alpha!r}"
+)
 
-AN_RESULTS_BETA = "Positional repeatability: analysis_results_beta = {analysis_results_beta!r}"
+AN_RESULTS_BETA = (
+    "positional repeatability: analysis_results_beta = {analysis_results_beta!r}"
+)

@@ -5,10 +5,10 @@ from inspect import cleandoc
 
 POS_VER_NA = "positional verification   : n/a"
 
-POS_VER_CALPARS = """Positional verification : calibration_pars = {calibration_pars}"""
+POS_VER_CALPARS = """positional verification : calibration_pars = {calibration_pars}"""
 
 POS_VER_ERRMSG = (
-    "Positional verification : message = {error_message}, time/record = {time:.16}/{record-count},"
+    "positional verification : message = {error_message}, time/record = {time:.16}/{record-count},"
     " version = {algorithm_version}"
 )
 
@@ -56,9 +56,9 @@ POS_VER_RESULT_EXTENDED = cleandoc(
     positional verification : git version                  = {git_version}"""
 )
 
-POS_VER_ERRVALS = "Positional verification : posver_errors = {posver_error}"
+POS_VER_ERRVALS = "positional verification : posver_errors = {posver_error}"
 
-POS_VER_ARESULTS = "Positional verification : posver_errors = {posver_error}"
+POS_VER_ARESULTS = "positional verification : posver_errors = {posver_error}"
 
 POS_VER_IMAGES = "positional verification images : {images!r}"
 

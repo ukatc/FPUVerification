@@ -55,7 +55,9 @@ def resolve(tasks, rig, dbe):
         last_tasks = tasks.copy()
         # check for expansions (replace user shorthands by detailed task breakdown)
         for tsk, expansion in task_expansions:
-            tasks = expand_tasks(tasks, tsk, expansion, delete=True, verbosity=verbosity)
+            tasks = expand_tasks(
+                tasks, tsk, expansion, delete=True, verbosity=verbosity
+            )
 
         # add dependencies (add tasks required to do a test)
         for tsk, expansion in task_dependencies:
@@ -68,11 +70,7 @@ def resolve(tasks, rig, dbe):
                 tfun = lambda fpu_id: testfun(dbe, fpu_id)
                 if (not all_true(tfun, fpuset)) or rig.opts.repeat_passed_tests:
                     tasks = expand_tasks(
-                        tasks,
-                        tsk,
-                        cond_expansion,
-                        delete=True,
-                        verbosity=verbosity
+                        tasks, tsk, cond_expansion, delete=True, verbosity=verbosity
                     )
 
         # check for equality with last iteration

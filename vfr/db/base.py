@@ -10,6 +10,7 @@ from numpy import array, Inf, NaN, inf, nan  # these values are used!!
 assert Inf or NaN or inf or nan or array or True
 from vfr.tests_common import timestamp
 
+
 def get_version():
     start_dir = os.getcwd()
     source_dir = os.path.dirname(inspect.getsourcefile(get_version))
@@ -17,8 +18,8 @@ def get_version():
     version = subprocess.check_output(["git", "describe"]).strip()
     os.chdir(start_dir)
 
-GIT_VERSION = get_version()
 
+GIT_VERSION = get_version()
 
 
 class TestResult:
