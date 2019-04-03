@@ -34,7 +34,7 @@ MET_HEIGHT_RESULT_LONG = cleandoc(
 
 MET_HEIGHT_RESULT_EXTENDED = MET_HEIGHT_RESULT_LONG
 
-MET_HEIGHT_IMAGES = "metrology height images : {!r}"
+MET_HEIGHT_IMAGES = "metrology height images   : {!r}"
 
 MET_HEIGHT_ERRMSG = (
     "Metrology height      : error message = {error_message}, time/record = {time:.16}/{record-count},"

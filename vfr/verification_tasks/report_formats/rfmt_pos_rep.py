@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function
 
 from inspect import cleandoc
 
-POS_REP_NA = "positional repeatability: n/a"
+POS_REP_NA = "positional repeatability  : n/a"
 
 POS_REP_CALPARS = (
     """Positional repeatability: calibration_pars = {calibration_pars!r}"""
@@ -81,6 +81,9 @@ POS_REP_ERRMSG = (
     " version = {algorithm_version}"
 )
 
+POS_REP_IMAGES = "positional repeatability images: {!r}"
+
+
 POS_REP_IMAGES_ALPHA = "positional repeatability images alpha: {images_alpha!r}"
 
 POS_REP_IMAGES_BETA = "positional repeatability images beta: {images_beta!r}"
@@ -88,3 +91,12 @@ POS_REP_IMAGES_BETA = "positional repeatability images beta: {images_beta!r}"
 POS_REP_WAVEFORM_PARS = (
     "positional repeatability images / waveform parameters: {waveform_pars!r}"
 )
+
+
+ALPHA_MAX_ANGLE = "positional repeatability: alpha_max_at_angle = {posrep_alpha_max_at_angle!r}"
+
+BETA_MAX_ANGLE = "positional repeatability: beta_max_at_angle = {posrep_beta_max_at_angle!r}"
+
+AN_RESULTS_ALPHA = "Positional repeatability: analysis_results_alpha = {analysis_results_alpha!r}"
+
+AN_RESULTS_BETA = "Positional repeatability: analysis_results_beta = {analysis_results_beta!r}"

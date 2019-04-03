@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function
 
 from inspect import cleandoc
 
-DATUM_RESULT_NA = "Datum test               : n/a"
+DATUM_RESULT_NA = "Datum test                : n/a"
 
 DATUM_RESULT_TERSE = cleandoc(
     """

@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function
 
 from inspect import cleandoc
 
-CDECT_RESULT_NA = "beta collision  test     : n/a"
+CDECT_RESULT_NA = "beta collision  test      : n/a"
 
 CDECT_RESULT_TERSE = (
     "collision detection     : result ="
@@ -20,7 +20,7 @@ CDECT_RESULT_LONG = CDECT_RESULT_COMPLETE
 CDECT_RESULT_EXTENDED = CDECT_RESULT_LONG
 
 
-LIMIT_RESULT_NA = "limit test            :  {limit_name} n/a"
+LIMIT_RESULT_NA = "limit test {limit_name:9.9}      : n/a"
 
 LIMIT_RESULT_TERSE = (
     "Limit test              : {limit_name:9.9s} = {result}, "

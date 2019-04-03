@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function
 
 from inspect import cleandoc
 
-POS_VER_NA = "positional verification : n/a"
+POS_VER_NA = "positional verification   : n/a"
 
 POS_VER_CALPARS = """Positional verification : calibration_pars = {calibration_pars}"""
 
@@ -55,3 +55,13 @@ POS_VER_RESULT_EXTENDED = cleandoc(
     positional verification : analysis version             = {algorithm_version}
     positional verification : git version                  = {git_version}"""
 )
+
+POS_VER_ERRVALS = "Positional verification : posver_errors = {posver_error}"
+
+POS_VER_ARESULTS = "Positional verification : posver_errors = {posver_error}"
+
+POS_VER_IMAGES = "positional verification images : {images!r}"
+
+POS_VER_NOIMAGES = "positional verification images : {!r}"
+
+POS_VER_GEARCORR = "gearbox correction = {gearbox_correction!r}"

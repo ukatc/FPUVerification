@@ -60,4 +60,4 @@ MET_CAL_ERRMSG = (
     "version = {algorithm_version}"
 )
 
-MET_CAL_IMAGES = "metrology calibration images: {!r}"
+MET_CAL_IMAGES = "metrology cal. images     : {!r}"

@@ -142,6 +142,7 @@ task_dependencies = [
             T.TST_MET_CAL_CAM_CONNECTION,
             T.TST_GATEWAY_CONNECTION,
             T.TST_POS_REP_CAM_CONNECTION,
+            T.REQ_DATUM_PASSED,
         ],
     ),
     (
@@ -151,6 +152,7 @@ task_dependencies = [
             T.TST_PUP_ALGN_CAM_CONNECTION,
             T.TST_MET_CAL_CAM_CONNECTION,
             T.TST_GATEWAY_CONNECTION,
+            T.REQ_DATUM_PASSED,
         ],
     ),
     (T.TASK_INIT_GD, [T.TASK_PARK_FPUS]),

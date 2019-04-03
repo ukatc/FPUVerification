@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function
 
 from inspect import cleandoc
 
-PUP_ALN_NA = "pupil_alignment test    : n/a"
+PUP_ALN_NA = "pupil_alignment test      : n/a"
 
 PUP_ALN_CALPARS = """pupil alignment    : calibration_pars = {calibration_pars!r}"""
 
@@ -60,3 +60,8 @@ PUP_ALN_RESULT_EXTENDED = cleandoc(
     pupil alignment         : algorithm version = {algorithm_version}
     pupil alignment         : git version       = {git_version}"""
 )
+
+
+PUP_ALN_COORDS = "pupil alignment    : coords = {coords!r}"
+
+PUP_ALN_IMAGES = "pupil alignment images: {!r}"

@@ -70,7 +70,7 @@ DAT_REP_RESULT_EXTENDED = cleandoc(
 )
 
 DAT_REP_ERRMSG = (
-    "Datum repeatability     : {error_message}, time/record = {time:.16}/{record-count},"
+    "datum repeatability     : {error_message}, time/record = {time:.16}/{record-count},"
     " version = TBD"
 )
 
