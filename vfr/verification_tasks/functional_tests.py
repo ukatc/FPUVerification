@@ -249,6 +249,7 @@ def test_limit(rig, dbe, which_limit, pars=None):
                 serialnumber=sn,
                 result=TestResult.OK if test_succeeded else TestResult.FAILED,
                 val=limit_val,
+                limit_name=which_limit,
                 diagnostic=diagnostic,
             )
 

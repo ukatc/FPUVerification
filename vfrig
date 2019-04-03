@@ -3,6 +3,7 @@
 from __future__ import absolute_import, division, print_function
 
 import atexit
+import sys
 from argparse import Namespace
 
 from protectiondb import open_database_env
@@ -179,6 +180,10 @@ if __name__ == "__main__":
             T.MEASURE_POS_VER,
             T.TASK_PARK_FPUS,
         ])
+
+    if opts.expand_tasks:
+        print("Expanded tasks: %s" % list(tasks))
+        sys.exit(0)
 
     if T.TST_GATEWAY_CONNECTION in tasks:
         print ("[%s] ###" % T.TST_GATEWAY_CONNECTION)

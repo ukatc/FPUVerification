@@ -36,6 +36,19 @@ from vfr.db.pupil_alignment import (
     get_pupil_alignment_result,
 )
 
+from vfr.verification_tasks.report_formats import (
+    rfmt_datum,
+    rfmt_dat_rep,
+    rfmt_cdect,
+    rfmt_datum,
+    rfmt_met_cal,
+    rfmt_met_hgt,
+    rfmt_pos_rep,
+    rfmt_pos_ver,
+    rfmt_pup_aln
+)
+
+
 tw = TextWrapper(
     width=120,
     initial_indent="",
@@ -46,6 +59,8 @@ tw = TextWrapper(
 
 fill = tw.fill
 
+FPU_SEPERATOR_LINE = "*" * 60
+EMPTY_LINE = ""
 
 def get_data(dbe, fpu_id):
     serial_number = dbe.fpu_config[fpu_id]["serialnumber"]
@@ -89,7 +104,6 @@ def get_data(dbe, fpu_id):
         ),
         pupil_alignment_result=get_pupil_alignment_result(dbe, fpu_id, count=count),
         pupil_alignment_images=get_pupil_alignment_images(dbe, fpu_id, count=count),
-        outfile=dbe.opts.output_file,
     )
 
     return data
@@ -317,351 +331,159 @@ def format_report_terse(
     positional_repeatability_images=None,
     positional_verification_images=None,
     pupil_alignment_images=None,
-    outfile=None,
 ):
 
-    yield ("*" * 60)
+    yield FPU_SEPERATOR_LINE
     yield ("FPU %s" % serial_number)
-    yield ""
+    yield EMPTY_LINE
     if datum_result is None:
-        yield ("Datum test               : n/a")
+        yield rfmt_datum.FATUM_RESULT_NA
     else:
-        yield (
-            cleandoc(
-                """
-                datum test              : alpha datumed = {datumed[0]}
-                datum test              : beta datumed = {datumed[1]}
-                datum test              : fpu_id/FPU state = {fpuid} / {result_state}
-                datum test              : counter deviations = {counter_deviation!r}
-                datum test              : time/record = {time:.16}/{record-count}
-                datum test              : result = {diagnostic}"""
-            ).format(**datum_result)
-        )
+        yield rfmt_datum.DATUM_RESULT_TERSE.format(**datum_result)
 
-    yield ""
+    yield EMPTY_LINE
 
     if beta_collision_result is None:
-        yield ("beta collision  test     : n/a")
+        yield rfmt_cdect.CDECT_RESULT_NA
     else:
         yield (
-            "collision detection     : result ="
-            " {result} ({diagnostic}), time/record = {time:.16}/{record-count}".format(
+            rfmt_cdect.CDECT_RESULT_TERSE.format(
                 **beta_collision_result
             )
         )
 
-    yield ""
+    yield EMPTY_LINE
 
     if alpha_min_result is None:
-        yield ("limit test            :  alpha min n/a")
+        yield rfmt_cdect.LIMIT_RESULT_NA.format(**alpha_min_result)
     else:
-        yield (
-            "Limit test              : alpha min = {result}, "
-            "limit = {val:+8.4f} ({diagnostic}), time/record = {time:.16}/{record-count}".format(
+        yield rfmt_cdect.LIMIT_RESULT_TERSE.format(
                 **alpha_min_result
             )
-        )
+
 
     if alpha_max_result is None:
-        yield ("limit test            :  alpha max n/a")
+        yield rfmt_cdect.LIMIT_RESULT_NA.format(**alpha_max_result)
     else:
-        yield (
-            "limit test              : alpha max = {result}, limit = {val:+8.4f}"
-            " ({diagnostic}), time/record = {time:.16}/{record-count}".format(
+        yield rfmt_cdect.LIMIT_RESULT_TERSE.format(
                 **alpha_max_result
             )
-        )
+
 
     if beta_min_result is None:
-        yield ("limit test            : beta min n/a")
+        yield rfmt_cdect.LIMIT_RESULT_NA.format(**beta_min_result)
     else:
-        yield (
-            "limit test              : beta min  = {result}, limit = {val:+8.4f} "
-            "({diagnostic}), time/record = {time:.16}/{record-count}".format(
+        yield rfmt_cdect.LIMIT_RESULT_TERSE.format(
                 **beta_min_result
             )
-        )
 
     if beta_max_result is None:
-        yield ("Limit test            : beta max n/a")
+        yield rfmt_cdect.LIMIT_RESULT_NA.format(**beta_max_result)
     else:
-        yield (
-            "limit test              : beta max  = {result}, limit = {val:+8.4f}"
-            " ({diagnostic}), time/record = {time:.16}/{record-count}".format(
+        yield rfmt_cdect.LIMIT_RESULT_TERSE.format(
                 **beta_max_result
             )
-        )
 
-    yield ""
+
+    yield EMPTY_LINE
 
     if datum_repeatability_result is None:
-        yield ("datum repeatability       : n/a")
+        yield rfmt_fdat_rep.DAT_REP_NA
     else:
         err_msg = datum_repeatability_result["error_message"]
         if not err_msg:
-            yield (
-                cleandoc(
-                    """
-                datum repeatability     : {result},
-                datum repeatability     : datum only max                = {datum_repeatability_only_max_mm:7.3} mm,
-                datum repeatability     : datum only std                = {datum_repeatability_only_std_mm:7.3} mm,
-                datum repeatability     : datum only max residual count = {datum_repeatability_max_residual_datumed},
-                datum repeatability     : datum+move max                = {datum_repeatability_move_max_mm:7.3} mm,
-                datum repeatability     : datum+move std                = {datum_repeatability_move_std_mm:7.3} mm,
-                datum repeatability     : datum+move max residual count = {datum_repeatability_max_residual_moved},
-                datum repeatability     : time/record                   = {time:.16}/{record-count}, version = {algorithm_version}""".format(
-                        **datum_repeatability_result
-                    )
-                )
-            )
+            yield rfmt_dat_rep.DAT_REP_RESULT_TERSE.format(**datum_repeatability_result)
 
-        #            yield(fill(
-        #                "Datum repeatability     : coords = {coords}".format(
-        #                    **datum_repeatability_result
-        #                ))
-        #
-        #            )
         else:
-            yield (
-                "Datum repeatability     : {error_message}, time/record = {time:.16}/{record-count},"
-                " version = TBD".format(**datum_repeatability_result)
-            )
+            yield rfmt_dat_rep.DAT_REP_ERRMSG.format(**datum_repeatability_result)
 
-    yield ""
+
+    yield EMPTY_LINE
 
     if metrology_calibration_result is None:
-        yield ("metrology calibration     : n/a")
+        yield rfmt_met_cal.MET_CAL_NA
     else:
         err_msg = metrology_calibration_result["error_message"]
         if not err_msg:
-            yield (
-                cleandoc(
-                    """
-                metrology calibration   : metcal_fibre_large_target_distance = {metcal_fibre_large_target_distance_mm:8.4f} mm,
-                metrology calibration   : metcal_fibre_small_target_distance = {metcal_fibre_small_target_distance_mm:8.4f} mm,
-                metrology calibration   : metcal_target_vector_angle         = {metcal_target_vector_angle_deg:8.4f} degrees,
-                metrology calibration   : time/record={time:.16}/{record-count}, version = {algorithm_version}""".format(
-                        **metrology_calibration_result
-                    )
-                )
+            yield rfmt_met_cal.MET_CAL_RESULT_TERSE.format(
+                **metrology_calibration_result
             )
         else:
-            yield (
-                "Metrology calibration   : {error_message}, time/record = {time:.16}/{record-count}, "
-                "version = {algorithm_version}".format(metrology_calibration_result)
-            )
+            yield rfmt_met_cal.MET_CAL_ERRMSG.format(metrology_calibration_result)
 
-    #    yield(fill("metrology calibration images: {!r}".format(metrology_calibration_images)))
 
-    yield ""
+    yield EMPTY_LINE
 
     if metrology_height_result is None:
-        yield ("metrology_height          : n/a")
+        yield  rfmt_met_hgt.MET_HEIGHT_NA
     else:
         err_msg = metrology_height_result["error_message"]
         if not err_msg:
-            yield (
-                cleandoc(
-                    """
-                metrology height        : small target = {small_target_height_mm:8.4f} mm,
-                metrology height        : large target = {small_target_height_mm:8.4f} mm,
-                metrology height        : time/record = {time:.16}/{record-count}, version = {algorithm_version}""".format(
+            yield rfmt_met_hgt.MET_HEIGHT_RESULT_TERSE.format(
                         **metrology_height_result
-                    )
-                )
-            )
-        #            yield("metrology height images : {!r}".format(metrology_height_images))
-        else:
-            yield (
-                "Metrology height      : fibre_distance = {error_message}, time/record = {time:.16}/{record-count},"
-                " version = {algorithm_version}".format(**metrology_height_result)
             )
 
-    yield ""
+        else:
+            yield rfmt_met_hgt.MET_HEIGHT_ERRMSG.format(**metrology_height_result)
+
+
+    yield EMPTY_LINE
 
     if positional_repeatability_result is None:
-        yield ("positional repeatability: n/a")
+        yield rfmt_pos_rep.POS_REP_NA
     else:
         err_msg = positional_repeatability_result["error_message"]
         if not err_msg:
-            yield (
-                cleandoc(
-                    """
-                    positional repeatability: passed        = {result},
-                    positional repeatability: alpha_max     = {posrep_alpha_max_mm:8.4f} mm,
-                    positional repeatability: beta_max      = {posrep_beta_max_mm:8.4f} mm,
-                    positional repeatability: posrep_rss_mm = {posrep_rss_mm:8.4f} mm,
-                    positional repeatability: time/record   = {time:.16}/{record-count}, version = {algorithm_version}"""
-                ).format(**positional_repeatability_result)
-            )
-            yield (
-                fill(
-                    """Positional repeatability: calibration_pars = {calibration_pars!r}""".format(
-                        **positional_repeatability_result
-                    )
-                )
-            )
-            yield ""
-            yield (
-                fill(
-                    """positional repeatability: gearbox correction = {gearbox_correction}""".format(
-                        **positional_repeatability_result
-                    )
-                )
-            )
-            yield (
-                cleandoc(
-                    """
-                    positional repeatability: gearbox correction algorithm version = {algorithm_version}"""
-                ).format(**positional_repeatability_result)
-            )
-        #            yield(
-        #                fill(
-        #                    """Positional repeatability: alpha_max_at_angle = {posrep_alpha_max_at_angle!r}"""
-        #                .format(**positional_repeatability_result))
-        #
-        #            )
-        #            yield(
-        #                fill(
-        #                    """Positional repeatability: beta_max_at_angle = {posrep_beta_max_at_angle!r}"""
-        #                .format(**positional_repeatability_result))
-        #
-        #            )
-        #            yield(
-        #                fill(
-        #                    """Positional repeatability: analysis_results_alpha = {analysis_results_alpha!r}"""
-        #                .format(**positional_repeatability_result))
-        #
-        #            )
-        #            yield(
-        #                fill(
-        #                    """Positional repeatability: analysis_results_beta = {analysis_results_beta!r}"""
-        #                .format(**positional_repeatability_result))
-        #
-        #            )
-        #            yield(
-        #                fill(
-        #                    """Positional repeatability: gearbox_correction = {gearbox_correction!r}"""
-        #                .format(**positional_repeatability_result))
-        #
-        #            )
-        #            yield(fill("positional repeatability images: {images_alpha!r}".format(
-        #                    **positional_repeatability_images))
-        #
-        #            )
-        #            yield(fill("positional repeatability images: {images_beta!r}".format(
-        #                    **positional_repeatability_images))
-        #
-        #            )
-        #            yield(fill("positional repeatability images: {waveform_pars!r}".format(
-        #                    **positional_repeatability_images))
-        #
-        #            )
+            yield rfmt_pos_rep.POS_REP_RESULT_TERSE.format(**positional_repeatability_result)
+
+            yield EMPTY_LINE
+
+            yield fill(rfmt_pos_rep.POS_REP_GEARCOR.format(**positional_repeatability_result))
+
+            yield rfmt_pos_rep.POS_REP_GEARALGO.format(**positional_repeatability_result)
         else:
-            yield (
-                "Positional repeatability: message = {error_message}, time/record = {time:.16}/{record-count},"
-                " version = {algorithm_version}".format(
+            yield rfmt_pos_rep.POS_REP_ERRMSG.format(
                     **positional_repeatability_result
-                )
             )
 
-    yield ""
+
+    yield EMPTY_LINE
 
     if positional_verification_result is None:
-        yield ("positional verification : n/a")
+        yield rfmt_pos_ver.POS_VER_NA
     else:
         err_msg = positional_verification_result["error_message"]
         if not err_msg:
-            yield (
-                cleandoc(
-                    """
-                    positional verification : passed           = {result},
-                    positional verification : posver_error_max = {posver_error_max_mm:8.4f} mm,
-                    positional verification : time/record      = {time:.16}/{record-count}, version = {algorithm_version}"""
-                ).format(**positional_verification_result)
-            )
-            yield (
-                fill(
-                    """Positional verification : calibration_pars = {calibration_pars}""".format(
-                        **positional_verification_result
-                    )
-                )
-            )
-        #           yield(
-        #               fill(
-        #                   """Positional verification : posver_errors = {posver_error}"""
-        #               .format(**positional_verification_result))
-        #
-        #           )
-        #           yield(
-        #               fill(
-        #                   """Positional verification : analysis_results = {analysis_results}"""
-        #               .format(**positional_verification_result))
-        #
-        #           )
-        #           if "gearbox_correction" not in positional_verification_images:
-        #               positional_verification_images["gearbox_correction"] = None
-        #           yield(
-        #               fill(
-        #               "positional verification images : {images!r}".format(
-        #                   **positional_verification_images
-        #               ))
-        #           )
-        #           yield(
-        #               fill(
-        #               "gearbox correction = {gearbox_correction!r}".format(
-        #                   **positional_verification_images
-        #               ))
-        #           )
-        else:
-            yield (
-                "Positional verification : message = {error_message}, time/record = {time:.16}/{record-count},"
-                " version = {algorithm_version}".format(
+            yield rfmt_pos_ver.POS_VER_RESULT_TERSE.format(**positional_verification_result)
+
+            yield fill(
+                rfmt_pos_ver.POS_VER_CALPARS.format(
                     **positional_verification_result
                 )
             )
+        else:
+            yield rfmt_pos_ver.POS_VER_ERRMSG.format(
+                    **positional_verification_result
+            )
 
-    yield ""
+
+    yield EMPTY_LINE
 
     if pupil_alignment_result is None:
-        yield ("pupil_alignment test    : n/a")
+        yield rfmt_pup_aln.PUP_ALN_NA
     else:
         err_msg = pupil_alignment_result["error_message"]
         if not err_msg:
-            yield (
-                cleandoc(
-                    """
-                    pupil alignment         : passed        = {result},
-                    pupil alignment         : chassis error =  {measures[chassis_error]} mm,
-                    pupil alignment         : alpha error   =  {measures[alpha_error]} mm,
-                    pupil alignment         : beta error    =  {measures[beta_error]} mm,
-                    pupil alignment         : total error   =  {measures[total_error]} mm,
-                    pupil alignment         : time/record   = {time:.16}/{record-count}"""
-                ).format(**pupil_alignment_result)
-            )
-            yield (
-                fill(
-                    """pupil alignment    : calibration_pars = {calibration_pars!r}""".format(
-                        **pupil_alignment_result
-                    )
-                )
-            )
-        #            yield(
-        #                fill(
-        #                    """pupil alignment    : coords = {coords!r}"""
-        #                .format(**pupil_alignment_result))
-        #
-        #            )
-        #            yield(fill("pupil alignment images: {!r}".format(pupil_alignment_images)))
+            yield rfmt_pup_aln.PUP_ALN_RESULT_TERSE.format(**pupil_alignment_result)
+
         else:
-            yield (
-                "pupil alignment: message = {error_message}, time/record = {time:.16}/{record-count}".format(
+            yield rfmt_pup_aln.PUP_ALN_ERRMSG.format(
                     **pupil_alignment_result
                 )
-            )
 
 
-def format_report_short(
+
+def format_report_complete(
     serial_number=None,
     datum_result=None,
     alpha_min_result=None,
@@ -681,376 +503,183 @@ def format_report_short(
     positional_repeatability_images=None,
     positional_verification_images=None,
     pupil_alignment_images=None,
-    outfile=None,
 ):
 
-    yield ("*" * 60)
+    yield FPU_SEPERATOR_LINE
     yield ("FPU %s" % serial_number)
-    yield ""
+    yield EMPTY_LINE
     if datum_result is None:
-        yield ("datum test              : n/a")
+        yield rfmt_datum.DATUM_RESULT_NA
     else:
-        yield (
-            cleandoc(
-                """
-                datum test              : result = {result} / {diagnostic}
-                datum test              : alpha datumed = {datumed[0]}
-                datum test              : beta datumed = {datumed[1]}
-                datum test              : fpu_id/FPU state = {fpuid} / {result_state}
-                datum test              : counter deviations = {counter_deviation!r}
-                datum test              : time/record = {time:.16}/{record-count}"""
-            ).format(**datum_result)
-        )
+        yield rfmt_datum.DATUM_RESULT_COMPLETE.format(**datum_result)
 
-    yield ""
+    yield EMPTY_LINE
 
     if beta_collision_result is None:
-        yield ("beta collision  test     : n/a")
+        yield rfmt_cdect.CDECT_RESULT_NA
+    else:
+        yield rfmt_cdect.CDECT_RESULT_COMPLETE.format(
+                **beta_collision_result
+            )
+
+
+    yield EMPTY_LINE
+
+
+    if beta_collision_result is None:
+        yield rfmt_cdect.CDECT_RESULT_NA
     else:
         yield (
-            "collision detection     : result ="
-            " {result} @ {val:+8.4f} ({diagnostic}), time/record = {time:.16}/{record-count}".format(
+            rfmt_cdect.CDECT_RESULT_COMPLETE.format(
                 **beta_collision_result
             )
         )
 
-    yield ""
+    yield EMPTY_LINE
 
     if alpha_min_result is None:
-        yield ("limit test            :  alpha min n/a")
+        yield rfmt_cdect.LIMIT_RESULT_NA.format(**alpha_min_result)
     else:
-        yield (
-            "Limit test              : alpha min = {result}, "
-            "limit = {val:+8.4f} ({diagnostic}), time/record = {time:.16}/{record-count}".format(
+        yield rfmt_cdect.LIMIT_RESULT_COMPLETE.format(
                 **alpha_min_result
             )
-        )
+
 
     if alpha_max_result is None:
-        yield ("limit test            :  alpha max n/a")
+        yield rfmt_cdect.LIMIT_RESULT_NA.format(**alpha_max_result)
     else:
-        yield (
-            "limit test              : alpha max = {result}, limit = {val:+8.4f}"
-            " ({diagnostic}), time/record = {time:.16}/{record-count}".format(
+        yield rfmt_cdect.LIMIT_RESULT_COMPLETE.format(
                 **alpha_max_result
             )
-        )
+
 
     if beta_min_result is None:
-        yield ("limit test            : beta min n/a")
+        yield rfmt_cdect.LIMIT_RESULT_NA.format(**beta_min_result)
     else:
-        yield (
-            "limit test              : beta min  = {result}, limit = {val:+8.4f} "
-            "({diagnostic}), time/record = {time:.16}/{record-count}".format(
+        yield rfmt_cdect.LIMIT_RESULT_COMPLETE.format(
                 **beta_min_result
             )
-        )
 
     if beta_max_result is None:
-        yield ("Limit test            : beta max n/a")
+        yield rfmt_cdect.LIMIT_RESULT_NA.format(**beta_max_result)
     else:
-        yield (
-            "limit test              : beta max  = {result}, limit = {val:+8.4f}"
-            " ({diagnostic}), time/record = {time:.16}/{record-count}".format(
+        yield rfmt_cdect.LIMIT_RESULT_COMPLETE.format(
                 **beta_max_result
             )
-        )
 
-    yield ""
+
+
+    yield EMPTY_LINE
 
     if datum_repeatability_result is None:
-        yield ("datum repeatability       : n/a")
+        yield rfmt.dat_rep.DAT_REP_NA
     else:
         err_msg = datum_repeatability_result["error_message"]
         if not err_msg:
-            yield (
-                cleandoc(
-                    """
-                datum repeatability     : {result},
-                datum repeatability     : threshold                      = {pass_threshold_mm:8.4f}
-                datum repeatability     : datum only max                 = {datum_repeatability_only_max_mm:7.3} mm
-                datum repeatability     : datum only std                 = {datum_repeatability_only_std_mm:7.3} mm
-                datum repeatability     : datum only max residual count  = {datum_repeatability_max_residual_datumed}
-                datum repeatability     : datum+move max                 = {datum_repeatability_move_max_mm:7.3} mm
-                datum repeatability     : datum+move std                 = {datum_repeatability_move_std_mm:7.3} mm
-                datum repeatability     : datum+move max residual count  = {datum_repeatability_max_residual_moved}
-                datum repeatability     : datum only min quality         = {min_quality_datumed:8.4f}
-                datum repeatability     : datum+move min quality         = {min_quality_moved:8.4f}
-                datum repeatability     : time/record                    = {time:.16}/{record-count}
-                datum repeatability     : git version                    = {git_version}
-                datum repeatability     : image algorithm version        = {algorithm_version}""".format(
+            yield rfmt_dat_rep.DAT_REP_RESULT_COMPLETE.format(
                         **datum_repeatability_result
                     )
-                )
-            )
-
-        #            yield(fill(
-        #                "Datum repeatability     : coords = {coords}".format(
-        #                    **datum_repeatability_result
-        #                ))
-        #
-        #            )
         else:
-            yield (
-                "datum repeatability     : {error_message}, time/record = {time:.16}/{record-count},"
-                " version = TBD".format(**datum_repeatability_result)
-            )
+            yield rfmt_dat_rep.DAT_REP_ERRMSG.format(**datum_repeatability_result)
 
-    yield ""
+
+    yield EMPTY_LINE
 
     if metrology_calibration_result is None:
-        yield ("metrology calibration     : n/a")
+        yield rfmt_met_cal.MET_CAL_NA
     else:
         err_msg = metrology_calibration_result["error_message"]
         if not err_msg:
-            yield (
-                cleandoc(
-                    """
-                metrology calibration   : metcal_fibre_large_target_distance = {metcal_fibre_large_target_distance_mm:8.4f} mm
-                metrology calibration   : metcal_fibre_small_target_distance = {metcal_fibre_small_target_distance_mm:8.4f} mm
-                metrology calibration   : metcal_target_vector_angle         = {metcal_target_vector_angle_deg:8.4f} degrees
-                metrology calibration   : coords large target                = {coords[target_big_xy]!r}
-                metrology calibration   : coords small target                = {coords[target_small_xy]!r}
-                metrology calibration   : quality small target               = {coords[target_small_q]:8.4f}
-                metrology calibration   : quality large target               = {coords[target_big_q]:8.4f}
-                    metrology calibration   : quality fibre                      = {coords[fibre_q]:8.4f}
-                metrology calibration   : git version                        = {git_version}
-                metrology calibration   : time/record={time:.16}/{record-count}, version = {algorithm_version}""".format(
-                        **metrology_calibration_result
-                    )
-                )
+            yield rfmt_met_cal.MET_CAL_RESULT_COMPLETE.format(
+                **metrology_calibration_result
             )
         else:
-            yield (
-                "metrology calibration   : {error_message}, time/record = {time:.16}/{record-count}, "
-                "version = {algorithm_version}".format(metrology_calibration_result)
-            )
+            yield rfmt_met_cal.MET_CAL_ERRMSG.format(metrology_calibration_result)
 
-    #    yield(fill("metrology calibration images: {!r}".format(metrology_calibration_images)))
-
-    yield ""
+    yield EMPTY_LINE
 
     if metrology_height_result is None:
-        yield ("metrology_height          : n/a")
+        yield  rfmt_met_hgt.MET_HEIGHT_NA
     else:
         err_msg = metrology_height_result["error_message"]
         if not err_msg:
-            yield (
-                cleandoc(
-                    """
-                metrology height        : small target = {small_target_height_mm:8.4f} mm
-                metrology height        : large target = {small_target_height_mm:8.4f} mm
-                metrology height        : test result  = {test_result} mm
-                metrology height        : git version  = {git_version}
-                metrology height        : time/record  = {time:.16}/{record-count}, version = {algorithm_version}""".format(
+            yield rfmt_met_hgt.MET_HEIGHT_RESULT_COMPLETE.format(
                         **metrology_height_result
-                    )
-                )
-            )
-        #            yield("metrology height images : {!r}".format(metrology_height_images))
-        else:
-            yield (
-                "Metrology height      : fibre_distance = {error_message}, time/record = {time:.16}/{record-count},"
-                " version = {algorithm_version}".format(**metrology_height_result)
             )
 
-    yield ""
+        else:
+            yield rfmt_met_hgt.MET_HEIGHT_ERRMSG.format(**metrology_height_result)
+
+    yield EMPTY_LINE
 
     if positional_repeatability_result is None:
-        yield ("positional repeatability: n/a")
+        yield rfmt_pos_rep.POS_REP_NA
     else:
         err_msg = positional_repeatability_result["error_message"]
         if not err_msg:
-            yield (
-                cleandoc(
-                    """
-                    positional repeatability: passed          = {result}
-                    positional repeatability: pass_threshold  = {pass_threshold_mm:8.4f} mm
-                    positional repeatability: alpha_max       = {posrep_alpha_max_mm:8.4f} mm
-                    positional repeatability: beta_max        = {posrep_beta_max_mm:8.4f} mm
-                    positional repeatability: posrep_rss_mm   = {posrep_rss_mm:8.4f} mm
-                    positional repeatability: arg_max_alpha   = {arg_max_alpha_error:8.4f}
-                    positional repeatability: arg_max_beta    = {arg_max_beta_error:8.4f}
-                    positional repeatability: alpha quality   = {min_quality_alpha:8.4f}
-                    positional repeatability: beta quality    = {min_quality_beta:8.4f}
-                    positional repeatability: time/record     = {time:.16}/{record-count}
-                    positional repeatability: anlysis version = {algorithm_version}
-                    positional repeatability: git version     = {git_version}"""
-                ).format(**positional_repeatability_result)
-            )
-            yield (
-                fill(
-                    """Positional repeatability: calibration_pars = {calibration_pars!r}""".format(
-                        **positional_repeatability_result
-                    )
-                )
-            )
-            yield ""
-            yield (
-                fill(
-                    """positional repeatability: gearbox correction = {gearbox_correction}""".format(
-                        **positional_repeatability_result
-                    )
-                )
-            )
-            yield (
-                cleandoc(
-                    """
-                    positional repeatability: gearbox correction algorithm version = {algorithm_version}"""
-                ).format(**positional_repeatability_result)
-            )
-        #            yield(
-        #                fill(
-        #                    """Positional repeatability: alpha_max_at_angle = {posrep_alpha_max_at_angle!r}"""
-        #                .format(**positional_repeatability_result))
-        #
-        #            )
-        #            yield(
-        #                fill(
-        #                    """Positional repeatability: beta_max_at_angle = {posrep_beta_max_at_angle!r}"""
-        #                .format(**positional_repeatability_result))
-        #
-        #            )
-        #            yield(
-        #                fill(
-        #                    """Positional repeatability: analysis_results_alpha = {analysis_results_alpha!r}"""
-        #                .format(**positional_repeatability_result))
-        #
-        #            )
-        #            yield(
-        #                fill(
-        #                    """Positional repeatability: analysis_results_beta = {analysis_results_beta!r}"""
-        #                .format(**positional_repeatability_result))
-        #
-        #            )
-        #            yield(
-        #                fill(
-        #                    """Positional repeatability: gearbox_correction = {gearbox_correction!r}"""
-        #                .format(**positional_repeatability_result))
-        #
-        #            )
-        #            yield(fill("positional repeatability images: {images_alpha!r}".format(
-        #                    **positional_repeatability_images))
-        #
-        #            )
-        #            yield(fill("positional repeatability images: {images_beta!r}".format(
-        #                    **positional_repeatability_images))
-        #
-        #            )
-        #            yield(fill("positional repeatability images: {waveform_pars!r}".format(
-        #                    **positional_repeatability_images))
-        #
-        #            )
-        else:
-            yield (
-                "Positional repeatability: message = {error_message}, time/record = {time:.16}/{record-count},"
-                " version = {algorithm_version}".format(
-                    **positional_repeatability_result
-                )
-            )
+            yield rfmt_pos_rep.POS_REP_RESULT_COMPLETE.format(**positional_repeatability_result)
 
-    yield ""
+            yield EMPTY_LINE
+
+            yield fill(rfmt_pos_rep.POS_REP_GEARCOR.format(**positional_repeatability_result))
+
+            yield rfmt_pos_rep.POS_REP_GEARALGO.format(**positional_repeatability_result)
+        else:
+            yield rfmt_pos_rep.POS_REP_ERRMSG.format(**positional_repeatability_result)
+
+    yield EMPTY_LINE
 
     if positional_verification_result is None:
-        yield ("positional verification : n/a")
+        yield rfmt_pos_ver.POS_VER_NA
     else:
         err_msg = positional_verification_result["error_message"]
         if not err_msg:
-            yield (
-                cleandoc(
-                    """
-                    positional verification : passed                       = {result}
-                    positional verification : pass_threshold               = {pass_threshold_mm}
-                    positional verification : posver_error_max             = {posver_error_max_mm:8.4f} mm
-                    positional verification : arg_max_error (count, α, β)  = {arg_max_error}
-                    positional verification : min image quality            = {min_quality:8.4f}
-                    positional verification : time/record                  = {time:.16}/{record-count}
-                    positional verification : analysis version             = {algorithm_version}
-                    positional verification : git version                  = {git_version}"""
-                ).format(**positional_verification_result)
-            )
-            yield (
-                fill(
-                    """Positional verification : calibration_pars             = {calibration_pars}""".format(
-                        **positional_verification_result
-                    )
-                )
-            )
-        #           yield(
-        #               fill(
-        #                   """Positional verification : posver_errors = {posver_error}"""
-        #               .format(**positional_verification_result))
-        #
-        #           )
-        #           yield(
-        #               fill(
-        #                   """Positional verification : analysis_results = {analysis_results}"""
-        #               .format(**positional_verification_result))
-        #
-        #           )
-        #           if "gearbox_correction" not in positional_verification_images:
-        #               positional_verification_images["gearbox_correction"] = None
-        #           yield(
-        #               fill(
-        #               "positional verification images : {images!r}".format(
-        #                   **positional_verification_images
-        #               ))
-        #           )
-        #           yield(
-        #               fill(
-        #               "gearbox correction = {gearbox_correction!r}".format(
-        #                   **positional_verification_images
-        #               ))
-        #           )
+            yield rfmt_pos_ver.POS_VER_RESULT_COMPLETE.format(**positional_verification_result)
+
+            yield fill(rfmt_pos_ver.POS_VER_CALPARS.format(
+                **positional_verification_result
+            ))
+
         else:
-            yield (
-                "Positional verification : message = {error_message}, time/record = {time:.16}/{record-count},"
-                " version = {algorithm_version}".format(
+            yield rfmt_pos_ver.POS_VER_ERRMSG.format(
                     **positional_verification_result
-                )
             )
 
-    yield ""
+    yield EMPTY_LINE
 
     if pupil_alignment_result is None:
-        yield ("pupil_alignment test    : n/a")
+        yield rfmt_pup_aln.PUP_ALN_NA
     else:
         err_msg = pupil_alignment_result["error_message"]
         if not err_msg:
-            yield (
-                cleandoc(
-                    """
-                    pupil alignment         : passed            = {result}
-                    pupil alignment         : pass_threshold    = {pass_threshold_mm:8.4f}
-                    pupil alignment         : chassis error     = {measures[chassis_error]:8.4f} mm
-                    pupil alignment         : alpha error       = {measures[alpha_error]:8.4f} mm
-                    pupil alignment         : beta error        = {measures[beta_error]:8.4f} mm
-                    pupil alignment         : total error       = {measures[total_error]:8.4f} mm
-                    pupil alignment         : time/record       = {time:.16}/{record-count}
-                    pupil alignment         : algorithm version = {algorithm_version}
-                    pupil alignment         : git version       = {git_version}"""
-                ).format(**pupil_alignment_result)
-            )
-            yield (
-                fill(
-                    """pupil alignment         : calibration_pars  = {calibration_pars!r}""".format(
-                        **pupil_alignment_result
-                    )
-                )
-            )
-        #            yield(
-        #                fill(
-        #                    """pupil alignment    : coords = {coords!r}"""
-        #                .format(**pupil_alignment_result))
-        #
-        #            )
-        #            yield(fill("pupil alignment images: {!r}".format(pupil_alignment_images)))
+            yield rfmt_pup_aln.PUP_ALN_RESULT_COMPLETE.format(**pupil_alignment_result)
+
         else:
-            yield (
-                "pupil alignment: message = {error_message}, time/record = {time:.16}/{record-count}".format(
+            yield rfmt_pup_aln.PUP_ALN_ERRMSG.format(
                     **pupil_alignment_result
                 )
+
+def list_posrep_angle_errors(name, error_by_angle, error_max):
+    yield """\npositional repeatability: max error by {}""".format(name)
+    for angle in sorted(error_by_angle.keys()):
+        val = error_by_angle[angle]
+        tag = " <<<" if val == error_max else ""
+        yield (
+            """Positional repeatability:     {angle:7.2f} = {val:8.4f} {tag}""".format(
+                angle=angle, val=val, tag=tag
             )
+        )
+
+def list_posver_err_by_coord(error_by_coords, error_max):
+    yield ("""positional verification : max error by coordinate""")
+    for coord in sorted(error_by_coords.keys()):
+        val = error_by_coords[coord]
+        tag = " <<<" if val == error_max else ""
+        yield (
+            """Positional verification :     # {coord[0]:03d} ({coord[1]:+8.2f}, {coord[2]:+8.2f}) = {val:8.4f} {tag}""".format(
+                coord=coord, val=val, tag=tag
+            )
+        )
 
 
 def format_report_long(
@@ -1073,413 +702,181 @@ def format_report_long(
     positional_repeatability_images=None,
     positional_verification_images=None,
     pupil_alignment_images=None,
-    outfile=None,
 ):
 
-    yield ("*" * 60)
+    yield FPU_SEPERATOR_LINE
     yield ("FPU %s" % serial_number)
-    yield ""
+    yield EMPTY_LINE
     if datum_result is None:
-        yield ("datum test              : n/a")
+        yield rfmt_datum.DATUM_RESULT_NA
     else:
         yield (
-            cleandoc(
-                """
-                datum test              : result = {result} / {diagnostic}
-                datum test              : alpha datumed = {datumed[0]}
-                datum test              : beta datumed = {datumed[1]}
-                datum test              : fpu_id/FPU state = {fpuid} / {result_state}
-                datum test              : counter deviations = {counter_deviation!r}
-                datum test              : time/record = {time:.16}/{record-count}"""
-            ).format(**datum_result)
+            rfmt_datum.DATUM_RESULT_LONG.format(**datum_result)
         )
 
-    yield ""
+    yield EMPTY_LINE
 
     if beta_collision_result is None:
-        yield ("beta collision  test     : n/a")
+        yield rfmt_cdect.CDECT_RESULT_NA
     else:
         yield (
-            "collision detection     : result ="
-            " {result} @ {val:+8.4f} ({diagnostic}), time/record = {time:.16}/{record-count}".format(
+            rfmt_cdect.CDECT_RESULT_LONG.format(
                 **beta_collision_result
             )
         )
 
-    yield ""
+    yield EMPTY_LINE
 
     if alpha_min_result is None:
-        yield ("limit test            :  alpha min n/a")
+        yield rfmt_cdect.LIMIT_RESULT_NA.format(**alpha_min_result)
     else:
-        yield (
-            "Limit test              : alpha min = {result}, "
-            "limit = {val:+8.4f} ({diagnostic}), time/record = {time:.16}/{record-count}".format(
+        yield rfmt_cdect.LIMIT_RESULT_LONG.format(
                 **alpha_min_result
             )
-        )
+
 
     if alpha_max_result is None:
-        yield ("limit test            :  alpha max n/a")
+        yield rfmt_cdect.LIMIT_RESULT_NA.format(**alpha_max_result)
     else:
-        yield (
-            "limit test              : alpha max = {result}, limit = {val:+8.4f}"
-            " ({diagnostic}), time/record = {time:.16}/{record-count}".format(
+        yield rfmt_cdect.LIMIT_RESULT_LONG.format(
                 **alpha_max_result
             )
-        )
+
 
     if beta_min_result is None:
-        yield ("limit test            : beta min n/a")
+        yield rfmt_cdect.LIMIT_RESULT_NA.format(**beta_min_result)
     else:
-        yield (
-            "limit test              : beta min  = {result}, limit = {val:+8.4f} "
-            "({diagnostic}), time/record = {time:.16}/{record-count}".format(
+        yield rfmt_cdect.LIMIT_RESULT_LONG.format(
                 **beta_min_result
             )
-        )
 
     if beta_max_result is None:
-        yield ("Limit test            : beta max n/a")
+        yield rfmt_cdect.LIMIT_RESULT_NA.format(**beta_max_result)
     else:
-        yield (
-            "limit test              : beta max  = {result}, limit = {val:+8.4f}"
-            " ({diagnostic}), time/record = {time:.16}/{record-count}".format(
+        yield rfmt_cdect.LIMIT_RESULT_LONG.format(
                 **beta_max_result
             )
-        )
 
-    yield ""
+    yield EMPTY_LINE
 
     if datum_repeatability_result is None:
-        yield ("datum repeatability       : n/a")
+        yield rfmt.dat_rep.DAT_REP_NA
     else:
         err_msg = datum_repeatability_result["error_message"]
         if not err_msg:
-            yield (
-                cleandoc(
-                    """
-                datum repeatability     : {result},
-                datum repeatability     : threshold                      = {pass_threshold_mm:8.4f}
-                datum repeatability     : datum only max                 = {datum_repeatability_only_max_mm:7.3} mm
-                datum repeatability     : datum only std                 = {datum_repeatability_only_std_mm:7.3} mm
-                datum repeatability     : datum only max residual count  = {datum_repeatability_max_residual_datumed}
-                datum repeatability     : datum+move max                 = {datum_repeatability_move_max_mm:7.3} mm
-                datum repeatability     : datum+move std                 = {datum_repeatability_move_std_mm:7.3} mm
-                datum repeatability     : datum+move max residual count  = {datum_repeatability_max_residual_moved}
-                datum repeatability     : datum only min quality         = {min_quality_datumed:8.4f}
-                datum repeatability     : datum+move min quality         = {min_quality_moved:8.4f}
-                datum repeatability     : time/record                    = {time:.16}/{record-count}
-                datum repeatability     : git version                    = {git_version}
-                datum repeatability     : image algorithm version        = {algorithm_version}""".format(
+            yield rfmt_dat_rep.DAT_REP_RESULT_LONG.format(
                         **datum_repeatability_result
                     )
-                )
-            )
-
-        #            yield(fill(
-        #                "Datum repeatability     : coords = {coords}".format(
-        #                    **datum_repeatability_result
-        #                ))
-        #
-        #            )
         else:
-            yield (
-                "datum repeatability     : {error_message}, time/record = {time:.16}/{record-count},"
-                " version = TBD".format(**datum_repeatability_result)
-            )
+            yield rfmt_dat_rep.DAT_REP_ERRMSG.format(**datum_repeatability_result)
 
-    yield ""
+    yield EMPTY_LINE
 
     if metrology_calibration_result is None:
-        yield ("metrology calibration     : n/a")
+        yield rfmt_met_cal.MET_CAL_NA
     else:
         err_msg = metrology_calibration_result["error_message"]
         if not err_msg:
-            yield (
-                cleandoc(
-                    """
-                metrology calibration   : metcal_fibre_large_target_distance = {metcal_fibre_large_target_distance_mm:8.4f} mm
-                metrology calibration   : metcal_fibre_small_target_distance = {metcal_fibre_small_target_distance_mm:8.4f} mm
-                metrology calibration   : metcal_target_vector_angle         = {metcal_target_vector_angle_deg:8.4f} degrees
-                metrology calibration   : coords large target                = {coords[target_big_xy]!r}
-                metrology calibration   : coords small target                = {coords[target_small_xy]!r}
-                metrology calibration   : quality small target               = {coords[target_small_q]:8.4f}
-                metrology calibration   : quality large target               = {coords[target_big_q]:8.4f}
-                    metrology calibration   : quality fibre                      = {coords[fibre_q]:8.4f}
-                metrology calibration   : git version                        = {git_version}
-                metrology calibration   : time/record={time:.16}/{record-count}, version = {algorithm_version}""".format(
-                        **metrology_calibration_result
-                    )
-                )
+            yield rfmt_met_cal.MET_CAL_RESULT_LONG.format(
+                **metrology_calibration_result
             )
         else:
-            yield (
-                "metrology calibration   : {error_message}, time/record = {time:.16}/{record-count}, "
-                "version = {algorithm_version}".format(metrology_calibration_result)
-            )
+            yield rfmt_met_cal.MET_CAL_ERRMSG.format(metrology_calibration_result)
 
-    #    yield(fill("metrology calibration images: {!r}".format(metrology_calibration_images)))
-
-    yield ""
+    yield EMPTY_LINE
 
     if metrology_height_result is None:
-        yield ("metrology_height          : n/a")
+        yield  rfmt_met_hgt.MET_HEIGHT_NA
     else:
         err_msg = metrology_height_result["error_message"]
         if not err_msg:
-            yield (
-                cleandoc(
-                    """
-                metrology height        : small target = {small_target_height_mm:8.4f} mm
-                metrology height        : large target = {small_target_height_mm:8.4f} mm
-                metrology height        : test result  = {test_result} mm
-                metrology height        : git version  = {git_version}
-                metrology height        : time/record  = {time:.16}/{record-count}, version = {algorithm_version}""".format(
+            yield rfmt_met_hgt.MET_HEIGHT_RESULT_LONG.format(
                         **metrology_height_result
-                    )
-                )
-            )
-        #            yield("metrology height images : {!r}".format(metrology_height_images))
-        else:
-            yield (
-                "Metrology height      : fibre_distance = {error_message}, time/record = {time:.16}/{record-count},"
-                " version = {algorithm_version}".format(**metrology_height_result)
             )
 
-    yield ""
+        else:
+            yield rfmt_met_hgt.MET_HEIGHT_ERRMSG.format(**metrology_height_result)
+
+    yield EMPTY_LINE
+
 
     if positional_repeatability_result is None:
-        yield ("positional repeatability: n/a")
+        yield rfmt_pos_rep.POS_REP_NA
     else:
         err_msg = positional_repeatability_result["error_message"]
         if not err_msg:
-            yield (
-                cleandoc(
-                    """
-                    positional repeatability: passed          = {result}
-                    positional repeatability: pass_threshold  = {pass_threshold_mm:8.4f} mm
-                    positional repeatability: alpha_max       = {posrep_alpha_max_mm:8.4f} mm
-                    positional repeatability: beta_max        = {posrep_beta_max_mm:8.4f} mm
-                    positional repeatability: posrep_rss_mm   = {posrep_rss_mm:8.4f} mm
-                    positional repeatability: arg_max_alpha   = {arg_max_alpha_error:8.4f}
-                    positional repeatability: arg_max_beta    = {arg_max_beta_error:8.4f}
-                    positional repeatability: alpha quality   = {min_quality_alpha:8.4f}
-                    positional repeatability: beta quality    = {min_quality_beta:8.4f}
-                    positional repeatability: time/record     = {time:.16}/{record-count}
-                    positional repeatability: anlysis version = {algorithm_version}
-                    positional repeatability: git version     = {git_version}"""
-                ).format(**positional_repeatability_result)
-            )
+            yield rfmt_pos_rep.POS_REP_RESULT_LONG.format(**positional_repeatability_result)
+
+            yield EMPTY_LINE
+
             error_by_alpha = positional_repeatability_result[
                 "posrep_alpha_max_at_angle"
             ]
-            yield ("""\nPositional repeatability: max error by alpha angle""")
-            error_max = positional_repeatability_result["arg_max_alpha_error"]
-            for alpha in sorted(error_by_alpha.keys()):
-                val = error_by_alpha[alpha]
-                tag = " <<<" if val == error_max else ""
-                yield (
-                    """Positional repeatability:     {alpha:7.2f} = {val:8.4f} {tag}""".format(
-                        alpha=alpha, val=val, tag=tag
-                    )
-                )
+            alpha_error_max = positional_repeatability_result["arg_max_alpha_error"]
+
+            for line in list_posrep_angle_errors("alpha angle", error_by_alpha, alpha_error_max):
+                yield line
+
             error_by_beta = positional_repeatability_result["posrep_beta_max_at_angle"]
-            yield ("error_by_beta= {}".format(error_by_beta))
-            yield ("""\nPositional repeatability: max error by beta angle""")
-            error_max = positional_repeatability_result["arg_max_beta_error"]
-            for beta in sorted(error_by_beta.keys()):
-                val = error_by_beta[beta]
-                tag = " <<<" if val == error_max else ""
-                yield (
-                    """Positional repeatability:     {beta:7.2f} = {val:8.4f} {tag}""".format(
-                        beta=beta, val=val, tag=tag
-                    )
-                )
+            beta_error_max = positional_repeatability_result["arg_max_beta_error"]
 
-            yield (
-                fill(
-                    """Positional repeatability: calibration_pars = {calibration_pars!r}""".format(
-                        **positional_repeatability_result
-                    )
-                )
-            )
-            yield ""
-            yield (
-                fill(
-                    """positional repeatability: gearbox correction = {gearbox_correction}""".format(
-                        **positional_repeatability_result
-                    )
-                )
-            )
-            yield (
-                cleandoc(
-                    """
-                    positional repeatability: gearbox correction algorithm version = {algorithm_version}"""
-                ).format(**positional_repeatability_result)
-            )
-        #            yield(
-        #                fill(
-        #                    """Positional repeatability: alpha_max_at_angle = {posrep_alpha_max_at_angle!r}"""
-        #                .format(**positional_repeatability_result))
-        #
-        #            )
-        #            yield(
-        #                fill(
-        #                    """Positional repeatability: beta_max_at_angle = {posrep_beta_max_at_angle!r}"""
-        #                .format(**positional_repeatability_result))
-        #
-        #            )
-        #            yield(
-        #                fill(
-        #                    """Positional repeatability: analysis_results_alpha = {analysis_results_alpha!r}"""
-        #                .format(**positional_repeatability_result))
-        #
-        #            )
-        #            yield(
-        #                fill(
-        #                    """Positional repeatability: analysis_results_beta = {analysis_results_beta!r}"""
-        #                .format(**positional_repeatability_result))
-        #
-        #            )
-        #            yield(
-        #                fill(
-        #                    """Positional repeatability: gearbox_correction = {gearbox_correction!r}"""
-        #                .format(**positional_repeatability_result))
-        #
-        #            )
-        #            yield(fill("positional repeatability images: {images_alpha!r}".format(
-        #                    **positional_repeatability_images))
-        #
-        #            )
-        #            yield(fill("positional repeatability images: {images_beta!r}".format(
-        #                    **positional_repeatability_images))
-        #
-        #            )
-        #            yield(fill("positional repeatability images: {waveform_pars!r}".format(
-        #                    **positional_repeatability_images))
-        #
-        #            )
+            for line in list_posrep_angle_errors("beta angle", error_by_beta, beta_error_max):
+                yield line
+
+            yield fill(rfmt_pos_rep.POS_REP_CALPARS.format(**positional_repeatability_result))
+
+            yield EMPTY_LINE
+
+            yield fill(rfmt_pos_rep.POS_REP_GEARCOR.format(**positional_repeatability_result))
+
+            yield rfmt_pos_rep.POS_REP_GEARALGO.format(**positional_repeatability_result)
+
         else:
-            yield (
-                "Positional repeatability: message = {error_message}, time/record = {time:.16}/{record-count},"
-                " version = {algorithm_version}".format(
-                    **positional_repeatability_result
-                )
-            )
+            yield rfmt_pos_rep.POS_REP_ERRMSG.format(**positional_repeatability_result)
 
-    yield ""
+    yield EMPTY_LINE
 
     if positional_verification_result is None:
-        yield ("positional verification : n/a")
+        yield rfmt_pos_ver.POS_VER_NA
     else:
         err_msg = positional_verification_result["error_message"]
         if not err_msg:
-            yield (
-                cleandoc(
-                    """
-                    positional verification : passed                       = {result}
-                    positional verification : pass_threshold               = {pass_threshold_mm}
-                    positional verification : posver_error_max             = {posver_error_max_mm:8.4f} mm
-                    positional verification : arg_max_error (count, α, β)  = {arg_max_error}
-                    positional verification : min image quality            = {min_quality:8.4f}
-                    positional verification : time/record                  = {time:.16}/{record-count}
-                    positional verification : analysis version             = {algorithm_version}
-                    positional verification : git version                  = {git_version}"""
-                ).format(**positional_verification_result)
-            )
+            yield rfmt_pos_ver.POS_VER_RESULT_LONG.format(**positional_verification_result)
+
+            yield fill(rfmt_pos_ver.POS_VER_CALPARS.format(
+                **positional_verification_result
+            ))
+
             error_by_coords = positional_verification_result["posver_error"]
-            yield ("""Positional verification : max error by coordinate""")
             error_max = positional_verification_result["posver_error_max_mm"]
-            for coord in sorted(error_by_coords.keys()):
-                val = error_by_coords[coord]
-                tag = " <<<" if val == error_max else ""
-                yield (
-                    """Positional verification :     # {coord[0]:03d} ({coord[1]:+8.2f}, {coord[2]:+8.2f}) = {val:8.4f} {tag}""".format(
-                        coord=coord, val=val, tag=tag
-                    )
-                )
-            yield (
-                fill(
-                    """Positional verification : calibration_pars             = {calibration_pars}""".format(
-                        **positional_verification_result
-                    )
-                )
-            )
-        #           yield(
-        #               fill(
-        #                   """Positional verification : posver_errors = {posver_error}"""
-        #               .format(**positional_verification_result))
-        #
-        #           )
-        #           yield(
-        #               fill(
-        #                   """Positional verification : analysis_results = {analysis_results}"""
-        #               .format(**positional_verification_result))
-        #
-        #           )
-        #           if "gearbox_correction" not in positional_verification_images:
-        #               positional_verification_images["gearbox_correction"] = None
-        #           yield(
-        #               fill(
-        #               "positional verification images : {images!r}".format(
-        #                   **positional_verification_images
-        #               ))
-        #           )
-        #           yield(
-        #               fill(
-        #               "gearbox correction = {gearbox_correction!r}".format(
-        #                   **positional_verification_images
-        #               ))
-        #           )
+            for line in list_posver_err_by_coord(error_by_coords, error_max):
+                yield line
+
         else:
-            yield (
-                "Positional verification : message = {error_message}, time/record = {time:.16}/{record-count},"
-                " version = {algorithm_version}".format(
+            yield rfmt_pos_ver.POS_VER_ERRMSG.format(
                     **positional_verification_result
-                )
             )
 
-    yield ""
+
+    yield EMPTY_LINE
 
     if pupil_alignment_result is None:
-        yield ("pupil_alignment test    : n/a")
+        yield rfmt_pup_aln.PUP_ALN_NA
     else:
         err_msg = pupil_alignment_result["error_message"]
         if not err_msg:
-            yield (
-                cleandoc(
-                    """
-                    pupil alignment         : passed            = {result}
-                    pupil alignment         : pass_threshold    = {pass_threshold_mm:8.4f}
-                    pupil alignment         : chassis error     = {measures[chassis_error]:8.4f} mm
-                    pupil alignment         : alpha error       = {measures[alpha_error]:8.4f} mm
-                    pupil alignment         : beta error        = {measures[beta_error]:8.4f} mm
-                    pupil alignment         : total error       = {measures[total_error]:8.4f} mm
-                    pupil alignment         : time/record       = {time:.16}/{record-count}
-                    pupil alignment         : algorithm version = {algorithm_version}
-                    pupil alignment         : git version       = {git_version}"""
-                ).format(**pupil_alignment_result)
-            )
-            yield (
-                fill(
-                    """pupil alignment         : calibration_pars  = {calibration_pars!r}""".format(
+            yield rfmt_pup_aln.PUP_ALN_RESULT_LONG.format(**pupil_alignment_result)
+
+            yield fill(rfmt_pup_aln.PUP_ALN_CALPARS.format(
                         **pupil_alignment_result
                     )
                 )
-            )
-        #            yield(
-        #                fill(
-        #                    """pupil alignment    : coords = {coords!r}"""
-        #                .format(**pupil_alignment_result))
-        #
-        #            )
-        #            yield(fill("pupil alignment images: {!r}".format(pupil_alignment_images)))
         else:
-            yield (
-                "pupil alignment: message = {error_message}, time/record = {time:.16}/{record-count}".format(
+            yield rfmt_pup_aln.PUP_ALN_ERRMSG.format(
                     **pupil_alignment_result
                 )
-            )
+
+
 
 
 def format_report_extended(
@@ -1502,253 +899,137 @@ def format_report_extended(
     positional_repeatability_images=None,
     positional_verification_images=None,
     pupil_alignment_images=None,
-    outfile=None,
 ):
 
-    yield ("*" * 60)
+    yield FPU_SEPERATOR_LINE
     yield ("FPU %s" % serial_number)
-    yield ""
+    yield EMPTY_LINE
     if datum_result is None:
-        yield ("datum test              : n/a")
+        yield rfmt_datum.DATUM_RESULT_NA
     else:
         yield (
-            cleandoc(
-                """
-                datum test              : result = {result} / {diagnostic}
-                datum test              : alpha datumed = {datumed[0]}
-                datum test              : beta datumed = {datumed[1]}
-                datum test              : fpu_id/FPU state = {fpuid} / {result_state}
-                datum test              : counter deviations = {counter_deviation!r}
-                datum test              : time/record = {time:.16}/{record-count}"""
-            ).format(**datum_result)
+            rfmt_datum.DATUM_RESULT_EXTENDED.format(**datum_result)
         )
 
-    yield ""
+    yield EMPTY_LINE
 
     if beta_collision_result is None:
-        yield ("beta collision  test     : n/a")
+        yield rfmt_cdect.CDECT_RESULT_NA
     else:
         yield (
-            "collision detection     : result ="
-            " {result} @ {val:+8.4f} ({diagnostic}), time/record = {time:.16}/{record-count}".format(
+            rfmt_cdect.CDECT_RESULT_EXTENDED.format(
                 **beta_collision_result
             )
         )
 
-    yield ""
+    yield EMPTY_LINE
 
     if alpha_min_result is None:
-        yield ("limit test            :  alpha min n/a")
+        yield rfmt_cdect.LIMIT_RESULT_NA.format(**alpha_min_result)
     else:
-        yield (
-            "Limit test              : alpha min = {result}, "
-            "limit = {val:+8.4f} ({diagnostic}), time/record = {time:.16}/{record-count}".format(
+        yield rfmt_cdect.LIMIT_RESULT_EXTENDED.format(
                 **alpha_min_result
             )
-        )
+
 
     if alpha_max_result is None:
-        yield ("limit test            :  alpha max n/a")
+        yield rfmt_cdect.LIMIT_RESULT_NA.format(**alpha_max_result)
     else:
-        yield (
-            "limit test              : alpha max = {result}, limit = {val:+8.4f}"
-            " ({diagnostic}), time/record = {time:.16}/{record-count}".format(
+        yield rfmt_cdect.LIMIT_RESULT_EXTENDED.format(
                 **alpha_max_result
             )
-        )
+
 
     if beta_min_result is None:
-        yield ("limit test            : beta min n/a")
+        yield rfmt_cdect.LIMIT_RESULT_NA.format(**beta_min_result)
     else:
-        yield (
-            "limit test              : beta min  = {result}, limit = {val:+8.4f} "
-            "({diagnostic}), time/record = {time:.16}/{record-count}".format(
+        yield rfmt_cdect.LIMIT_RESULT_EXTENDED.format(
                 **beta_min_result
             )
-        )
 
     if beta_max_result is None:
-        yield ("Limit test            : beta max n/a")
+        yield rfmt_cdect.LIMIT_RESULT_NA.format(**beta_max_result)
     else:
-        yield (
-            "limit test              : beta max  = {result}, limit = {val:+8.4f}"
-            " ({diagnostic}), time/record = {time:.16}/{record-count}".format(
+        yield rfmt_cdect.LIMIT_RESULT_EXTENDED.format(
                 **beta_max_result
             )
-        )
 
-    yield ""
+
+    yield EMPTY_LINE
+
 
     if datum_repeatability_result is None:
-        yield ("datum repeatability       : n/a")
+        yield rfmt.dat_rep.DAT_REP_NA
     else:
         err_msg = datum_repeatability_result["error_message"]
         if not err_msg:
-            yield (
-                cleandoc(
-                    """
-                datum repeatability     : {result},
-                datum repeatability     : threshold                      = {pass_threshold_mm:8.4f}
-                datum repeatability     : datum only max                 = {datum_repeatability_only_max_mm:7.3} mm
-                datum repeatability     : datum only std                 = {datum_repeatability_only_std_mm:7.3} mm
-                datum repeatability     : datum only max residual count  = {datum_repeatability_max_residual_datumed}
-                datum repeatability     : datum+move max                 = {datum_repeatability_move_max_mm:7.3} mm
-                datum repeatability     : datum+move std                 = {datum_repeatability_move_std_mm:7.3} mm
-                datum repeatability     : datum+move max residual count  = {datum_repeatability_max_residual_moved}
-                datum repeatability     : datum only min quality         = {min_quality_datumed:8.4f}
-                datum repeatability     : datum+move min quality         = {min_quality_moved:8.4f}
-                datum repeatability     : time/record                    = {time:.16}/{record-count}
-                datum repeatability     : git version                    = {git_version}
-                datum repeatability     : image algorithm version        = {algorithm_version}""".format(
+            yield rfmt_dat_rep.DAT_REP_RESULT_EXTENDED.format(
                         **datum_repeatability_result
                     )
-                )
-            )
+            yield fill(rfmt_dat_rep.DAT_REP_IMAGES.format(datum_repeatability_images))
 
-            yield (
-                fill(
-                    "Datum repeatability     : coords = {coords}".format(
-                        **datum_repeatability_result
-                    )
-                )
-            )
         else:
-            yield (
-                "datum repeatability     : {error_message}, time/record = {time:.16}/{record-count},"
-                " version = TBD".format(**datum_repeatability_result)
-            )
+            yield rfmt_dat_rep.DAT_REP_ERRMSG.format(**datum_repeatability_result)
 
-    yield ""
+    yield EMPTY_LINE
 
     if metrology_calibration_result is None:
-        yield ("metrology calibration     : n/a")
+        yield rfmt_met_cal.MET_CAL_NA
     else:
         err_msg = metrology_calibration_result["error_message"]
         if not err_msg:
-            yield (
-                cleandoc(
-                    """
-                metrology calibration   : metcal_fibre_large_target_distance = {metcal_fibre_large_target_distance_mm:8.4f} mm
-                metrology calibration   : metcal_fibre_small_target_distance = {metcal_fibre_small_target_distance_mm:8.4f} mm
-                metrology calibration   : metcal_target_vector_angle         = {metcal_target_vector_angle_deg:8.4f} degrees
-                metrology calibration   : coords large target                = {coords[target_big_xy]!r}
-                metrology calibration   : coords small target                = {coords[target_small_xy]!r}
-                metrology calibration   : quality small target               = {coords[target_small_q]:8.4f}
-                metrology calibration   : quality large target               = {coords[target_big_q]:8.4f}
-                    metrology calibration   : quality fibre                      = {coords[fibre_q]:8.4f}
-                metrology calibration   : git version                        = {git_version}
-                metrology calibration   : time/record={time:.16}/{record-count}, version = {algorithm_version}""".format(
-                        **metrology_calibration_result
-                    )
-                )
+            yield rfmt_met_cal.MET_CAL_RESULT_EXTENDED.format(
+                **metrology_calibration_result
             )
         else:
-            yield (
-                "metrology calibration   : {error_message}, time/record = {time:.16}/{record-count}, "
-                "version = {algorithm_version}".format(metrology_calibration_result)
-            )
+            yield rfmt_met_cal.MET_CAL_ERRMSG.format(metrology_calibration_result)
 
     yield (
-        fill("metrology calibration images: {!r}".format(metrology_calibration_images))
+        fill(rfmt_met_cal.MET_CAL_IMAGES.format(metrology_calibration_images))
     )
 
-    yield ""
+    yield EMPTY_LINE
 
     if metrology_height_result is None:
-        yield ("metrology_height          : n/a")
+        yield  rfmt_met_hgt.MET_HEIGHT_NA
     else:
         err_msg = metrology_height_result["error_message"]
         if not err_msg:
-            yield (
-                cleandoc(
-                    """
-                metrology height        : small target = {small_target_height_mm:8.4f} mm
-                metrology height        : large target = {small_target_height_mm:8.4f} mm
-                metrology height        : test result  = {test_result} mm
-                metrology height        : git version  = {git_version}
-                metrology height        : time/record  = {time:.16}/{record-count}, version = {algorithm_version}""".format(
+            yield rfmt_met_hgt.MET_HEIGHT_RESULT_EXTENDED.format(
                         **metrology_height_result
-                    )
-                )
-            )
-            yield ("metrology height images : {!r}".format(metrology_height_images))
-        else:
-            yield (
-                "Metrology height      : fibre_distance = {error_message}, time/record = {time:.16}/{record-count},"
-                " version = {algorithm_version}".format(**metrology_height_result)
             )
 
-    yield ""
+            yield (rfmt_met_hgt.MET_HEIGHT_IMAGES.format(metrology_height_images))
+
+        else:
+            yield rfmt_met_hgt.MET_HEIGHT_ERRMSG.format(**metrology_height_result)
+
+
+    yield EMPTY_LINE
 
     if positional_repeatability_result is None:
-        yield ("positional repeatability: n/a")
+        yield rfmt_pos_rep.POS_REP_NA
     else:
         err_msg = positional_repeatability_result["error_message"]
         if not err_msg:
-            yield (
-                cleandoc(
-                    """
-                    positional repeatability: passed          = {result}
-                    positional repeatability: pass_threshold  = {pass_threshold_mm:8.4f} mm
-                    positional repeatability: alpha_max       = {posrep_alpha_max_mm:8.4f} mm
-                    positional repeatability: beta_max        = {posrep_beta_max_mm:8.4f} mm
-                    positional repeatability: posrep_rss_mm   = {posrep_rss_mm:8.4f} mm
-                    positional repeatability: arg_max_alpha   = {arg_max_alpha_error:8.4f}
-                    positional repeatability: arg_max_beta    = {arg_max_beta_error:8.4f}
-                    positional repeatability: alpha quality   = {min_quality_alpha:8.4f}
-                    positional repeatability: beta quality    = {min_quality_beta:8.4f}
-                    positional repeatability: time/record     = {time:.16}/{record-count}
-                    positional repeatability: anlysis version = {algorithm_version}
-                    positional repeatability: git version     = {git_version}"""
-                ).format(**positional_repeatability_result)
-            )
+            yield rfmt_pos_rep.POS_REP_RESULT_EXTENDED.format(**positional_repeatability_result)
+
+            yield EMPTY_LINE
             error_by_alpha = positional_repeatability_result[
                 "posrep_alpha_max_at_angle"
             ]
-            yield ("""\nPositional repeatability: max error by alpha angle""")
-            error_max = positional_repeatability_result["arg_max_alpha_error"]
-            for alpha in sorted(error_by_alpha.keys()):
-                val = error_by_alpha[alpha]
-                tag = " <<<" if val == error_max else ""
-                yield (
-                    """Positional repeatability:     {alpha:7.2f} = {val:8.4f} {tag}""".format(
-                        alpha=alpha, val=val, tag=tag
-                    )
-                )
-            error_by_beta = positional_repeatability_result["posrep_beta_max_at_angle"]
-            yield ("error_by_beta={}".format(error_by_beta))
-            yield ("""\nPositional repeatability: max error by beta angle""")
-            error_max = positional_repeatability_result["arg_max_beta_error"]
-            for beta in sorted(error_by_beta.keys()):
-                val = error_by_beta[beta]
-                tag = " <<<" if val == error_max else ""
-                yield (
-                    """Positional repeatability:     {beta:7.2f} = {val:8.4f} {tag}""".format(
-                        beta=beta, val=val, tag=tag
-                    )
-                )
+            alpha_error_max = positional_repeatability_result["arg_max_alpha_error"]
 
-            yield (
-                fill(
-                    """Positional repeatability: calibration_pars = {calibration_pars!r}""".format(
-                        **positional_repeatability_result
-                    )
-                )
-            )
-            yield ""
-            yield (
-                fill(
-                    """positional repeatability: gearbox correction = {gearbox_correction}""".format(
-                        **positional_repeatability_result
-                    )
-                )
-            )
-            yield (
-                cleandoc(
-                    """
-                    positional repeatability: gearbox correction algorithm version = {algorithm_version}"""
-                ).format(**positional_repeatability_result)
-            )
+            for line in list_posrep_angle_errors("alpha angle", error_by_alpha, alpha_error_max):
+                yield line
+
+            error_by_beta = positional_repeatability_result["posrep_beta_max_at_angle"]
+            beta_error_max = positional_repeatability_result["arg_max_beta_error"]
+
+            for line in list_posrep_angle_errors("beta angle", error_by_beta, beta_error_max):
+                yield line
+
+
             yield (
                 fill(
                     """Positional repeatability: alpha_max_at_angle = {posrep_alpha_max_at_angle!r}""".format(
@@ -1777,80 +1058,54 @@ def format_report_extended(
                     )
                 )
             )
-            yield (
-                fill(
-                    """Positional repeatability: gearbox_correction = {gearbox_correction!r}""".format(
-                        **positional_repeatability_result
-                    )
-                )
-            )
-            yield (
-                fill(
-                    "positional repeatability images: {images_alpha!r}".format(
-                        **positional_repeatability_images
-                    )
-                )
-            )
-            yield (
-                fill(
-                    "positional repeatability images: {images_beta!r}".format(
-                        **positional_repeatability_images
-                    )
-                )
-            )
-            yield (
-                fill(
-                    "positional repeatability images / waveform parameters: {waveform_pars!r}".format(
-                        **positional_repeatability_images
-                    )
-                )
-            )
-        else:
-            yield (
-                "Positional repeatability: message = {error_message}, time/record = {time:.16}/{record-count},"
-                " version = {algorithm_version}".format(
-                    **positional_repeatability_result
-                )
-            )
 
-    yield ""
+            yield fill(rfmt_pos_rep.POS_REP_CALPARS.format(**positional_repeatability_result))
+
+            yield EMPTY_LINE
+
+            yield fill(rfmt_pos_rep.POS_REP_GEARCOR.format(**positional_repeatability_result))
+
+            yield rfmt_pos_rep.POS_REP_GEARALGO.format(**positional_repeatability_result)
+
+            yield fill(
+                    rfmt_pos_rep.POS_REP_IMAGES_ALPHA.format(
+                        **positional_repeatability_images
+                    )
+                )
+
+            yield fill(rfmt_pos_rep.POS_REP_IMAGES_BETA.format(
+                        **positional_repeatability_images
+                    )
+                )
+
+            yield fill(rfmt_pos_rep.POS_REP_WAVEFORM_PARS.format(
+                        **positional_repeatability_images
+                    )
+                )
+
+
+        else:
+            yield rfmt_pos_rep.POS_REP_ERRMSG.format(**positional_repeatability_result)
+
+
+    yield EMPTY_LINE
 
     if positional_verification_result is None:
-        yield ("positional verification : n/a")
+        yield rfmt_pos_ver.POS_VER_NA
     else:
         err_msg = positional_verification_result["error_message"]
         if not err_msg:
-            yield (
-                cleandoc(
-                    """
-                    positional verification : passed                       = {result}
-                    positional verification : pass_threshold               = {pass_threshold_mm}
-                    positional verification : posver_error_max             = {posver_error_max_mm:8.4f} mm
-                    positional verification : arg_max_error (count, α, β)  = {arg_max_error}
-                    positional verification : min image quality            = {min_quality:8.4f}
-                    positional verification : time/record                  = {time:.16}/{record-count}
-                    positional verification : analysis version             = {algorithm_version}
-                    positional verification : git version                  = {git_version}"""
-                ).format(**positional_verification_result)
-            )
+            yield rfmt_pos_ver.POS_VER_RESULT_EXTENDED.format(**positional_verification_result)
+
+            yield fill(rfmt_pos_ver.POS_VER_CALPARS.format(
+                **positional_verification_result
+            ))
+
             error_by_coords = positional_verification_result["posver_error"]
-            yield ("""Positional verification : max error by coordinate""")
             error_max = positional_verification_result["posver_error_max_mm"]
-            for coord in sorted(error_by_coords.keys()):
-                val = error_by_coords[coord]
-                tag = " <<<" if val == error_max else ""
-                yield (
-                    """Positional verification :     # {coord[0]:03d} ({coord[1]:+8.2f}, {coord[2]:+8.2f}) = {val:8.4f} {tag}""".format(
-                        coord=coord, val=val, tag=tag
-                    )
-                )
-            yield (
-                fill(
-                    """Positional verification : calibration_pars             = {calibration_pars}""".format(
-                        **positional_verification_result
-                    )
-                )
-            )
+            for line in list_posver_err_by_coord(error_by_coords, error_max):
+                yield line
+
             yield (
                 fill(
                     """Positional verification : posver_errors = {posver_error}""".format(
@@ -1882,41 +1137,23 @@ def format_report_extended(
                 )
             )
         else:
-            yield (
-                "Positional verification : message = {error_message}, time/record = {time:.16}/{record-count},"
-                " version = {algorithm_version}".format(
+            yield rfmt_pos_ver.POS_VER_ERRMSG.format(
                     **positional_verification_result
-                )
             )
 
-    yield ""
+    yield EMPTY_LINE
 
     if pupil_alignment_result is None:
-        yield ("pupil_alignment test    : n/a")
+        yield rfmt_pup_aln.PUP_ALN_NA
     else:
         err_msg = pupil_alignment_result["error_message"]
         if not err_msg:
-            yield (
-                cleandoc(
-                    """
-                    pupil alignment         : passed            = {result}
-                    pupil alignment         : pass_threshold    = {pass_threshold_mm:8.4f}
-                    pupil alignment         : chassis error     = {measures[chassis_error]:8.4f} mm
-                    pupil alignment         : alpha error       = {measures[alpha_error]:8.4f} mm
-                    pupil alignment         : beta error        = {measures[beta_error]:8.4f} mm
-                    pupil alignment         : total error       = {measures[total_error]:8.4f} mm
-                    pupil alignment         : time/record       = {time:.16}/{record-count}
-                    pupil alignment         : algorithm version = {algorithm_version}
-                    pupil alignment         : git version       = {git_version}"""
-                ).format(**pupil_alignment_result)
-            )
-            yield (
-                fill(
-                    """pupil alignment         : calibration_pars  = {calibration_pars!r}""".format(
+            yield rfmt_pup_aln.PUP_ALN_RESULT_EXTENDED.format(**pupil_alignment_result)
+
+            yield fill(rfmt_pup_aln.PUP_ALN_CALPARS.format(
                         **pupil_alignment_result
                     )
                 )
-            )
             yield (
                 fill(
                     """pupil alignment    : coords = {coords!r}""".format(
@@ -1926,11 +1163,9 @@ def format_report_extended(
             )
             yield (fill("pupil alignment images: {!r}".format(pupil_alignment_images)))
         else:
-            yield (
-                "pupil alignment: message = {error_message}, time/record = {time:.16}/{record-count}".format(
+            yield rfmt_pup_aln.PUP_ALN_ERRMSG.format(
                     **pupil_alignment_result
                 )
-            )
 
 
 def report(dbe, opts):
@@ -1948,8 +1183,8 @@ def report(dbe, opts):
             lines = format_report_brief(**ddict)
         elif report_format == "terse":
             lines = format_report_terse(**ddict)
-        elif report_format == "short":
-            lines = format_report_short(**ddict)
+        elif report_format == "complete":
+            lines = format_report_complete(**ddict)
         elif report_format == "long":
             lines = format_report_long(**ddict)
         else:

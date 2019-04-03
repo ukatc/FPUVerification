@@ -41,7 +41,7 @@ def save_datum_result(rig, dbe, dasel, rigstate):
             {
                 "result": fsuccess,
                 "datumed": (a_ok, b_ok),
-                "fpuid": fpu_id,
+                "fpu_id": fpu_id,
                 "counter_deviation": (fpu.alpha_deviation, fpu.alpha_deviation),
                 "result_state": str(fpu.state),
                 "diagnostic": "OK" if fsuccess else rigstate,

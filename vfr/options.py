@@ -58,17 +58,25 @@ def parse_args():
     )
 
     parser.add_argument(
+        "-x",
+        "--expand-tasks",
+        default=False,
+        action="store_true",
+        help="expand and print given tasks and exit",
+    )
+
+    parser.add_argument(
         "-fmt",
         "--report-format",
         default="terse",
-        choices=["status", "brief", "terse", "short", "long", "extended"],
+        choices=["status", "brief", "terse", "complete", "long", "extended"],
         help="""output format of 'report' task (one of 'status', 'terse', 'short', 'long',
         'extended', default is 'terse'). The options do the following:
 
         'status': print one line with the overall status for each FPU
         'brief' : print one line for each test section
         'terse' : print essential information
-        'short' : print additional information, like angles with maximum errors
+        'complete' : print additional information, like angles with maximum errors
         'long'  : in addition, list values for each angle
         'extended' : print nearly full information, including a list of images""",
     )
