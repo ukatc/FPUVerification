@@ -25,9 +25,10 @@ def all_true(testfun, sequence):
     return passed
 
 
-def expand_tasks(tasks, goal, expansion, delete=False):
+def expand_tasks(tasks, goal, expansion, delete=False, verbosity=0):
     if goal in tasks:
-        print("[expanding %s to %r] ###" % (goal, expansion))
+        if verbosity > 2:
+            print("[expanding %s to %r] ###" % (goal, expansion))
 
         if delete:
             print("deleting %s " % goal)
@@ -48,16 +49,17 @@ def resolve(tasks, rig, dbe):
 
             raise ValueError("invalid task name '%s'" % tsk)
 
+    verbosity = rig.opts.verbosity
     while True:
 
         last_tasks = tasks.copy()
         # check for expansions (replace user shorthands by detailed task breakdown)
         for tsk, expansion in task_expansions:
-            tasks = expand_tasks(tasks, tsk, expansion, delete=True)
+            tasks = expand_tasks(tasks, tsk, expansion, delete=True, verbosity=verbosity)
 
         # add dependencies (add tasks required to do a test)
         for tsk, expansion in task_dependencies:
-            tasks = expand_tasks(tasks, tsk, expansion)
+            tasks = expand_tasks(tasks, tsk, expansion, verbosity=verbosity)
 
         # add conditional dependencies (add tests which need to be passed before,
         # and are not already passed by all FPUs)
@@ -65,11 +67,18 @@ def resolve(tasks, rig, dbe):
             if tsk in tasks:
                 tfun = lambda fpu_id: testfun(dbe, fpu_id)
                 if (not all_true(tfun, fpuset)) or rig.opts.repeat_passed_tests:
-                    tasks = expand_tasks(tasks, tsk, cond_expansion, delete=True)
+                    tasks = expand_tasks(
+                        tasks,
+                        tsk,
+                        cond_expansion,
+                        delete=True,
+                        verbosity=verbosity
+                    )
 
         # check for equality with last iteration
         # -- if equal, expansion is finished
-        print("tasks = ", tasks)
+        if verbosity > 4:
+            print("tasks = ", tasks)
         if tasks == last_tasks:
             break
 
