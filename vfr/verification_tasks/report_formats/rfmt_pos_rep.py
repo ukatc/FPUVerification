@@ -5,9 +5,13 @@ from inspect import cleandoc
 
 POS_REP_NA = "positional repeatability: n/a"
 
-POS_REP_CALPARS = """Positional repeatability: calibration_pars = {calibration_pars!r}"""
+POS_REP_CALPARS = (
+    """Positional repeatability: calibration_pars = {calibration_pars!r}"""
+)
 
-POS_REP_GEARCOR = """positional repeatability: gearbox correction = {gearbox_correction}"""
+POS_REP_GEARCOR = (
+    """positional repeatability: gearbox correction = {gearbox_correction}"""
+)
 
 POS_REP_GEARALGO = cleandoc(
     """
@@ -81,4 +85,6 @@ POS_REP_IMAGES_ALPHA = "positional repeatability images alpha: {images_alpha!r}"
 
 POS_REP_IMAGES_BETA = "positional repeatability images beta: {images_beta!r}"
 
-POS_REP_WAVEFORM_PARS = "positional repeatability images / waveform parameters: {waveform_pars!r}"
+POS_REP_WAVEFORM_PARS = (
+    "positional repeatability images / waveform parameters: {waveform_pars!r}"
+)

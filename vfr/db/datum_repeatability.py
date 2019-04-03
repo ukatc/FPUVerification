@@ -2,10 +2,7 @@ from __future__ import absolute_import, division, print_function
 
 from collections import namedtuple
 from functools import partial
-from vfr.db.base import (TestResult,
-                         save_named_record,
-                         get_named_record,
-)
+from vfr.db.base import TestResult, save_named_record, get_named_record
 
 RECORD_TYPE = "datum-repeatability"
 
@@ -33,7 +30,9 @@ DatumRepeatabilityResult = namedtuple(
 )
 
 
-save_datum_repeatability_images = partial(save_named_record, (RECORD_TYPE, "images"), include_fpu_id=True)
+save_datum_repeatability_images = partial(
+    save_named_record, (RECORD_TYPE, "images"), include_fpu_id=True
+)
 
 get_datum_repeatability_images = partial(get_named_record, (RECORD_TYPE, "images"))
 

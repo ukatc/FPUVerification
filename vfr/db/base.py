@@ -93,7 +93,9 @@ def get_test_result(dbe, fpu_id, keyfunc, count=None, verbosity=None):
     return val
 
 
-def save_named_record(record_type, dbe, fpu_id, record, include_fpu_id=False, verbosity_offset=0):
+def save_named_record(
+    record_type, dbe, fpu_id, record, include_fpu_id=False, verbosity_offset=0
+):
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
@@ -126,7 +128,7 @@ def get_named_record(record_type, dbe, fpu_id, count=None, verbosity_offset=0):
         keybase = (serialnumber,) + record_type
         return keybase
 
-    rval= get_test_result(dbe, fpu_id, keyfunc, count=count)
+    rval = get_test_result(dbe, fpu_id, keyfunc, count=count)
 
     verbosity = max(dbe.opts.verbosity - verbosity_offset, 0)
     if verbosity > 6:

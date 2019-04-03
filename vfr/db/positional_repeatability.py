@@ -2,10 +2,7 @@ from __future__ import absolute_import, division, print_function
 
 from collections import namedtuple
 from functools import partial
-from vfr.db.base import (TestResult,
-                         save_named_record,
-                         get_named_record,
-)
+from vfr.db.base import TestResult, save_named_record, get_named_record
 
 RECORD_TYPE = "positional-repeatability"
 
@@ -35,13 +32,22 @@ PositionalRepeatabilityResults = namedtuple(
 )
 
 
-save_positional_repeatability_images = partial(save_named_record, (RECORD_TYPE, "images"), verbosity_offset=3, include_fpu_id=True)
+save_positional_repeatability_images = partial(
+    save_named_record, (RECORD_TYPE, "images"), verbosity_offset=3, include_fpu_id=True
+)
 
-get_positional_repeatability_images = partial(get_named_record, (RECORD_TYPE, "images"), verbosity_offset=3)
+get_positional_repeatability_images = partial(
+    get_named_record, (RECORD_TYPE, "images"), verbosity_offset=3
+)
 
-save_positional_repeatability_result = partial(save_named_record, (RECORD_TYPE, "result"), verbosity_offset=3)
+save_positional_repeatability_result = partial(
+    save_named_record, (RECORD_TYPE, "result"), verbosity_offset=3
+)
 
-get_positional_repeatability_result = partial(get_named_record, (RECORD_TYPE, "result"), verbosity_offset=3)
+get_positional_repeatability_result = partial(
+    get_named_record, (RECORD_TYPE, "result"), verbosity_offset=3
+)
+
 
 def get_positional_repeatability_passed_p(dbe, fpu_id, count=None):
     """returns True if the latest positional repeatability test for this FPU

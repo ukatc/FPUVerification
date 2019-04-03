@@ -2,10 +2,7 @@ from __future__ import absolute_import, division, print_function
 
 from collections import namedtuple
 from functools import partial
-from vfr.db.base import (save_named_record,
-                         get_named_record,
-)
-
+from vfr.db.base import save_named_record, get_named_record
 
 
 RECORD_TYPE = "metrology-calibration"
@@ -23,7 +20,9 @@ MetrologyCalibrationResult = namedtuple(
 )
 
 
-save_metrology_calibration_images = partial(save_named_record, (RECORD_TYPE, "images"), include_fpu_id=True)
+save_metrology_calibration_images = partial(
+    save_named_record, (RECORD_TYPE, "images"), include_fpu_id=True
+)
 
 get_metrology_calibration_images = partial(get_named_record, (RECORD_TYPE, "images"))
 

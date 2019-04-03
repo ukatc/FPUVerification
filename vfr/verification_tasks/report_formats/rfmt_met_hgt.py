@@ -29,13 +29,14 @@ MET_HEIGHT_RESULT_LONG = cleandoc(
     metrology height        : test result  = {test_result} mm
     metrology height        : git version  = {git_version}
     metrology height        : time/record  = {time:.16}/{record-count}, version = {algorithm_version}"""
-    )
+)
 
 
 MET_HEIGHT_RESULT_EXTENDED = MET_HEIGHT_RESULT_LONG
 
 MET_HEIGHT_IMAGES = "metrology height images : {!r}"
 
-MET_HEIGHT_ERRMSG = ("Metrology height      : error message = {error_message}, time/record = {time:.16}/{record-count},"
-                     " version = {algorithm_version}"
+MET_HEIGHT_ERRMSG = (
+    "Metrology height      : error message = {error_message}, time/record = {time:.16}/{record-count},"
+    " version = {algorithm_version}"
 )

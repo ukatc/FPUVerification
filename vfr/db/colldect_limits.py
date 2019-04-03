@@ -16,7 +16,8 @@ from vfr.tests_common import timestamp
 from vfr.db.base import TestResult, get_test_result, save_test_result
 
 LimitTestResult = namedtuple(
-    "LimitTestResult", " fpu_id" " serialnumber" " result" " val" " diagnostic" " limit_name"
+    "LimitTestResult",
+    " fpu_id" " serialnumber" " result" " val" " diagnostic" " limit_name",
 )
 
 

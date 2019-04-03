@@ -45,7 +45,7 @@ from vfr.verification_tasks.report_formats import (
     rfmt_met_hgt,
     rfmt_pos_rep,
     rfmt_pos_ver,
-    rfmt_pup_aln
+    rfmt_pup_aln,
 )
 
 
@@ -61,6 +61,7 @@ fill = tw.fill
 
 FPU_SEPERATOR_LINE = "*" * 60
 EMPTY_LINE = ""
+
 
 def get_data(dbe, fpu_id):
     serial_number = dbe.fpu_config[fpu_id]["serialnumber"]
@@ -346,44 +347,29 @@ def format_report_terse(
     if beta_collision_result is None:
         yield rfmt_cdect.CDECT_RESULT_NA
     else:
-        yield (
-            rfmt_cdect.CDECT_RESULT_TERSE.format(
-                **beta_collision_result
-            )
-        )
+        yield (rfmt_cdect.CDECT_RESULT_TERSE.format(**beta_collision_result))
 
     yield EMPTY_LINE
 
     if alpha_min_result is None:
         yield rfmt_cdect.LIMIT_RESULT_NA.format(**alpha_min_result)
     else:
-        yield rfmt_cdect.LIMIT_RESULT_TERSE.format(
-                **alpha_min_result
-            )
-
+        yield rfmt_cdect.LIMIT_RESULT_TERSE.format(**alpha_min_result)
 
     if alpha_max_result is None:
         yield rfmt_cdect.LIMIT_RESULT_NA.format(**alpha_max_result)
     else:
-        yield rfmt_cdect.LIMIT_RESULT_TERSE.format(
-                **alpha_max_result
-            )
-
+        yield rfmt_cdect.LIMIT_RESULT_TERSE.format(**alpha_max_result)
 
     if beta_min_result is None:
         yield rfmt_cdect.LIMIT_RESULT_NA.format(**beta_min_result)
     else:
-        yield rfmt_cdect.LIMIT_RESULT_TERSE.format(
-                **beta_min_result
-            )
+        yield rfmt_cdect.LIMIT_RESULT_TERSE.format(**beta_min_result)
 
     if beta_max_result is None:
         yield rfmt_cdect.LIMIT_RESULT_NA.format(**beta_max_result)
     else:
-        yield rfmt_cdect.LIMIT_RESULT_TERSE.format(
-                **beta_max_result
-            )
-
+        yield rfmt_cdect.LIMIT_RESULT_TERSE.format(**beta_max_result)
 
     yield EMPTY_LINE
 
@@ -396,7 +382,6 @@ def format_report_terse(
 
         else:
             yield rfmt_dat_rep.DAT_REP_ERRMSG.format(**datum_repeatability_result)
-
 
     yield EMPTY_LINE
 
@@ -411,21 +396,17 @@ def format_report_terse(
         else:
             yield rfmt_met_cal.MET_CAL_ERRMSG.format(metrology_calibration_result)
 
-
     yield EMPTY_LINE
 
     if metrology_height_result is None:
-        yield  rfmt_met_hgt.MET_HEIGHT_NA
+        yield rfmt_met_hgt.MET_HEIGHT_NA
     else:
         err_msg = metrology_height_result["error_message"]
         if not err_msg:
-            yield rfmt_met_hgt.MET_HEIGHT_RESULT_TERSE.format(
-                        **metrology_height_result
-            )
+            yield rfmt_met_hgt.MET_HEIGHT_RESULT_TERSE.format(**metrology_height_result)
 
         else:
             yield rfmt_met_hgt.MET_HEIGHT_ERRMSG.format(**metrology_height_result)
-
 
     yield EMPTY_LINE
 
@@ -434,18 +415,21 @@ def format_report_terse(
     else:
         err_msg = positional_repeatability_result["error_message"]
         if not err_msg:
-            yield rfmt_pos_rep.POS_REP_RESULT_TERSE.format(**positional_repeatability_result)
+            yield rfmt_pos_rep.POS_REP_RESULT_TERSE.format(
+                **positional_repeatability_result
+            )
 
             yield EMPTY_LINE
 
-            yield fill(rfmt_pos_rep.POS_REP_GEARCOR.format(**positional_repeatability_result))
-
-            yield rfmt_pos_rep.POS_REP_GEARALGO.format(**positional_repeatability_result)
-        else:
-            yield rfmt_pos_rep.POS_REP_ERRMSG.format(
-                    **positional_repeatability_result
+            yield fill(
+                rfmt_pos_rep.POS_REP_GEARCOR.format(**positional_repeatability_result)
             )
 
+            yield rfmt_pos_rep.POS_REP_GEARALGO.format(
+                **positional_repeatability_result
+            )
+        else:
+            yield rfmt_pos_rep.POS_REP_ERRMSG.format(**positional_repeatability_result)
 
     yield EMPTY_LINE
 
@@ -454,18 +438,15 @@ def format_report_terse(
     else:
         err_msg = positional_verification_result["error_message"]
         if not err_msg:
-            yield rfmt_pos_ver.POS_VER_RESULT_TERSE.format(**positional_verification_result)
+            yield rfmt_pos_ver.POS_VER_RESULT_TERSE.format(
+                **positional_verification_result
+            )
 
             yield fill(
-                rfmt_pos_ver.POS_VER_CALPARS.format(
-                    **positional_verification_result
-                )
+                rfmt_pos_ver.POS_VER_CALPARS.format(**positional_verification_result)
             )
         else:
-            yield rfmt_pos_ver.POS_VER_ERRMSG.format(
-                    **positional_verification_result
-            )
-
+            yield rfmt_pos_ver.POS_VER_ERRMSG.format(**positional_verification_result)
 
     yield EMPTY_LINE
 
@@ -477,10 +458,7 @@ def format_report_terse(
             yield rfmt_pup_aln.PUP_ALN_RESULT_TERSE.format(**pupil_alignment_result)
 
         else:
-            yield rfmt_pup_aln.PUP_ALN_ERRMSG.format(
-                    **pupil_alignment_result
-                )
-
+            yield rfmt_pup_aln.PUP_ALN_ERRMSG.format(**pupil_alignment_result)
 
 
 def format_report_complete(
@@ -518,56 +496,36 @@ def format_report_complete(
     if beta_collision_result is None:
         yield rfmt_cdect.CDECT_RESULT_NA
     else:
-        yield rfmt_cdect.CDECT_RESULT_COMPLETE.format(
-                **beta_collision_result
-            )
-
+        yield rfmt_cdect.CDECT_RESULT_COMPLETE.format(**beta_collision_result)
 
     yield EMPTY_LINE
-
 
     if beta_collision_result is None:
         yield rfmt_cdect.CDECT_RESULT_NA
     else:
-        yield (
-            rfmt_cdect.CDECT_RESULT_COMPLETE.format(
-                **beta_collision_result
-            )
-        )
+        yield (rfmt_cdect.CDECT_RESULT_COMPLETE.format(**beta_collision_result))
 
     yield EMPTY_LINE
 
     if alpha_min_result is None:
         yield rfmt_cdect.LIMIT_RESULT_NA.format(**alpha_min_result)
     else:
-        yield rfmt_cdect.LIMIT_RESULT_COMPLETE.format(
-                **alpha_min_result
-            )
-
+        yield rfmt_cdect.LIMIT_RESULT_COMPLETE.format(**alpha_min_result)
 
     if alpha_max_result is None:
         yield rfmt_cdect.LIMIT_RESULT_NA.format(**alpha_max_result)
     else:
-        yield rfmt_cdect.LIMIT_RESULT_COMPLETE.format(
-                **alpha_max_result
-            )
-
+        yield rfmt_cdect.LIMIT_RESULT_COMPLETE.format(**alpha_max_result)
 
     if beta_min_result is None:
         yield rfmt_cdect.LIMIT_RESULT_NA.format(**beta_min_result)
     else:
-        yield rfmt_cdect.LIMIT_RESULT_COMPLETE.format(
-                **beta_min_result
-            )
+        yield rfmt_cdect.LIMIT_RESULT_COMPLETE.format(**beta_min_result)
 
     if beta_max_result is None:
         yield rfmt_cdect.LIMIT_RESULT_NA.format(**beta_max_result)
     else:
-        yield rfmt_cdect.LIMIT_RESULT_COMPLETE.format(
-                **beta_max_result
-            )
-
-
+        yield rfmt_cdect.LIMIT_RESULT_COMPLETE.format(**beta_max_result)
 
     yield EMPTY_LINE
 
@@ -577,11 +535,10 @@ def format_report_complete(
         err_msg = datum_repeatability_result["error_message"]
         if not err_msg:
             yield rfmt_dat_rep.DAT_REP_RESULT_COMPLETE.format(
-                        **datum_repeatability_result
-                    )
+                **datum_repeatability_result
+            )
         else:
             yield rfmt_dat_rep.DAT_REP_ERRMSG.format(**datum_repeatability_result)
-
 
     yield EMPTY_LINE
 
@@ -599,12 +556,12 @@ def format_report_complete(
     yield EMPTY_LINE
 
     if metrology_height_result is None:
-        yield  rfmt_met_hgt.MET_HEIGHT_NA
+        yield rfmt_met_hgt.MET_HEIGHT_NA
     else:
         err_msg = metrology_height_result["error_message"]
         if not err_msg:
             yield rfmt_met_hgt.MET_HEIGHT_RESULT_COMPLETE.format(
-                        **metrology_height_result
+                **metrology_height_result
             )
 
         else:
@@ -617,13 +574,19 @@ def format_report_complete(
     else:
         err_msg = positional_repeatability_result["error_message"]
         if not err_msg:
-            yield rfmt_pos_rep.POS_REP_RESULT_COMPLETE.format(**positional_repeatability_result)
+            yield rfmt_pos_rep.POS_REP_RESULT_COMPLETE.format(
+                **positional_repeatability_result
+            )
 
             yield EMPTY_LINE
 
-            yield fill(rfmt_pos_rep.POS_REP_GEARCOR.format(**positional_repeatability_result))
+            yield fill(
+                rfmt_pos_rep.POS_REP_GEARCOR.format(**positional_repeatability_result)
+            )
 
-            yield rfmt_pos_rep.POS_REP_GEARALGO.format(**positional_repeatability_result)
+            yield rfmt_pos_rep.POS_REP_GEARALGO.format(
+                **positional_repeatability_result
+            )
         else:
             yield rfmt_pos_rep.POS_REP_ERRMSG.format(**positional_repeatability_result)
 
@@ -634,16 +597,16 @@ def format_report_complete(
     else:
         err_msg = positional_verification_result["error_message"]
         if not err_msg:
-            yield rfmt_pos_ver.POS_VER_RESULT_COMPLETE.format(**positional_verification_result)
-
-            yield fill(rfmt_pos_ver.POS_VER_CALPARS.format(
+            yield rfmt_pos_ver.POS_VER_RESULT_COMPLETE.format(
                 **positional_verification_result
-            ))
+            )
+
+            yield fill(
+                rfmt_pos_ver.POS_VER_CALPARS.format(**positional_verification_result)
+            )
 
         else:
-            yield rfmt_pos_ver.POS_VER_ERRMSG.format(
-                    **positional_verification_result
-            )
+            yield rfmt_pos_ver.POS_VER_ERRMSG.format(**positional_verification_result)
 
     yield EMPTY_LINE
 
@@ -655,9 +618,8 @@ def format_report_complete(
             yield rfmt_pup_aln.PUP_ALN_RESULT_COMPLETE.format(**pupil_alignment_result)
 
         else:
-            yield rfmt_pup_aln.PUP_ALN_ERRMSG.format(
-                    **pupil_alignment_result
-                )
+            yield rfmt_pup_aln.PUP_ALN_ERRMSG.format(**pupil_alignment_result)
+
 
 def list_posrep_angle_errors(name, error_by_angle, error_max):
     yield """\npositional repeatability: max error by {}""".format(name)
@@ -669,6 +631,7 @@ def list_posrep_angle_errors(name, error_by_angle, error_max):
                 angle=angle, val=val, tag=tag
             )
         )
+
 
 def list_posver_err_by_coord(error_by_coords, error_max):
     yield ("""positional verification : max error by coordinate""")
@@ -710,52 +673,36 @@ def format_report_long(
     if datum_result is None:
         yield rfmt_datum.DATUM_RESULT_NA
     else:
-        yield (
-            rfmt_datum.DATUM_RESULT_LONG.format(**datum_result)
-        )
+        yield (rfmt_datum.DATUM_RESULT_LONG.format(**datum_result))
 
     yield EMPTY_LINE
 
     if beta_collision_result is None:
         yield rfmt_cdect.CDECT_RESULT_NA
     else:
-        yield (
-            rfmt_cdect.CDECT_RESULT_LONG.format(
-                **beta_collision_result
-            )
-        )
+        yield (rfmt_cdect.CDECT_RESULT_LONG.format(**beta_collision_result))
 
     yield EMPTY_LINE
 
     if alpha_min_result is None:
         yield rfmt_cdect.LIMIT_RESULT_NA.format(**alpha_min_result)
     else:
-        yield rfmt_cdect.LIMIT_RESULT_LONG.format(
-                **alpha_min_result
-            )
-
+        yield rfmt_cdect.LIMIT_RESULT_LONG.format(**alpha_min_result)
 
     if alpha_max_result is None:
         yield rfmt_cdect.LIMIT_RESULT_NA.format(**alpha_max_result)
     else:
-        yield rfmt_cdect.LIMIT_RESULT_LONG.format(
-                **alpha_max_result
-            )
-
+        yield rfmt_cdect.LIMIT_RESULT_LONG.format(**alpha_max_result)
 
     if beta_min_result is None:
         yield rfmt_cdect.LIMIT_RESULT_NA.format(**beta_min_result)
     else:
-        yield rfmt_cdect.LIMIT_RESULT_LONG.format(
-                **beta_min_result
-            )
+        yield rfmt_cdect.LIMIT_RESULT_LONG.format(**beta_min_result)
 
     if beta_max_result is None:
         yield rfmt_cdect.LIMIT_RESULT_NA.format(**beta_max_result)
     else:
-        yield rfmt_cdect.LIMIT_RESULT_LONG.format(
-                **beta_max_result
-            )
+        yield rfmt_cdect.LIMIT_RESULT_LONG.format(**beta_max_result)
 
     yield EMPTY_LINE
 
@@ -764,9 +711,7 @@ def format_report_long(
     else:
         err_msg = datum_repeatability_result["error_message"]
         if not err_msg:
-            yield rfmt_dat_rep.DAT_REP_RESULT_LONG.format(
-                        **datum_repeatability_result
-                    )
+            yield rfmt_dat_rep.DAT_REP_RESULT_LONG.format(**datum_repeatability_result)
         else:
             yield rfmt_dat_rep.DAT_REP_ERRMSG.format(**datum_repeatability_result)
 
@@ -786,26 +731,25 @@ def format_report_long(
     yield EMPTY_LINE
 
     if metrology_height_result is None:
-        yield  rfmt_met_hgt.MET_HEIGHT_NA
+        yield rfmt_met_hgt.MET_HEIGHT_NA
     else:
         err_msg = metrology_height_result["error_message"]
         if not err_msg:
-            yield rfmt_met_hgt.MET_HEIGHT_RESULT_LONG.format(
-                        **metrology_height_result
-            )
+            yield rfmt_met_hgt.MET_HEIGHT_RESULT_LONG.format(**metrology_height_result)
 
         else:
             yield rfmt_met_hgt.MET_HEIGHT_ERRMSG.format(**metrology_height_result)
 
     yield EMPTY_LINE
 
-
     if positional_repeatability_result is None:
         yield rfmt_pos_rep.POS_REP_NA
     else:
         err_msg = positional_repeatability_result["error_message"]
         if not err_msg:
-            yield rfmt_pos_rep.POS_REP_RESULT_LONG.format(**positional_repeatability_result)
+            yield rfmt_pos_rep.POS_REP_RESULT_LONG.format(
+                **positional_repeatability_result
+            )
 
             yield EMPTY_LINE
 
@@ -814,22 +758,32 @@ def format_report_long(
             ]
             alpha_error_max = positional_repeatability_result["arg_max_alpha_error"]
 
-            for line in list_posrep_angle_errors("alpha angle", error_by_alpha, alpha_error_max):
+            for line in list_posrep_angle_errors(
+                "alpha angle", error_by_alpha, alpha_error_max
+            ):
                 yield line
 
             error_by_beta = positional_repeatability_result["posrep_beta_max_at_angle"]
             beta_error_max = positional_repeatability_result["arg_max_beta_error"]
 
-            for line in list_posrep_angle_errors("beta angle", error_by_beta, beta_error_max):
+            for line in list_posrep_angle_errors(
+                "beta angle", error_by_beta, beta_error_max
+            ):
                 yield line
 
-            yield fill(rfmt_pos_rep.POS_REP_CALPARS.format(**positional_repeatability_result))
+            yield fill(
+                rfmt_pos_rep.POS_REP_CALPARS.format(**positional_repeatability_result)
+            )
 
             yield EMPTY_LINE
 
-            yield fill(rfmt_pos_rep.POS_REP_GEARCOR.format(**positional_repeatability_result))
+            yield fill(
+                rfmt_pos_rep.POS_REP_GEARCOR.format(**positional_repeatability_result)
+            )
 
-            yield rfmt_pos_rep.POS_REP_GEARALGO.format(**positional_repeatability_result)
+            yield rfmt_pos_rep.POS_REP_GEARALGO.format(
+                **positional_repeatability_result
+            )
 
         else:
             yield rfmt_pos_rep.POS_REP_ERRMSG.format(**positional_repeatability_result)
@@ -841,11 +795,13 @@ def format_report_long(
     else:
         err_msg = positional_verification_result["error_message"]
         if not err_msg:
-            yield rfmt_pos_ver.POS_VER_RESULT_LONG.format(**positional_verification_result)
-
-            yield fill(rfmt_pos_ver.POS_VER_CALPARS.format(
+            yield rfmt_pos_ver.POS_VER_RESULT_LONG.format(
                 **positional_verification_result
-            ))
+            )
+
+            yield fill(
+                rfmt_pos_ver.POS_VER_CALPARS.format(**positional_verification_result)
+            )
 
             error_by_coords = positional_verification_result["posver_error"]
             error_max = positional_verification_result["posver_error_max_mm"]
@@ -853,10 +809,7 @@ def format_report_long(
                 yield line
 
         else:
-            yield rfmt_pos_ver.POS_VER_ERRMSG.format(
-                    **positional_verification_result
-            )
-
+            yield rfmt_pos_ver.POS_VER_ERRMSG.format(**positional_verification_result)
 
     yield EMPTY_LINE
 
@@ -867,16 +820,9 @@ def format_report_long(
         if not err_msg:
             yield rfmt_pup_aln.PUP_ALN_RESULT_LONG.format(**pupil_alignment_result)
 
-            yield fill(rfmt_pup_aln.PUP_ALN_CALPARS.format(
-                        **pupil_alignment_result
-                    )
-                )
+            yield fill(rfmt_pup_aln.PUP_ALN_CALPARS.format(**pupil_alignment_result))
         else:
-            yield rfmt_pup_aln.PUP_ALN_ERRMSG.format(
-                    **pupil_alignment_result
-                )
-
-
+            yield rfmt_pup_aln.PUP_ALN_ERRMSG.format(**pupil_alignment_result)
 
 
 def format_report_extended(
@@ -907,56 +853,38 @@ def format_report_extended(
     if datum_result is None:
         yield rfmt_datum.DATUM_RESULT_NA
     else:
-        yield (
-            rfmt_datum.DATUM_RESULT_EXTENDED.format(**datum_result)
-        )
+        yield (rfmt_datum.DATUM_RESULT_EXTENDED.format(**datum_result))
 
     yield EMPTY_LINE
 
     if beta_collision_result is None:
         yield rfmt_cdect.CDECT_RESULT_NA
     else:
-        yield (
-            rfmt_cdect.CDECT_RESULT_EXTENDED.format(
-                **beta_collision_result
-            )
-        )
+        yield (rfmt_cdect.CDECT_RESULT_EXTENDED.format(**beta_collision_result))
 
     yield EMPTY_LINE
 
     if alpha_min_result is None:
         yield rfmt_cdect.LIMIT_RESULT_NA.format(**alpha_min_result)
     else:
-        yield rfmt_cdect.LIMIT_RESULT_EXTENDED.format(
-                **alpha_min_result
-            )
-
+        yield rfmt_cdect.LIMIT_RESULT_EXTENDED.format(**alpha_min_result)
 
     if alpha_max_result is None:
         yield rfmt_cdect.LIMIT_RESULT_NA.format(**alpha_max_result)
     else:
-        yield rfmt_cdect.LIMIT_RESULT_EXTENDED.format(
-                **alpha_max_result
-            )
-
+        yield rfmt_cdect.LIMIT_RESULT_EXTENDED.format(**alpha_max_result)
 
     if beta_min_result is None:
         yield rfmt_cdect.LIMIT_RESULT_NA.format(**beta_min_result)
     else:
-        yield rfmt_cdect.LIMIT_RESULT_EXTENDED.format(
-                **beta_min_result
-            )
+        yield rfmt_cdect.LIMIT_RESULT_EXTENDED.format(**beta_min_result)
 
     if beta_max_result is None:
         yield rfmt_cdect.LIMIT_RESULT_NA.format(**beta_max_result)
     else:
-        yield rfmt_cdect.LIMIT_RESULT_EXTENDED.format(
-                **beta_max_result
-            )
-
+        yield rfmt_cdect.LIMIT_RESULT_EXTENDED.format(**beta_max_result)
 
     yield EMPTY_LINE
-
 
     if datum_repeatability_result is None:
         yield rfmt.dat_rep.DAT_REP_NA
@@ -964,8 +892,8 @@ def format_report_extended(
         err_msg = datum_repeatability_result["error_message"]
         if not err_msg:
             yield rfmt_dat_rep.DAT_REP_RESULT_EXTENDED.format(
-                        **datum_repeatability_result
-                    )
+                **datum_repeatability_result
+            )
             yield fill(rfmt_dat_rep.DAT_REP_IMAGES.format(datum_repeatability_images))
 
         else:
@@ -984,26 +912,23 @@ def format_report_extended(
         else:
             yield rfmt_met_cal.MET_CAL_ERRMSG.format(metrology_calibration_result)
 
-    yield (
-        fill(rfmt_met_cal.MET_CAL_IMAGES.format(metrology_calibration_images))
-    )
+    yield (fill(rfmt_met_cal.MET_CAL_IMAGES.format(metrology_calibration_images)))
 
     yield EMPTY_LINE
 
     if metrology_height_result is None:
-        yield  rfmt_met_hgt.MET_HEIGHT_NA
+        yield rfmt_met_hgt.MET_HEIGHT_NA
     else:
         err_msg = metrology_height_result["error_message"]
         if not err_msg:
             yield rfmt_met_hgt.MET_HEIGHT_RESULT_EXTENDED.format(
-                        **metrology_height_result
+                **metrology_height_result
             )
 
             yield (rfmt_met_hgt.MET_HEIGHT_IMAGES.format(metrology_height_images))
 
         else:
             yield rfmt_met_hgt.MET_HEIGHT_ERRMSG.format(**metrology_height_result)
-
 
     yield EMPTY_LINE
 
@@ -1012,7 +937,9 @@ def format_report_extended(
     else:
         err_msg = positional_repeatability_result["error_message"]
         if not err_msg:
-            yield rfmt_pos_rep.POS_REP_RESULT_EXTENDED.format(**positional_repeatability_result)
+            yield rfmt_pos_rep.POS_REP_RESULT_EXTENDED.format(
+                **positional_repeatability_result
+            )
 
             yield EMPTY_LINE
             error_by_alpha = positional_repeatability_result[
@@ -1020,15 +947,18 @@ def format_report_extended(
             ]
             alpha_error_max = positional_repeatability_result["arg_max_alpha_error"]
 
-            for line in list_posrep_angle_errors("alpha angle", error_by_alpha, alpha_error_max):
+            for line in list_posrep_angle_errors(
+                "alpha angle", error_by_alpha, alpha_error_max
+            ):
                 yield line
 
             error_by_beta = positional_repeatability_result["posrep_beta_max_at_angle"]
             beta_error_max = positional_repeatability_result["arg_max_beta_error"]
 
-            for line in list_posrep_angle_errors("beta angle", error_by_beta, beta_error_max):
+            for line in list_posrep_angle_errors(
+                "beta angle", error_by_beta, beta_error_max
+            ):
                 yield line
-
 
             yield (
                 fill(
@@ -1059,34 +989,40 @@ def format_report_extended(
                 )
             )
 
-            yield fill(rfmt_pos_rep.POS_REP_CALPARS.format(**positional_repeatability_result))
+            yield fill(
+                rfmt_pos_rep.POS_REP_CALPARS.format(**positional_repeatability_result)
+            )
 
             yield EMPTY_LINE
 
-            yield fill(rfmt_pos_rep.POS_REP_GEARCOR.format(**positional_repeatability_result))
+            yield fill(
+                rfmt_pos_rep.POS_REP_GEARCOR.format(**positional_repeatability_result)
+            )
 
-            yield rfmt_pos_rep.POS_REP_GEARALGO.format(**positional_repeatability_result)
+            yield rfmt_pos_rep.POS_REP_GEARALGO.format(
+                **positional_repeatability_result
+            )
 
             yield fill(
-                    rfmt_pos_rep.POS_REP_IMAGES_ALPHA.format(
-                        **positional_repeatability_images
-                    )
+                rfmt_pos_rep.POS_REP_IMAGES_ALPHA.format(
+                    **positional_repeatability_images
                 )
+            )
 
-            yield fill(rfmt_pos_rep.POS_REP_IMAGES_BETA.format(
-                        **positional_repeatability_images
-                    )
+            yield fill(
+                rfmt_pos_rep.POS_REP_IMAGES_BETA.format(
+                    **positional_repeatability_images
                 )
+            )
 
-            yield fill(rfmt_pos_rep.POS_REP_WAVEFORM_PARS.format(
-                        **positional_repeatability_images
-                    )
+            yield fill(
+                rfmt_pos_rep.POS_REP_WAVEFORM_PARS.format(
+                    **positional_repeatability_images
                 )
-
+            )
 
         else:
             yield rfmt_pos_rep.POS_REP_ERRMSG.format(**positional_repeatability_result)
-
 
     yield EMPTY_LINE
 
@@ -1095,11 +1031,13 @@ def format_report_extended(
     else:
         err_msg = positional_verification_result["error_message"]
         if not err_msg:
-            yield rfmt_pos_ver.POS_VER_RESULT_EXTENDED.format(**positional_verification_result)
-
-            yield fill(rfmt_pos_ver.POS_VER_CALPARS.format(
+            yield rfmt_pos_ver.POS_VER_RESULT_EXTENDED.format(
                 **positional_verification_result
-            ))
+            )
+
+            yield fill(
+                rfmt_pos_ver.POS_VER_CALPARS.format(**positional_verification_result)
+            )
 
             error_by_coords = positional_verification_result["posver_error"]
             error_max = positional_verification_result["posver_error_max_mm"]
@@ -1137,9 +1075,7 @@ def format_report_extended(
                 )
             )
         else:
-            yield rfmt_pos_ver.POS_VER_ERRMSG.format(
-                    **positional_verification_result
-            )
+            yield rfmt_pos_ver.POS_VER_ERRMSG.format(**positional_verification_result)
 
     yield EMPTY_LINE
 
@@ -1150,10 +1086,7 @@ def format_report_extended(
         if not err_msg:
             yield rfmt_pup_aln.PUP_ALN_RESULT_EXTENDED.format(**pupil_alignment_result)
 
-            yield fill(rfmt_pup_aln.PUP_ALN_CALPARS.format(
-                        **pupil_alignment_result
-                    )
-                )
+            yield fill(rfmt_pup_aln.PUP_ALN_CALPARS.format(**pupil_alignment_result))
             yield (
                 fill(
                     """pupil alignment    : coords = {coords!r}""".format(
@@ -1163,9 +1096,7 @@ def format_report_extended(
             )
             yield (fill("pupil alignment images: {!r}".format(pupil_alignment_images)))
         else:
-            yield rfmt_pup_aln.PUP_ALN_ERRMSG.format(
-                    **pupil_alignment_result
-                )
+            yield rfmt_pup_aln.PUP_ALN_ERRMSG.format(**pupil_alignment_result)
 
 
 def report(dbe, opts):
@@ -1190,7 +1121,7 @@ def report(dbe, opts):
         else:
             lines = format_report_extended(**ddict)
         try:
-            #dbe.opts.output_file.writelines(line + "\n" for line in lines)
+            # dbe.opts.output_file.writelines(line + "\n" for line in lines)
             for line in lines:
                 dbe.opts.output_file.write(line + "\n")
         except TypeError:
