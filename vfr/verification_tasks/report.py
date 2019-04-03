@@ -374,7 +374,7 @@ def format_report_terse(
     yield EMPTY_LINE
 
     if datum_repeatability_result is None:
-        yield rfmt_fdat_rep.DAT_REP_NA
+        yield rfmt_dat_rep.DAT_REP_NA
     else:
         err_msg = datum_repeatability_result["error_message"]
         if not err_msg:
@@ -887,7 +887,7 @@ def format_report_extended(
     yield EMPTY_LINE
 
     if datum_repeatability_result is None:
-        yield rfmt.dat_rep.DAT_REP_NA
+        yield rfmt_dat_rep.DAT_REP_NA
     else:
         err_msg = datum_repeatability_result["error_message"]
         if not err_msg:
