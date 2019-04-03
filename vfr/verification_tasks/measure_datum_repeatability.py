@@ -2,6 +2,8 @@ from __future__ import absolute_import, division, print_function
 
 import warnings
 
+from functools import partial
+
 from fpu_commands import gen_wf
 from GigE.GigECamera import BASLER_DEVICE_CLASS, DEVICE_CLASS, IP_ADDRESS
 from ImageAnalysisFuncs.base import get_min_quality
@@ -26,106 +28,186 @@ from vfr.db.datum_repeatability import (
 from vfr.tests_common import dirac, get_sorted_positions, store_image, timestamp
 
 
+def check_skip(rig, dbe, fpu_id):
+    """checks whether an FPU should be skipped because
+    it was already tested. If so, return the reason as a string."""
+
+    if get_datum_repeatability_passed_p(dbe, fpu_id) and (
+        not rig.opts.repeat_passed_tests
+    ):
+
+        sn = rig.fpu_config[fpu_id]["serialnumber"]
+        return "FPU %{} : datum repeatability test already passed, skipping test".format(
+            sn
+        )
+
+    # no reason found, return a falsey value
+    return None
+
+
+def config_camera(rig, exposure_time):
+    """configure the camera, returning a camera object."""
+
+    # initialize camera
+    # set camera exposure time to DATUM_REP_EXPOSURE milliseconds
+    MET_CAL_CAMERA_CONF = {
+        DEVICE_CLASS: BASLER_DEVICE_CLASS,
+        IP_ADDRESS: MET_CAL_CAMERA_IP_ADDRESS,
+    }
+
+    met_cal_cam = rig.hw.GigECamera(MET_CAL_CAMERA_CONF)
+    met_cal_cam.SetExposureTime(exposure_time)
+
+    return met_cal_cam
+
+
+def get_counter_residuals(rig, fpu_id):
+    """get residual step countes for a specific FPU
+    from the grid_state data structure.
+
+    These residual values indicate when an FPU was missing
+    steps during a movement, because normally
+    the step numbers at dataum cancel out to zero.
+    """
+
+    rig.gd.getCounterDeviation(rig.grid_state, fpuset=[fpu_id])
+    fpu = rig.grid_state.FPU[fpu_id]
+    return (fpu.alpha_deviation, fpu.beta_deviation)
+
+
+def move_then_datum(rig, fpu_id):
+    """make a measurement where an FPU is first moved,
+    then datumed, so that impact of movements on
+    the FPUs mechanical precision is measured.
+    """
+    if rig.opts.verbosity > 0:
+        print("moving FPU %i to (30,30) and back" % fpu_id)
+    wf = gen_wf(30 * dirac(fpu_id, rig.opts.N), 30)
+    verbosity = max(rig.opts.verbosity - 3, 0)
+    gd = rig.gd
+    grid_state = rig.grid_state
+
+    gd.configMotion(wf, grid_state, verbosity=verbosity)
+    gd.executeMotion(grid_state, fpuset=[fpu_id])
+    gd.reverseMotion(grid_state, fpuset=[fpu_id], verbosity=verbosity)
+    gd.executeMotion(grid_state, fpuset=[fpu_id])
+    gd.findDatum(grid_state, fpuset=[fpu_id])
+
+
+def grab_datumed_images(rig, fpu_id, capture_func, iterations):
+    """perform a number of datum operations, store
+    an image after each, and return the path names
+    of the images, together with the residual count."""
+
+    datumed_images = []
+    datumed_residuals = []
+    for count in range(iterations):
+
+        print("capturing datumed-%02i" % count)
+
+        rig.gd.findDatum(rig.grid_state, fpuset=[fpu_id])
+
+        ipath = capture_func("datumed", count)
+        datumed_images.append(ipath)
+
+        alpha_dev, beta_dev = get_counter_residuals(rig, fpu_id)
+        datumed_residuals.append((alpha_dev, beta_dev))
+
+    return datumed_images, datumed_residuals
+
+
+def grab_moved_images(rig, fpu_id, capture_func, iterations):
+    """perform datum operations after moving, grab and
+    collect images, and return resulting images and residual counts.
+    """
+
+    rig.gd.findDatum(rig.grid_state)
+    moved_images = []
+    moved_residuals = []
+    for count in range(iterations):
+        move_then_datum(rig, fpu_id)
+
+        print("capturing moved+datumed-%02i" % count)
+        ipath = capture_func("moved+datumed", count)
+        moved_images.append(ipath)
+
+        alpha_dev, beta_dev = get_counter_residuals(rig, fpu_id)
+        moved_residuals.append((alpha_dev, beta_dev))
+
+    return moved_images, moved_residuals
+
+
+def record_images_from_fpu(rig, fpu_id, capture_image, num_iterations):
+    """make a mesaurement series for a specific FPU."""
+
+    sn = rig.fpu_config[fpu_id]["serialnumber"]
+    capture_for_sn = partial(capture_image, sn)
+
+    # capture images with datum-only hardware command
+    datumed_images, datumed_residuals = grab_datumed_images(
+        rig, fpu_id, capture_for_sn, num_iterations
+    )
+
+    # capture images whith FPU moveing, then datum
+    moved_images, moved_residuals = grab_moved_images(
+        rig, fpu_id, capture_for_sn, num_iterations
+    )
+
+    # wrap up the gathered data in a DB record
+    image_record = DatumRepeatabilityImages(
+        images={"datumed_images": datumed_images, "moved_images": moved_images},
+        residual_counts={
+            "datumed_residuals": datumed_residuals,
+            "moved_residuals": moved_residuals,
+        },
+    )
+
+    return image_record
+
+
 def measure_datum_repeatability(rig, dbe, pars=None):
-
-    tstamp = timestamp()
-
-    # home turntable
+    # go to defined start configuration
     rig.hw.safe_home_turntable(rig.gd, rig.grid_state)
-
     rig.lctrl.switch_all_off()
 
     with rig.lctrl.use_ambientlight():
 
-        # get sorted positions (this is needed because the turntable can only
-        # move into one direction)
+        tstamp = timestamp()
+        camera = config_camera(rig, pars.DATUM_REP_EXPOSURE_MS)
+
+        # define closure which stores images with unique path names
+        # (using time stamp and camera object configured above)
+        def capture_image(sn, subtest, cnt):
+            ipath = store_image(
+                camera,
+                "{sn}/{tn}/{ts}/{tp}-{ct:03d}.bmp",
+                sn=sn,
+                tn="datum-repeatability",
+                ts=tstamp,
+                tp=subtest,
+                ct=cnt,
+            )
+
+            return ipath
+
+        # turn table along sorted positions
         for fpu_id, stage_position in get_sorted_positions(
             rig.measure_fpuset, pars.DATUM_REP_POSITIONS
         ):
 
-            if get_datum_repeatability_passed_p(dbe, fpu_id) and (
-                not rig.opts.repeat_passed_tests
-            ):
-
-                sn = rig.fpu_config[fpu_id]["serialnumber"]
-                print(
-                    "FPU %s : datum repeatability test already passed, skipping test"
-                    % sn
-                )
+            skip_reason = check_skip(rig, dbe, fpu_id)
+            if skip_reason:
+                print(skip_reason)
                 continue
 
-            # move rotary stage to POS_REP_POSN_N
+            # move rotary stage to measurement position
             rig.hw.turntable_safe_goto(rig.gd, rig.grid_state, stage_position)
-
-            # initialize pos_rep camera
-            # set pos_rep camera exposure time to DATUM_REP_EXPOSURE milliseconds
-            MET_CAL_CAMERA_CONF = {
-                DEVICE_CLASS: BASLER_DEVICE_CLASS,
-                IP_ADDRESS: MET_CAL_CAMERA_IP_ADDRESS,
-            }
-
-            met_cal_cam = rig.hw.GigECamera(MET_CAL_CAMERA_CONF)
-            met_cal_cam.SetExposureTime(pars.DATUM_REP_EXPOSURE_MS)
-
-            datumed_images = []
-            moved_images = []
-            datumed_residuals = []
-            moved_residuals = []
-
-            def capture_image(subtest, cnt):
-
-                ipath = store_image(
-                    met_cal_cam,
-                    "{sn}/{tn}/{ts}/{tp}-{ct:03d}.bmp",
-                    sn=rig.fpu_config[fpu_id]["serialnumber"],
-                    tn="datum-repeatability",
-                    ts=tstamp,
-                    tp=subtest,
-                    ct=cnt,
-                )
-
-                return ipath
-
-            for count in range(pars.DATUM_REP_ITERATIONS):
-                print("capturing datumed-%02i" % count)
-                rig.gd.findDatum(rig.grid_state, fpuset=[fpu_id])
-                ipath = capture_image("datumed", count)
-                datumed_images.append(ipath)
-                rig.gd.getCounterDeviation(rig.grid_state, fpuset=[fpu_id])
-                fpu = rig.grid_state.FPU[fpu_id]
-                datumed_residuals.append((fpu.alpha_deviation, fpu.beta_deviation))
-
-            rig.gd.findDatum(rig.grid_state)
-            for count in range(pars.DATUM_REP_ITERATIONS):
-                if rig.opts.verbosity > 0:
-                    print("moving FPU %i to (30,30) and back" % fpu_id)
-                wf = gen_wf(30 * dirac(fpu_id, rig.opts.N), 30)
-                verbosity = max(rig.opts.verbosity - 3, 0)
-                gd = rig.gd
-                grid_state = rig.grid_state
-
-                gd.configMotion(wf, grid_state, verbosity=verbosity)
-                gd.executeMotion(grid_state, fpuset=[fpu_id])
-                gd.reverseMotion(grid_state, fpuset=[fpu_id], verbosity=verbosity)
-                gd.executeMotion(grid_state, fpuset=[fpu_id])
-                gd.findDatum(grid_state, fpuset=[fpu_id])
-                print("capturing moved+datumed-%02i" % count)
-                ipath = capture_image("moved+datumed", count)
-                moved_images.append(ipath)
-
-                rig.gd.getCounterDeviation(rig.grid_state, fpuset=[fpu_id])
-                fpu = rig.grid_state.FPU[fpu_id]
-                moved_residuals.append((fpu.alpha_deviation, fpu.beta_deviation))
-
-            record = DatumRepeatabilityImages(
-                images={"datumed_images": datumed_images, "moved_images": moved_images},
-                residual_counts={
-                    "datumed_residuals": datumed_residuals,
-                    "moved_residuals": moved_residuals,
-                },
+            # measure images
+            image_record = record_images_from_fpu(
+                rig, fpu_id, capture_image, pars.DATUM_REP_ITERATIONS
             )
-
-            save_datum_repeatability_images(dbe, fpu_id, record)
+            # store to database
+            save_datum_repeatability_images(dbe, fpu_id, image_record)
 
 
 def eval_datum_repeatability(dbe, dat_rep_analysis_pars):

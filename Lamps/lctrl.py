@@ -72,8 +72,8 @@ BACKLIGHT_CHANNEL = 0
 # here a nice explanation how the context managers work:
 # https://jeffknupp.com/blog/2016/03/07/python-with-context-managers/
 
-class LampControllerBase:
 
+class LampControllerBase:
     def switch_all_off(self):
         self.switch_fibre_backlight("off")
         self.switch_ambientlight("off")
