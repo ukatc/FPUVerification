@@ -72,8 +72,15 @@ BACKLIGHT_CHANNEL = 0
 # here a nice explanation how the context managers work:
 # https://jeffknupp.com/blog/2016/03/07/python-with-context-managers/
 
+class LampControllerBase:
 
-class lampController:
+    def switch_all_off(self):
+        self.switch_fibre_backlight("off")
+        self.switch_ambientlight("off")
+        self.switch_silhouettelight("off")
+
+
+class lampController(LampControllerBase):
     """ Class to control lamps through an attached DAQ.
 
     The connected ports are
@@ -203,7 +210,7 @@ class lampController:
             time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
 
 
-class manualLampController:
+class manualLampController(LampControllerBase):
     """ Class to control lamps manually. This is important for test purpuses.
 
     """
@@ -214,16 +221,16 @@ class manualLampController:
         """
         pass
 
-    def switch_fibre_backlight(self, state, manual_lamp_control=False):
+    def switch_fibre_backlight(self, state):
         raw_input("switch state of backlight to %r and press <enter> $" % state)
 
-    def switch_fibre_backlight_voltage(self, voltage, manual_lamp_control=False):
+    def switch_fibre_backlight_voltage(self, voltage):
         raw_input("switch voltage of backlight to %r and press <enter> $" % voltage)
 
-    def switch_ambientlight(self, state, manual_lamp_control=False):
+    def switch_ambientlight(self, state):
         raw_input("switch state of ambient light to %r and press <enter> $" % state)
 
-    def switch_silhouettelight(self, state, manual_lamp_control=False):
+    def switch_silhouettelight(self, state):
         raw_input("switch state of silhouette light to %r and press <enter> $" % state)
 
     @contextmanager

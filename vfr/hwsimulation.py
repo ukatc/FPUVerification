@@ -9,6 +9,8 @@ from contextlib import contextmanager
 
 import ImageAnalysisFuncs  # used to look up images
 
+from Lamps.lctrl import LampControllerBase
+
 from vfr.conf import (
     LAMP_WARMING_TIME_MILLISECONDS,
     MET_CAL_CAMERA_IP_ADDRESS,
@@ -23,7 +25,7 @@ from vfr.tests_common import find_datum
 # https://jeffknupp.com/blog/2016/03/07/python-with-context-managers/
 
 
-class lampController:
+class lampController(LampControllerBase):
     def __init__(self):
         print("initializing mocked-up lamp controller...")
 

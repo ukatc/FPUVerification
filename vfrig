@@ -81,9 +81,7 @@ if __name__ == "__main__":
 
     # make sure that lamps are switched off on program exit
     def lamps_off():
-        lctrl.switch_fibre_backlight("off")
-        lctrl.switch_ambientlight("off")
-        lctrl.switch_silhouettelight("off")
+        lctrl.switch_all_off()
 
     if opts.mockup:
         hw = hwsimulation
