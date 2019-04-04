@@ -179,7 +179,7 @@ POS_REP_MEASUREMENT_PARS = Namespace(
     POS_REP_POSITIONS=POS_REP_POSITIONS,  # the rotary stage angle required to
     # place each FPU under the positional
     # repeatability camera
-    POS_REP_EXPOSURE_MS=NaN,  # the exposure time in
+    POS_REP_EXPOSURE_MS=250,  # the exposure time in
     # milliseconds for a correctly
     # exposed image
     POS_REP_NUM_INCREMENTS=3,  # the number of movements made
@@ -229,7 +229,7 @@ POS_VER_MEASUREMENT_PARS = Namespace(
     POS_REP_POSITIONS=POS_REP_POSITIONS,  # the rotary stage angle required to
     # place each FPU under the positional
     # repeatability camera
-    POS_VER_EXPOSURE_MS=NaN,  # the exposure time in
+    POS_VER_EXPOSURE_MS=250,  # the exposure time in
     # milliseconds for a correctly
     # exposed image
     POS_VER_ITERATIONS=3,  # the number of times each FPU
