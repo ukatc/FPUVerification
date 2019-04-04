@@ -45,12 +45,12 @@ MET_HEIGHT_CAMERA_IP_ADDRESS = "169.254.190.121"
 PUP_ALGN_CAMERA_IP_ADDRESS = "169.254.108.113"
 
 
-METROLOGY_CAL_POSITIONS = [268, 328, 28, 88, 148, 208]
+METROLOGY_CAL_POSITIONS = [254, 314.5, 13, 73, 133.5]
 
 COLLDECT_MEASUREMENT_PARS = Namespace(
     COLDECT_ALPHA=-180,
-    COLDECT_BETA=70,
-    COLDECT_POSITIONS=[NaN, NaN, NaN, NaN, NaN, NaN],
+    COLDECT_BETA=130,
+    COLDECT_POSITIONS=[201, 261, 321.5, 20, 80],
     LIMIT_ALPHA_NEG_EXPECT=-182.0,
     LIMIT_ALPHA_POS_EXPECT=+175.0,
     LIMIT_BETA_NEG_EXPECT=-185.0,
@@ -61,7 +61,7 @@ DATUM_REP_MEASUREMENT_PARS = Namespace(
     DATUM_REP_ITERATIONS=10,  # the
     # number of datum operations made for
     # each test
-    DATUM_REP_EXPOSURE_MS=500,  # the exposure
+    DATUM_REP_EXPOSURE_MS=1300,  # the exposure
     # time in milliseconds for a correctly
     # exposed image
     DATUM_REP_POSITIONS=METROLOGY_CAL_POSITIONS,
@@ -84,10 +84,10 @@ DAT_REP_CALIBRATION_PARS = {
 DATUM_REP_ANALYSIS_PARS = Namespace(
     FIXME_FAKE_RESULT=True,  # DELETE THIS!! This is only for testing!
     POS_REP_PLATESCALE=DAT_REP_PLATESCALE,
-    POS_REP_SMALL_DIAMETER=1.5,  # millimeter
-    POS_REP_LARGE_DIAMETER=2.5,  # millimeter
+    POS_REP_SMALL_DIAMETER=1.4,  # millimeter
+    POS_REP_LARGE_DIAMETER=2.4,  # millimeter
     POS_REP_DIAMETER_TOLERANCE=0.1,  # millimeter
-    POS_REP_THRESHOLD=40,  # 0-255
+    POS_REP_THRESHOLD=80,  # 0-255
     POS_REP_QUALITY_METRIC=0.8,  # dimensionless
     POS_REP_CALIBRATION_PARS=DAT_REP_CALIBRATION_PARS,
     display=False,
@@ -103,7 +103,7 @@ MET_CAL_MEASUREMENT_PARS = Namespace(
     METROLOGY_CAL_POSITIONS=METROLOGY_CAL_POSITIONS,
     # rotary stage angle, in degrees, required to place each FPU under
     # the metrology calibration camera
-    METROLOGY_CAL_TARGET_EXPOSURE_MS=500.0,  # he exposure time in
+    METROLOGY_CAL_TARGET_EXPOSURE_MS=1300,  # he exposure time in
     # milliseconds for a
     # correctly exposed
     # image of the
@@ -117,7 +117,7 @@ MET_CAL_MEASUREMENT_PARS = Namespace(
     # for fibre measurements
 )
 
-POS_REP_PLATESCALE = 0.02361  # millimeter per pixel
+POS_REP_PLATESCALE = 0.02361  # millimeter per pixel 
 
 POS_REP_CALIBRATION_PARS = {
     "algorithm": "scale",
@@ -129,8 +129,8 @@ POS_REP_CALIBRATION_PARS = {
 
 POS_REP_ANALYSIS_PARS = Namespace(
     POS_REP_PLATESCALE=POS_REP_PLATESCALE,
-    POS_REP_SMALL_DIAMETER=1.5,  # millimeter
-    POS_REP_LARGE_DIAMETER=2.5,  # millimeter
+    POS_REP_SMALL_DIAMETER=1.4,  # millimeter
+    POS_REP_LARGE_DIAMETER=2.4,  # millimeter
     POS_REP_DIAMETER_TOLERANCE=0.1,  # millimeter
     POS_REP_THRESHOLD=40,  # 0-255
     POS_REP_QUALITY_METRIC=0.8,  # dimensionless
@@ -141,8 +141,8 @@ POS_REP_ANALYSIS_PARS = Namespace(
 
 MET_CAL_TARGET_ANALYSIS_PARS = Namespace(
     MET_CAL_PLATESCALE=0.00668,  # millimeter per pixel
-    MET_CAL_SMALL_DIAMETER=1.5,  # millimeter
-    MET_CAL_LARGE_DIAMETER=2.5,  # millimeter
+    MET_CAL_SMALL_DIAMETER=1.4,  # millimeter
+    MET_CAL_LARGE_DIAMETER=2.4,  # millimeter
     MET_CAL_DIAMETER_TOLERANCE=0.1,  # millimeter
     MET_CAL_GAUSS_BLUR=3,  # pixels - MUST BE AN ODD NUMBER
     MET_CAL_THRESHOLD=40,  # 0-255
@@ -159,7 +159,7 @@ MET_CAL_FIBRE_ANALYSIS_PARS = Namespace(
 )
 
 
-POS_REP_POSITIONS = [132, 192, 252, 312, 12, 72]
+POS_REP_POSITIONS = [135, 195, 255, 315, 15]
 
 # these values are for CAN protocol version 1 firmware
 MOTOR_MIN_STEP_FREQUENCY = 500
@@ -246,31 +246,29 @@ POS_VER_EVALUATION_PARS = Namespace(
 
 PUP_ALGN_MEASUREMENT_PARS = Namespace(
     PUP_ALGN_POSITIONS=[
-        0.0,
-        NaN,
-        NaN,
-        NaN,
-        NaN,
-        NaN,
+        19,
+        79,
+        139,
+        200,
+        260
     ],  # the rotary stage angle required to
     # place each FPU under the first pupil
     # alignment fold mirror
     PUP_ALGN_LINPOSITIONS=[  # the linear stage positions
-        0.0,  # note= bogus values - spec missing FIXME
-        5.0,
-        10.0,
-        15.0,
-        20.0,
-        25.0,
+        10.5,  # note= bogus values - spec missing FIXME
+        19,
+        27.5,
+        35,
+        43.5
     ],
     # required to illuminate each FPU
     # fibre
-    PUP_ALGN_EXPOSURE_MS=NaN,  # the exposure time in milliseconds
+    PUP_ALGN_EXPOSURE_MS=3000,  # the exposure time in milliseconds
     # for a correctly exposed image
-    PUP_ALGN_LAMP_VOLTAGE=3.3,
+    PUP_ALGN_LAMP_VOLTAGE=5,
 )
 
-PUP_ALGN_PLATESCALE = 0.00668
+PUP_ALGN_PLATESCALE = 0.76
 
 PUP_ALGN_CALIBRATION_PARS = {
     "algorithm": "scale",
@@ -301,15 +299,14 @@ PUP_ALGN_EVALUATION_PARS = Namespace(
 
 MET_HEIGHT_MEASUREMENT_PARS = Namespace(
     MET_HEIGHT_POSITIONS=[
-        268,
-        328,
+        269.5,
+        330,
         28,
-        88,
-        148,
+        88.5,
         208,
     ],  # the rotary stage angle required to place each FPU
     #                                                        in front of the metrology height camera
-    MET_HEIGHT_TARGET_EXPOSURE_MS=NaN,  # the exposure time in
+    MET_HEIGHT_TARGET_EXPOSURE_MS=50,  # the exposure time in
     # milliseconds for a
     # correctly exposed image
     # of the illuminated
