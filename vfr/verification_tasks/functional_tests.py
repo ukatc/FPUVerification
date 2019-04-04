@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
+from fpu_constants import StepsPerDegreeBeta
 from fpu_commands import gen_wf
 from FpuGridDriver import (
     DASEL_ALPHA,
@@ -16,7 +17,7 @@ from FpuGridDriver import (
     LimitBreachError,
     MovementError,
 )
-from numpy import NaN
+from numpy import NaN, ceil
 from vfr.db.base import TestResult
 from vfr.db.colldect_limits import (
     LimitTestResult,
@@ -181,6 +182,7 @@ def test_limit(rig, dbe, which_limit, pars=None):
                 rig.gd.findDatum(rig.grid_state)
                 print("OK")
                 rig.hw.safe_home_turntable(rig.gd, rig.grid_state, opts=rig.opts)
+                # inform mocked hardware about place of collision it has to simulate
                 go_collision_test_pos(fpu_id, rig.opts)
 
             print(
@@ -293,11 +295,18 @@ def test_limit(rig, dbe, which_limit, pars=None):
                 rig.gd.executeMotion(rig.grid_state, fpuset=[fpu_id])
             else:
                 print("moving fpu %i back by %i steps" % (fpu_id, 10))
-                for k in range(3):
+                RECOVERY_STEPS_PER_ITERATION = 10
+                recovery_steps = pars.RECOVERY_ANGLE_DEG * StepsPerDegreeBeta
+                recovery_iterations = int(ceil(recovery_steps / RECOVERY_STEPS_PER_ITERATION))
+
+                for k in range(recovery_iterations):
                     rig.gd.freeBetaCollision(
                         fpu_id, free_dir, rig.grid_state, soft_protection=False
                     )
                     rig.gd.pingFPUs(rig.grid_state, [fpu_id])
+                    angle = rig.gd.trackedAngles(rig.grid_state, retrieve=True)[fpu_id]
+                    print("recovering FPU, current angle = %r" % angle)
+
                 rig.gd.enableBetaCollisionProtection(rig.grid_state)
                 wf = gen_wf(0, dw * dirac(fpu_id, N))
                 rig.gd.configMotion(

@@ -58,6 +58,7 @@ COLLDECT_MEASUREMENT_PARS = Namespace(
     LIMIT_ALPHA_POS_EXPECT=+175.0,
     LIMIT_BETA_NEG_EXPECT=-185.0,
     LIMIT_BETA_POS_EXPECT=+155.0,
+    RECOVERY_ANGLE_DEG = 3.0, # angle (in degrees) of back movement to recover
 )
 
 DATUM_REP_MEASUREMENT_PARS = Namespace(
@@ -120,7 +121,7 @@ MET_CAL_MEASUREMENT_PARS = Namespace(
     # for fibre measurements
 )
 
-POS_REP_PLATESCALE = 0.02361  # millimeter per pixel 
+POS_REP_PLATESCALE = 0.02361  # millimeter per pixel
 
 POS_REP_CALIBRATION_PARS = {
     "algorithm": "scale",
