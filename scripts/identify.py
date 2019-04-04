@@ -21,4 +21,4 @@ def identify(serial):
 
 
 if __name__ == "__main__":
-    sys.exit(identify())
+    sys.exit(identify()) # pylint: disable=no-value-for-parameter

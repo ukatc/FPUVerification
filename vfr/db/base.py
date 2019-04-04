@@ -18,6 +18,8 @@ def get_version():
     version = subprocess.check_output(["git", "describe"]).strip()
     os.chdir(start_dir)
 
+    return version
+
 
 GIT_VERSION = get_version()
 

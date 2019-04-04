@@ -3,7 +3,7 @@ from __future__ import division, print_function
 import cv2
 from ImageAnalysisFuncs.base import ImageAnalysisError
 from matplotlib import pyplot as plt
-from numpy import float32, std, sqrt
+from numpy import float32, std, sqrt # pylint: disable=no-name-in-module
 from numpy.polynomial import Polynomial
 
 # version number for analysis algorithm
@@ -31,6 +31,7 @@ def methtHeight(
     # Johannes Nix (code imported and re-formatted)
 
     # image processing
+    # pylint: disable=no-member
     image = cv2.imread(image_path)
     blur = cv2.GaussianBlur(image, (pars.METHT_GAUSS_BLUR, pars.METHT_GAUSS_BLUR), 0)
     gray = cv2.cvtColor(blur, cv2.COLOR_BGR2GRAY)

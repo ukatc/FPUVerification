@@ -56,7 +56,7 @@ def check_can_connection(rd, grid_state, opts, fpu_id):
     rv = rd.pingFPUs(grid_state, fpuset=[fpu_id])
     print(rv)
 
-    return rv == FpuGridDriver.ethercanif.DE_OK
+    return rv == FpuGridDriver.ethercanif.DE_OK # # pylint: disable=no-member
 
 
 def ping_fpus(gd, grid_state, opts):

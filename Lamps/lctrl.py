@@ -75,6 +75,7 @@ BACKLIGHT_CHANNEL = 0
 
 class LampControllerBase:
     def switch_all_off(self):
+        # pylint: disable=no-member
         self.switch_fibre_backlight("off")
         self.switch_ambientlight("off")
         self.switch_silhouettelight("off")

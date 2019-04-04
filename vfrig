@@ -144,7 +144,7 @@ if __name__ == "__main__":
     # low-level actions
     tasks = resolve(opts.tasks, rig, dbe)
 
-    if not rig.measure_fpuset:
+    if not rig.measure_fpuset: # pylint: disable=no-member
         # no measurements, we remove all related tasks
         print("No FPUs in measurement set, removing all measurement tasks")
         tasks -= set([

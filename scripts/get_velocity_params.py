@@ -24,4 +24,4 @@ def get_vel_params(serial):
 if __name__ == "__main__":
     import sys
 
-    sys.exit(get_vel_params())
+    sys.exit(get_vel_params()) # pylint: disable=no-value-for-parameter

@@ -70,6 +70,7 @@ def metcalTargetCoordinates(image_path, pars=None):
 
     centres = {}
 
+    # pylint: disable=no-member
     image = cv2.imread(image_path)
 
     # image processing
@@ -227,6 +228,7 @@ def metcalFibreCoordinates(image_path, pars=None):  # configurable parameters
     # Authors: Stephen Watson (initial algorithm March 4, 2019)
     # Johannes Nix (code imported and re-formatted)
 
+    # pylint: disable=no-member
     image = cv2.imread(image_path)
 
     # image processing

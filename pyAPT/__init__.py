@@ -23,7 +23,8 @@ __all__ = [
     "OutOfRangeError",
     "PRM1",
     "CR1Z7",
-    "NR360S" "add_PID",
+    "NR360S",
+    "add_PID",
 ]
 
 Message = message.Message

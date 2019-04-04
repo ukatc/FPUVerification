@@ -33,4 +33,4 @@ def info(serial):
 if __name__ == "__main__":
     import sys
 
-    sys.exit(info())
+    sys.exit(info()) # pylint: disable=no-value-for-parameter

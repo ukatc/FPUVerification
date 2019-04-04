@@ -127,7 +127,7 @@ class GigECamera:
         elif ip_address == MET_CAL_CAMERA_IP_ADDRESS:
             if (
                 self.exposure_time_ms
-                == MET_CAL_MEASUREMENT_PARS.METROLOGY_CAL_FIBRE_EXPOSURE_MS
+                == MET_CAL_MEASUREMENT_PARS.METROLOGY_CAL_FIBRE_EXPOSURE_MS # # pylint: disable=no-member
             ):
                 warnings.warn(
                     "using target image in place of fibre image for met "

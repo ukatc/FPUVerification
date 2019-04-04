@@ -37,6 +37,7 @@ def pupalnCoordinates(
     # Authors: Stephen Watson (initial algorithm March 4, 2019(
     # Johannes Nix (code imported and re-formatted)
 
+    # pylint: disable=no-member
     image = cv2.imread(image_path)
 
     # image processing
