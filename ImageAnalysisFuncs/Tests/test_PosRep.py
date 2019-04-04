@@ -54,6 +54,15 @@ class TestPosRepImageAnalysis(unittest.TestCase):
                 29.112,
                 0.903,
             ),
+            (
+                "../TestImages/PT24_posrep_selftest.bmp",
+                45.152,
+                30.717,
+                0.888,
+                43.418,
+                29.112,
+                0.903,
+            ),
         ]
 
         for (test_image, small_x, small_y, small_q, large_x, large_y, large_q) in cases:
