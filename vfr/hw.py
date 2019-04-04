@@ -68,7 +68,7 @@ def turntable_safe_goto(gd, grid_state, stage_position, wait=True, monitor=False
 def home_linear_stage():
     with pyAPT.MTS50(serial_number=MTS50_SERIALNUMBER) as con:
         print("\tHoming linear stage...", "end=' '")
-        con.home(clockwise=True)
+        con.home()
         print("homed")
     print("OK")
 
