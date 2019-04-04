@@ -111,8 +111,17 @@ class GigECamera(object):
             sets the raw exposure time in ms.
         """
 
+        # convert exposure time from milliseconds to
+        # microseconds where the value is an integral multiple of 35
+        # microseconds
+        EXPOSURE_STEP_US = 35
+        US_PER_MS = 1000
+        exposure_time_us = EXPOSURE_STEP_US * int(
+            round(US_PER_MS * exposure_time / float(EXPOSURE_STEP_US))
+        )
+        print("setting exposure time to %f us" % exposure_time_us)
         if genicam.IsWritable(self.camera.ExposureTimeRaw):
-            self.camera.ExposureTimeRaw.SetValue(exposure_time)
+            self.camera.ExposureTimeRaw.SetValue(exposure_time_us)
         else:
             print(
                 "Exposure Time is not settable, continuing with current exposure time."
