@@ -90,6 +90,15 @@ def parse_args():
     )
 
     parser.add_argument(
+        "-ign",
+        "--ignore-analysis-failures",
+        default=False,
+        action="store_true",
+        help="in the self-test, ignore image analysis failures "
+        "(converting them into a warning)",
+    )
+
+    parser.add_argument(
         "-mlc",
         "--manual-lamp-control",
         default=False,

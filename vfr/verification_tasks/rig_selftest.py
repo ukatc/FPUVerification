@@ -1,8 +1,10 @@
 from __future__ import absolute_import, division, print_function
 
 import sys
+from warnings import warn
 
 from GigE.GigECamera import BASLER_DEVICE_CLASS, DEVICE_CLASS, IP_ADDRESS
+from ImageAnalysisFuncs.base import ImageAnalysisError
 from ImageAnalysisFuncs.analyze_metrology_calibration import (
     metcalFibreCoordinates,
     metcalTargetCoordinates,
@@ -52,10 +54,18 @@ def selftest_pup_algn(rig, pars=None, PUP_ALGN_ANALYSIS_PARS=None, capture_image
 
             ipath_selftest_pup_algn = capture_image(pup_aln_cam, "pupil-alignment")
 
-            result = pupalnCoordinates(
-                ipath_selftest_pup_algn, pars=PUP_ALGN_ANALYSIS_PARS
-            )
-            del result
+            try:
+                result = pupalnCoordinates(
+                    ipath_selftest_pup_algn, pars=PUP_ALGN_ANALYSIS_PARS
+                )
+                del result
+            except ImageAnalysisError:
+                if rig.opts.ignore_analysis_failures:
+                    warn("FAILED: self-test pupil alignment image"
+                         " analysis (ignored)")
+                else:
+                    raise
+
     finally:
         rig.hw.safe_home_turntable(rig.gd, rig.grid_state)
         rig.hw.home_linear_stage()
@@ -111,10 +121,18 @@ def selftest_metrology_calibration(
         with rig.lctrl.use_backlight(pars.METROLOGY_CAL_BACKLIGHT_VOLTAGE):
             ipath_selftest_met_cal_fibre = capture_image(met_cal_cam, "met-cal-fibre")
 
-        target_coordinates = metcalTargetCoordinates(
-            ipath_selftest_met_cal_target, pars=MET_CAL_TARGET_ANALYSIS_PARS
-        )
-        del target_coordinates
+        try:
+            target_coordinates = metcalTargetCoordinates(
+                ipath_selftest_met_cal_target, pars=MET_CAL_TARGET_ANALYSIS_PARS
+            )
+            del target_coordinates
+        except ImageAnalysisError:
+            if rig.opts.ignore_analysis_failures:
+                warn("FAILED: self-test metrology calibration image"
+                     " analysis (ignored)")
+            else:
+                raise
+
 
         fibre_coordinates = metcalFibreCoordinates(
             ipath_selftest_met_cal_fibre, pars=MET_CAL_FIBRE_ANALYSIS_PARS
@@ -157,9 +175,20 @@ def selftest_metrology_height(
                 met_height_cam, "metrology-height"
             )
 
-        metht_small_target_height_mm, metht_large_target_height_mm = methtHeight(
-            ipath_selftest_met_height, pars=MET_HEIGHT_ANALYSIS_PARS
-        )
+        try:
+            metht_small_target_height_mm, metht_large_target_height_mm = methtHeight(
+                ipath_selftest_met_height, pars=MET_HEIGHT_ANALYSIS_PARS
+            )
+            del metht_small_target_height_mm
+            del metht_large_target_height_mm
+
+        except ImageAnalysisError:
+            if rig.opts.ignore_analysis_failures:
+                warn("FAILED: self-test metrology height image"
+                     " analysis (ignored)")
+            else:
+                raise
+
 
     finally:
         rig.hw.safe_home_turntable(rig.gd, rig.grid_state)
@@ -197,8 +226,15 @@ def selftest_positional_repeatability(
                 pos_rep_cam, "positional-repeatability"
             )
 
-        coords = posrepCoordinates(selftest_ipath_pos_rep, pars=POS_REP_ANALYSIS_PARS)
-        del coords
+        try:
+            coords = posrepCoordinates(selftest_ipath_pos_rep, pars=POS_REP_ANALYSIS_PARS)
+            del coords
+        except ImageAnalysisError:
+            if rig.opts.ignore_analysis_failures:
+                warn("FAILED: self-test positional repeatability image"
+                     " analysis (ignored)")
+            else:
+                raise
 
     finally:
         rig.hw.safe_home_turntable(rig.gd, rig.grid_state)

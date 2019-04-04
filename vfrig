@@ -99,7 +99,8 @@ if __name__ == "__main__":
         'repeat_passed_tests',
         'skip_fibre',
         'N',
-        'bus_repeat_dummy_delay'
+        'bus_repeat_dummy_delay',
+        'ignore_analysis_failures',
     ]})
 
     db_opts = Namespace(**{ k : vars(opts)[k] for k in [
