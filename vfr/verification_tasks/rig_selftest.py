@@ -28,9 +28,7 @@ def selftest_pup_algn(rig, pars=None, PUP_ALGN_ANALYSIS_PARS=None, capture_image
         # home turntable
         rig.hw.safe_home_turntable(rig.gd, rig.grid_state)
         rig.hw.home_linear_stage()
-
-        rig.lctrl.switch_ambientlight("off")
-        rig.lctrl.switch_silhouettelight("off")
+        rig.lctrl.switch_all_off()
 
         with rig.lctrl.use_backlight(5.0):
 
@@ -84,10 +82,7 @@ def selftest_metrology_calibration(
     try:
         # home turntable
         rig.hw.safe_home_turntable(rig.gd, rig.grid_state)
-
-        rig.lctrl.switch_fibre_backlight("off")
-        rig.lctrl.switch_ambientlight("off")
-        rig.lctrl.switch_fibre_backlight_voltage(0.0)
+        rig.lctrl.switch_all_off()
 
         MET_CAL_CAMERA_CONF = {
             DEVICE_CLASS: BASLER_DEVICE_CLASS,
@@ -106,8 +101,7 @@ def selftest_metrology_calibration(
         rig.hw.turntable_safe_goto(rig.gd, rig.grid_state, stage_position)
 
         met_cal_cam.SetExposureTime(pars.METROLOGY_CAL_TARGET_EXPOSURE_MS)
-        rig.lctrl.switch_fibre_backlight("off")
-        rig.lctrl.switch_fibre_backlight_voltage(0.0)
+        rig.lctrl.switch_all_off()
 
         # use context manager to switch lamp on
         # and guarantee it is switched off after the
@@ -116,7 +110,7 @@ def selftest_metrology_calibration(
             ipath_selftest_met_cal_target = capture_image(met_cal_cam, "met-cal-target")
 
         met_cal_cam.SetExposureTime(pars.METROLOGY_CAL_FIBRE_EXPOSURE_MS)
-        rig.lctrl.switch_ambientlight("off")
+        rig.lctrl.switch_all_off()
 
         with rig.lctrl.use_backlight(pars.METROLOGY_CAL_BACKLIGHT_VOLTAGE):
             ipath_selftest_met_cal_fibre = capture_image(met_cal_cam, "met-cal-fibre")
@@ -151,10 +145,7 @@ def selftest_metrology_height(
 
     try:
         rig.hw.safe_home_turntable(rig.gd, rig.grid_state)
-
-        rig.lctrl.switch_fibre_backlight("off")
-        rig.lctrl.switch_ambientlight("off")
-        rig.lctrl.switch_fibre_backlight_voltage(0.0)
+        rig.lctrl.switch_all_off()
 
         MET_HEIGHT_CAMERA_CONF = {
             DEVICE_CLASS: BASLER_DEVICE_CLASS,
@@ -202,9 +193,7 @@ def selftest_positional_repeatability(
 
     try:
         rig.hw.safe_home_turntable(rig.gd, rig.grid_state)
-
-        rig.lctrl.switch_fibre_backlight("off")
-        rig.lctrl.switch_fibre_backlight_voltage(0.0)
+        rig.lctrl.switch_all_off()
 
         POS_REP_CAMERA_CONF = {
             DEVICE_CLASS: BASLER_DEVICE_CLASS,
