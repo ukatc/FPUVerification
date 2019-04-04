@@ -3,10 +3,12 @@
 from __future__ import absolute_import, division, print_function
 
 import atexit
+import os
 import sys
 from argparse import Namespace
 
 from protectiondb import open_database_env
+import devicelock
 from vfr import hw as real_hw
 from vfr import hwsimulation
 from vfr.conf import (COLLDECT_MEASUREMENT_PARS,
@@ -28,6 +30,7 @@ from vfr.db.snset import add_sns_to_set
 from vfr.options import load_config, parse_args, check_sns_unique
 from vfr.posdb import init_position
 from vfr.TaskLogic import T, resolve
+from vfr.task_config import MEASUREMENT_TASKS
 from vfr.tests_common import find_datum, flush, cd_to_image_root
 from vfr.verification_tasks.functional_tests import (DASEL_ALPHA, DASEL_BETA,
                                                      DASEL_BOTH, rewind_fpus, test_datum,
@@ -90,6 +93,7 @@ if __name__ == "__main__":
         hw = real_hw
         atexit.register(lamps_off)
 
+
     rig_opts = Namespace(**{ k : vars(opts)[k] for k in [
         'verbosity',
         'mockup',
@@ -148,37 +152,17 @@ if __name__ == "__main__":
     if not rig.measure_fpuset: # pylint: disable=no-member
         # no measurements, we remove all related tasks
         print("No FPUs in measurement set, removing all measurement tasks")
-        tasks -= set([
-            T.TST_GATEWAY_CONNECTION,
-            T.TST_POS_REP_CAM_CONNECTION,
-            T.TST_POS_REP_CAM_CONNECTION,
-            T.TST_MET_CAL_CAM_CONNECTION,
-            T.TST_MET_HEIGHT_CAM_CONNECTION,
-            T.TST_PUP_ALGN_CAM_CONNECTION,
-            T.TASK_INIT_RD,
-            T.TST_CAN_CONNECTION,
-            T.TST_FLASH,
-            T.TST_INITPOS,
-            T.TASK_INIT_GD,
-            T.TST_DATUM_ALPHA,
-            T.TST_DATUM_BETA,
-            T.TST_DATUM_BOTH,
-            T.TASK_REFERENCE,
-            T.TASK_SELFTEST_NONFIBRE,
-            T.TASK_SELFTEST_FIBRE,
-            T.TST_COLLDETECT,
-            T.TST_ALPHA_MIN,
-            T.TST_ALPHA_MAX,
-            T.TST_BETA_MAX,
-            T.TST_BETA_MIN,
-            T.MEASURE_MET_CAL,
-            T.MEASURE_MET_HEIGHT,
-            T.MEASURE_DATUM_REP,
-            T.MEASURE_PUP_ALGN,
-            T.MEASURE_POS_REP,
-            T.MEASURE_POS_VER,
-            T.TASK_PARK_FPUS,
-        ])
+        tasks -= MEASUREMENT_TASKS
+
+    if (tasks &  MEASUREMENT_TASKS):
+        # lock the rig hardware to ensure exclusive access
+        groupname = os.environ.get("MOONS_GATEWAY_ACCESS_GROUP","moons")
+        # acquire a unique inter-process lock for the rig
+        lockname = 'moons-verification-rig'
+        if opts.mockup:
+            lockname += "-mockup"
+        dl = devicelock.DeviceLock(lockname, groupname)
+
 
     if opts.expand_tasks:
         print("Expanded tasks: %s" % list(tasks))

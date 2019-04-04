@@ -14,7 +14,7 @@ from fpu_constants import (
     BETA_MIN_DEGREE,
     BETA_MAX_DEGREE,
 )
-from vfr.conf import DEFAULT_TASKS
+from vfr.conf import DEFAULT_TASKS, DEFAULT_TASKS_NONFIBRE
 from vfr.db.snset import get_snset
 from vfr.helptext import examples, summary
 from vfr.TaskLogic import T
@@ -298,7 +298,10 @@ def parse_args():
         sys.exit(0)
 
     if len(args.tasks) == 0:
-        args.tasks = DEFAULT_TASKS
+        if args.skip_fibre :
+            args.tasks = DEFAULT_TASKS_NONFIBRE
+        else:
+            args.tasks = DEFAULT_TASKS
 
     if args.mockup:
         args.gateway_address = "127.0.0.1"
