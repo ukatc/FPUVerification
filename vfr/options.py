@@ -150,7 +150,15 @@ def parse_args():
         "--repeat-passed-tests",
         default=False,
         action="store_true",
-        help="repeat tests which were already passed successfully",
+        help="repeat tests which were already passed successfully (except limit tests)",
+    )
+
+    parser.add_argument(
+        "-rpl",
+        "--repeat-limit-tests",
+        default=False,
+        action="store_true",
+        help="repeat limit tests which were already passed successfully",
     )
 
     parser.add_argument(
@@ -183,14 +191,6 @@ def parse_args():
         default=False,
         action="store_true",
         help="skip measurements and dependencies which require fibres to be present",
-    )
-
-    parser.add_argument(
-        "-rw",
-        "--rewind_fpus",
-        default=False,
-        action="store_true",
-        help="rewind FPUs to datum position at start",
     )
 
     parser.add_argument(

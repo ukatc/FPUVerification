@@ -91,6 +91,8 @@ summary = cleandoc(
     2) FUNCTIONAL TESTS
     -------------------
 
+    {TASK_REWIND_FPUS!r:<20}  - rewind FPUs to position which is safe for datum scan
+
     {TST_DATUM!r:<20}  - test functionality of datum operation, and store result
 
     {TST_FUNCTIONAL!r:<20}  - perform all functional tests

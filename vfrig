@@ -20,7 +20,8 @@ from vfr.conf import (COLLDECT_MEASUREMENT_PARS,
                       POS_REP_MEASUREMENT_PARS, POS_VER_EVALUATION_PARS,
                       POS_VER_MEASUREMENT_PARS, PUP_ALGN_ANALYSIS_PARS,
                       PUP_ALGN_CAMERA_IP_ADDRESS, PUP_ALGN_EVALUATION_PARS,
-                      PUP_ALGN_MEASUREMENT_PARS)
+                      PUP_ALGN_MEASUREMENT_PARS, REWIND_POS_ALPHA, REWIND_POS_BETA)
+
 from vfr.connection import (check_can_connection, check_connection,
                             init_driver)
 from vfr.db.snset import add_sns_to_set
@@ -29,7 +30,7 @@ from vfr.posdb import init_position
 from vfr.TaskLogic import T, resolve
 from vfr.tests_common import find_datum, flush, cd_to_image_root
 from vfr.verification_tasks.functional_tests import (DASEL_ALPHA, DASEL_BETA,
-                                                     DASEL_BOTH, test_datum,
+                                                     DASEL_BOTH, rewind_fpus, test_datum,
                                                      test_limit)
 from vfr.verification_tasks.measure_datum_repeatability import (eval_datum_repeatability,
                                                                 measure_datum_repeatability)
@@ -97,7 +98,6 @@ if __name__ == "__main__":
         're_initialize',
         'repeat_passed_tests',
         'skip_fibre',
-        'rewind_fpus',
         'N',
         'bus_repeat_dummy_delay'
     ]})
@@ -302,6 +302,13 @@ if __name__ == "__main__":
         flush()
         gd.resetFPUs(grid_state, fpuset=measure_fpuset)
         print ("OK")
+
+    if T.TASK_REWIND_FPUS in tasks:
+        print ("[%s] ###" % T.TASK_REWIND_FPUS)
+
+        print ("rewinding FPUs near datum position..." )
+
+        rewind_fpus(rig, REWIND_POS_ALPHA, REWIND_POS_BETA)
 
     if T.TST_DATUM_ALPHA in tasks:
         print ("[%s] ###" % T.TST_DATUM_ALPHA)

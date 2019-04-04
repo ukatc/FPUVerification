@@ -43,6 +43,7 @@ class T:
     TASK_REPORT = "report"
     TASK_DUMP = "dump"
     TASK_PARK_FPUS = "park_fpus"
+    TASK_REWIND_FPUS = "rewind_fpus"
     # elementary tests
     TST_ALPHA_MAX = "search_alpha_max"
     TST_ALPHA_MIN = "search_alpha_min"
@@ -98,6 +99,7 @@ usertasks = set(
         T.TASK_SELFTEST_NONFIBRE,
         T.TASK_SELFTEST_FIBRE,
         T.TASK_PARK_FPUS,
+        T.TASK_REWIND_FPUS,
         T.TST_ALPHA_MAX,
         T.TST_ALPHA_MIN,
         T.TST_BETA_MAX,
@@ -156,9 +158,9 @@ task_dependencies = [
         ],
     ),
     (T.TASK_INIT_GD, [T.TASK_PARK_FPUS]),
-    (T.TST_DATUM_ALPHA, [T.TASK_INIT_GD, T.TST_CAN_CONNECTION]),
-    (T.TST_DATUM_BETA, [T.TASK_INIT_GD, T.TST_CAN_CONNECTION]),
-    (T.TST_DATUM_BOTH, [T.TASK_INIT_GD, T.TST_CAN_CONNECTION]),
+    (T.TST_DATUM_ALPHA, [T.TASK_INIT_GD, T.TST_CAN_CONNECTION, T.TASK_REWIND_FPUS]),
+    (T.TST_DATUM_BETA, [T.TASK_INIT_GD, T.TST_CAN_CONNECTION, T.TASK_REWIND_FPUS]),
+    (T.TST_DATUM_BOTH, [T.TASK_INIT_GD, T.TST_CAN_CONNECTION, T.TASK_REWIND_FPUS]),
     (
         T.TST_ALPHA_MAX,
         [T.TASK_INIT_GD, T.TST_CAN_CONNECTION, T.REQ_DATUM_PASSED, T.TASK_REFERENCE],

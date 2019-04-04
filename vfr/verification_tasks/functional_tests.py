@@ -43,13 +43,7 @@ class CollisionDetectionFailure(Exception):
 class LimitDetectionFailure(Exception):
     pass
 
-
-def test_datum(rig, dbe, dasel=DASEL_BOTH):
-
-    failed_fpus = []
-
-    rig.gd.pingFPUs(rig.grid_state, fpuset=rig.measure_fpuset)
-
+def rewind_fpus(rig, abs_alpha, abs_beta):
     # depending on options, we reset & rewind the FPUs
     if rig.opts.always_reset_fpus:
         print("resetting FPUs.... ", "end=' '")
@@ -57,17 +51,28 @@ def test_datum(rig, dbe, dasel=DASEL_BOTH):
         rig.gd.resetFPUs(rig.grid_state, fpuset=rig.measure_fpuset)
         print("OK")
 
-    abs_alpha = -180.0 + 1.5
-    abs_beta = 1.5
-    if rig.opts.rewind_fpus:
-        goto_position(
-            rig.gd,
-            abs_alpha,
-            abs_beta,
-            rig.grid_state,
-            fpuset=rig.measure_fpuset,
-            allow_uninitialized=True,
-        )
+    rig.gd.pingFPUs(rig.grid_state, fpuset=rig.measure_fpuset)
+
+    goto_position(
+        rig.gd,
+        abs_alpha,
+        abs_beta,
+        rig.grid_state,
+        fpuset=rig.measure_fpuset,
+        allow_uninitialized=True,
+    )
+
+def test_datum(rig, dbe, dasel=DASEL_BOTH):
+
+    failed_fpus = []
+
+    if rig.opts.always_reset_fpus:
+        print("resetting FPUs.... ", "end=' '")
+        flush()
+        rig.gd.resetFPUs(rig.grid_state, fpuset=rig.measure_fpuset)
+        print("OK")
+
+    rig.gd.pingFPUs(rig.grid_state, fpuset=rig.measure_fpuset)
 
     # Now, we issue a findDatum method. In order to know when and how
     # this command finished, we pass the rig.grid_state variable.
@@ -157,8 +162,10 @@ def test_limit(rig, dbe, which_limit, pars=None):
     ):
         sn = rig.fpu_config[fpu_id]["serialnumber"]
 
-        if get_anglimit_passed_p(dbe, fpu_id, which_limit) and (
-            not rig.opts.repeat_passed_tests
+        if (get_anglimit_passed_p(dbe, fpu_id, which_limit)
+            and ((not rig.opts.repeat_passed_tests)
+                 and (which_limit != "beta_collision"))
+            and (not rig.opts.repeat_limit_tests)
         ):
 
             print(

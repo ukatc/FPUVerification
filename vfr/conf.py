@@ -45,6 +45,9 @@ MET_HEIGHT_CAMERA_IP_ADDRESS = "169.254.190.121"
 PUP_ALGN_CAMERA_IP_ADDRESS = "169.254.108.113"
 
 
+REWIND_POS_ALPHA = -175.0 # alpha start position before initial datum search
+REWIND_POS_BETA = 5.0 # alpha start position before initial datum search
+
 METROLOGY_CAL_POSITIONS = [268, 328, 28, 88, 148, 208]
 
 COLLDECT_MEASUREMENT_PARS = Namespace(
