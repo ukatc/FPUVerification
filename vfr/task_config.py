@@ -299,7 +299,8 @@ conditional_dependencies = [
 # task expansions (where one user-selectable task contains several sub-tasks)
 task_expansions = [
     (T.TST_INIT, [T.TST_FLASH, T.TST_INITPOS]),
-    (T.TST_DATUM, [T.TST_DATUM_ALPHA, T.TST_DATUM_BETA, T.TST_DATUM_BOTH]),
+#    (T.TST_DATUM, [T.TST_DATUM_ALPHA, T.TST_DATUM_BETA, T.TST_DATUM_BOTH]),
+    (T.TST_DATUM, [T.TST_DATUM_BOTH]),
     (
         T.TST_LIMITS,
         [
