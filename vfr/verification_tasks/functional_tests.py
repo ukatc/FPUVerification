@@ -151,7 +151,7 @@ def test_limit(rig, dbe, which_limit, pars=None):
     elif which_limit == "beta_collision":
         abs_alpha, abs_beta = pars.COLDECT_ALPHA, (pars.COLDECT_BETA + 5.0)
         free_dir = REQD_CLOCKWISE
-        dw = 30
+        dw = -30
         idx = 1
 
     if which_limit != "beta_collision":
