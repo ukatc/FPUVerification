@@ -234,7 +234,7 @@ if __name__ == "__main__":
 
     if T.TST_CAN_CONNECTION in tasks:
         print ("[test_can_connection] ###")
-        for fpu_id in measure_fpuset:
+        for fpu_id in range(opts.N):
             rv = check_can_connection(rd, grid_state, opts, fpu_id)
 
     if T.TST_FLASH in tasks:

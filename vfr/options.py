@@ -226,7 +226,7 @@ def parse_args():
         metavar="NUM_FPUS",
         dest="N",
         type=int,
-        default=6,
+        default=5,
         help="Number of adressed FPUs (default: %(default)s).",
     )
 
