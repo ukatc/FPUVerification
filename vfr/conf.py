@@ -84,14 +84,14 @@ DAT_REP_CALIBRATION_PARS = {
     "coeffs": [[NaN, NaN, NaN], [NaN, NaN, NaN], [NaN, NaN, NaN]],
 }
 
-
+# this needs later adjustment (does not work currently)
 DATUM_REP_ANALYSIS_PARS = Namespace(
     FIXME_FAKE_RESULT=True,  # DELETE THIS!! This is only for testing!
     POS_REP_PLATESCALE=DAT_REP_PLATESCALE,
-    POS_REP_SMALL_DIAMETER=1.4,  # millimeter
-    POS_REP_LARGE_DIAMETER=2.4,  # millimeter
+    POS_REP_SMALL_DIAMETER=1.4,  # millimeter (does not work)
+    POS_REP_LARGE_DIAMETER=2.4,  # millimeter (does not work)
     POS_REP_DIAMETER_TOLERANCE=0.1,  # millimeter
-    POS_REP_THRESHOLD=80,  # 0-255
+    POS_REP_THRESHOLD=80,  # 0-255  (does not work)
     POS_REP_QUALITY_METRIC=0.8,  # dimensionless
     POS_REP_CALIBRATION_PARS=DAT_REP_CALIBRATION_PARS,
     display=False,
@@ -131,10 +131,11 @@ POS_REP_CALIBRATION_PARS = {
 }
 
 
+# this needs to e adjuster - parameters do not work
 POS_REP_ANALYSIS_PARS = Namespace(
     POS_REP_PLATESCALE=POS_REP_PLATESCALE,
-    POS_REP_SMALL_DIAMETER=1.4,  # millimeter
-    POS_REP_LARGE_DIAMETER=2.4,  # millimeter
+    POS_REP_SMALL_DIAMETER=1.4,  # millimeter (does not work)
+    POS_REP_LARGE_DIAMETER=2.4,  # millimeter (does not work)
     POS_REP_DIAMETER_TOLERANCE=0.1,  # millimeter
     POS_REP_THRESHOLD=40,  # 0-255
     POS_REP_QUALITY_METRIC=0.8,  # dimensionless
