@@ -149,7 +149,7 @@ def test_limit(rig, dbe, which_limit, pars=None):
         dw = -30
         idx = 1
     elif which_limit == "beta_collision":
-        abs_alpha, abs_beta = pars.COLDECT_ALPHA, (pars.COLDECT_BETA + 5.0)
+        abs_alpha, abs_beta = pars.COLDECT_ALPHA, pars.COLDECT_BETA
         free_dir = REQD_CLOCKWISE
         dw = -30
         idx = 1
@@ -198,7 +198,7 @@ def test_limit(rig, dbe, which_limit, pars=None):
                 goto_position(
                     rig.gd,
                     abs_alpha,
-                    abs_beta - 5.0,
+                    abs_beta - pars.COLDECT_BETA_SPAN,
                     rig.grid_state,
                     fpuset=[fpu_id],
                     soft_protection=False,
@@ -206,7 +206,7 @@ def test_limit(rig, dbe, which_limit, pars=None):
                 goto_position(
                     rig.gd,
                     abs_alpha,
-                    abs_beta + 5.0,
+                    abs_beta + pars.COLDECT_BETA_SPAN,
                     rig.grid_state,
                     fpuset=[fpu_id],
                     soft_protection=False,
