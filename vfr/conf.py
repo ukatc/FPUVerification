@@ -46,7 +46,7 @@ PUP_ALGN_CAMERA_IP_ADDRESS = "169.254.108.113"
 
 
 REWIND_POS_ALPHA = -175.0 # alpha start position before initial datum search
-REWIND_POS_BETA = 5.0 # alpha start position before initial datum search
+REWIND_POS_BETA = 1.0 # alpha start position before initial datum search
 
 METROLOGY_CAL_POSITIONS = [254, 314.5, 13, 73, 133.5]
 
