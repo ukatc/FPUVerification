@@ -12,6 +12,7 @@ from ImageAnalysisFuncs.analyze_positional_repeatability import (
     posrepCoordinates,
 )
 from numpy import NaN
+from fpu_constants import ALPHA_DATUM_OFFSET
 from vfr.conf import POS_REP_CAMERA_IP_ADDRESS
 from vfr.db.base import TestResult
 from vfr.db.colldect_limits import get_angular_limit
@@ -95,6 +96,8 @@ def measure_positional_repeatability(rig, dbe, pars=None):
                 continue
 
             _alpha_min = get_angular_limit(dbe, fpu_id, "alpha_min")
+            if _alpha_min is None:
+                _alpha_min = {"val" : ALPHA_DATUM_OFFSET}
             _alpha_max = get_angular_limit(dbe, fpu_id, "alpha_max")
             _beta_min = get_angular_limit(dbe, fpu_id, "beta_min")
             _beta_max = get_angular_limit(dbe, fpu_id, "beta_max")
