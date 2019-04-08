@@ -149,9 +149,9 @@ def test_limit(rig, dbe, which_limit, pars=None):
         dw = -30
         idx = 1
     elif which_limit == "beta_collision":
-        abs_alpha, abs_beta = pars.COLDECT_ALPHA, (pars.COLDECT_BETA + 5.0)
+        abs_alpha, abs_beta = pars.COLDECT_ALPHA, pars.COLDECT_BETA
         free_dir = REQD_CLOCKWISE
-        dw = 30
+        dw = -30
         idx = 1
 
     if which_limit != "beta_collision":
@@ -198,7 +198,7 @@ def test_limit(rig, dbe, which_limit, pars=None):
                 goto_position(
                     rig.gd,
                     abs_alpha,
-                    abs_beta - 5.0,
+                    abs_beta - pars.COLDECT_BETA_SPAN,
                     rig.grid_state,
                     fpuset=[fpu_id],
                     soft_protection=False,
@@ -206,7 +206,7 @@ def test_limit(rig, dbe, which_limit, pars=None):
                 goto_position(
                     rig.gd,
                     abs_alpha,
-                    abs_beta + 5.0,
+                    abs_beta + pars.COLDECT_BETA_SPAN,
                     rig.grid_state,
                     fpuset=[fpu_id],
                     soft_protection=False,
@@ -305,7 +305,7 @@ def test_limit(rig, dbe, which_limit, pars=None):
                     )
                     rig.gd.pingFPUs(rig.grid_state, [fpu_id])
                     angle = rig.gd.trackedAngles(rig.grid_state, retrieve=True)[fpu_id]
-                    print("recovering FPU, current angle = %r" % angle)
+                    print("recovering FPU, current angle = %s" % repr(angle))
 
                 rig.gd.enableBetaCollisionProtection(rig.grid_state)
                 wf = gen_wf(0, dw * dirac(fpu_id, N))
