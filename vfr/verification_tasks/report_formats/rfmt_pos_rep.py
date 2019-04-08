@@ -90,7 +90,6 @@ POS_REP_IMAGES_BETA = "positional repeatability images beta: {images_beta!r}"
 
 POS_REP_WAVEFORM_PARS = (
     "positional repeatability images / waveform parameters: {waveform_pars!r}"
-
 )
 
 
