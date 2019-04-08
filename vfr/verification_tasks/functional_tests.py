@@ -305,7 +305,8 @@ def test_limit(rig, dbe, which_limit, pars=None):
                     )
                     rig.gd.pingFPUs(rig.grid_state, [fpu_id])
                     angle = rig.gd.trackedAngles(rig.grid_state, retrieve=True)[fpu_id]
-                    print("recovering FPU, current angle = %s" % repr(angle))
+                    if (k % 10) == 0:
+                        print("recovering FPU, current angle = %s" % repr(angle))
 
                 rig.gd.enableBetaCollisionProtection(rig.grid_state)
                 wf = gen_wf(0, dw * dirac(fpu_id, N))
