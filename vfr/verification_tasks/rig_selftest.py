@@ -59,10 +59,10 @@ def selftest_pup_algn(rig, pars=None, PUP_ALGN_ANALYSIS_PARS=None, capture_image
                     ipath_selftest_pup_algn, pars=PUP_ALGN_ANALYSIS_PARS
                 )
                 del result
-            except ImageAnalysisError:
+            except ImageAnalysisError as err:
                 if rig.opts.ignore_analysis_failures:
                     warn("FAILED: self-test pupil alignment image"
-                         " analysis (ignored)")
+                         " analysis (ignored), message = %s" % repr(err))
                 else:
                     raise
 
@@ -126,10 +126,10 @@ def selftest_metrology_calibration(
                 ipath_selftest_met_cal_target, pars=MET_CAL_TARGET_ANALYSIS_PARS
             )
             del target_coordinates
-        except ImageAnalysisError:
+        except ImageAnalysisError as err:
             if rig.opts.ignore_analysis_failures:
                 warn("FAILED: self-test metrology calibration image"
-                     " analysis (ignored)")
+                     " analysis (ignored), message = %s" % repr(err))
             else:
                 raise
 
@@ -182,10 +182,10 @@ def selftest_metrology_height(
             del metht_small_target_height_mm
             del metht_large_target_height_mm
 
-        except ImageAnalysisError:
+        except ImageAnalysisError as err:
             if rig.opts.ignore_analysis_failures:
                 warn("FAILED: self-test metrology height image"
-                     " analysis (ignored)")
+                     " analysis (ignored), message = %r" % repr(err))
             else:
                 raise
 
@@ -229,10 +229,10 @@ def selftest_positional_repeatability(
         try:
             coords = posrepCoordinates(selftest_ipath_pos_rep, pars=POS_REP_ANALYSIS_PARS)
             del coords
-        except ImageAnalysisError:
+        except ImageAnalysisError as err:
             if rig.opts.ignore_analysis_failures:
                 warn("FAILED: self-test positional repeatability image"
-                     " analysis (ignored)")
+                     " analysis (ignored), message = %r" % repr(err))
             else:
                 raise
 
