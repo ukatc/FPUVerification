@@ -75,4 +75,6 @@ DAT_REP_ERRMSG = (
 )
 
 
-DAT_REP_IMAGES = "datum repetability images : {!r}"
+DAT_REP_IMAGES = "datum repeatability images : {!r}"
+
+DAT_REP_COORDS = "datum repeatability coordinates : {coords}"

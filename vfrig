@@ -72,23 +72,11 @@ if __name__ == "__main__":
     cd_to_image_root(IMAGE_ROOT_FOLDER)
     # check connections to cameras and EtherCAN gateway
 
-    if opts.mockup:
-        lctrl = hwsimulation.lampController()
-    else:
-        if opts.manual_lamp_control:
-            lctrl = real_hw.manualLampController()
-        else:
-            lctrl = real_hw.lampController()
-
-    # make sure that lamps are switched off on program exit
-    def lamps_off():
-        lctrl.switch_all_off()
 
     if opts.mockup:
         hw = hwsimulation
     else:
         hw = real_hw
-        atexit.register(lamps_off)
 
     rig_opts = Namespace(**{ k : vars(opts)[k] for k in [
         'verbosity',
@@ -97,6 +85,7 @@ if __name__ == "__main__":
         'always_reset_fpus',
         're_initialize',
         'repeat_passed_tests',
+        'repeat_limit_tests',
         'skip_fibre',
         'N',
         'bus_repeat_dummy_delay',
@@ -123,7 +112,7 @@ if __name__ == "__main__":
     rig = Namespace(
         hw=hw,
         gd=None,
-        lctrl=lctrl,
+        lctrl=None,
         grid_state=None,
         measure_fpuset=measure_fpuset,
         fpu_config=fpu_config,
@@ -145,40 +134,59 @@ if __name__ == "__main__":
     # low-level actions
     tasks = resolve(opts.tasks, rig, dbe)
 
+    measurement_tasks = set([
+        T.TST_GATEWAY_CONNECTION,
+        T.TST_POS_REP_CAM_CONNECTION,
+        T.TST_POS_REP_CAM_CONNECTION,
+        T.TST_MET_CAL_CAM_CONNECTION,
+        T.TST_MET_HEIGHT_CAM_CONNECTION,
+        T.TST_PUP_ALGN_CAM_CONNECTION,
+        T.TASK_INIT_RD,
+        T.TST_CAN_CONNECTION,
+        T.TST_FLASH,
+        T.TST_INITPOS,
+        T.TASK_INIT_GD,
+        T.TST_DATUM_ALPHA,
+        T.TST_DATUM_BETA,
+        T.TST_DATUM_BOTH,
+        T.TASK_REFERENCE,
+        T.TASK_SELFTEST_NONFIBRE,
+        T.TASK_SELFTEST_FIBRE,
+        T.TST_COLLDETECT,
+        T.TST_ALPHA_MIN,
+        T.TST_ALPHA_MAX,
+        T.TST_BETA_MAX,
+        T.TST_BETA_MIN,
+        T.MEASURE_MET_CAL,
+        T.MEASURE_MET_HEIGHT,
+        T.MEASURE_DATUM_REP,
+        T.MEASURE_PUP_ALGN,
+        T.MEASURE_POS_REP,
+        T.MEASURE_POS_VER,
+        T.TASK_PARK_FPUS,
+    ])
+
     if not rig.measure_fpuset: # pylint: disable=no-member
         # no measurements, we remove all related tasks
         print("No FPUs in measurement set, removing all measurement tasks")
-        tasks -= set([
-            T.TST_GATEWAY_CONNECTION,
-            T.TST_POS_REP_CAM_CONNECTION,
-            T.TST_POS_REP_CAM_CONNECTION,
-            T.TST_MET_CAL_CAM_CONNECTION,
-            T.TST_MET_HEIGHT_CAM_CONNECTION,
-            T.TST_PUP_ALGN_CAM_CONNECTION,
-            T.TASK_INIT_RD,
-            T.TST_CAN_CONNECTION,
-            T.TST_FLASH,
-            T.TST_INITPOS,
-            T.TASK_INIT_GD,
-            T.TST_DATUM_ALPHA,
-            T.TST_DATUM_BETA,
-            T.TST_DATUM_BOTH,
-            T.TASK_REFERENCE,
-            T.TASK_SELFTEST_NONFIBRE,
-            T.TASK_SELFTEST_FIBRE,
-            T.TST_COLLDETECT,
-            T.TST_ALPHA_MIN,
-            T.TST_ALPHA_MAX,
-            T.TST_BETA_MAX,
-            T.TST_BETA_MIN,
-            T.MEASURE_MET_CAL,
-            T.MEASURE_MET_HEIGHT,
-            T.MEASURE_DATUM_REP,
-            T.MEASURE_PUP_ALGN,
-            T.MEASURE_POS_REP,
-            T.MEASURE_POS_VER,
-            T.TASK_PARK_FPUS,
-        ])
+        tasks -= measurement_tasks
+
+    if opts.mockup or (not (tasks & measurement_tasks)):
+        lctrl = hwsimulation.lampController()
+    else:
+        if opts.manual_lamp_control:
+            lctrl = real_hw.manualLampController()
+        else:
+            lctrl = real_hw.lampController()
+
+            # make sure that lamps are switched off on program exit
+            def lamps_off():
+                lctrl.switch_all_off()
+
+            atexit.register(lamps_off)
+
+
+    rig.lctrl = lctrl
 
     if opts.expand_tasks:
         print("Expanded tasks: %s" % list(tasks))

@@ -1,7 +1,7 @@
 from __future__ import absolute_import, division, print_function
 
 import warnings
-
+from numpy import isnan
 from Gearbox.gear_correction import GearboxFitError, fit_gearbox_correction
 from GigE.GigECamera import BASLER_DEVICE_CLASS, DEVICE_CLASS, IP_ADDRESS
 from ImageAnalysisFuncs.base import get_min_quality, arg_max_dict
@@ -12,6 +12,7 @@ from ImageAnalysisFuncs.analyze_positional_repeatability import (
     posrepCoordinates,
 )
 from numpy import NaN
+from fpu_constants import ALPHA_DATUM_OFFSET
 from vfr.conf import POS_REP_CAMERA_IP_ADDRESS
 from vfr.db.base import TestResult
 from vfr.db.colldect_limits import get_angular_limit
@@ -95,7 +96,11 @@ def measure_positional_repeatability(rig, dbe, pars=None):
                 continue
 
             _alpha_min = get_angular_limit(dbe, fpu_id, "alpha_min")
+            if _alpha_min is None:
+                _alpha_min = {"val" : ALPHA_DATUM_OFFSET}
             _alpha_max = get_angular_limit(dbe, fpu_id, "alpha_max")
+            if _alpha_max is None:
+                _alpha_max = {"val" : 155.0}
             _beta_min = get_angular_limit(dbe, fpu_id, "beta_min")
             _beta_max = get_angular_limit(dbe, fpu_id, "beta_max")
 
@@ -112,6 +117,11 @@ def measure_positional_repeatability(rig, dbe, pars=None):
             alpha_max = _alpha_max["val"]
             beta_min = _beta_min["val"]
             beta_max = _beta_max["val"]
+
+            assert (not isnan(alpha_min))
+            assert (not isnan(alpha_max))
+            assert (not isnan(beta_min))
+            assert (not isnan(beta_max))
 
             # move rotary stage to POS_REP_POSN_N
             rig.hw.turntable_safe_goto(rig.gd, rig.grid_state, stage_position)

@@ -53,12 +53,12 @@ METROLOGY_CAL_POSITIONS = [254, 314.5, 13, 73, 133.5]
 COLLDECT_MEASUREMENT_PARS = Namespace(
     COLDECT_ALPHA=-180,
     COLDECT_BETA=130,
-    COLDECT_BETA_SPAN = 25.0
+    COLDECT_BETA_SPAN = 25.0,
     COLDECT_POSITIONS=[201, 261, 321.5, 20, 80],
     LIMIT_ALPHA_NEG_EXPECT=-182.0,
     LIMIT_ALPHA_POS_EXPECT=+175.0,
-    LIMIT_BETA_NEG_EXPECT=-185.0,
-    LIMIT_BETA_POS_EXPECT=+155.0,
+    LIMIT_BETA_NEG_EXPECT=-190.0,
+    LIMIT_BETA_POS_EXPECT=+160.0,
     RECOVERY_ANGLE_DEG = 3.0, # angle (in degrees) of back movement to recover
 )
 
@@ -89,10 +89,10 @@ DAT_REP_CALIBRATION_PARS = {
 DATUM_REP_ANALYSIS_PARS = Namespace(
     FIXME_FAKE_RESULT=True,  # DELETE THIS!! This is only for testing!
     POS_REP_PLATESCALE=DAT_REP_PLATESCALE,
-    POS_REP_SMALL_DIAMETER=1.4,  # millimeter (does not work)
-    POS_REP_LARGE_DIAMETER=2.4,  # millimeter (does not work)
-    POS_REP_DIAMETER_TOLERANCE=0.1,  # millimeter
-    POS_REP_THRESHOLD=80,  # 0-255  (does not work)
+    POS_REP_SMALL_DIAMETER=1.42,  # millimeter (does not work)
+    POS_REP_LARGE_DIAMETER=2.42,  # millimeter (does not work)
+    POS_REP_DIAMETER_TOLERANCE=0.15,  # millimeter
+    POS_REP_THRESHOLD=60,  # 0-255  (does not work)
     POS_REP_QUALITY_METRIC=0.8,  # dimensionless
     POS_REP_CALIBRATION_PARS=DAT_REP_CALIBRATION_PARS,
     display=False,
@@ -122,7 +122,7 @@ MET_CAL_MEASUREMENT_PARS = Namespace(
     # for fibre measurements
 )
 
-POS_REP_PLATESCALE = 0.02361  # millimeter per pixel
+POS_REP_PLATESCALE = 0.0235  # millimeter per pixel
 
 POS_REP_CALIBRATION_PARS = {
     "algorithm": "scale",
@@ -135,10 +135,10 @@ POS_REP_CALIBRATION_PARS = {
 # this needs to e adjuster - parameters do not work
 POS_REP_ANALYSIS_PARS = Namespace(
     POS_REP_PLATESCALE=POS_REP_PLATESCALE,
-    POS_REP_SMALL_DIAMETER=1.4,  # millimeter (does not work)
-    POS_REP_LARGE_DIAMETER=2.4,  # millimeter (does not work)
-    POS_REP_DIAMETER_TOLERANCE=0.1,  # millimeter
-    POS_REP_THRESHOLD=40,  # 0-255
+    POS_REP_SMALL_DIAMETER=1.45,  # millimeter (does not work)
+    POS_REP_LARGE_DIAMETER=2.45,  # millimeter (does not work)
+    POS_REP_DIAMETER_TOLERANCE=0.15,  # millimeter
+    POS_REP_THRESHOLD=70,  # 0-255
     POS_REP_QUALITY_METRIC=0.8,  # dimensionless
     POS_REP_CALIBRATION_PARS=POS_REP_CALIBRATION_PARS,
     display=False,
@@ -147,11 +147,11 @@ POS_REP_ANALYSIS_PARS = Namespace(
 
 MET_CAL_TARGET_ANALYSIS_PARS = Namespace(
     MET_CAL_PLATESCALE=0.00668,  # millimeter per pixel
-    MET_CAL_SMALL_DIAMETER=1.4,  # millimeter
-    MET_CAL_LARGE_DIAMETER=2.4,  # millimeter
-    MET_CAL_DIAMETER_TOLERANCE=0.1,  # millimeter
+    MET_CAL_SMALL_DIAMETER=1.42,  # millimeter
+    MET_CAL_LARGE_DIAMETER=2.42,  # millimeter
+    MET_CAL_DIAMETER_TOLERANCE=0.15,  # millimeter
     MET_CAL_GAUSS_BLUR=3,  # pixels - MUST BE AN ODD NUMBER
-    MET_CAL_THRESHOLD=40,  # 0-255
+    MET_CAL_THRESHOLD=80,  # 0-255
     MET_CAL_QUALITY_METRIC=0.8,  # dimensionless
     display=False,  # will display image with contours annotated
     verbosity=0,
@@ -182,7 +182,7 @@ POS_REP_MEASUREMENT_PARS = Namespace(
     POS_REP_POSITIONS=POS_REP_POSITIONS,  # the rotary stage angle required to
     # place each FPU under the positional
     # repeatability camera
-    POS_REP_EXPOSURE_MS=250,  # the exposure time in
+    POS_REP_EXPOSURE_MS=200,  # the exposure time in
     # milliseconds for a correctly
     # exposed image
     POS_REP_NUM_INCREMENTS=3,  # the number of movements made
@@ -325,7 +325,7 @@ MET_HEIGHT_ANALYSIS_PARS = Namespace(
     METHT_THRESHOLD=150,  # 0-255
     METHT_SCAN_HEIGHT=2000,  # pixels
     METHT_GAUSS_BLUR=1,  # pixels - MUST BE AN ODD NUMBER
-    METHT_STANDARD_DEV=0.04,  # millimeter
+    METHT_STANDARD_DEV=0.1,  # millimeter
     METHT_NOISE_METRIC=0.25,  # dimensionless
     display=False,
     verbosity=0,

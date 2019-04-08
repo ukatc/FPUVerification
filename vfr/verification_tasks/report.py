@@ -895,6 +895,8 @@ def format_report_extended(
                 **datum_repeatability_result
             )
 
+            yield fill(rfmt_dat_rep.DAT_REP_COORDS.format(**datum_repeatability_result))
+
         else:
             yield rfmt_dat_rep.DAT_REP_ERRMSG.format(**datum_repeatability_result)
 
