@@ -135,6 +135,8 @@ def measure_pupil_alignment(rig, dbe, pars=None):
             record = PupilAlignmentImages(images=images)
             save_pupil_alignment_images(dbe, fpu_id, record)
 
+    rig.hw.home_linear_stage() # bring linear stage to home pos
+
 
 def eval_pupil_alignment(
     dbe, PUP_ALGN_ANALYSIS_PARS=None, PUP_ALGN_EVALUATION_PARS=None

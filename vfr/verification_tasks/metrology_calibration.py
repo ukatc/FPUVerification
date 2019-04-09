@@ -86,6 +86,8 @@ def measure_metrology_calibration(rig, dbe, pars=None):
 
         save_metrology_calibration_images(dbe, fpu_id, record)
 
+    rig.hw.home_linear_stage() # bring linear stage to home pos
+
 
 def eval_metrology_calibration(
     dbe, metcal_target_analysis_pars, metcal_fibre_analysis_pars
