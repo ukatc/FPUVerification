@@ -47,7 +47,7 @@ PUP_ALGN_CAMERA_IP_ADDRESS = "169.254.108.113"
 REWIND_POS_ALPHA = -175.0 # alpha start position before initial datum search
 REWIND_POS_BETA = 1.0 # alpha start position before initial datum search
 
-METROLOGY_CAL_POSITIONS = [254, 314.5, 13, 73, 133.5]
+METROLOGY_CAL_POSITIONS = [254.0, 314.5, 13.0, 73.0, 133.5]
 
 COLLDECT_MEASUREMENT_PARS = Namespace(
     COLDECT_ALPHA=-180,
@@ -104,10 +104,10 @@ DATUM_REP_ANALYSIS_PARS = Namespace(
 
 LINPOSITIONS=[  # the linear stage positions
     10.5,  # FIXME: bogus values - spec missing
-    19,
+    19.0,
     27.5,
-    35,
-    43.5
+    35.0,
+    43.5,
 ]
 
 MET_CAL_MEASUREMENT_PARS = Namespace(
@@ -307,10 +307,10 @@ PUP_ALGN_EVALUATION_PARS = Namespace(
 MET_HEIGHT_MEASUREMENT_PARS = Namespace(
     MET_HEIGHT_POSITIONS=[
         269.5,
-        330,
-        28,
+        330.0,
+        28.0,
         88.5,
-        208,
+        148.5,
     ],  # the rotary stage angle required to place each FPU
     #                                                        in front of the metrology height camera
     MET_HEIGHT_TARGET_EXPOSURE_MS=50,  # the exposure time in

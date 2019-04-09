@@ -36,6 +36,7 @@ def measure_metrology_height(rig, dbe, pars=None):
         }
 
         met_height_cam = rig.hw.GigECamera(MET_HEIGHT_CAMERA_CONF)
+        met_height_cam.SetExposureTime(pars.MET_HEIGHT_TARGET_EXPOSURE_MS)
 
         # get sorted positions (this is needed because the turntable can only
         # move into one direction)

@@ -107,7 +107,7 @@ def measure_positional_verification(rig, dbe, pars=None):
                 )
                 continue
 
-            if get_pupil_alignment_passed_p(dbe, fpu_id):
+            if not get_pupil_alignment_passed_p(dbe, fpu_id):
                 if opts.skip_fibre:
                     print(
                         "FPU %s: ignoring missing pupil alignment test,\n"
