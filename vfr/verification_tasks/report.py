@@ -394,7 +394,7 @@ def format_report_terse(
                 **metrology_calibration_result
             )
         else:
-            yield rfmt_met_cal.MET_CAL_ERRMSG.format(metrology_calibration_result)
+            yield rfmt_met_cal.MET_CAL_ERRMSG.format(**metrology_calibration_result)
 
     yield EMPTY_LINE
 
@@ -551,7 +551,7 @@ def format_report_complete(
                 **metrology_calibration_result
             )
         else:
-            yield rfmt_met_cal.MET_CAL_ERRMSG.format(metrology_calibration_result)
+            yield rfmt_met_cal.MET_CAL_ERRMSG.format(**metrology_calibration_result)
 
     yield EMPTY_LINE
 
@@ -726,7 +726,7 @@ def format_report_long(
                 **metrology_calibration_result
             )
         else:
-            yield rfmt_met_cal.MET_CAL_ERRMSG.format(metrology_calibration_result)
+            yield rfmt_met_cal.MET_CAL_ERRMSG.format(**metrology_calibration_result)
 
     yield EMPTY_LINE
 
@@ -916,7 +916,7 @@ def format_report_extended(
                 **metrology_calibration_result
             )
         else:
-            yield rfmt_met_cal.MET_CAL_ERRMSG.format(metrology_calibration_result)
+            yield rfmt_met_cal.MET_CAL_ERRMSG.format(**metrology_calibration_result)
 
     if metrology_calibration_images:
         yield (fill(rfmt_met_cal.MET_CAL_IMAGES.format(metrology_calibration_images)))

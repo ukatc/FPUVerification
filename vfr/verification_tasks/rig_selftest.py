@@ -45,10 +45,13 @@ def selftest_pup_algn(rig, pars=None, PUP_ALGN_ANALYSIS_PARS=None, capture_image
             pup_aln_cam.SetExposureTime(pars.PUP_ALGN_EXPOSURE_MS)
 
             fpu_id, lin_position = get_sorted_positions(
-                rig.measure_fpuset, pars.PUP_ALGN_POSITIONS
+                rig.measure_fpuset, pars.PUP_ALGN_LINPOSITIONS
             )[0]
 
+            print("fpu_id=", fpu_id)
             stage_position = pars.PUP_ALGN_POSITIONS[fpu_id]
+            print("lin_position=", lin_position)
+            print("stage_position=", stage_position)
 
             # move rotary stage to PUP_ALN_POSN_N
             rig.hw.turntable_safe_goto(rig.gd, rig.grid_state, stage_position)
@@ -169,6 +172,7 @@ def selftest_metrology_height(
         }
 
         met_height_cam = rig.hw.GigECamera(MET_HEIGHT_CAMERA_CONF)
+        met_height_cam.SetExposureTime(pars.MET_HEIGHT_TARGET_EXPOSURE_MS)
 
         fpu_id, stage_position = get_sorted_positions(
             rig.measure_fpuset, pars.MET_HEIGHT_POSITIONS
