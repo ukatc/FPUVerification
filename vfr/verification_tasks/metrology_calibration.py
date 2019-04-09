@@ -26,6 +26,7 @@ def measure_metrology_calibration(rig, dbe, pars=None):
 
     # home turntable
     rig.hw.safe_home_turntable(rig.gd, rig.grid_state)
+    rig.hw.home_linear_stage()
 
     rig.lctrl.switch_fibre_backlight("off")
     rig.lctrl.switch_ambientlight("off")
@@ -74,6 +75,8 @@ def measure_metrology_calibration(rig, dbe, pars=None):
 
         met_cal_cam.SetExposureTime(pars.METROLOGY_CAL_FIBRE_EXPOSURE_MS)
 
+        rig.hw.linear_stage_goto(pars.METROLOGY_CAL_LINPOSITIONS[fpu_id])
+
         with rig.lctrl.use_backlight(pars.METROLOGY_CAL_BACKLIGHT_VOLTAGE):
             fibre_ipath = capture_image(met_cal_cam, "fibre")
 
@@ -82,6 +85,8 @@ def measure_metrology_calibration(rig, dbe, pars=None):
         record = MetrologyCalibrationImages(images=images)
 
         save_metrology_calibration_images(dbe, fpu_id, record)
+
+    rig.hw.home_linear_stage() # bring linear stage to home pos
 
 
 def eval_metrology_calibration(

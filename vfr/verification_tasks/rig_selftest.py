@@ -44,13 +44,15 @@ def selftest_pup_algn(rig, pars=None, PUP_ALGN_ANALYSIS_PARS=None, capture_image
             pup_aln_cam = rig.hw.GigECamera(PUP_ALGN_CAMERA_CONF)
             pup_aln_cam.SetExposureTime(pars.PUP_ALGN_EXPOSURE_MS)
 
-            fpu_id, stage_position = get_sorted_positions(
+            fpu_id, lin_position = get_sorted_positions(
                 rig.measure_fpuset, pars.PUP_ALGN_POSITIONS
             )[0]
 
+            stage_position = pars.PUP_ALGN_POSITIONS[fpu_id]
+
             # move rotary stage to PUP_ALN_POSN_N
             rig.hw.turntable_safe_goto(rig.gd, rig.grid_state, stage_position)
-            rig.hw.linear_stage_goto(pars.PUP_ALGN_LINPOSITIONS[fpu_id])
+            rig.hw.linear_stage_goto(lin_position)
 
             ipath_selftest_pup_algn = capture_image(pup_aln_cam, "pupil-alignment")
 
@@ -84,6 +86,7 @@ def selftest_metrology_calibration(
     try:
         # home turntable
         rig.hw.safe_home_turntable(rig.gd, rig.grid_state)
+        rig.hw.home_linear_stage()
 
         rig.lctrl.switch_fibre_backlight("off")
         rig.lctrl.switch_ambientlight("off")
@@ -96,11 +99,14 @@ def selftest_metrology_calibration(
 
         met_cal_cam = rig.hw.GigECamera(MET_CAL_CAMERA_CONF)
 
-        # get sorted positions (this is needed because the turntable can only
-        # move into one direction)
-        fpu_id, stage_position = get_sorted_positions(
-            rig.measure_fpuset, pars.METROLOGY_CAL_POSITIONS
+        # get sorted positions (here, and only here, we use the linear
+        # stage because it is much slower, so using the minimum linear
+        # position accelerates the self-test)
+        fpu_id, lin_position = get_sorted_positions(
+            rig.measure_fpuset, pars.METROLOGY_CAL_LINPOSITIONS
         )[0]
+
+        stage_position = pars.METROLOGY_CAL_POSITIONS[fpu_id]
 
         # move rotary stage to POS_REP_POSN_0
         rig.hw.turntable_safe_goto(rig.gd, rig.grid_state, stage_position)
@@ -117,6 +123,7 @@ def selftest_metrology_calibration(
 
         met_cal_cam.SetExposureTime(pars.METROLOGY_CAL_FIBRE_EXPOSURE_MS)
         rig.lctrl.switch_ambientlight("off")
+        rig.hw.linear_stage_goto(lin_position)
 
         with rig.lctrl.use_backlight(pars.METROLOGY_CAL_BACKLIGHT_VOLTAGE):
             ipath_selftest_met_cal_fibre = capture_image(met_cal_cam, "met-cal-fibre")

@@ -103,6 +103,13 @@ DATUM_REP_ANALYSIS_PARS = Namespace(
     # acceptable FPU
 )
 
+LINPOSITIONS=[  # the linear stage positions
+    10.5,  # FIXME: bogus values - spec missing
+    19,
+    27.5,
+    35,
+    43.5
+],
 
 MET_CAL_MEASUREMENT_PARS = Namespace(
     METROLOGY_CAL_POSITIONS=METROLOGY_CAL_POSITIONS,
@@ -120,6 +127,7 @@ MET_CAL_MEASUREMENT_PARS = Namespace(
     # targets
     METROLOGY_CAL_BACKLIGHT_VOLTAGE=0.1,  # voltage of backlight
     # for fibre measurements
+    METROLOGY_CAL_LINPOSITIONS=LINPOSITIONS, # linear stage positions
 )
 
 POS_REP_PLATESCALE = 0.0235  # millimeter per pixel
@@ -260,13 +268,7 @@ PUP_ALGN_MEASUREMENT_PARS = Namespace(
     ],  # the rotary stage angle required to
     # place each FPU under the first pupil
     # alignment fold mirror
-    PUP_ALGN_LINPOSITIONS=[  # the linear stage positions
-        10.5,  # note= bogus values - spec missing FIXME
-        19,
-        27.5,
-        35,
-        43.5
-    ],
+    PUP_ALGN_LINPOSITIONS=LINPOSITIONS,
     # required to illuminate each FPU
     # fibre
     PUP_ALGN_EXPOSURE_MS=3000,  # the exposure time in milliseconds
