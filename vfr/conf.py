@@ -308,10 +308,10 @@ PUP_ALGN_EVALUATION_PARS = Namespace(
 MET_HEIGHT_MEASUREMENT_PARS = Namespace(
     MET_HEIGHT_POSITIONS=[
         269.5,
-        330,
-        28,
+        330.0,
+        28.0,
         88.5,
-        208,
+        148.5,
     ],  # the rotary stage angle required to place each FPU
     #                                                        in front of the metrology height camera
     MET_HEIGHT_TARGET_EXPOSURE_MS=50,  # the exposure time in
