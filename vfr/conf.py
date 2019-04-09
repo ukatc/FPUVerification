@@ -8,9 +8,8 @@ from os import environ
 
 from numpy import Inf, NaN
 
-# if you want to exclude fibres, uncomment the line below
 DEFAULT_TASKS = ["selftest", "test_functional", "measure_all", "eval_all", "report"]
-# DEFAULT_TASKS = ["selftest", "test_functional", "measure_nonfibre", "eval_nonfibre", "report"]
+DEFAULT_TASKS_NONFIBRE = ["selftest", "test_functional", "measure_nonfibre", "eval_nonfibre", "report"]
 
 # a few parameters are defined globally because they are
 # used in many different places
@@ -109,7 +108,7 @@ LINPOSITIONS=[  # the linear stage positions
     27.5,
     35,
     43.5
-],
+]
 
 MET_CAL_MEASUREMENT_PARS = Namespace(
     METROLOGY_CAL_POSITIONS=METROLOGY_CAL_POSITIONS,

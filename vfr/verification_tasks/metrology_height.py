@@ -26,10 +26,7 @@ def measure_metrology_height(rig, dbe, pars=None):
 
     # home turntable
     rig.hw.safe_home_turntable(rig.gd, rig.grid_state)
-
-    rig.lctrl.switch_fibre_backlight("off")
-    rig.lctrl.switch_ambientlight("off")
-    rig.lctrl.switch_fibre_backlight_voltage(0.0)
+    rig.lctrl.switch_all_off()
 
     with rig.lctrl.use_silhouettelight():
 

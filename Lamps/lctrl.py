@@ -80,6 +80,38 @@ class LampControllerBase:
         self.switch_ambientlight("off")
         self.switch_silhouettelight("off")
 
+    @contextmanager
+    def use_silhouettelight(self):
+        self.switch_silhouettelight("on")
+        time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
+        try:
+            yield None
+
+        finally:
+            self.switch_silhouettelight("off")
+            time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
+
+    @contextmanager
+    def use_backlight(self, voltage):
+        self.switch_fibre_backlight_voltage(voltage)
+        time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
+        try:
+            yield None
+
+        finally:
+            self.switch_fibre_backlight("off")
+            time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
+
+    @contextmanager
+    def use_ambientlight(self):
+        self.switch_ambientlight("on")
+        time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
+        try:
+            yield None
+
+        finally:
+            self.switch_ambientlight("off")
+            time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
 
 class lampController(LampControllerBase):
     """ Class to control lamps through an attached DAQ.
@@ -177,39 +209,6 @@ class lampController(LampControllerBase):
             )
         self.digital_device.d_out(self.silhouette_port, value)
 
-    @contextmanager
-    def use_silhouettelight(self):
-        self.switch_silhouettelight("on")
-        time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
-        try:
-            yield None
-
-        finally:
-            self.switch_silhouettelight("off")
-            time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
-
-    @contextmanager
-    def use_backlight(self, voltage):
-        self.switch_fibre_backlight_voltage(voltage)
-        time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
-        try:
-            yield None
-
-        finally:
-            self.switch_fibre_backlight("off")
-            time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
-
-    @contextmanager
-    def use_ambientlight(self):
-        self.switch_ambientlight("on")
-        time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
-        try:
-            yield None
-
-        finally:
-            self.switch_ambientlight("off")
-            time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
-
 
 class manualLampController(LampControllerBase):
     """ Class to control lamps manually. This is important for test purpuses.
@@ -233,36 +232,3 @@ class manualLampController(LampControllerBase):
 
     def switch_silhouettelight(self, state):
         raw_input("switch state of silhouette light to %r and press <enter> $" % state)
-
-    @contextmanager
-    def use_silhouettelight(self):
-        self.switch_silhouettelight("on")
-        time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
-        try:
-            yield None
-
-        finally:
-            self.switch_silhouettelight("off")
-            time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
-
-    @contextmanager
-    def use_backlight(self, voltage):
-        self.switch_fibre_backlight_voltage(voltage)
-        time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
-        try:
-            yield None
-
-        finally:
-            self.switch_fibre_backlight("off")
-            time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
-
-    @contextmanager
-    def use_ambientlight(self):
-        self.switch_ambientlight("on")
-        time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
-        try:
-            yield None
-
-        finally:
-            self.switch_ambientlight("off")
-            time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)

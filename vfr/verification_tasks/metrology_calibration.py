@@ -27,10 +27,7 @@ def measure_metrology_calibration(rig, dbe, pars=None):
     # home turntable
     rig.hw.safe_home_turntable(rig.gd, rig.grid_state)
     rig.hw.home_linear_stage()
-
-    rig.lctrl.switch_fibre_backlight("off")
-    rig.lctrl.switch_ambientlight("off")
-    rig.lctrl.switch_fibre_backlight_voltage(0.0)
+    rig.lctrl.switch_all_off()
 
     MET_CAL_CAMERA_CONF = {
         DEVICE_CLASS: BASLER_DEVICE_CLASS,
