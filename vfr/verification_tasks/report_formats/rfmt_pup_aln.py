@@ -66,3 +66,5 @@ PUP_ALN_RESULT_EXTENDED = cleandoc(
 PUP_ALN_COORDS = "pupil alignment    : coords = {coords!r}"
 
 PUP_ALN_IMAGES = "pupil alignment images: {!r}"
+
+PUP_ALN_IMAGES_MAPFILE = "pupil alignment calibration file: {calibration_mapfile!r}"

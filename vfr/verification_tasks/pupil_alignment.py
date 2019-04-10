@@ -129,10 +129,12 @@ def measure_pupil_alignment(rig, dbe, pars=None):
 
             find_datum(rig.gd, rig.grid_state, rig.opts)
 
-            record = PupilAlignmentImages(images=images)
+            record = PupilAlignmentImages(
+                images=images, calibration_mapfile=pars.PUP_ALGN_CALIBRATION_MAPFILE
+            )
             save_pupil_alignment_images(dbe, fpu_id, record)
 
-    rig.hw.home_linear_stage() # bring linear stage to home pos
+    rig.hw.home_linear_stage()  # bring linear stage to home pos
 
 
 def eval_pupil_alignment(

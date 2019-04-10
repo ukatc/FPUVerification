@@ -95,10 +95,10 @@ def measure_positional_repeatability(rig, dbe, pars=None):
 
             _alpha_min = get_angular_limit(dbe, fpu_id, "alpha_min")
             if _alpha_min is None:
-                _alpha_min = {"val" : ALPHA_DATUM_OFFSET}
+                _alpha_min = {"val": ALPHA_DATUM_OFFSET}
             _alpha_max = get_angular_limit(dbe, fpu_id, "alpha_max")
             if _alpha_max is None:
-                _alpha_max = {"val" : 155.0}
+                _alpha_max = {"val": 155.0}
             _beta_min = get_angular_limit(dbe, fpu_id, "beta_min")
             _beta_max = get_angular_limit(dbe, fpu_id, "beta_max")
 
@@ -116,10 +116,10 @@ def measure_positional_repeatability(rig, dbe, pars=None):
             beta_min = _beta_min["val"]
             beta_max = _beta_max["val"]
 
-            assert (not isnan(alpha_min))
-            assert (not isnan(alpha_max))
-            assert (not isnan(beta_min))
-            assert (not isnan(beta_max))
+            assert not isnan(alpha_min)
+            assert not isnan(alpha_max)
+            assert not isnan(beta_min)
+            assert not isnan(beta_max)
 
             # move rotary stage to POS_REP_POSN_N
             rig.hw.turntable_safe_goto(rig.gd, rig.grid_state, stage_position)
@@ -215,6 +215,7 @@ def measure_positional_repeatability(rig, dbe, pars=None):
                 images_alpha=image_dict_alpha,
                 images_beta=image_dict_beta,
                 waveform_pars=pars.POS_REP_WAVEFORM_PARS,
+                calibration_mapfile=pars.POS_REP_CALIBRATION_MAPFILE,
             )
 
             save_positional_repeatability_images(dbe, fpu_id, record)

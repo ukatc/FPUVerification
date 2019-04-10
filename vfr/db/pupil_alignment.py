@@ -6,7 +6,9 @@ from vfr.db.base import TestResult, save_named_record, get_named_record
 
 RECORD_TYPE = "pupil-alignment"
 
-PupilAlignmentImages = namedtuple("PupilAlignmentImages", " images")
+PupilAlignmentImages = namedtuple(
+    "PupilAlignmentImages", " images" " calibration_mapfile"
+)
 
 PupilAlignmentResult = namedtuple(
     "PupilAlignmentResult",

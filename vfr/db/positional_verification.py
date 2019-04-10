@@ -13,7 +13,8 @@ PositionalVerificationImages = namedtuple(
     " gearbox_correction"
     " gearbox_algorithm_version"
     " gearbox_git_version"
-    " gearbox_record_count",
+    " gearbox_record_count"
+    " calibration_mapfile",
 )
 
 PositionalVerificationResult = namedtuple(

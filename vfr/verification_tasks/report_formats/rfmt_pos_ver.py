@@ -62,6 +62,10 @@ POS_VER_ARESULTS = "positional verification : posver_errors = {posver_error}"
 
 POS_VER_IMAGES = "positional verification images : {images!r}"
 
+POS_VER_IMAGES_MAPFILE = (
+    "positional verification calibration file: {calibration_mapfile!r}"
+)
+
 POS_VER_NOIMAGES = "positional verification images : {!r}"
 
 POS_VER_GEARCORR = "gearbox correction = {gearbox_correction!r}"

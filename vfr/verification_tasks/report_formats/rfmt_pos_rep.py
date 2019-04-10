@@ -84,6 +84,10 @@ POS_REP_ERRMSG = (
 POS_REP_IMAGES = "positional repeatability images: {!r}"
 
 
+POS_REP_IMAGES_MAPFILE = (
+    "positional repeatability calibration file: {calibration_mapfile!r}"
+)
+
 POS_REP_IMAGES_ALPHA = "positional repeatability images alpha: {images_alpha!r}"
 
 POS_REP_IMAGES_BETA = "positional repeatability images beta: {images_beta!r}"

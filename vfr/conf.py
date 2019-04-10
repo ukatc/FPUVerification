@@ -6,10 +6,16 @@ from argparse import Namespace
 from math import ceil
 from os import environ
 
-from numpy import Inf, NaN
+from numpy import Inf
 
 DEFAULT_TASKS = ["selftest", "test_functional", "measure_all", "eval_all", "report"]
-DEFAULT_TASKS_NONFIBRE = ["selftest", "test_functional", "measure_nonfibre", "eval_nonfibre", "report"]
+DEFAULT_TASKS_NONFIBRE = [
+    "selftest",
+    "test_functional",
+    "measure_nonfibre",
+    "eval_nonfibre",
+    "report",
+]
 
 # a few parameters are defined globally because they are
 # used in many different places
@@ -44,21 +50,21 @@ MET_HEIGHT_CAMERA_IP_ADDRESS = "169.254.190.121"
 PUP_ALGN_CAMERA_IP_ADDRESS = "169.254.108.113"
 
 
-REWIND_POS_ALPHA = -175.0 # alpha start position before initial datum search
-REWIND_POS_BETA = 1.0 # alpha start position before initial datum search
+REWIND_POS_ALPHA = -175.0  # alpha start position before initial datum search
+REWIND_POS_BETA = 1.0  # alpha start position before initial datum search
 
 METROLOGY_CAL_POSITIONS = [254.0, 314.5, 13.0, 73.0, 133.5]
 
 COLLDECT_MEASUREMENT_PARS = Namespace(
     COLDECT_ALPHA=-180,
     COLDECT_BETA=130,
-    COLDECT_BETA_SPAN = 25.0,
+    COLDECT_BETA_SPAN=25.0,
     COLDECT_POSITIONS=[201, 261, 321.5, 20, 80],
     LIMIT_ALPHA_NEG_EXPECT=-182.0,
     LIMIT_ALPHA_POS_EXPECT=+175.0,
     LIMIT_BETA_NEG_EXPECT=-190.0,
     LIMIT_BETA_POS_EXPECT=+160.0,
-    RECOVERY_ANGLE_DEG = 3.0, # angle (in degrees) of back movement to recover
+    RECOVERY_ANGLE_DEG=3.0,  # angle (in degrees) of back movement to recover
 )
 
 DATUM_REP_MEASUREMENT_PARS = Namespace(
@@ -77,12 +83,7 @@ DAT_REP_PLATESCALE = (
 )  # millimeter per pixel, for the metology calibration camera
 
 
-DAT_REP_CALIBRATION_PARS = {
-    "algorithm": "scale",
-    "scale_factor": DAT_REP_PLATESCALE,
-    # values below are placeholders
-    "coeffs": [[NaN, NaN, NaN], [NaN, NaN, NaN], [NaN, NaN, NaN]],
-}
+DAT_REP_CALIBRATION_PARS = {"algorithm": "scale", "scale_factor": DAT_REP_PLATESCALE}
 
 # this needs later adjustment (does not work currently)
 DATUM_REP_ANALYSIS_PARS = Namespace(
@@ -102,7 +103,7 @@ DATUM_REP_ANALYSIS_PARS = Namespace(
     # acceptable FPU
 )
 
-LINPOSITIONS=[  # the linear stage positions
+LINPOSITIONS = [  # the linear stage positions
     10.5,  # FIXME: bogus values - spec missing
     19.0,
     27.5,
@@ -126,17 +127,12 @@ MET_CAL_MEASUREMENT_PARS = Namespace(
     # targets
     METROLOGY_CAL_BACKLIGHT_VOLTAGE=0.1,  # voltage of backlight
     # for fibre measurements
-    METROLOGY_CAL_LINPOSITIONS=LINPOSITIONS, # linear stage positions
+    METROLOGY_CAL_LINPOSITIONS=LINPOSITIONS,  # linear stage positions
 )
 
 POS_REP_PLATESCALE = 0.0235  # millimeter per pixel
 
-POS_REP_CALIBRATION_PARS = {
-    "algorithm": "scale",
-    "scale_factor": POS_REP_PLATESCALE,
-    # values below are placeholders
-    "coeffs": [[NaN, NaN, NaN], [NaN, NaN, NaN], [NaN, NaN, NaN]],
-}
+POS_REP_CALIBRATION_PARS = {"algorithm": "scale", "scale_factor": POS_REP_PLATESCALE}
 
 
 # this needs to e adjuster - parameters do not work
@@ -223,6 +219,7 @@ POS_REP_MEASUREMENT_PARS = Namespace(
         "min_stop_steps": None,
         "max_steps": STEPS_UPPER_LIMIT,
     },
+    POS_REP_CALIBRATION_MAPFILE="calibration/mapping/pos-rep-2019-04-10.cfg",
 )
 
 
@@ -245,6 +242,7 @@ POS_VER_MEASUREMENT_PARS = Namespace(
     POS_VER_ITERATIONS=3,  # the number of times each FPU
     # sweeps back and forth
     POS_VER_SAFETY_TOLERANCE=1.5,  # safety distance towards range limits
+    POS_VER_CALIBRATION_MAPFILE="calibration/mapping/pos-rep-2019-04-10.cfg",
 )
 
 
@@ -258,13 +256,7 @@ POS_VER_EVALUATION_PARS = Namespace(
 
 
 PUP_ALGN_MEASUREMENT_PARS = Namespace(
-    PUP_ALGN_POSITIONS=[
-        19,
-        79,
-        139,
-        200,
-        260
-    ],  # the rotary stage angle required to
+    PUP_ALGN_POSITIONS=[19, 79, 139, 200, 260],  # the rotary stage angle required to
     # place each FPU under the first pupil
     # alignment fold mirror
     PUP_ALGN_LINPOSITIONS=LINPOSITIONS,
@@ -273,16 +265,12 @@ PUP_ALGN_MEASUREMENT_PARS = Namespace(
     PUP_ALGN_EXPOSURE_MS=3000,  # the exposure time in milliseconds
     # for a correctly exposed image
     PUP_ALGN_LAMP_VOLTAGE=5,
+    PUP_ALGN_CALIBRATION_MAPFILE="calibration/mapping/pup-aln-2019-04-10.cfg",
 )
 
 PUP_ALGN_PLATESCALE = 0.76
 
-PUP_ALGN_CALIBRATION_PARS = {
-    "algorithm": "scale",
-    "scale_factor": PUP_ALGN_PLATESCALE,
-    # values below are placeholders
-    "coeffs": [[NaN, NaN, NaN], [NaN, NaN, NaN], [NaN, NaN, NaN]],
-}
+PUP_ALGN_CALIBRATION_PARS = {"algorithm": "scale", "scale_factor": PUP_ALGN_PLATESCALE}
 
 
 PUP_ALGN_ANALYSIS_PARS = Namespace(

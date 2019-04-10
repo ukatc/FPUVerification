@@ -7,7 +7,8 @@ from vfr.db.base import TestResult, save_named_record, get_named_record
 RECORD_TYPE = "positional-repeatability"
 
 PositionalRepeatabilityImages = namedtuple(
-    "PositionalRepeatabilityImages", " images_alpha" " images_beta" " waveform_pars"
+    "PositionalRepeatabilityImages",
+    " images_alpha" " images_beta" " waveform_pars" " calibration_mapfile",
 )
 
 PositionalRepeatabilityResults = namedtuple(
