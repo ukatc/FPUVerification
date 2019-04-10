@@ -39,17 +39,17 @@ def expand_tasks(tasks, goal, expansion, delete=False, verbosity=0):
     return tasks
 
 
-def resolve(tasks, rig, dbe):
+def resolve(tasks, rigparams, dbe):
     tasks = set(tasks)
 
-    fpuset = set(rig.measure_fpuset) | set(dbe.eval_fpuset)
+    fpuset = set(rigparams.measure_fpuset) | set(dbe.eval_fpuset)
 
     for tsk in tasks:
         if tsk not in usertasks:
 
             raise ValueError("invalid task name '%s'" % tsk)
 
-    verbosity = rig.opts.verbosity
+    verbosity = rigparams.opts.verbosity
     while True:
 
         last_tasks = tasks.copy()
@@ -68,7 +68,7 @@ def resolve(tasks, rig, dbe):
         for tsk, testfun, cond_expansion in conditional_dependencies:
             if tsk in tasks:
                 tfun = lambda fpu_id: testfun(dbe, fpu_id)
-                if (not all_true(tfun, fpuset)) or rig.opts.repeat_passed_tests:
+                if (not all_true(tfun, fpuset)) or rigparams.opts.repeat_passed_tests:
                     tasks = expand_tasks(
                         tasks, tsk, cond_expansion, delete=True, verbosity=verbosity
                     )

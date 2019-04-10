@@ -8,9 +8,8 @@ import sys
 from argparse import Namespace
 
 from protectiondb import open_database_env
-import devicelock
-from vfr import hw as real_hw
-from vfr import hwsimulation
+from vfr.verification_rig import Rig
+
 from vfr.conf import (COLLDECT_MEASUREMENT_PARS,
                       DATUM_REP_ANALYSIS_PARS, DATUM_REP_MEASUREMENT_PARS,
                       IMAGE_ROOT_FOLDER, MET_CAL_CAMERA_IP_ADDRESS,
@@ -24,8 +23,7 @@ from vfr.conf import (COLLDECT_MEASUREMENT_PARS,
                       PUP_ALGN_CAMERA_IP_ADDRESS, PUP_ALGN_EVALUATION_PARS,
                       PUP_ALGN_MEASUREMENT_PARS, REWIND_POS_ALPHA, REWIND_POS_BETA)
 
-from vfr.connection import (check_can_connection, check_connection,
-                            init_driver)
+from vfr.connection import check_can_connection, check_connection
 from vfr.db.snset import add_sns_to_set
 from vfr.options import load_config, parse_args, check_sns_unique
 from vfr.posdb import init_position
@@ -76,13 +74,9 @@ if __name__ == "__main__":
     # check connections to cameras and EtherCAN gateway
 
 
-    if opts.mockup:
-        hw = hwsimulation
-    else:
-        hw = real_hw
-
-
     rig_opts = Namespace(**{ k : vars(opts)[k] for k in [
+        'gateway_address',
+        'gateway_port',
         'verbosity',
         'mockup',
         'manual_lamp_control',
@@ -113,13 +107,8 @@ if __name__ == "__main__":
 
     # we define two structs which group hardware
     # access and database access.
-    rig = Namespace(
-        hw=hw,
-        gd=None,
-        lctrl=None,
-        grid_state=None,
+    rig_params = Namespace(
         measure_fpuset=measure_fpuset,
-        fpu_config=fpu_config,
         opts=rig_opts,
     )
 
@@ -136,40 +125,16 @@ if __name__ == "__main__":
 
     # resolve high-level tasks and dependent checks and measurements into
     # low-level actions
-    tasks = resolve(opts.tasks, rig, dbe)
+    tasks = resolve(opts.tasks, rig_params, dbe)
 
 
-    if not rig.measure_fpuset: # pylint: disable=no-member
+    if not rig_params.measure_fpuset: # pylint: disable=no-member
         # no measurements, we remove all related tasks
         print("No FPUs in measurement set, removing all measurement tasks")
         tasks -= MEASUREMENT_TASKS
 
     if (tasks &  MEASUREMENT_TASKS):
-        # lock the rig hardware to ensure exclusive access
-        groupname = os.environ.get("MOONS_GATEWAY_ACCESS_GROUP","moons")
-        # acquire a unique inter-process lock for the rig
-        lockname = 'moons-verification-rig'
-        if opts.mockup:
-            lockname += "-mockup"
-        dl = devicelock.DeviceLock(lockname, groupname)
-
-    # FIXME: this should be replaced by an extra task
-    if opts.mockup or (not (tasks & measurement_tasks)):
-        lctrl = hwsimulation.lampController()
-    else:
-        if opts.manual_lamp_control:
-            lctrl = real_hw.manualLampController()
-        else:
-            lctrl = real_hw.lampController()
-
-            # make sure that lamps are switched off on program exit
-            def lamps_off():
-                lctrl.switch_all_off()
-
-            atexit.register(lamps_off)
-
-
-    rig.lctrl = lctrl
+        rig = Rig(rig_params, fpu_config=fpu_config)
 
     if opts.expand_tasks:
         print("Expanded tasks: %s" % list(tasks))
@@ -218,15 +183,12 @@ if __name__ == "__main__":
     if T.TASK_INIT_RD in tasks:
 
         print ("[initialize unprotected FPU driver] ###")
-
-        rd, grid_state = init_driver(opts, max(measure_fpuset), protected=False)
-
-        rig.grid_state = grid_state
+        rig.init_driver(protected=False)
 
     if T.TST_CAN_CONNECTION in tasks:
         print ("[test_can_connection] ###")
         for fpu_id in range(opts.N):
-            rv = check_can_connection(rd, grid_state, opts, fpu_id)
+            rv = check_can_connection(rig.rd, rig.grid_state, rig.opts, fpu_id)
 
     if T.TST_FLASH in tasks:
         print ("[flash_snum] ###")
@@ -240,10 +202,10 @@ if __name__ == "__main__":
                 end='',
             )
             flush()
-            rval = rd.writeSerialNumber(fpu_id, serial_number, grid_state)
+            rval = rig.rd.writeSerialNumber(fpu_id, serial_number, grid_state)
             flashed_numbers.append(serial_number)
             print (rval)
-            rd.readSerialNumbers(grid_state)
+            rig.rd.readSerialNumbers(grid_state)
         # we update the set of FPUs which are in the database,
         # so that we can iterate over existing data when generating reports.
         add_sns_to_set(dbe, flashed_numbers)
@@ -270,18 +232,11 @@ if __name__ == "__main__":
 
     if T.TASK_INIT_GD in tasks:
 
-        if locals().has_key("rd"):
-            del rd  # delete raw (unprotected) driver instance
-
         print ("[initialize protected driver] ###")
-        gd, grid_state = init_driver(opts, max(measure_fpuset), env=env, protected=True)
-        gd.readSerialNumbers(grid_state)
-
-        rig.gd = gd
-        rig.grid_state = grid_state
+        rig.init_driver(env=env, protected=True)
 
         for fpu_id in measure_fpuset:
-            actual_sn = grid_state.FPU[fpu_id].serial_number
+            actual_sn = rig.grid_state.FPU[fpu_id].serial_number
             configured_sn = fpu_config[fpu_id]["serialnumber"]
             if configured_sn != actual_sn:
                 raise ValueError(
@@ -292,7 +247,7 @@ if __name__ == "__main__":
     if opts.resetFPUs:
         print ("resetting FPUs.... ", end='')
         flush()
-        gd.resetFPUs(grid_state, fpuset=measure_fpuset)
+        rig.gd.resetFPUs(rig.grid_state, fpuset=measure_fpuset)
         print ("OK")
 
     if T.TASK_REWIND_FPUS in tasks:
@@ -308,7 +263,7 @@ if __name__ == "__main__":
         # We can use grid_state to display the starting position
         print (
             "the starting position (in degrees) is:",
-            gd.trackedAngles(grid_state, retrieve=True),
+            rig.gd.trackedAngles(rig.grid_state, retrieve=True),
         )
         test_datum(
             rig, dbe, DASEL_ALPHA
@@ -320,7 +275,7 @@ if __name__ == "__main__":
         # We can use grid_state to display the starting position
         print (
             "the starting position (in degrees) is:",
-            gd.trackedAngles(grid_state, retrieve=True),
+            rig.gd.trackedAngles(rig.grid_state, retrieve=True),
         )
         test_datum(
             rig, dbe, DASEL_BETA
@@ -332,7 +287,7 @@ if __name__ == "__main__":
         # We can use grid_state to display the starting position
         print (
             "the starting position (in degrees) is:",
-            gd.trackedAngles(grid_state, retrieve=True),
+            rig.gd.trackedAngles(rig.grid_state, retrieve=True),
         )
         test_datum(
             rig, dbe, DASEL_BOTH
@@ -343,7 +298,7 @@ if __name__ == "__main__":
         # move all fpus to datum which are not there
         # (this is needed to operate the turntable)
 
-        find_datum(gd, grid_state, opts=opts, uninitialized=True)
+        find_datum(rig.gd, rig.grid_state, opts=opts, uninitialized=True)
 
     if T.TASK_SELFTEST_NONFIBRE in tasks:
         print ("[%s] ###" % T.TASK_SELFTEST_NONFIBRE)
@@ -487,7 +442,7 @@ if __name__ == "__main__":
     if T.TASK_PARK_FPUS in tasks:
         print ("[%s] ###" % T.TASK_PARK_FPUS)
         # move all fpus back to datum
-        find_datum(gd, grid_state, opts=opts, uninitialized=True)
+        find_datum(rig.gd, rig.grid_state, opts=opts, uninitialized=True)
 
     if T.EVAL_POS_VER in tasks:
         print ("[%s] ###" % T.EVAL_POS_VER)
