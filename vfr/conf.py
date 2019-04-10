@@ -23,6 +23,7 @@ DEFAULT_TASKS_NONFIBRE = [
 INSTRUMENT_FOCAL_LENGTH = 4101.4  # millimeter (does not change)
 
 ALPHA_DATUM_OFFSET = -180
+ALPHA_RANGE_MAX = 155.0 # maximum range of alpha arm
 
 PROTECTION_TOLERANCE = 0.15  # degrees of protection between measured
 # limit and soft protection range

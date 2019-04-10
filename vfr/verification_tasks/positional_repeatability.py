@@ -36,25 +36,63 @@ from vfr.verification_tasks.measure_datum_repeatability import (
     get_datum_repeatability_passed_p,
 )
 
+def check_skip_reason(dbe, fpu_id, sn, repeat_passed_tests=None):
+    if not get_datum_repeatability_passed_p(dbe, fpu_id):
+        return (
+            "FPU %s: skipping positional repeatability measurement because"
+            " there is no passed datum repeatability test" % sn
+        )
+    
+    if not get_pupil_alignment_passed_p(dbe, fpu_id):
+        if rig.opts.skip_fibre:
+            warnings.warn(
+                "skipping check for pupil alignment because '--skip-fibre' flag is set"
+            )
+        else:
+            return (
+                "FPU %s: skipping positional repeatability measurement because"
+                " there is no passed pupil alignment test"
+                " (use '--skip-fibre' flag if you want to omit that test)" % sn
+            )
+        
+    if get_positional_repeatability_passed_p(dbe, fpu_id) and (
+            not repeat_passed_tests
+    ):
+        
+        return (
+            "FPU %s : positional repeatability test already passed, skipping test"
+            % sn
+        )
+    
+    return None
 
+def initialize_rig(rig):
+    # home turntable
+    rig.hw.safe_home_turntable(rig.gd, rig.grid_state)
+    # switch lamps off
+    rig.lctrl.switch_all_off()
+
+def prepare_cam(exposure_time):
+    # initialize pos_rep camera
+    # set pos_rep camera exposure time to POSITIONAL_REP_EXPOSURE milliseconds
+    POS_REP_CAMERA_CONF = {
+        DEVICE_CLASS: BASLER_DEVICE_CLASS,
+        IP_ADDRESS: POS_REP_CAMERA_IP_ADDRESS,
+    }
+    
+    pos_rep_cam = rig.hw.GigECamera(POS_REP_CAMERA_CONF)
+    pos_rep_cam.SetExposureTime(exposure_time)
+    
+    return pos_rep_cam
+    
 def measure_positional_repeatability(rig, dbe, pars=None):
 
     tstamp = timestamp()
 
-    # home turntable
-    rig.hw.safe_home_turntable(rig.gd, rig.grid_state)
-    rig.lctrl.switch_all_off()
+    initialize_rig(rig)
 
     with rig.lctrl.use_ambientlight():
-        # initialize pos_rep camera
-        # set pos_rep camera exposure time to POSITIONAL_REP_EXPOSURE milliseconds
-        POS_REP_CAMERA_CONF = {
-            DEVICE_CLASS: BASLER_DEVICE_CLASS,
-            IP_ADDRESS: POS_REP_CAMERA_IP_ADDRESS,
-        }
-
-        pos_rep_cam = rig.hw.GigECamera(POS_REP_CAMERA_CONF)
-        pos_rep_cam.SetExposureTime(pars.POS_REP_EXPOSURE_MS)
+        pos_rep_cam = prepare_cam(pars.POS_REP_EXPOSURE_MS)
 
         # get sorted positions (this is needed because the turntable can only
         # move into one direction)
@@ -63,64 +101,24 @@ def measure_positional_repeatability(rig, dbe, pars=None):
         ):
 
             sn = rig.fpu_config[fpu_id]["serialnumber"]
-            if not get_datum_repeatability_passed_p(dbe, fpu_id):
-                print(
-                    "FPU %s: skipping positional repeatability measurement because"
-                    " there is no passed datum repeatability test" % sn
-                )
+            skip_message = check_skip_reason(
+                dbe,
+                fpu_id,
+                sn,
+                repeat_passed_tests=rig.opts.repeat_passed_tests
+            )
+            
+            if skip_message:
+                print(skip_message)
                 continue
 
-            if not get_pupil_alignment_passed_p(dbe, fpu_id):
-                if rig.opts.skip_fibre:
-                    warnings.warn(
-                        "skipping check for pupil alignment because '--skip-fibre' flag is set"
-                    )
-                else:
-                    print(
-                        "FPU %s: skipping positional repeatability measurement because"
-                        " there is no passed pupil alignment test"
-                        " (use '--skip-fibre' flag if you want to omit that test)" % sn
-                    )
-                    continue
+            range_limits = get_range_limits(dbe, fpu_id)
 
-            if get_positional_repeatability_passed_p(dbe, fpu_id) and (
-                not rig.opts.repeat_passed_tests
-            ):
-
-                print(
-                    "FPU %s : positional repeatability test already passed, skipping test"
-                    % sn
-                )
-                continue
-
-            _alpha_min = get_angular_limit(dbe, fpu_id, "alpha_min")
-            if _alpha_min is None:
-                _alpha_min = {"val": ALPHA_DATUM_OFFSET}
-            _alpha_max = get_angular_limit(dbe, fpu_id, "alpha_max")
-            if _alpha_max is None:
-                _alpha_max = {"val": 155.0}
-            _beta_min = get_angular_limit(dbe, fpu_id, "beta_min")
-            _beta_max = get_angular_limit(dbe, fpu_id, "beta_max")
-
-            if (
-                (_alpha_min is None)
-                or (_alpha_max is None)
-                or (_beta_min is None)
-                or (_beta_max is None)
-            ):
+            if range_limits is None:
                 print("FPU %s : limit test value missing, skipping test" % sn)
                 continue
 
-            alpha_min = _alpha_min["val"]
-            alpha_max = _alpha_max["val"]
-            beta_min = _beta_min["val"]
-            beta_max = _beta_max["val"]
-
-            assert not isnan(alpha_min)
-            assert not isnan(alpha_max)
-            assert not isnan(beta_min)
-            assert not isnan(beta_max)
-
+                
             # move rotary stage to POS_REP_POSN_N
             rig.hw.turntable_safe_goto(rig.gd, rig.grid_state, stage_position)
 
