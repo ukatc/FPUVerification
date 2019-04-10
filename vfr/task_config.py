@@ -62,6 +62,8 @@ class T:
     TST_INIT = "initiate"
     TST_INITPOS = "setpos"
     TST_LIMITS = "test_limits"
+    TST_LIMITS_ALPHA = "test_limits_alpha"
+    TST_LIMITS_BETA = "test_limits_beta"
     TST_MET_CAL = "test_met_cal"
     TST_MET_CAL_CAM_CONNECTION = "test_met_cam_conn"
     TST_MET_HEIGHT = "test_met_height"
@@ -117,6 +119,8 @@ usertasks = set(
         T.TST_INIT,
         T.TST_INITPOS,
         T.TST_LIMITS,
+        T.TST_LIMITS_ALPHA,
+        T.TST_LIMITS_BETA,
         T.TST_MET_CAL,
         T.TST_MET_CAL_CAM_CONNECTION,
         T.TST_MET_HEIGHT_CAM_CONNECTION,
@@ -337,8 +341,22 @@ task_expansions = [
         T.TST_LIMITS,
         [
             T.TST_COLLDETECT,
-#            T.TST_ALPHA_MAX,
-#            T.TST_ALPHA_MIN,
+#            T.TST_LIMITS_ALPHA,
+            T.TST_LIMITS_BETA,
+        ],
+    ),
+    (
+        T.TST_LIMITS_ALPHA,
+        [
+            T.TST_COLLDETECT,
+            T.TST_ALPHA_MAX,
+            T.TST_ALPHA_MIN,
+        ],
+    ),
+    (
+        T.TST_LIMITS_BETA,
+        [
+            T.TST_COLLDETECT,
             T.TST_BETA_MAX,
             T.TST_BETA_MIN,
         ],

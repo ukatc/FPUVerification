@@ -101,6 +101,9 @@ summary = cleandoc(
 
     {TST_LIMITS!r:<20}  - test limit switch functionality
 
+    {TST_LIMITS_ALPHA!r:<20}  - test limit switch functionality, alpha switches only
+    {TST_LIMITS_BETA!r:<20}  - test limit switch functionality, beta switch only
+
     {TST_ALPHA_MAX!r:<20}  - search alpha max limit
     {TST_ALPHA_MIN!r:<20}  - search alpha min limit
     {TST_BETA_MAX!r:<20}  - search beta max limit
