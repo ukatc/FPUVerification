@@ -75,7 +75,7 @@ class T:
     TST_PUP_ALGN_CAM_CONNECTION = "test_pup_algn_cam_conn"
 
 
-usertasks = set(
+USERTASKS = set(
     [
         T.EVAL_DATUM_REP,
         T.EVAL_MET_CAL,

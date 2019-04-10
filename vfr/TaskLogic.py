@@ -5,7 +5,7 @@ from vfr.task_config import (
     conditional_dependencies,
     task_dependencies,
     task_expansions,
-    usertasks,
+    USERTASKS,
 )
 
 assert T
@@ -45,7 +45,7 @@ def resolve(tasks, rigparams, dbe):
     fpuset = set(rigparams.measure_fpuset) | set(dbe.eval_fpuset)
 
     for tsk in tasks:
-        if tsk not in usertasks:
+        if tsk not in USERTASKS:
 
             raise ValueError("invalid task name '%s'" % tsk)
 

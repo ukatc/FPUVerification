@@ -17,7 +17,7 @@ from fpu_constants import (
 from vfr.conf import DEFAULT_TASKS, DEFAULT_TASKS_NONFIBRE
 from vfr.db.snset import get_snset
 from vfr.helptext import examples, summary
-from vfr.task_config import usertasks, T
+from vfr.task_config import USERTASKS, T
 
 
 def parse_args():
@@ -293,7 +293,7 @@ def parse_args():
     args = parser.parse_args()
 
     if args.list_tasks:
-        print("available tasks in alphabetic order: %r" % sorted(list(usertasks)))
+        print("available tasks in alphabetic order: %r" % sorted(list(USERTASKS)))
         sys.exit(0)
 
     if len(args.tasks) == 0:
