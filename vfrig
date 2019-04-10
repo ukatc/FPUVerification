@@ -6,8 +6,6 @@ import atexit
 import os
 import sys
 from argparse import Namespace
-
-from protectiondb import open_database_env
 from vfr.verification_rig import Rig
 
 from vfr.conf import (COLLDECT_MEASUREMENT_PARS,
@@ -25,7 +23,8 @@ from vfr.conf import (COLLDECT_MEASUREMENT_PARS,
 
 from vfr.connection import check_can_connection, check_connection
 from vfr.db.snset import add_sns_to_set
-from vfr.options import load_config, parse_args, check_sns_unique
+from vfr.db.toplevel import Database
+from vfr.options import parse_args, check_sns_unique
 from vfr.posdb import init_position
 from vfr.TaskLogic import T, resolve
 from vfr.task_config import MEASUREMENT_TASKS
@@ -50,78 +49,25 @@ from vfr.verification_tasks.rig_selftest import (selftest_fibre,
                                                  selftest_nonfibre)
 
 if __name__ == "__main__":
-    opts = parse_args()
+    opts, db_opts, rig_opts = parse_args()
     print ("starting verification")
     print ("tasks = %r" % opts.tasks)
 
-    env = open_database_env(mockup=opts.mockup)
+    dbe = Database(opts=db_opts)
 
-    if env is None:
-        raise ValueError(
-            "The environment variable FPU_DATABASE needs to"
-            " be set to the directory path of the LMDB position database!"
-        )
-
-    vfdb = env.open_db("verification")
-
-    fpu_config, measure_fpuset, eval_fpuset = load_config(env, vfdb, opts.setup_file, opts=opts)
+    fpu_config, measure_fpuset, eval_fpuset = dbe.load_fpu_config_and_sets(opts.setup_file, opts)
 
 
-    # change current directory to image root folder, so that
-    # we can use relative image paths in both measurement
-    # and evaluation tasks
-    cd_to_image_root(IMAGE_ROOT_FOLDER)
-    # check connections to cameras and EtherCAN gateway
-
-
-    rig_opts = Namespace(**{ k : vars(opts)[k] for k in [
-        'gateway_address',
-        'gateway_port',
-        'verbosity',
-        'mockup',
-        'manual_lamp_control',
-        'always_reset_fpus',
-        're_initialize',
-        'repeat_passed_tests',
-        'repeat_limit_tests',
-        'skip_fibre',
-        'N',
-        'bus_repeat_dummy_delay',
-        'ignore_analysis_failures',
-    ]})
-
-    db_opts = Namespace(**{ k : vars(opts)[k] for k in [
-        'report_format',
-        'verbosity',
-        're_initialize',
-        'output_file',
-        'reuse_serialnum',
-        'update_protection_limits',
-        'protection_tolerance',
-        'display_alpha_max',
-        'display_alpha_min',
-        'display_beta_max',
-        'display_beta_min',
-        'record_count',
-    ]})
-
-    # we define two structs which group hardware
-    # access and database access.
     rig_params = Namespace(
         measure_fpuset=measure_fpuset,
         opts=rig_opts,
     )
 
-    fpudb = env.open_db("fpu")
+    # change current directory to image root folder, so that
+    # we can use relative image paths in both measurement
+    # and evaluation tasks
+    cd_to_image_root(IMAGE_ROOT_FOLDER)
 
-    dbe = Namespace(
-        env=env,
-        fpudb=fpudb,
-        vfdb=vfdb,
-        eval_fpuset=eval_fpuset,
-        fpu_config=fpu_config,
-        opts=db_opts,
-    )
 
     # resolve high-level tasks and dependent checks and measurements into
     # low-level actions
@@ -134,12 +80,14 @@ if __name__ == "__main__":
         tasks -= MEASUREMENT_TASKS
 
     if (tasks &  MEASUREMENT_TASKS):
+        # we are going to need the rig hardware
         rig = Rig(rig_params, fpu_config=fpu_config)
 
     if opts.expand_tasks:
         print("Expanded tasks: %s" % list(tasks))
         sys.exit(0)
 
+    # check connections to cameras and EtherCAN gateway
     if T.TST_GATEWAY_CONNECTION in tasks:
         print ("[%s] ###" % T.TST_GATEWAY_CONNECTION)
         check_connection(opts, "gateway", opts.gateway_address)
@@ -233,7 +181,7 @@ if __name__ == "__main__":
     if T.TASK_INIT_GD in tasks:
 
         print ("[initialize protected driver] ###")
-        rig.init_driver(env=env, protected=True)
+        rig.init_driver(env=dbe.env, protected=True)
 
         for fpu_id in measure_fpuset:
             actual_sn = rig.grid_state.FPU[fpu_id].serial_number

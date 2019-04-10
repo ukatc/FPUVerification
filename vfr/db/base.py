@@ -8,6 +8,7 @@ import subprocess
 from numpy import array, Inf, NaN, inf, nan  # these values are used!!
 
 assert Inf or NaN or inf or nan or array or True
+
 from vfr.tests_common import timestamp
 
 

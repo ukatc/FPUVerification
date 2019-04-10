@@ -17,8 +17,7 @@ from fpu_constants import (
 from vfr.conf import DEFAULT_TASKS, DEFAULT_TASKS_NONFIBRE
 from vfr.db.snset import get_snset
 from vfr.helptext import examples, summary
-from vfr.TaskLogic import T
-from vfr.task_config import usertasks
+from vfr.task_config import usertasks, T
 
 
 def parse_args():
@@ -313,13 +312,46 @@ def parse_args():
     else:
         args.output_file = open(args.output_file, "w")
 
-    return args
+    db_opts = argparse.Namespace(**{ k : vars(args)[k] for k in [
+        'mockup',
+        'report_format',
+        'verbosity',
+        're_initialize',
+        'output_file',
+        'reuse_serialnum',
+        'update_protection_limits',
+        'protection_tolerance',
+        'display_alpha_max',
+        'display_alpha_min',
+        'display_beta_max',
+        'display_beta_min',
+        'record_count',
+    ]})
+
+    rig_opts = argparse.Namespace(**{ k : vars(args)[k] for k in [
+        'gateway_address',
+        'gateway_port',
+        'verbosity',
+        'mockup',
+        'manual_lamp_control',
+        'always_reset_fpus',
+        're_initialize',
+        'repeat_passed_tests',
+        'repeat_limit_tests',
+        'skip_fibre',
+        'N',
+        'bus_repeat_dummy_delay',
+        'ignore_analysis_failures',
+    ]})
+
+
+    return args, db_opts, rig_opts
 
 
 sn_pat = re.compile("[a-zA-Z0-9]{1,5}$")
 
 
-def get_sets(env, vfdb, fpu_config, opts):
+def get_sets(all_serial_numbers, fpu_config, opts):
     """Under normal operation, we want to measure and evaluate the FPUs
     in the rig.
 
@@ -337,7 +369,7 @@ def get_sets(env, vfdb, fpu_config, opts):
 
     if eval_snset == "all":
         # get the serial numbers of all FPUs which have been measured so far
-        eval_snset = get_snset(env, vfdb, opts)
+        eval_snset = all_serial_numbers
         # this is a workaround against dirty data
         eval_snset = set(filter(lambda x: type(x) == types.StringType, eval_snset))
         fpu_config = {}
@@ -415,8 +447,25 @@ def get_sets(env, vfdb, fpu_config, opts):
 
     return fpu_config, sorted(measure_fpuset), sorted(eval_fpuset)
 
+def check_config_item(fpu_id, val):
+    try:
+        key = int(fpu_id)
+    except ValueError:
+        raise ValueError(
+            "FPU identifier %r is not valid!" % fpu_id
+        )
 
-def load_config(env, vfdb, config_file_name, opts=None):
+    if (key < 0) or (key > 4):
+        raise ValueError("FPU id %i is not valid!" % key)
+
+    serialnumber = val["serialnumber"]
+    if not sn_pat.match(serialnumber):
+        raise ValueError(
+            "serial number %r for FPU %i is not valid!" % (serialnumber, key)
+        )
+
+
+def load_config(config_file_name):
     print("reading measurement configuratiom from %r..." % config_file_name)
     cfg_list = literal_eval("".join(open(config_file_name).readlines()))
 
@@ -435,16 +484,17 @@ def load_config(env, vfdb, config_file_name, opts=None):
     )
 
     for key, val in fconfig.items():
-        if key < 0:
-            raise ValueError("FPU id %i is not valid!" % key)
-        serialnumber = val["serialnumber"]
-        if not sn_pat.match(serialnumber):
-            raise ValueError(
-                "serial number %r for FPU %i is not valid!" % (serialnumber, key)
-            )
+        check_config_item(key, val)
+
+    return fconfig
+
+
+def load_config_and_sets(all_serial_numbers, config_file_name, opts=None):
+
+    fconfig = load_config(config_file_name)
 
     # get sets of measured and evaluated FPUs
-    fpu_config, measure_fpuset, eval_fpuset = get_sets(env, vfdb, fconfig, opts)
+    fpu_config, measure_fpuset, eval_fpuset = get_sets(all_serial_numbers, fconfig, opts)
 
     return fpu_config, sorted(measure_fpuset), sorted(eval_fpuset)
 
