@@ -74,8 +74,9 @@ BACKLIGHT_CHANNEL = 0
 
 
 class LampControllerBase:
+    # pylint: disable=no-member
+
     def switch_all_off(self):
-        # pylint: disable=no-member
         self.switch_fibre_backlight("off")
         self.switch_ambientlight("off")
         self.switch_silhouettelight("off")
@@ -112,6 +113,7 @@ class LampControllerBase:
         finally:
             self.switch_ambientlight("off")
             time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
+
 
 class lampController(LampControllerBase):
     """ Class to control lamps through an attached DAQ.
