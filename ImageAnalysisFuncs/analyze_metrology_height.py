@@ -3,7 +3,7 @@ from __future__ import division, print_function
 import cv2
 from ImageAnalysisFuncs.base import ImageAnalysisError
 from matplotlib import pyplot as plt
-from numpy import float32, std, sqrt # pylint: disable=no-name-in-module
+from numpy import float32, std, sqrt  # pylint: disable=no-name-in-module
 from numpy.polynomial import Polynomial
 
 # version number for analysis algorithm

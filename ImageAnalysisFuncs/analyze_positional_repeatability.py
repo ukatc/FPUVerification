@@ -415,8 +415,12 @@ def evaluate_positional_verification(dict_of_coords, pars=None):
         x_big, y_big = NaN * alpha, NaN * beta
 
         # compute difference
-        err_small = norm(va[:2] - array([alpha, beta])) # pylint: disable=invalid-unary-operand-type
-        err_big = norm(va[2:] - array([alpha, beta]))   # pylint: disable=invalid-unary-operand-type
+        err_small = norm(
+            va[:2] - array([alpha, beta])
+        )  # pylint: disable=invalid-unary-operand-type
+        err_big = norm(
+            va[2:] - array([alpha, beta])
+        )  # pylint: disable=invalid-unary-operand-type
 
         posver_error[k] = max(err_small, err_big)
 
