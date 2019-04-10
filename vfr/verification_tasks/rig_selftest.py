@@ -64,8 +64,10 @@ def selftest_pup_algn(rig, pars=None, PUP_ALGN_ANALYSIS_PARS=None, capture_image
                 del result
             except ImageAnalysisError as err:
                 if rig.opts.ignore_analysis_failures:
-                    warn("FAILED: self-test pupil alignment image"
-                         " analysis (ignored), message = %s" % repr(err))
+                    warn(
+                        "FAILED: self-test pupil alignment image"
+                        " analysis (ignored), message = %s" % repr(err)
+                    )
                 else:
                     raise
 
@@ -132,11 +134,12 @@ def selftest_metrology_calibration(
             del target_coordinates
         except ImageAnalysisError as err:
             if rig.opts.ignore_analysis_failures:
-                warn("FAILED: self-test metrology calibration image"
-                     " analysis (ignored), message = %s" % repr(err))
+                warn(
+                    "FAILED: self-test metrology calibration image"
+                    " analysis (ignored), message = %s" % repr(err)
+                )
             else:
                 raise
-
 
         fibre_coordinates = metcalFibreCoordinates(
             ipath_selftest_met_cal_fibre, pars=MET_CAL_FIBRE_ANALYSIS_PARS
@@ -186,11 +189,12 @@ def selftest_metrology_height(
 
         except ImageAnalysisError as err:
             if rig.opts.ignore_analysis_failures:
-                warn("FAILED: self-test metrology height image"
-                     " analysis (ignored), message = %r" % repr(err))
+                warn(
+                    "FAILED: self-test metrology height image"
+                    " analysis (ignored), message = %r" % repr(err)
+                )
             else:
                 raise
-
 
     finally:
         rig.hw.safe_home_turntable(rig.gd, rig.grid_state)
@@ -227,12 +231,16 @@ def selftest_positional_repeatability(
             )
 
         try:
-            coords = posrepCoordinates(selftest_ipath_pos_rep, pars=POS_REP_ANALYSIS_PARS)
+            coords = posrepCoordinates(
+                selftest_ipath_pos_rep, pars=POS_REP_ANALYSIS_PARS
+            )
             del coords
         except ImageAnalysisError as err:
             if rig.opts.ignore_analysis_failures:
-                warn("FAILED: self-test positional repeatability image"
-                     " analysis (ignored), message = %r" % repr(err))
+                warn(
+                    "FAILED: self-test positional repeatability image"
+                    " analysis (ignored), message = %r" % repr(err)
+                )
             else:
                 raise
 

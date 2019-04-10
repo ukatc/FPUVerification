@@ -23,4 +23,4 @@ def home(serial):
 if __name__ == "__main__":
     import sys
 
-    sys.exit(home()) # pylint: disable=no-value-for-parameter
+    sys.exit(home())  # pylint: disable=no-value-for-parameter

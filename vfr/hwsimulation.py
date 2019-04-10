@@ -3,16 +3,13 @@ from __future__ import absolute_import, division, print_function
 import inspect
 import os
 import os.path
-import time
 import warnings
-from contextlib import contextmanager
 
 import ImageAnalysisFuncs  # used to look up images
 
 from Lamps.lctrl import LampControllerBase
 
 from vfr.conf import (
-    LAMP_WARMING_TIME_MILLISECONDS,
     MET_CAL_CAMERA_IP_ADDRESS,
     MET_CAL_MEASUREMENT_PARS,
     MET_HEIGHT_CAMERA_IP_ADDRESS,
@@ -94,7 +91,7 @@ class GigECamera:
         elif ip_address == MET_CAL_CAMERA_IP_ADDRESS:
             if (
                 self.exposure_time_ms
-                == MET_CAL_MEASUREMENT_PARS.METROLOGY_CAL_FIBRE_EXPOSURE_MS # # pylint: disable=no-member
+                == MET_CAL_MEASUREMENT_PARS.METROLOGY_CAL_FIBRE_EXPOSURE_MS  # # pylint: disable=no-member
             ):
                 warnings.warn(
                     "using target image in place of fibre image for met "

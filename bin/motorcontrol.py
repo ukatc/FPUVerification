@@ -8,7 +8,7 @@ import time
 from ast import literal_eval
 from os import environ, path
 
-import pyAPT # pylint: disable=import-error
+import pyAPT  # pylint: disable=import-error
 
 # from pyAPT.controller import Controller  # the generic diver class
 from pyAPT.cr1z7 import CR1Z7
@@ -16,8 +16,8 @@ from pyAPT.lts300 import LTS300
 from pyAPT.mts50 import MTS50
 from pyAPT.nr360s import NR360S
 from pyAPT.prm1 import PRM1
-from pylibftdi import Driver as LibFTDI_Driver # pylint: disable=import-error
-from pylibftdi import FtdiError # pylint: disable=import-error
+from pylibftdi import Driver as LibFTDI_Driver  # pylint: disable=import-error
+from pylibftdi import FtdiError  # pylint: disable=import-error
 
 __help__ = """Thorlabs motor control, re-written in Python.
 To automatically use a certain device type with a specific

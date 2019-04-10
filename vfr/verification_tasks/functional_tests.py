@@ -44,6 +44,7 @@ class CollisionDetectionFailure(Exception):
 class LimitDetectionFailure(Exception):
     pass
 
+
 def rewind_fpus(rig, abs_alpha, abs_beta):
     # depending on options, we reset & rewind the FPUs
     if rig.opts.always_reset_fpus:
@@ -62,6 +63,7 @@ def rewind_fpus(rig, abs_alpha, abs_beta):
         fpuset=rig.measure_fpuset,
         allow_uninitialized=True,
     )
+
 
 def test_datum(rig, dbe, dasel=DASEL_BOTH):
 
@@ -163,9 +165,11 @@ def test_limit(rig, dbe, which_limit, pars=None):
     ):
         sn = rig.fpu_config[fpu_id]["serialnumber"]
 
-        if (get_anglimit_passed_p(dbe, fpu_id, which_limit)
-            and ((not rig.opts.repeat_passed_tests)
-                 and (which_limit != "beta_collision"))
+        if (
+            get_anglimit_passed_p(dbe, fpu_id, which_limit)
+            and (
+                (not rig.opts.repeat_passed_tests) and (which_limit != "beta_collision")
+            )
             and (not rig.opts.repeat_limit_tests)
         ):
 
@@ -297,7 +301,9 @@ def test_limit(rig, dbe, which_limit, pars=None):
                 print("moving fpu %i back by %i steps" % (fpu_id, 10))
                 RECOVERY_STEPS_PER_ITERATION = 10
                 recovery_steps = pars.RECOVERY_ANGLE_DEG * StepsPerDegreeBeta
-                recovery_iterations = int(ceil(recovery_steps / RECOVERY_STEPS_PER_ITERATION))
+                recovery_iterations = int(
+                    ceil(recovery_steps / RECOVERY_STEPS_PER_ITERATION)
+                )
 
                 for k in range(recovery_iterations):
                     rig.gd.freeBetaCollision(

@@ -5,6 +5,7 @@ from protectiondb import open_database_env
 from vfr.options import load_config_and_sets
 from vfr.db.snset import get_snset
 
+
 class Database:
     def __init__(self, eval_fpuset=None, fpu_config=None, opts=None):
 
@@ -22,16 +23,13 @@ class Database:
         self.eval_fpuset = None
         self.fpu_config = None
 
-
     def load_fpu_config_and_sets(self, config_file_name, opts):
         all_serial_numbers = get_snset(self.env, self.vfdb, opts)
         fpu_config, measure_fpuset, eval_fpuset = load_config_and_sets(
-            all_serial_numbers,
-            config_file_name,
-            opts
+            all_serial_numbers, config_file_name, opts
         )
 
-        self.eval_fpuset=eval_fpuset
-        self.fpu_config=fpu_config
+        self.eval_fpuset = eval_fpuset
+        self.fpu_config = fpu_config
 
         return fpu_config, measure_fpuset, eval_fpuset

@@ -297,7 +297,7 @@ def parse_args():
         sys.exit(0)
 
     if len(args.tasks) == 0:
-        if args.skip_fibre :
+        if args.skip_fibre:
             args.tasks = DEFAULT_TASKS_NONFIBRE
         else:
             args.tasks = DEFAULT_TASKS
@@ -312,38 +312,47 @@ def parse_args():
     else:
         args.output_file = open(args.output_file, "w")
 
-    db_opts = argparse.Namespace(**{ k : vars(args)[k] for k in [
-        'mockup',
-        'report_format',
-        'verbosity',
-        're_initialize',
-        'output_file',
-        'reuse_serialnum',
-        'update_protection_limits',
-        'protection_tolerance',
-        'display_alpha_max',
-        'display_alpha_min',
-        'display_beta_max',
-        'display_beta_min',
-        'record_count',
-    ]})
+    db_opts = argparse.Namespace(
+        **{
+            k: vars(args)[k]
+            for k in [
+                "mockup",
+                "report_format",
+                "verbosity",
+                "re_initialize",
+                "output_file",
+                "reuse_serialnum",
+                "update_protection_limits",
+                "protection_tolerance",
+                "display_alpha_max",
+                "display_alpha_min",
+                "display_beta_max",
+                "display_beta_min",
+                "record_count",
+            ]
+        }
+    )
 
-    rig_opts = argparse.Namespace(**{ k : vars(args)[k] for k in [
-        'gateway_address',
-        'gateway_port',
-        'verbosity',
-        'mockup',
-        'manual_lamp_control',
-        'always_reset_fpus',
-        're_initialize',
-        'repeat_passed_tests',
-        'repeat_limit_tests',
-        'skip_fibre',
-        'N',
-        'bus_repeat_dummy_delay',
-        'ignore_analysis_failures',
-    ]})
-
+    rig_opts = argparse.Namespace(
+        **{
+            k: vars(args)[k]
+            for k in [
+                "gateway_address",
+                "gateway_port",
+                "verbosity",
+                "mockup",
+                "manual_lamp_control",
+                "always_reset_fpus",
+                "re_initialize",
+                "repeat_passed_tests",
+                "repeat_limit_tests",
+                "skip_fibre",
+                "N",
+                "bus_repeat_dummy_delay",
+                "ignore_analysis_failures",
+            ]
+        }
+    )
 
     return args, db_opts, rig_opts
 
@@ -447,13 +456,12 @@ def get_sets(all_serial_numbers, fpu_config, opts):
 
     return fpu_config, sorted(measure_fpuset), sorted(eval_fpuset)
 
+
 def check_config_item(fpu_id, val):
     try:
         key = int(fpu_id)
     except ValueError:
-        raise ValueError(
-            "FPU identifier %r is not valid!" % fpu_id
-        )
+        raise ValueError("FPU identifier %r is not valid!" % fpu_id)
 
     if (key < 0) or (key > 4):
         raise ValueError("FPU id %i is not valid!" % key)
@@ -494,7 +502,9 @@ def load_config_and_sets(all_serial_numbers, config_file_name, opts=None):
     fconfig = load_config(config_file_name)
 
     # get sets of measured and evaluated FPUs
-    fpu_config, measure_fpuset, eval_fpuset = get_sets(all_serial_numbers, fconfig, opts)
+    fpu_config, measure_fpuset, eval_fpuset = get_sets(
+        all_serial_numbers, fconfig, opts
+    )
 
     return fpu_config, sorted(measure_fpuset), sorted(eval_fpuset)
 

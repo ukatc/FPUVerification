@@ -134,38 +134,40 @@ usertasks = set(
     ]
 )
 
-MEASUREMENT_TASKS = set([
-            T.TST_GATEWAY_CONNECTION,
-            T.TST_POS_REP_CAM_CONNECTION,
-            T.TST_POS_REP_CAM_CONNECTION,
-            T.TST_MET_CAL_CAM_CONNECTION,
-            T.TST_MET_HEIGHT_CAM_CONNECTION,
-            T.TST_PUP_ALGN_CAM_CONNECTION,
-            T.TASK_INIT_RD,
-            T.TASK_REWIND_FPUS,
-            T.TST_CAN_CONNECTION,
-            T.TST_FLASH,
-            T.TST_INITPOS,
-            T.TASK_INIT_GD,
-            T.TST_DATUM_ALPHA,
-            T.TST_DATUM_BETA,
-            T.TST_DATUM_BOTH,
-            T.TASK_REFERENCE,
-            T.TASK_SELFTEST_NONFIBRE,
-            T.TASK_SELFTEST_FIBRE,
-            T.TST_COLLDETECT,
-            T.TST_ALPHA_MIN,
-            T.TST_ALPHA_MAX,
-            T.TST_BETA_MAX,
-            T.TST_BETA_MIN,
-            T.MEASURE_MET_CAL,
-            T.MEASURE_MET_HEIGHT,
-            T.MEASURE_DATUM_REP,
-            T.MEASURE_PUP_ALGN,
-            T.MEASURE_POS_REP,
-            T.MEASURE_POS_VER,
-            T.TASK_PARK_FPUS,
-        ])
+MEASUREMENT_TASKS = set(
+    [
+        T.TST_GATEWAY_CONNECTION,
+        T.TST_POS_REP_CAM_CONNECTION,
+        T.TST_POS_REP_CAM_CONNECTION,
+        T.TST_MET_CAL_CAM_CONNECTION,
+        T.TST_MET_HEIGHT_CAM_CONNECTION,
+        T.TST_PUP_ALGN_CAM_CONNECTION,
+        T.TASK_INIT_RD,
+        T.TASK_REWIND_FPUS,
+        T.TST_CAN_CONNECTION,
+        T.TST_FLASH,
+        T.TST_INITPOS,
+        T.TASK_INIT_GD,
+        T.TST_DATUM_ALPHA,
+        T.TST_DATUM_BETA,
+        T.TST_DATUM_BOTH,
+        T.TASK_REFERENCE,
+        T.TASK_SELFTEST_NONFIBRE,
+        T.TASK_SELFTEST_FIBRE,
+        T.TST_COLLDETECT,
+        T.TST_ALPHA_MIN,
+        T.TST_ALPHA_MAX,
+        T.TST_BETA_MAX,
+        T.TST_BETA_MIN,
+        T.MEASURE_MET_CAL,
+        T.MEASURE_MET_HEIGHT,
+        T.MEASURE_DATUM_REP,
+        T.MEASURE_PUP_ALGN,
+        T.MEASURE_POS_REP,
+        T.MEASURE_POS_VER,
+        T.TASK_PARK_FPUS,
+    ]
+)
 
 # task dependencies (where doing one task requires doing another task before)
 task_dependencies = [
@@ -336,31 +338,17 @@ conditional_dependencies = [
 task_expansions = [
     (T.TST_INIT, [T.TST_FLASH, T.TST_INITPOS]),
     (T.TST_DATUM, [T.TST_DATUM_ALPHA, T.TST_DATUM_BETA, T.TST_DATUM_BOTH]),
-#    (T.TST_DATUM, [T.TST_DATUM_BOTH]),
+    #    (T.TST_DATUM, [T.TST_DATUM_BOTH]),
     (
         T.TST_LIMITS,
         [
             T.TST_COLLDETECT,
-#            T.TST_LIMITS_ALPHA,
+            #            T.TST_LIMITS_ALPHA,
             T.TST_LIMITS_BETA,
         ],
     ),
-    (
-        T.TST_LIMITS_ALPHA,
-        [
-            T.TST_COLLDETECT,
-            T.TST_ALPHA_MAX,
-            T.TST_ALPHA_MIN,
-        ],
-    ),
-    (
-        T.TST_LIMITS_BETA,
-        [
-            T.TST_COLLDETECT,
-            T.TST_BETA_MAX,
-            T.TST_BETA_MIN,
-        ],
-    ),
+    (T.TST_LIMITS_ALPHA, [T.TST_COLLDETECT, T.TST_ALPHA_MAX, T.TST_ALPHA_MIN]),
+    (T.TST_LIMITS_BETA, [T.TST_COLLDETECT, T.TST_BETA_MAX, T.TST_BETA_MIN]),
     (
         T.TST_FUNCTIONAL,
         [T.TST_GATEWAY_CONNECTION, T.TST_CAN_CONNECTION, T.TST_DATUM, T.TST_LIMITS],

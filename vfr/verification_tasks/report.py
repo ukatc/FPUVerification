@@ -2,10 +2,7 @@
 from __future__ import absolute_import, division, print_function
 
 from argparse import Namespace
-from inspect import cleandoc
 from textwrap import TextWrapper
-from numpy import array, Inf
-import numpy as np
 
 from vfr.db.base import TestResult
 
@@ -40,7 +37,6 @@ from vfr.verification_tasks.report_formats import (
     rfmt_datum,
     rfmt_dat_rep,
     rfmt_cdect,
-    rfmt_datum,
     rfmt_met_cal,
     rfmt_met_hgt,
     rfmt_pos_rep,

@@ -23,4 +23,4 @@ def status(serial):
 if __name__ == "__main__":
     import sys
 
-    sys.exit(status()) # pylint: disable=no-value-for-parameter
+    sys.exit(status())  # pylint: disable=no-value-for-parameter
