@@ -64,9 +64,7 @@ def goto_position(
     if verbosity > 0:
         print("moving FPUs %s to (%6.2f,%6.2f)" % (fpuset, abs_alpha, abs_beta))
 
-    wf = gen_wf(
-        abs_alpha - current_alpha, abs_beta - current_beta
-    )
+    wf = gen_wf(abs_alpha - current_alpha, abs_beta - current_beta)
     wf2 = {k: v for k, v in wf.items() if k in fpuset}
     verbosity = max(verbosity - 3, 0)
     gd.configMotion(

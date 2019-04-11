@@ -4,7 +4,6 @@ from collections import namedtuple
 from numpy import isnan
 
 from fpu_constants import (
-    ALPHA_DATUM_OFFSET,
     ALPHA_MAX_DEGREE,
     ALPHA_MIN_DEGREE,
     BETA_MAX_DEGREE,
@@ -12,7 +11,7 @@ from fpu_constants import (
 )
 from interval import Interval
 from protectiondb import ProtectionDB
-from vfr.conf import PROTECTION_TOLERANCE
+from vfr.conf import PROTECTION_TOLERANCE, ALPHA_RANGE_MAX, ALPHA_DATUM_OFFSET
 from vfr.tests_common import timestamp
 from vfr.db.base import TestResult, get_test_result, save_test_result
 
@@ -116,14 +115,12 @@ def set_protection_limit(dbe, grid_state, which_limit, record):
         print("limit %s: replacing %r by %r" % (which_limit, val, new_val))
         ProtectionDB.putInterval(txn, serialnumber, subkey, new_val, offset)
 
+
 RangeLimits = namedtuple(
-    "RangeLimits",
-    " alpha_min"
-    " alpha_max"
-    " beta_min"
-    " beta_max"
-    )
-        
+    "RangeLimits", " alpha_min" " alpha_max" " beta_min" " beta_max"
+)
+
+
 def get_range_limits(dbe, fpu_id):
     _alpha_min = get_angular_limit(dbe, fpu_id, "alpha_min")
     if _alpha_min is None:
@@ -135,10 +132,10 @@ def get_range_limits(dbe, fpu_id):
     _beta_max = get_angular_limit(dbe, fpu_id, "beta_max")
 
     if (
-            (_alpha_min is None)
-            or (_alpha_max is None)
-            or (_beta_min is None)
-            or (_beta_max is None)
+        (_alpha_min is None)
+        or (_alpha_max is None)
+        or (_beta_min is None)
+        or (_beta_max is None)
     ):
         return None
 
@@ -146,16 +143,13 @@ def get_range_limits(dbe, fpu_id):
     alpha_max = _alpha_max["val"]
     beta_min = _beta_min["val"]
     beta_max = _beta_max["val"]
-    
+
     assert not isnan(alpha_min)
     assert not isnan(alpha_max)
     assert not isnan(beta_min)
     assert not isnan(beta_max)
 
     limits = RangeLimits(
-        alpha_min=alpha_min,
-        alpha_max=alpha_max,
-        beta_min=beta_min,
-        beta_max=beta_max,
+        alpha_min=alpha_min, alpha_max=alpha_max, beta_min=beta_min, beta_max=beta_max
     )
     return limits

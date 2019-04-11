@@ -2,7 +2,6 @@ from __future__ import absolute_import, division, print_function
 
 import random
 import warnings
-from numpy import isnan
 
 from fpu_commands import gen_wf
 from Gearbox.gear_correction import GearboxFitError, apply_gearbox_correction
@@ -18,7 +17,7 @@ from numpy import NaN
 from fpu_constants import ALPHA_DATUM_OFFSET
 from vfr.conf import POS_REP_CAMERA_IP_ADDRESS
 from vfr.db.base import TestResult
-from vfr.db.colldect_limits import get_angular_limit
+from vfr.db.colldect_limits import get_range_limits
 from vfr.db.datum_repeatability import get_datum_repeatability_passed_p
 from vfr.db.positional_repeatability import (
     get_positional_repeatability_passed_p,
@@ -142,6 +141,11 @@ def measure_positional_verification(rig, dbe, pars=None):
             if range_limits is None:
                 print("FPU %s : limit test value missing, skipping test" % sn)
                 continue
+
+            alpha_min = range_limits.alpha_min
+            alpha_max = range_limits.alpha_max
+            beta_min = range_limits.beta_min
+            beta_max = range_limits.beta_max
 
             if opts.verbosity > 0:
                 print(

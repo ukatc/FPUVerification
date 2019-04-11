@@ -1,7 +1,8 @@
 from __future__ import absolute_import, division, print_function
 
 import warnings
-from numpy import isnan
+from collections import namedtuple
+
 from Gearbox.gear_correction import GearboxFitError, fit_gearbox_correction
 from GigE.GigECamera import BASLER_DEVICE_CLASS, DEVICE_CLASS, IP_ADDRESS
 from ImageAnalysisFuncs.base import get_min_quality, arg_max_dict
@@ -12,10 +13,9 @@ from ImageAnalysisFuncs.analyze_positional_repeatability import (
     posrepCoordinates,
 )
 from numpy import NaN
-from fpu_constants import ALPHA_DATUM_OFFSET
 from vfr.conf import POS_REP_CAMERA_IP_ADDRESS
 from vfr.db.base import TestResult
-from vfr.db.colldect_limits import get_angular_limit
+from vfr.db.colldect_limits import get_range_limits
 from vfr.db.positional_repeatability import (
     PositionalRepeatabilityImages,
     PositionalRepeatabilityResults,
@@ -36,15 +36,16 @@ from vfr.verification_tasks.measure_datum_repeatability import (
     get_datum_repeatability_passed_p,
 )
 
-def check_skip_reason(dbe, fpu_id, sn, repeat_passed_tests=None):
+
+def check_skip_reason(dbe, fpu_id, sn, repeat_passed_tests=None, skip_fibre=False):
     if not get_datum_repeatability_passed_p(dbe, fpu_id):
         return (
             "FPU %s: skipping positional repeatability measurement because"
             " there is no passed datum repeatability test" % sn
         )
-    
+
     if not get_pupil_alignment_passed_p(dbe, fpu_id):
-        if rig.opts.skip_fibre:
+        if skip_fibre:
             warnings.warn(
                 "skipping check for pupil alignment because '--skip-fibre' flag is set"
             )
@@ -54,17 +55,15 @@ def check_skip_reason(dbe, fpu_id, sn, repeat_passed_tests=None):
                 " there is no passed pupil alignment test"
                 " (use '--skip-fibre' flag if you want to omit that test)" % sn
             )
-        
-    if get_positional_repeatability_passed_p(dbe, fpu_id) and (
-            not repeat_passed_tests
-    ):
-        
+
+    if get_positional_repeatability_passed_p(dbe, fpu_id) and (not repeat_passed_tests):
+
         return (
-            "FPU %s : positional repeatability test already passed, skipping test"
-            % sn
+            "FPU %s : positional repeatability test already passed, skipping test" % sn
         )
-    
+
     return None
+
 
 def initialize_rig(rig):
     # home turntable
@@ -72,19 +71,169 @@ def initialize_rig(rig):
     # switch lamps off
     rig.lctrl.switch_all_off()
 
-def prepare_cam(exposure_time):
+
+def prepare_cam(rig, exposure_time):
     # initialize pos_rep camera
     # set pos_rep camera exposure time to POSITIONAL_REP_EXPOSURE milliseconds
     POS_REP_CAMERA_CONF = {
         DEVICE_CLASS: BASLER_DEVICE_CLASS,
         IP_ADDRESS: POS_REP_CAMERA_IP_ADDRESS,
     }
-    
+
     pos_rep_cam = rig.hw.GigECamera(POS_REP_CAMERA_CONF)
     pos_rep_cam.SetExposureTime(exposure_time)
-    
+
     return pos_rep_cam
-    
+
+
+MeasurementIndex = namedtuple(
+    "MeasurementIndex",
+    " i_iteration" " j_direction" " k_increment" " idx_alpha" " idx_beta",
+)
+
+FPU_Position = namedtuple("FPU_Position", "alpha beta")
+
+
+def index_positions(pars):
+    for i_iteration in range(pars.POS_REP_ITERATIONS):
+        for j_direction in range(4):
+            MAX_INCREMENT = pars.POS_REP_NUM_INCREMENTS
+            for k_increment in range(MAX_INCREMENT):
+                if j_direction == 0:
+                    idx_alpha = k_increment
+                    idx_beta = 0
+                elif j_direction == 1:
+                    idx_alpha = MAX_INCREMENT - k_increment - 1
+                    idx_beta = 0
+                elif j_direction == 2:
+                    idx_alpha = 0
+                    idx_beta = k_increment
+                elif j_direction == 3:
+                    idx_alpha = 0
+                    idx_beta = MAX_INCREMENT - k_increment - 1
+
+                yield MeasurementIndex(
+                    i_iteration, j_direction, k_increment, idx_alpha, idx_beta
+                )
+
+
+def get_target_position(limits, pars, measurement_index):
+    alpha_min = limits.alpha_min
+    alpha_max = limits.alpha_max
+    beta_min = limits.beta_min
+    beta_max = limits.beta_max
+
+    step_a = (
+        alpha_max - alpha_min - 2 * pars.POS_REP_SAFETY_MARGIN
+    ) / pars.POS_REP_NUM_INCREMENTS
+    step_b = (
+        beta_max - beta_min - 2 * pars.POS_REP_SAFETY_MARGIN
+    ) / pars.POS_REP_NUM_INCREMENTS
+
+    alpha0 = alpha_min + pars.POS_REP_SAFETY_MARGIN
+    beta0 = beta_min + pars.POS_REP_SAFETY_MARGIN
+
+    abs_alpha = alpha0 + step_a * measurement_index.idx_alpha
+    abs_beta = beta0 + step_b * measurement_index.idx_beta
+
+    return FPU_Position(abs_alpha, abs_beta)
+
+
+def get_counted_angles(rig, fpu_id):
+    # to get the angles, we need to pass all connected FPUs
+    fpuset = range(rig.opts.N)
+    angles = rig.gd.countedAngles(rig.grid_state, fpuset=fpuset)
+
+    alpha_count = angles[fpu_id][0]
+    beta_count = angles[fpu_id][1]
+
+    return FPU_Position(alpha_count, beta_count)
+
+
+def get_step_counts(rig, fpu_id):
+    alpha_steps = rig.grid_state.FPU[fpu_id].alpha_steps
+    beta_steps = rig.grid_state.FPU[fpu_id].beta_steps
+
+    return FPU_Position(alpha_steps, beta_steps)
+
+
+def capture_fpu_position(rig, fpu_id, midx, target_pos, capture_image):
+    if rig.opts.verbosity > 0:
+        sn = rig.fpu_config[fpu_id]["serialnumber"]
+        print(
+            "FPU %s measurement [i%2i, j%2i, k%2i]: going to position (%7.2f, %7.2f)"
+            % (
+                sn,
+                midx.i_iteration,
+                midx.j_direction,
+                midx.k_increment,
+                target_pos.alpha,
+                target_pos.beta,
+            )
+        )
+
+    goto_position(
+        rig.gd, target_pos.alpha, target_pos.beta, rig.grid_state, fpuset=[fpu_id]
+    )
+
+    # We use the real and uncorrected position to index the images.
+    # This has a quantization 'error' compared to the target position,
+    # because the stepper motors use discrete steps, of course.
+    real_position = get_counted_angles(rig, fpu_id)
+    # To compute the gearbox calibration later, we also need the step
+    # counts.
+    real_steps = get_step_counts(rig, fpu_id)
+
+    ipath = capture_image(midx, real_position)
+    key = (
+        real_position.alpha,
+        real_position.beta,
+        midx.i_iteration,
+        midx.j_direction,
+        midx.k_increment,
+    )
+    val = (real_steps.alpha, real_steps.beta, ipath)
+
+    return key, val
+
+
+def get_images_for_fpu(rig, fpu_id, range_limits, pars, capture_image):
+
+    image_dict_alpha = {}
+    image_dict_beta = {}
+
+    current_iteration = -1
+    for measurement_index in index_positions(pars):
+        # go to datum at start of every new iteration
+        if measurement_index.i_iteration != current_iteration:
+            find_datum(rig.gd, rig.grid_state, opts=rig.opts)
+            current_iteration = measurement_index.i_iteration
+
+        target_pos = get_target_position(range_limits, pars, measurement_index)
+
+        key, val = capture_fpu_position(
+            rig, fpu_id, measurement_index, target_pos, capture_image
+        )
+
+        # the direction index tells whether the image
+        # belongs to the alpha or beta arm series
+        image_in_alpha_arm_series = measurement_index.j_direction in [0, 1]
+
+        if image_in_alpha_arm_series:
+            image_dict_alpha[key] = val
+        else:
+            image_dict_beta[key] = val
+
+    record = PositionalRepeatabilityImages(
+        images_alpha=image_dict_alpha,
+        images_beta=image_dict_beta,
+        waveform_pars=pars.POS_REP_WAVEFORM_PARS,
+        calibration_mapfile=pars.POS_REP_CALIBRATION_MAPFILE,
+    )
+
+    return record
+
+
 def measure_positional_repeatability(rig, dbe, pars=None):
 
     tstamp = timestamp()
@@ -92,7 +241,7 @@ def measure_positional_repeatability(rig, dbe, pars=None):
     initialize_rig(rig)
 
     with rig.lctrl.use_ambientlight():
-        pos_rep_cam = prepare_cam(pars.POS_REP_EXPOSURE_MS)
+        pos_rep_cam = prepare_cam(rig, pars.POS_REP_EXPOSURE_MS)
 
         # get sorted positions (this is needed because the turntable can only
         # move into one direction)
@@ -105,9 +254,10 @@ def measure_positional_repeatability(rig, dbe, pars=None):
                 dbe,
                 fpu_id,
                 sn,
-                repeat_passed_tests=rig.opts.repeat_passed_tests
+                repeat_passed_tests=rig.opts.repeat_passed_tests,
+                skip_fibre=rig.opts.skip_fibre,
             )
-            
+
             if skip_message:
                 print(skip_message)
                 continue
@@ -118,103 +268,27 @@ def measure_positional_repeatability(rig, dbe, pars=None):
                 print("FPU %s : limit test value missing, skipping test" % sn)
                 continue
 
-                
-            # move rotary stage to POS_REP_POSN_N
-            rig.hw.turntable_safe_goto(rig.gd, rig.grid_state, stage_position)
-
-            image_dict_alpha = {}
-            image_dict_beta = {}
-
-            def capture_image(iteration, increment, direction, alpha, beta):
+            def capture_image(measurement_index, real_pos):
 
                 ipath = store_image(
                     pos_rep_cam,
-                    "{sn}/{tn}/{ts}/{itr:03d}-{inc:03d}-{dir:03d}-({alpha:+08.3f},_{beta:+08.3f}).bmp",
+                    "{sn}/{tn}/{ts}/i{itr:03d}-j{dir:03d}-k{inc:03d}_({alpha:+08.3f},_{beta:+08.3f}).bmp",
                     sn=sn,
                     tn="positional-repeatability",
                     ts=tstamp,
-                    itr=iteration,
-                    inc=increment,
-                    dir=direction,
-                    alpha=alpha,
-                    beta=beta,
+                    itr=measurement_index.i_iteration,
+                    dir=measurement_index.j_direction,
+                    inc=measurement_index.k_increment,
+                    alpha=real_pos.alpha,
+                    beta=real_pos.beta,
                 )
 
                 return ipath
 
-            for i in range(pars.POS_REP_ITERATIONS):
-                find_datum(rig.gd, rig.grid_state, opts=rig.opts)
+            # move rotary stage to POS_REP_POSN_N
+            rig.hw.turntable_safe_goto(rig.gd, rig.grid_state, stage_position)
 
-                step_a = (
-                    alpha_max - alpha_min - 2 * pars.POS_REP_SAFETY_MARGIN
-                ) / pars.POS_REP_NUM_INCREMENTS
-                step_b = (
-                    beta_max - beta_min - 2 * pars.POS_REP_SAFETY_MARGIN
-                ) / pars.POS_REP_NUM_INCREMENTS
-
-                alpha0 = alpha_min + pars.POS_REP_SAFETY_MARGIN
-                beta0 = beta_min + pars.POS_REP_SAFETY_MARGIN
-
-                for j in range(4):
-
-                    M = pars.POS_REP_NUM_INCREMENTS
-                    for k in range(M):
-                        if j == 0:
-                            ka = k
-                            kb = 0
-                        elif j == 1:
-                            ka = M - k - 1
-                            kb = 0
-                        elif j == 2:
-                            ka = 0
-                            kb = k
-                        elif j == 3:
-                            ka = 0
-                            kb = M - k - 1
-
-                        abs_alpha = alpha0 + step_a * ka
-                        abs_beta = beta0 + step_b * kb
-
-                        if rig.opts.verbosity > 0:
-                            print(
-                                "FPU %s measurement [%2i, %2i, %2i]: going to position (%7.2f, %7.2f)"
-                                % (sn, i, j, k, abs_alpha, abs_beta)
-                            )
-
-                        goto_position(
-                            rig.gd, abs_alpha, abs_beta, rig.grid_state, fpuset=[fpu_id]
-                        )
-
-                        # to get the angles, we need to pass all connected FPUs
-                        fpuset = range(rig.opts.N)
-                        angles = rig.gd.countedAngles(rig.grid_state, fpuset=fpuset)
-
-                        alpha_count = angles[fpu_id][0]
-                        beta_count = angles[fpu_id][1]
-
-                        alpha_steps = rig.grid_state.FPU[fpu_id].alpha_steps
-                        beta_steps = rig.grid_state.FPU[fpu_id].beta_steps
-
-                        ipath = capture_image(i, j, k, alpha_count, beta_count)
-                        if j in [0, 1]:
-                            image_dict_alpha[(abs_alpha, abs_beta, i, j, k)] = (
-                                alpha_steps,
-                                beta_steps,
-                                ipath,
-                            )
-                        else:
-                            image_dict_beta[(abs_alpha, abs_beta, i, j, k)] = (
-                                alpha_steps,
-                                beta_steps,
-                                ipath,
-                            )
-
-            record = PositionalRepeatabilityImages(
-                images_alpha=image_dict_alpha,
-                images_beta=image_dict_beta,
-                waveform_pars=pars.POS_REP_WAVEFORM_PARS,
-                calibration_mapfile=pars.POS_REP_CALIBRATION_MAPFILE,
-            )
+            record = get_images_for_fpu(rig, fpu_id, range_limits, pars, capture_image)
 
             save_positional_repeatability_images(dbe, fpu_id, record)
 

@@ -259,21 +259,24 @@ task_dependencies = [
             T.TASK_INIT_GD2,
         ],
     ),
-    (T.MEASURE_MET_CAL,
-     [
-         T.TASK_SELFTEST_FIBRE,
-         T.TST_MET_CAL_CAM_CONNECTION,
-         T.TASK_INIT_GD2,
-         T.TASK_REFERENCE2,
-     ]
+    (
+        T.MEASURE_MET_CAL,
+        [
+            T.TASK_SELFTEST_FIBRE,
+            T.TST_MET_CAL_CAM_CONNECTION,
+            T.TASK_INIT_GD2,
+            T.TASK_REFERENCE2,
+        ],
     ),
-    (T.MEASURE_MET_HEIGHT,
-     [
-         T.TASK_SELFTEST_NONFIBRE,
-         T.TST_MET_HEIGHT_CAM_CONNECTION,
-         T.TASK_INIT_GD2,
-         T.TASK_REFERENCE2,
-     ]),
+    (
+        T.MEASURE_MET_HEIGHT,
+        [
+            T.TASK_SELFTEST_NONFIBRE,
+            T.TST_MET_HEIGHT_CAM_CONNECTION,
+            T.TASK_INIT_GD2,
+            T.TASK_REFERENCE2,
+        ],
+    ),
     (
         T.MEASURE_PUP_ALGN,
         [
