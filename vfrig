@@ -150,10 +150,10 @@ if __name__ == "__main__":
                 end='',
             )
             flush()
-            rval = rig.rd.writeSerialNumber(fpu_id, serial_number, grid_state)
+            rval = rig.rd.writeSerialNumber(fpu_id, serial_number, rig.grid_state)
             flashed_numbers.append(serial_number)
             print (rval)
-            rig.rd.readSerialNumbers(grid_state)
+            rig.rd.readSerialNumbers(rig.grid_state)
         # we update the set of FPUs which are in the database,
         # so that we can iterate over existing data when generating reports.
         add_sns_to_set(dbe, flashed_numbers)
@@ -307,6 +307,27 @@ if __name__ == "__main__":
             "beta_min",
             pars=COLLDECT_MEASUREMENT_PARS
         )
+
+    if T.TASK_INIT_GD2 in tasks:
+        # this re-initializes the driver because
+        # the range limits might have changed,
+        # and they are only loaded by the
+        # EtherCAN driver upon initialization
+        print ("[initialize protected driver (re-loading limits)] ###")
+        rig.init_driver(env=dbe.env, protected=True)
+
+        for fpu_id in measure_fpuset:
+            actual_sn = rig.grid_state.FPU[fpu_id].serial_number
+            configured_sn = fpu_config[fpu_id]["serialnumber"]
+            if configured_sn != actual_sn:
+                raise ValueError(
+                    "actual serial number of FPU %i = %r does not match configuration (%r)"
+                    % (fpu_id, actual_sn, configured_sn)
+                )
+
+    if T.TASK_REFERENCE2 in tasks:
+        print ("[%s] ###" % T.TASK_REFERENCE2)
+        find_datum(rig.gd, rig.grid_state, opts=opts, uninitialized=True)
 
     if T.MEASURE_MET_CAL in tasks:
         print ("[%s] ###" % T.MEASURE_MET_CAL)

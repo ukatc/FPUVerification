@@ -35,8 +35,10 @@ class T:
     TASK_EVAL_ALL = "eval_all"
     TASK_EVAL_NONFIBRE = "eval_nonfibre"
     TASK_INIT_GD = "initialize_grid_driver"
+    TASK_INIT_GD2 = "initialize_grid_driver_2"
     TASK_INIT_RD = "initialize_unprotected_fpu_driver"
     TASK_REFERENCE = "reference"
+    TASK_REFERENCE2 = "reference2"
     TASK_SELFTEST = "selftest"
     TASK_SELFTEST_NONFIBRE = "selftest_nonfibre"
     TASK_SELFTEST_FIBRE = "selftest_fibre"
@@ -196,6 +198,7 @@ task_dependencies = [
         ],
     ),
     (T.TASK_INIT_GD, [T.TASK_PARK_FPUS]),
+    (T.TASK_INIT_GD2, [T.TASK_PARK_FPUS]),
     (T.TST_DATUM_ALPHA, [T.TASK_INIT_GD, T.TST_CAN_CONNECTION, T.TASK_REWIND_FPUS]),
     (T.TST_DATUM_BETA, [T.TASK_INIT_GD, T.TST_CAN_CONNECTION, T.TASK_REWIND_FPUS]),
     (T.TST_DATUM_BOTH, [T.TASK_INIT_GD, T.TST_CAN_CONNECTION, T.TASK_REWIND_FPUS]),
@@ -216,6 +219,7 @@ task_dependencies = [
         [T.TASK_INIT_GD, T.TST_CAN_CONNECTION, T.REQ_DATUM_PASSED, T.TASK_REFERENCE],
     ),
     (T.TASK_REFERENCE, [T.REQ_DATUM_PASSED]),
+    (T.TASK_REFERENCE2, [T.REQ_DATUM_PASSED, T.TASK_INIT_GD2]),
     (T.TST_COLLDETECT, [T.REQ_DATUM_PASSED, T.TASK_REFERENCE]),
     (
         T.MEASURE_DATUM_REP,
@@ -224,7 +228,8 @@ task_dependencies = [
             T.TST_POS_REP_CAM_CONNECTION,
             T.REQ_DATUM_PASSED,
             T.REQ_COLLDECT_PASSED,
-            T.TASK_REFERENCE,
+            T.TASK_REFERENCE2,
+            T.TASK_INIT_GD2,
         ],
     ),
     (
@@ -232,11 +237,12 @@ task_dependencies = [
         [
             T.TASK_SELFTEST_NONFIBRE,
             T.TST_POS_REP_CAM_CONNECTION,
-            T.TASK_REFERENCE,
+            T.TASK_REFERENCE2,
             T.REQ_DATUM_PASSED,
             T.REQ_COLLDECT_PASSED,
             # T.REQ_PUP_ALGN_PASSED,
             T.REQ_DATUM_REP_PASSED,
+            T.TASK_INIT_GD2,
         ],
     ),
     (
@@ -249,11 +255,25 @@ task_dependencies = [
             # T.REQ_PUP_ALGN_PASSED,
             T.REQ_DATUM_REP_PASSED,
             T.REQ_POS_REP_PASSED,
-            T.TASK_REFERENCE,
+            T.TASK_REFERENCE2,
+            T.TASK_INIT_GD2,
         ],
     ),
-    (T.MEASURE_MET_CAL, [T.TASK_SELFTEST_FIBRE, T.TST_MET_CAL_CAM_CONNECTION]),
-    (T.MEASURE_MET_HEIGHT, [T.TASK_SELFTEST_NONFIBRE, T.TST_MET_HEIGHT_CAM_CONNECTION]),
+    (T.MEASURE_MET_CAL,
+     [
+         T.TASK_SELFTEST_FIBRE,
+         T.TST_MET_CAL_CAM_CONNECTION,
+         T.TASK_INIT_GD2,
+         T.TASK_REFERENCE2,
+     ]
+    ),
+    (T.MEASURE_MET_HEIGHT,
+     [
+         T.TASK_SELFTEST_NONFIBRE,
+         T.TST_MET_HEIGHT_CAM_CONNECTION,
+         T.TASK_INIT_GD2,
+         T.TASK_REFERENCE2,
+     ]),
     (
         T.MEASURE_PUP_ALGN,
         [
@@ -261,7 +281,8 @@ task_dependencies = [
             T.TST_PUP_ALGN_CAM_CONNECTION,
             T.REQ_DATUM_PASSED,
             T.REQ_COLLDECT_PASSED,
-            T.TASK_REFERENCE,
+            T.TASK_REFERENCE2,
+            T.TASK_INIT_GD2,
         ],
     ),
     (
