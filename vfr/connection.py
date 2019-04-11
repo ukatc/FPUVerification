@@ -25,10 +25,11 @@ def check_connection(opts, name, address):
         print("... OK")
 
 
-def init_driver(opts, max_id, env=None, protected=True):
+def init_driver(opts, N, env=None, protected=True):
+    print("initializing for %i FPUs" % N)
     if protected:
         try:
-            rd = FpuGridDriver.GridDriver(max_id + 1, env=env)
+            rd = FpuGridDriver.GridDriver(N, env=env)
         except ProtectionError as e:
             print(
                 "protectionError exception raised -- maybe the"
@@ -36,7 +37,7 @@ def init_driver(opts, max_id, env=None, protected=True):
                 str(e),
             )
     else:
-        rd = FpuGridDriver.UnprotectedGridDriver(max_id + 1)
+        rd = FpuGridDriver.UnprotectedGridDriver(N)
 
     gateway_adr = [
         FpuGridDriver.GatewayAddress(opts.gateway_address, opts.gateway_port)

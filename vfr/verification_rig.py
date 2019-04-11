@@ -54,8 +54,8 @@ class Rig:
         self.lctrl = lctrl
 
     def init_driver(self, protected=True, env=None):
-        # N = max(self.measure_fpuset)
         N = self.opts.N
+        #N = max(self.measure_fpuset) + 1
 
         self.rd, self.gd = None, None
 
