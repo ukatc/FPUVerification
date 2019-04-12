@@ -181,9 +181,12 @@ class lampController(LampControllerBase):
         elif state == "off":
             value = 0
         else:
-            raise LampDAQError(
-                "Bad state value, should be on or off, recivievd {}".format(state)
-            )
+            try:
+                value = int(state)
+            except ValueError:
+                raise LampDAQError(
+                    "Bad state value, should be on or off, recivievd {}".format(state)
+                )
         self.analog_device.a_out(
             BACKLIGHT_CHANNEL, self.analog_output_range, AOutFlag.DEFAULT, value
         )
@@ -206,9 +209,12 @@ class lampController(LampControllerBase):
         elif state == "off":
             value = 0
         else:
-            raise LampDAQError(
-                "Bad state value, should be on or off, recivievd {}".format(state)
-            )
+            try:
+                value = int(state)
+            except ValueError:
+                raise LampDAQError(
+                    "Bad state value, should be on or off, recivievd {}".format(state)
+                )
         self.digital_device.d_out(self.ambient_port, value)
 
         self.ambientlight_state = value
@@ -221,9 +227,12 @@ class lampController(LampControllerBase):
         elif state == "off":
             value = 0
         else:
-            raise LampDAQError(
-                "Bad state value, should be on or off, recivievd {}".format(state)
-            )
+            try:
+                value = int(state)
+            except ValueError:
+                raise LampDAQError(
+                    "Bad state value, should be on or off, recivievd {}".format(state)
+                )
         self.digital_device.d_out(self.silhouette_port, value)
         self.silhouettelight_state = value
         return previous_silhouettelight_state
