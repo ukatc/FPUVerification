@@ -25,35 +25,52 @@ from vfr.tests_common import find_datum
 class lampController(LampControllerBase):
     def __init__(self):
         print("initializing mocked-up lamp controller...")
+        self.backlight_state = 0.0
+        self.ambientlight_state = 0.0
+        self.silhouettelight_state = 0.0
 
     def switch_fibre_backlight(self, state):
+        previous_state = self.backlight_state
         print("'switch state of backlight to %r and presse <enter>'" % state)
+        self.backlight_state = state
+        return previous_state
 
     def switch_fibre_backlight_voltage(self, voltage):
+        previous_state = self.backlight_state
         print("'switch voltage of backlight to %3.1f and presse <enter>'" % voltage)
+        self.backlight_state = voltage
+        return previous_state
 
     def switch_ambientlight(self, state):
+        previous_state = self.ambientlight_state
         print("'switch state of ambient light to %r and presse <enter>'" % state)
+        self.ambientlight_state = state
+        return previous_state
 
     def switch_silhouettelight(self, state, manual_lamp_control=False):
+        previous_state = self.silhouettelight_state
         print("'switch state of silhouette light to %r and presse <enter>'" % state)
+        self.silhouettelight_state = state
+        return previous_state
 
 
-def turntable_safe_goto(gd, grid_state, stage_position, opts=None):
-    find_datum(gd, grid_state, opts=opts)
+def turntable_safe_goto(rig, grid_state, stage_position, opts=None):
+    with rig.lctrl.use_ambientlight():
+        find_datum(rig.gd, grid_state, opts=opts)
 
-    print("moving turntable to position %5.2f" % stage_position)
+        print("moving turntable to position %5.2f" % stage_position)
 
 
-def safe_home_turntable(gd, grid_state, opts=None):
+def safe_home_turntable(rig, grid_state, opts=None):
     if (opts is not None) and opts.verbosity > 2:
         print("issuing findDatum:")
     # gd.findDatum(grid_state, timeout=DATUM_TIMEOUT_DISABLE)
-    find_datum(gd, grid_state, opts=opts)
-    if (opts is not None) and opts.verbosity > 2:
-        print("findDatum finished")
+    with rig.lctrl.use_ambientlight():
+        find_datum(rig.gd, grid_state, opts=opts)
+        if (opts is not None) and opts.verbosity > 2:
+            print("findDatum finished")
 
-    print("moving turntable to home position")
+        print("moving turntable to home position")
 
 
 def home_linear_stage():

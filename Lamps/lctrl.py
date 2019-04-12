@@ -83,35 +83,35 @@ class LampControllerBase:
 
     @contextmanager
     def use_silhouettelight(self):
-        self.switch_silhouettelight("on")
+        old_value = self.switch_silhouettelight("on")
         time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
         try:
             yield None
 
         finally:
-            self.switch_silhouettelight("off")
+            self.switch_silhouettelight(old_value)
             time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
 
     @contextmanager
     def use_backlight(self, voltage):
-        self.switch_fibre_backlight_voltage(voltage)
+        old_value = self.switch_fibre_backlight_voltage(voltage)
         time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
         try:
             yield None
 
         finally:
-            self.switch_fibre_backlight("off")
+            self.switch_fibre_backlight(old_value)
             time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
 
     @contextmanager
     def use_ambientlight(self):
-        self.switch_ambientlight("on")
+        old_value = self.switch_ambientlight("on")
         time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
         try:
             yield None
 
         finally:
-            self.switch_ambientlight("off")
+            self.switch_ambientlight(old_value)
             time.sleep(float(LAMP_WARMING_TIME_MILLISECONDS) / 1000)
 
 
@@ -170,8 +170,12 @@ class lampController(LampControllerBase):
         # Storing values for use in Analog mode
 
         self.analog_output_range = self.analog_device.get_info().get_ranges()[0]
+        self.backlight_state = 0.0
+        self.ambientlight_state = 0.0
+        self.silhouettelight_state = 0.0
 
     def switch_fibre_backlight(self, state):
+        previous_backlight_state = self.backlight_state
         if state == "on":
             value = BACKLIGHT_WRITE_VALUE
         elif state == "off":
@@ -184,12 +188,19 @@ class lampController(LampControllerBase):
             BACKLIGHT_CHANNEL, self.analog_output_range, AOutFlag.DEFAULT, value
         )
 
+        self.backlight_state = value
+        return previous_backlight_state
+
     def switch_fibre_backlight_voltage(self, voltage):
+        previous_backlight_state = self.backlight_state
         self.analog_device.a_out(
             BACKLIGHT_CHANNEL, self.analog_output_range, AOutFlag.DEFAULT, voltage
         )
+        self.backlight_state = voltage
+        return previous_backlight_state
 
     def switch_ambientlight(self, state):
+        previous_ambientlight_state = self.ambientlight_state
         if state == "on":
             value = AMBIENT_WRITE_VALUE
         elif state == "off":
@@ -200,7 +211,11 @@ class lampController(LampControllerBase):
             )
         self.digital_device.d_out(self.ambient_port, value)
 
+        self.ambientlight_state = value
+        return previous_ambientlight_state
+
     def switch_silhouettelight(self, state):
+        previous_silhouettelight_state = self.silhouettelight_state
         if state == "on":
             value = SILHOUETTE_WRITE_VALUE
         elif state == "off":
@@ -210,6 +225,8 @@ class lampController(LampControllerBase):
                 "Bad state value, should be on or off, recivievd {}".format(state)
             )
         self.digital_device.d_out(self.silhouette_port, value)
+        self.silhouettelight_state = value
+        return previous_silhouettelight_state
 
 
 class manualLampController(LampControllerBase):
@@ -218,19 +235,33 @@ class manualLampController(LampControllerBase):
     """
 
     def __init__(self):
-        """this does nothing.
+        """set initial states to 'off'.
 
         """
-        pass
+        self.backlight_state = 0.0
+        self.ambientlight_state = 0.0
+        self.silhouettelight_state = 0.0
 
     def switch_fibre_backlight(self, state):
+        previous_backlight_state = self.backlight_state
         raw_input("switch state of backlight to %r and press <enter> $" % state)
+        self.backlight_state = state
+        return previous_backlight_state
 
     def switch_fibre_backlight_voltage(self, voltage):
+        previous_backlight_state = self.backlight_state
         raw_input("switch voltage of backlight to %r and press <enter> $" % voltage)
+        self.backlight_state = voltage
+        return previous_backlight_state
 
     def switch_ambientlight(self, state):
+        previous_ambientlight_state = self.ambientlight_state
         raw_input("switch state of ambient light to %r and press <enter> $" % state)
+        self.ambientlight_state = state
+        return previous_ambientlight_state
 
     def switch_silhouettelight(self, state):
+        previous_silhouettelight_state = self.silhouettelight_state
         raw_input("switch state of silhouette light to %r and press <enter> $" % state)
+        self.silhouettelight_state = state
+        return previous_silhouettelight_state

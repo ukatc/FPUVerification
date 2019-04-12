@@ -67,7 +67,7 @@ def check_skip_reason(dbe, fpu_id, sn, repeat_passed_tests=None, skip_fibre=Fals
 
 def initialize_rig(rig):
     # home turntable
-    rig.hw.safe_home_turntable(rig.gd, rig.grid_state)
+    rig.hw.safe_home_turntable(rig, rig.grid_state)
     # switch lamps off
     rig.lctrl.switch_all_off()
 
@@ -286,7 +286,7 @@ def measure_positional_repeatability(rig, dbe, pars=None):
                 return ipath
 
             # move rotary stage to POS_REP_POSN_N
-            rig.hw.turntable_safe_goto(rig.gd, rig.grid_state, stage_position)
+            rig.hw.turntable_safe_goto(rig, rig.grid_state, stage_position)
 
             record = get_images_for_fpu(rig, fpu_id, range_limits, pars, capture_image)
 

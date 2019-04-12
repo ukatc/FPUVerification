@@ -25,7 +25,7 @@ def measure_metrology_height(rig, dbe, pars=None):
     tstamp = timestamp()
 
     # home turntable
-    rig.hw.safe_home_turntable(rig.gd, rig.grid_state)
+    rig.hw.safe_home_turntable(rig, rig.grid_state)
     rig.lctrl.switch_all_off()
 
     with rig.lctrl.use_silhouettelight():
@@ -44,7 +44,7 @@ def measure_metrology_height(rig, dbe, pars=None):
             rig.measure_fpuset, pars.MET_HEIGHT_POSITIONS
         ):
             # move rotary stage to POS_REP_POSN_N
-            rig.hw.turntable_safe_goto(rig.gd, rig.grid_state, stage_position)
+            rig.hw.turntable_safe_goto(rig, rig.grid_state, stage_position)
 
             # initialize pos_rep camera
             # set pos_rep camera exposure time to DATUM_REP_EXPOSURE milliseconds

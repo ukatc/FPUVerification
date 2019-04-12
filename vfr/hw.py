@@ -19,48 +19,50 @@ assert lampController
 assert manualLampController
 
 
-def safe_home_turntable(gd, grid_state, opts=None):
-    find_datum(gd, grid_state, opts=opts)
+def safe_home_turntable(rig, grid_state, opts=None):
+    with rig.lctrl.use_ambientlight():
+        find_datum(rig.gd, grid_state, opts=opts)
 
-    with pyAPT.NR360S(serial_number=NR360_SERIALNUMBER) as con:
-        print("\tHoming stage...", "end=' '")
-        con.home(clockwise=False)
-        print("homed")
-    print("OK")
+        with pyAPT.NR360S(serial_number=NR360_SERIALNUMBER) as con:
+            print("\tHoming stage...", "end=' '")
+            con.home(clockwise=False)
+            print("homed")
+        print("OK")
 
 
-def turntable_safe_goto(gd, grid_state, stage_position, wait=True, monitor=False):
-    gd.findDatum(grid_state)
-    print("moving turntable to position %f" % stage_position)
-    assert isfinite(stage_position), "stage position is not valid number"
-    with pyAPT.NR360S(serial_number=NR360_SERIALNUMBER) as con:
-        print("Found APT controller S/N", NR360_SERIALNUMBER)
-        st = time.time()
-        con.goto(stage_position, wait=wait)
-        #        if monitor:
-        #            stat = con.status()
-        #            while stat.moving:
-        #                out = "        pos %3.2f %s vel %3.2f %s/s" % (
-        #                    stat.position,
-        #                    con.unit,
-        #                    stat.velocity,
-        #                    con.unit,
-        #                )
-        #                sys.stdout.write(out)
-        #                time.sleep(0.01)
-        #                stat = con.status()
-        #                l = len(out)
-        #                sys.stdout.write("\b" * l)
-        #                sys.stdout.write(" " * l)
-        #                sys.stdout.write("\b" * l)
-        print("\tMove completed in %.2fs" % (time.time() - st))
-        print("\tNew position: %.2f %s" % (con.position(), con.unit))
-        if monitor:
+def turntable_safe_goto(rig, grid_state, stage_position, wait=True, monitor=False):
+    with rig.lctrl.use_ambientlight():
+        rig.gd.findDatum(grid_state)
+        print("moving turntable to position %f" % stage_position)
+        assert isfinite(stage_position), "stage position is not valid number"
+        with pyAPT.NR360S(serial_number=NR360_SERIALNUMBER) as con:
+            print("Found APT controller S/N", NR360_SERIALNUMBER)
+            st = time.time()
+            con.goto(stage_position, wait=wait)
+            #        if monitor:
+            #            stat = con.status()
+            #            while stat.moving:
+            #                out = "        pos %3.2f %s vel %3.2f %s/s" % (
+            #                    stat.position,
+            #                    con.unit,
+            #                    stat.velocity,
+            #                    con.unit,
+            #                )
+            #                sys.stdout.write(out)
+            #                time.sleep(0.01)
+            #                stat = con.status()
+            #                l = len(out)
+            #                sys.stdout.write("\b" * l)
+            #                sys.stdout.write(" " * l)
+            #                sys.stdout.write("\b" * l)
+            print("\tMove completed in %.2fs" % (time.time() - st))
+            print("\tNew position: %.2f %s" % (con.position(), con.unit))
+            if monitor:
+                print("\tStatus:", con.status())
+            return 0
+
+            print("\tNew position: %.2fmm %s" % (con.position(), con.unit))
             print("\tStatus:", con.status())
-        return 0
-
-        print("\tNew position: %.2fmm %s" % (con.position(), con.unit))
-        print("\tStatus:", con.status())
     print("OK")
 
 

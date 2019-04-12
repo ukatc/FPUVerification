@@ -51,7 +51,7 @@ def measure_pupil_alignment(rig, dbe, pars=None):
         return
 
     # home turntable
-    rig.hw.safe_home_turntable(rig.gd, rig.grid_state)
+    rig.hw.safe_home_turntable(rig, rig.grid_state)
     rig.hw.home_linear_stage()
     rig.lctrl.switch_all_off()
 
@@ -85,7 +85,7 @@ def measure_pupil_alignment(rig, dbe, pars=None):
                 continue
 
             # move rotary stage to PUP_ALGN_POSN_N
-            rig.hw.turntable_safe_goto(rig.gd, rig.grid_state, stage_position)
+            rig.hw.turntable_safe_goto(rig, rig.grid_state, stage_position)
             rig.hw.linear_stage_goto(pars.PUP_ALGN_LINPOSITIONS[fpu_id])
 
             sn = rig.fpu_config[fpu_id]["serialnumber"]

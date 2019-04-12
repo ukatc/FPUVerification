@@ -26,7 +26,7 @@ def selftest_pup_algn(rig, pars=None, PUP_ALGN_ANALYSIS_PARS=None, capture_image
 
     try:
         # home turntable
-        rig.hw.safe_home_turntable(rig.gd, rig.grid_state)
+        rig.hw.safe_home_turntable(rig, rig.grid_state)
         rig.hw.home_linear_stage()
         rig.lctrl.switch_all_off()
 
@@ -52,7 +52,7 @@ def selftest_pup_algn(rig, pars=None, PUP_ALGN_ANALYSIS_PARS=None, capture_image
             print("stage_position=", stage_position)
 
             # move rotary stage to PUP_ALN_POSN_N
-            rig.hw.turntable_safe_goto(rig.gd, rig.grid_state, stage_position)
+            rig.hw.turntable_safe_goto(rig, rig.grid_state, stage_position)
             rig.hw.linear_stage_goto(lin_position)
 
             ipath_selftest_pup_algn = capture_image(pup_aln_cam, "pupil-alignment")
@@ -72,7 +72,7 @@ def selftest_pup_algn(rig, pars=None, PUP_ALGN_ANALYSIS_PARS=None, capture_image
                     raise
 
     finally:
-        rig.hw.safe_home_turntable(rig.gd, rig.grid_state)
+        rig.hw.safe_home_turntable(rig, rig.grid_state)
         rig.hw.home_linear_stage()
 
 
@@ -88,7 +88,7 @@ def selftest_metrology_calibration(
 
     try:
         # home turntable
-        rig.hw.safe_home_turntable(rig.gd, rig.grid_state)
+        rig.hw.safe_home_turntable(rig, rig.grid_state)
         rig.hw.home_linear_stage()
         rig.lctrl.switch_all_off()
 
@@ -109,7 +109,7 @@ def selftest_metrology_calibration(
         stage_position = pars.METROLOGY_CAL_POSITIONS[fpu_id]
 
         # move rotary stage to POS_REP_POSN_0
-        rig.hw.turntable_safe_goto(rig.gd, rig.grid_state, stage_position)
+        rig.hw.turntable_safe_goto(rig, rig.grid_state, stage_position)
 
         met_cal_cam.SetExposureTime(pars.METROLOGY_CAL_TARGET_EXPOSURE_MS)
         rig.lctrl.switch_all_off()
@@ -147,7 +147,7 @@ def selftest_metrology_calibration(
         del fibre_coordinates
 
     finally:
-        rig.hw.safe_home_turntable(rig.gd, rig.grid_state)
+        rig.hw.safe_home_turntable(rig, rig.grid_state)
 
 
 def selftest_metrology_height(
@@ -157,7 +157,7 @@ def selftest_metrology_height(
     print("selftest: metrology height")
 
     try:
-        rig.hw.safe_home_turntable(rig.gd, rig.grid_state)
+        rig.hw.safe_home_turntable(rig, rig.grid_state)
         rig.lctrl.switch_all_off()
 
         MET_HEIGHT_CAMERA_CONF = {
@@ -173,7 +173,7 @@ def selftest_metrology_height(
         )[0]
 
         # move rotary stage to POS_REP_POSN_N
-        rig.hw.turntable_safe_goto(rig.gd, rig.grid_state, stage_position)
+        rig.hw.turntable_safe_goto(rig, rig.grid_state, stage_position)
 
         with rig.lctrl.use_silhouettelight():
             ipath_selftest_met_height = capture_image(
@@ -197,7 +197,7 @@ def selftest_metrology_height(
                 raise
 
     finally:
-        rig.hw.safe_home_turntable(rig.gd, rig.grid_state)
+        rig.hw.safe_home_turntable(rig, rig.grid_state)
 
 
 def selftest_positional_repeatability(
@@ -207,7 +207,7 @@ def selftest_positional_repeatability(
     print("selftest: positional repeatability")
 
     try:
-        rig.hw.safe_home_turntable(rig.gd, rig.grid_state)
+        rig.hw.safe_home_turntable(rig, rig.grid_state)
         rig.lctrl.switch_all_off()
 
         POS_REP_CAMERA_CONF = {
@@ -222,7 +222,7 @@ def selftest_positional_repeatability(
             rig.measure_fpuset, pars.POS_REP_POSITIONS
         )[0]
 
-        rig.hw.turntable_safe_goto(rig.gd, rig.grid_state, stage_position)
+        rig.hw.turntable_safe_goto(rig, rig.grid_state, stage_position)
 
         with rig.lctrl.use_ambientlight():
 
@@ -245,7 +245,7 @@ def selftest_positional_repeatability(
                 raise
 
     finally:
-        rig.hw.safe_home_turntable(rig.gd, rig.grid_state)
+        rig.hw.safe_home_turntable(rig, rig.grid_state)
 
 
 def selftest_nonfibre(
