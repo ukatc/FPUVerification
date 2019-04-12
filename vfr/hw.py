@@ -32,7 +32,7 @@ def safe_home_turntable(rig, grid_state, opts=None):
 
 def turntable_safe_goto(rig, grid_state, stage_position, wait=True, monitor=False):
     with rig.lctrl.use_ambientlight():
-        rig.gd.findDatum(grid_state)
+        find_datum(rig.gd, grid_state, opts=rig.opts)
         print("moving turntable to position %f" % stage_position)
         assert isfinite(stage_position), "stage position is not valid number"
         with pyAPT.NR360S(serial_number=NR360_SERIALNUMBER) as con:
