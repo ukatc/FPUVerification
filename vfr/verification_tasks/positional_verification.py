@@ -35,6 +35,7 @@ from vfr.db.pupil_alignment import get_pupil_alignment_passed_p
 from vfr.tests_common import (
     dirac,
     find_datum,
+    get_config_from_mapfile,
     get_sorted_positions,
     get_stepcounts,
     store_image,

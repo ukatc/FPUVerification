@@ -239,7 +239,7 @@ def posrepCoordinates(
     # to be fixed.
 
     # if targetSeparation > 2.475 or targetSeparation < 2.275:
-    if targetSeparation > 2.5 or targetSeparation < 2.2:
+    if targetSeparation > 30 or targetSeparation < 2.2:
         raise RepeatabilityAnalysisError(
             "Image %s: Target separation has a value of %.3f which is out of spec - "
             "use display option to check for target-like reflections" % (
