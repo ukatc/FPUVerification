@@ -125,9 +125,11 @@ def get_range_limits(dbe, fpu_id):
     _alpha_min = get_angular_limit(dbe, fpu_id, "alpha_min")
     if _alpha_min is None:
         _alpha_min = {"val": ALPHA_DATUM_OFFSET}
-        _alpha_max = get_angular_limit(dbe, fpu_id, "alpha_max")
+
+    _alpha_max = get_angular_limit(dbe, fpu_id, "alpha_max")
     if _alpha_max is None:
         _alpha_max = {"val": ALPHA_RANGE_MAX}
+
     _beta_min = get_angular_limit(dbe, fpu_id, "beta_min")
     _beta_max = get_angular_limit(dbe, fpu_id, "beta_max")
 
