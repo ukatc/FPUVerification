@@ -131,6 +131,7 @@ def get_range_limits(dbe, rig, fpu_id):
     _alpha_max = get_angular_limit(dbe, fpu_id, "alpha_max")
     if _alpha_max is None:
         _alpha_max = {"val": ALPHA_RANGE_MAX}
+
     _beta_min = get_angular_limit(dbe, fpu_id, "beta_min")
     _beta_max = get_angular_limit(dbe, fpu_id, "beta_max")
 
