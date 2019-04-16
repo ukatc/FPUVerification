@@ -78,7 +78,7 @@ def measure_positional_verification(rig, dbe, pars=None):
     gd = rig.gd
     grid_state = rig.grid_state
 
-    rig.hw.safe_home_turntable(gd, grid_state)
+    rig.hw.safe_home_turntable(rig, grid_state)
     rig.lctrl.switch_all_off()
 
     with rig.lctrl.use_ambientlight():
