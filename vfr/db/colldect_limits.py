@@ -121,11 +121,14 @@ RangeLimits = namedtuple(
 )
 
 
-def get_range_limits(dbe, fpu_id):
+def get_range_limits(dbe, rig, fpu_id):
+    # get measured limits (in case of alpha limit, assume a fixed
+    # value until it can be measured with upgraded FPU firmware).
     _alpha_min = get_angular_limit(dbe, fpu_id, "alpha_min")
     if _alpha_min is None:
         _alpha_min = {"val": ALPHA_DATUM_OFFSET}
-        _alpha_max = get_angular_limit(dbe, fpu_id, "alpha_max")
+
+    _alpha_max = get_angular_limit(dbe, fpu_id, "alpha_max")
     if _alpha_max is None:
         _alpha_max = {"val": ALPHA_RANGE_MAX}
     _beta_min = get_angular_limit(dbe, fpu_id, "beta_min")
@@ -143,6 +146,24 @@ def get_range_limits(dbe, fpu_id):
     alpha_max = _alpha_max["val"]
     beta_min = _beta_min["val"]
     beta_max = _beta_max["val"]
+
+
+
+    # Get protection intervals from protection database
+    fpu = rig.grid_state.FPU[fpu_id]
+    with dbe.env.begin(db=dbe.fpudb) as txn:
+        interval_alpha = ProtectionDB.getField(txn, fpu, ProtectionDB.alpha_limits) + ALPHA_DATUM_OFFSET
+        interval_beta = ProtectionDB.getField(txn, fpu, ProtectionDB.beta_limits)
+
+    # If needed, reduce measured or assumed limits to FPU driver
+    # protection limits. The driver would block any FPU movement
+    # exceeding these, causing the verification run to fail.
+    alpha_min = max(alpha_min, interval_alpha.min())
+    alpha_max = min(alpha_max, interval_alpha.max())
+
+    beta_min = max(beta_min, interval_beta.min())
+    beta_max = min(beta_max, interval_beta.max())
+
 
     assert not isnan(alpha_min)
     assert not isnan(alpha_max)

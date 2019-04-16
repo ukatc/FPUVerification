@@ -137,7 +137,7 @@ def measure_positional_verification(rig, dbe, pars=None):
                 )
                 continue
 
-            range_limits = get_range_limits(dbe, fpu_id)
+            range_limits = get_range_limits(dbe, rig, fpu_id)
             if range_limits is None:
                 print("FPU %s : limit test value missing, skipping test" % sn)
                 continue

@@ -11,6 +11,7 @@ from ImageAnalysisFuncs.analyze_pupil_alignment import (
 from numpy import NaN
 from vfr.conf import PUP_ALGN_CAMERA_IP_ADDRESS
 from vfr.db.base import TestResult
+from vfr.db.colldect_limits import get_range_limits
 from vfr.db.pupil_alignment import (
     PupilAlignmentImages,
     PupilAlignmentResult,
@@ -36,7 +37,7 @@ def generate_positions():
     for j in range(4):
         for k in range(4):
             yield (a0 + delta_a * j, b0 + delta_b * k), True
-    a_near = 1.0
+    a_near = -179.0
     b_near = 1.0
 
     yield (a_near, b_near), False
@@ -83,6 +84,21 @@ def measure_pupil_alignment(rig, dbe, pars=None):
                     " skipping test for this FPU" % sn
                 )
                 continue
+
+            range_limits = get_range_limits(dbe, rig, fpu_id)
+            if range_limits is None:
+                print("FPU %s : limit test value missing, skipping test" % sn)
+                continue
+
+            if ((range_limits.alpha_min > -170.0)
+                or (range_limits.beta_min > -170.0)
+                or (range_limits.alpha_max < +100.0)
+                or (range_limits.beta_max < +100.0)):
+                print("FPU %s : range limits insufficient for pupil alignment test,"
+                      " skipping test" % sn)
+                continue
+
+
 
             # move rotary stage to PUP_ALGN_POSN_N
             rig.hw.turntable_safe_goto(rig, rig.grid_state, stage_position)
