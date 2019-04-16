@@ -27,6 +27,7 @@ from vfr.db.positional_repeatability import (
 from vfr.db.pupil_alignment import get_pupil_alignment_passed_p
 from vfr.tests_common import (
     find_datum,
+    get_config_from_mapfile,
     get_sorted_positions,
     goto_position,
     store_image,
@@ -294,8 +295,6 @@ def measure_positional_repeatability(rig, dbe, pars=None):
 
 
 def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation_pars):
-    def analysis_func(ipath):
-        return posrepCoordinates(ipath, pars=pos_rep_analysis_pars)
 
     for fpu_id in dbe.eval_fpuset:
         measurement = get_positional_repeatability_images(dbe, fpu_id)
@@ -306,6 +305,16 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
 
         images_alpha = measurement["images_alpha"]
         images_beta = measurement["images_beta"]
+
+        mapfile = measurement["calibration_mapfile"]
+        if mapfile:
+            # passing coefficients is a temporary solution because
+            # ultimately we want to pass a function reference to
+            # calibrate points, because that's more efficient.
+            pos_rep_analysis_pars.POS_REP_CALIBRATION_PARS = get_config_from_mapfile(mapfile)
+
+            def analysis_func(ipath):
+                return posrepCoordinates(ipath, pars=pos_rep_analysis_pars)
 
         try:
             analysis_results_alpha = {}

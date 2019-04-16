@@ -133,6 +133,9 @@ MET_CAL_MEASUREMENT_PARS = Namespace(
 
 POS_REP_PLATESCALE = 0.0235  # millimeter per pixel
 
+# this is the fallback configuration, which is linear scaling.
+# If available, it is replaced by the calibration
+# which the map file points to.
 POS_REP_CALIBRATION_PARS = {"algorithm": "scale", "scale_factor": POS_REP_PLATESCALE}
 
 

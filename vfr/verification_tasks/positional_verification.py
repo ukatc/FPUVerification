@@ -273,8 +273,6 @@ def measure_positional_verification(rig, dbe, pars=None):
 
 
 def eval_positional_verification(dbe, pos_ver_analysis_pars, pos_ver_evaluation_pars):
-    def analysis_func(ipath):
-        return posrepCoordinates(ipath, pars=pos_ver_analysis_pars)
 
     for fpu_id in dbe.eval_fpuset:
         measurement = get_positional_verification_images(dbe, fpu_id)
@@ -284,6 +282,15 @@ def eval_positional_verification(dbe, pos_ver_analysis_pars, pos_ver_evaluation_
             continue
 
         images = measurement["images"]
+        mapfile = measurement["calibration_mapfile"]
+        if mapfile:
+            # passing coefficients is a temporary solution because
+            # ultimately we want to pass a function reference to
+            # calibrate points, because that's more efficient.
+            pos_ver_analysis_pars.POS_REP_CALIBRATION_PARS = get_config_from_mapfile(mapfile)
+
+            def analysis_func(ipath):
+                return posrepCoordinates(ipath, pars=pos_ver_analysis_pars)
 
         try:
             analysis_results = {}
