@@ -180,7 +180,7 @@ def measure_positional_verification(rig, dbe, pars=None):
             gearbox_record_count = pr_result["record-count"]
 
             # move rotary stage to POS_VER_POSN_N
-            rig.hw.turntable_safe_goto(gd, grid_state, stage_position)
+            rig.hw.turntable_safe_goto(rig, grid_state, stage_position)
 
             image_dict = {}
 
