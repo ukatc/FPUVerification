@@ -4,9 +4,11 @@ import errno
 import os
 import sys
 import time
+from ast import literal_eval
 from math import floor
 from os import path
 from os.path import expanduser, expandvars
+import camera_calibration
 
 from fpu_commands import gen_wf, list_states
 from fpu_constants import ALPHA_DATUM_OFFSET, BETA_DATUM_OFFSET
@@ -21,7 +23,7 @@ from FpuGridDriver import (
     SEARCH_CLOCKWISE,
 )
 from numpy import array, zeros
-from vfr.conf import DB_TIME_FORMAT
+from vfr.conf import DB_TIME_FORMAT, IMAGE_ROOT_FOLDER
 
 
 def flush():
@@ -201,3 +203,31 @@ def get_stepcounts(gd, grid_state, fpu_id):
     beta_steps = grid_state.FPU[fpu_id].beta_steps
 
     return alpha_steps, beta_steps
+
+def lit_eval_file(file_name):
+    def not_comment(line):
+        if len(line) == 0:
+            return False
+
+        return line.strip()[0] != '#'
+
+
+    return literal_eval("".join(filter(not_comment, open(file_name).readlines())))
+
+def get_config_from_mapfile(filename):
+    map_config = lit_eval_file(path.join("..", filename))
+    #current_dir = os.getcwd()
+    #cd_to_image_root(path.join(IMAGE_ROOT_FOLDER, ".."))
+    config_file_name = map_config["calibration_config_file"]
+    algorithm = map_config["algorithm"]
+
+    rel_config_file_name = path.join("..", config_file_name)
+    print("loading cal config from %s/%s" % (IMAGE_ROOT_FOLDER, rel_config_file_name))
+    config = camera_calibration.Config.load(rel_config_file_name)
+    #os.chdir(current_dir)
+    config_dict = config.to_dict()
+
+    return {
+        'algorithm' : algorithm,
+        'config' : config_dict,
+    }

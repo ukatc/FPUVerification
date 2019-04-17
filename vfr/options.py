@@ -14,6 +14,7 @@ from fpu_constants import (
     BETA_MIN_DEGREE,
     BETA_MAX_DEGREE,
 )
+from vfr.tests_common import lit_eval_file
 from vfr.conf import DEFAULT_TASKS, DEFAULT_TASKS_NONFIBRE
 from vfr.db.snset import get_snset
 from vfr.helptext import examples, summary
@@ -472,10 +473,9 @@ def check_config_item(fpu_id, val):
             "serial number %r for FPU %i is not valid!" % (serialnumber, key)
         )
 
-
 def load_config(config_file_name):
     print("reading measurement configuratiom from %r..." % config_file_name)
-    cfg_list = literal_eval("".join(open(config_file_name).readlines()))
+    cfg_list = lit_eval_file(config_file_name)
 
     fconfig = dict(
         [

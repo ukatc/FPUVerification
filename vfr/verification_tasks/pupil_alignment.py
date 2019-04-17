@@ -22,6 +22,7 @@ from vfr.db.pupil_alignment import (
 )
 from vfr.tests_common import (
     find_datum,
+    get_config_from_mapfile,
     get_sorted_positions,
     goto_position,
     store_image,
@@ -165,6 +166,16 @@ def eval_pupil_alignment(
             continue
 
         images = measurement["images"]
+
+        mapfile = measurement["calibration_mapfile"]
+        USE_MAPFILE = False # False because we do not yet have a
+                            # working calibration - delete this when
+                            # it's fixed
+        if mapfile and USE_MAPFILE:
+            # this is a temporary solution because ultimately we want to
+            # pass a function reference to calibrate points, because that's
+            # more efficient.
+            PUP_ALGN_ANALYSIS_PARS.PUP_ALGN_CALIBRATION_PARS = get_config_from_mapfile(mapfile)
 
         def analysis_func(ipath):
             return pupalnCoordinates(ipath, pars=PUP_ALGN_ANALYSIS_PARS)
