@@ -27,8 +27,13 @@ def correct(x, y, calibration_pars=None):
         # function.
         level = camera_calibration.Correction.lens_keystone_and_real_coordinates
         config =  camera_calibration.Config.from_dict(calibration_pars["config"])
+        x_0, y_0 = camera_calibration.correct_point( (0.0, 0.0), config, level)
         x_corr, y_corr = camera_calibration.correct_point( (x, y), config, level)
-        print("Distortion correction: (%7.2f, %7.2f) --> (%6.3f, %6.3f)" % (x, y, x_corr, y_corr))
+        x_scale = (x_corr - x_0) / float(x)
+        y_scale = (y_corr - y_0) / float(y)
+        print("Distortion correction: (%7.2f, %7.2f) --> (%6.3f, %6.3f), platescale = %f/%f" % (
+            x, y, x_corr, y_corr, x_scale, y_scale
+        ))
         return x_corr, y_corr
 
     raise CorrectionError("unknown algorithm")

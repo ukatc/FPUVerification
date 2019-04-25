@@ -139,8 +139,10 @@ POS_REP_PLATESCALE = 0.0235  # millimeter per pixel
 POS_REP_CALIBRATION_PARS = {"algorithm": "scale", "scale_factor": POS_REP_PLATESCALE}
 
 
-# this needs to e adjuster - parameters do not work
+# this needs to e adjusted - parameters do not work
 POS_REP_ANALYSIS_PARS = Namespace(
+    # FIXME: omit POS_REP prefix in members after merging AOB's
+    # branch, as this struct is used by DAT_REP as well
     POS_REP_PLATESCALE=POS_REP_PLATESCALE,
     POS_REP_SMALL_DIAMETER=1.45,  # millimeter (does not work)
     POS_REP_LARGE_DIAMETER=2.45,  # millimeter (does not work)
@@ -149,7 +151,7 @@ POS_REP_ANALYSIS_PARS = Namespace(
     POS_REP_QUALITY_METRIC=0.8,  # dimensionless
     POS_REP_CALIBRATION_PARS=POS_REP_CALIBRATION_PARS,
     display=False,
-    verbosity=0,
+    verbosity=6,
 )
 
 MET_CAL_TARGET_ANALYSIS_PARS = Namespace(
