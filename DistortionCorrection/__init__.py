@@ -12,10 +12,16 @@ def correct(x, y, calibration_pars=None):
     if (calibration_pars == None) or (calibration_pars["algorithm"] == "identity"):
         return x, y
     elif calibration_pars["algorithm"] == "scale":
+        platescale = calibration_pars["scale_factor"]
+        #print("Distortion correction: (%7.2f, %7.2f) --> (%6.3f, %6.3f), platescale = %f" % (
+        #    x, y, x * platescale, y * platescale, platescale
+        #))
+
         return (
-            x * calibration_pars["scale_factor"],
-            y * calibration_pars["scale_factor"],
+            x * platescale,
+            y * platescale,
         )
+
     elif calibration_pars["algorithm"] == "al/201904/multistage":
         # Use Alexander Lay's multi-stage distortion correction.
         #
