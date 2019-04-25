@@ -1,6 +1,6 @@
 from __future__ import division, print_function
 
-from numpy import array, asarray, sqrt, sum, Inf
+from numpy import array, asarray, Inf
 import numpy as np
 
 

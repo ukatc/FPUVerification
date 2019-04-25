@@ -18,7 +18,7 @@ def home(serial):
         print("\tIdentifying controller")
         con.identify()
         print("\tHoming parameters:", con.request_home_params())
-        print("\tHoming stage...", "end=' '")
+        print("\tHoming stage...", end=" ")
         con.home(clockwise=True)
         print("homed")
 

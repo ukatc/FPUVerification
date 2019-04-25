@@ -242,7 +242,7 @@ def exec_moverel(driver, serialnum, dist):
     try:
         with driver as con:
             print("Found APT controller S/N", serialnum)
-            print("\tMoving stage by %.3f %s ..." % (dist, con.unit), "end=''")
+            print("\tMoving stage by %.3f %s ..." % (dist, con.unit), end=" ")
             con.move(dist)
             print("moved")
             print("\tNew position: %.3f %s" % (con.position(), con.unit))
@@ -343,7 +343,7 @@ def exec_home(driver, serialnum, home_direction=None, limitswitch=None, velocity
         kwargs["velocity"] = velocity
 
     with driver as con:
-        print("\tHoming stage...", "end=''")
+        print("\tHoming stage...", end=" ")
         sys.stdout.flush()
         con.home(**kwargs)
 
@@ -358,7 +358,7 @@ def exec_stop(driver, serialnum, immediate=False, wait=True):
         mode = "profiled stop"
 
     try:
-        print("stopping serial number %s (%s) ..." % (serialnum, mode), "end=' '")
+        print("stopping serial number %s (%s) ..." % (serialnum, mode), end=" ")
         sys.stdout.flush()
         with driver as con:
             con.stop(immediate=True, wait=wait)

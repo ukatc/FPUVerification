@@ -15,7 +15,7 @@ def home(serial):
     with pyAPT.MTS50(serial_number=serial) as con:
         #  with pyAPT.NR360S(serial_number=serial) as con:
         #  with pyAPT.CR1Z7(serial_number=serial) as con:
-        print("\tHoming stage...", "end=' '")
+        print("\tHoming stage...", end=" ")
         con.home(velocity=10)
         print("OK")
 

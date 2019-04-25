@@ -28,7 +28,7 @@ def init_position(dbe, fpu_id, serialnumber, alpha_start, beta_start):
     print(
         "setting FPU #%i, sn=%s to starting position (%r, %r) ... "
         % (fpu_id, serialnumber, alpha_start, beta_start),
-        "end=' '",
+        end=" ",
     )
     flush()
 

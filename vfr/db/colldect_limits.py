@@ -148,12 +148,13 @@ def get_range_limits(dbe, rig, fpu_id):
     beta_min = _beta_min["val"]
     beta_max = _beta_max["val"]
 
-
-
     # Get protection intervals from protection database
     fpu = rig.grid_state.FPU[fpu_id]
     with dbe.env.begin(db=dbe.fpudb) as txn:
-        interval_alpha = ProtectionDB.getField(txn, fpu, ProtectionDB.alpha_limits) + ALPHA_DATUM_OFFSET
+        interval_alpha = (
+            ProtectionDB.getField(txn, fpu, ProtectionDB.alpha_limits)
+            + ALPHA_DATUM_OFFSET
+        )
         interval_beta = ProtectionDB.getField(txn, fpu, ProtectionDB.beta_limits)
 
     # If needed, reduce measured or assumed limits to FPU driver
@@ -164,7 +165,6 @@ def get_range_limits(dbe, rig, fpu_id):
 
     beta_min = max(beta_min, interval_beta.min())
     beta_max = min(beta_max, interval_beta.max())
-
 
     assert not isnan(alpha_min)
     assert not isnan(alpha_max)

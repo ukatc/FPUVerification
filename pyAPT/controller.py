@@ -186,7 +186,7 @@ class Controller(object):
 
     def _wait_message(self, expected_messageID, verbose=False):
         if verbose:
-            print("waiting for message ID 0x%0x..." % expected_messageID, "end=' '")
+            print("waiting for message ID 0x%0x..." % expected_messageID, end=" ")
         sys.stdout.flush()
         found = False
         while not found:

@@ -21,7 +21,7 @@ def main(args):
 
     try:
         with pyAPT.MTS50(serial_number=serial) as con:
-            print("\tMoving stage by %.2fmm..." % (dist), "end=' '")
+            print("\tMoving stage by %.2fmm..." % (dist), end=" ")
             con.move(dist)
             print("OK")
             print("\tNew position: %.2f %s" % (con.position(), con.unit))

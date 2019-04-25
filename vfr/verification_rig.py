@@ -55,7 +55,7 @@ class Rig:
 
     def init_driver(self, protected=True, env=None):
         N = self.opts.N
-        #N = max(self.measure_fpuset) + 1
+        # N = max(self.measure_fpuset) + 1
 
         self.rd, self.gd = None, None
 

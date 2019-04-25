@@ -22,7 +22,7 @@ def main(args):
     try:
         with pyAPT.NR360S(serial_number=serial) as con:
             print("Found APT controller S/N", serial)
-            print("\tMoving stage by %.2fmm..." % (dist), "end=' '")
+            print("\tMoving stage by %.2fmm..." % (dist), end=" ")
             con.move(dist)
             print("moved")
             print("\tNew position: %.2f %s" % (con.position(), con.unit))

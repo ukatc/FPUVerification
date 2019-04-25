@@ -473,6 +473,7 @@ def check_config_item(fpu_id, val):
             "serial number %r for FPU %i is not valid!" % (serialnumber, key)
         )
 
+
 def load_config(config_file_name):
     print("reading measurement configuratiom from %r..." % config_file_name)
     cfg_list = lit_eval_file(config_file_name)

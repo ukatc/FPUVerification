@@ -223,12 +223,14 @@ def posrepCoordinates(
 
     # target separation check - the values here are not configurable, as
     # they represent real mechanical tolerances
-    targetSeparation = norm(array(
-        [
-            posrep_small_target_x - posrep_large_target_x,
-            posrep_small_target_y - posrep_large_target_y,
-        ]
-    ))
+    targetSeparation = norm(
+        array(
+            [
+                posrep_small_target_x - posrep_large_target_x,
+                posrep_small_target_y - posrep_large_target_y,
+            ]
+        )
+    )
     if pars.verbosity > 5:
         print(
             "Image %s: Target separation is %.3f mm.  Specification is 2.375 +/- 0.1 mm."
@@ -242,8 +244,8 @@ def posrepCoordinates(
     if targetSeparation > 30 or targetSeparation < 2.2:
         raise RepeatabilityAnalysisError(
             "Image %s: Target separation has a value of %.3f which is out of spec - "
-            "use display option to check for target-like reflections" % (
-                image_path, targetSeparation)
+            "use display option to check for target-like reflections"
+            % (image_path, targetSeparation)
         )
 
     return (
