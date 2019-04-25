@@ -10,7 +10,7 @@ class ImageAnalysisError(Exception):
 
 def rss(values):
     vals = asarray(values)
-    return sqrt(sum(vals ** 2))
+    return np.linalg.norm(vals)
 
 
 def get_min_quality(list_of_coords):
