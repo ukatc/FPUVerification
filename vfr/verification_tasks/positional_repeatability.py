@@ -313,8 +313,8 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
             # calibrate points, because that's more efficient.
             pos_rep_analysis_pars.POS_REP_CALIBRATION_PARS = get_config_from_mapfile(mapfile)
 
-            def analysis_func(ipath):
-                return posrepCoordinates(ipath, pars=pos_rep_analysis_pars)
+        def analysis_func(ipath):
+            return posrepCoordinates(ipath, pars=pos_rep_analysis_pars)
 
         try:
             analysis_results_alpha = {}
