@@ -26,7 +26,14 @@ from vfr.db.colldect_limits import (
     set_protection_limit,
 )
 from vfr.db.datum import save_datum_result
-from vfr.tests_common import dirac, flush, get_sorted_positions, goto_position
+from vfr.tests_common import (
+    dirac,
+    flush,
+    get_sorted_positions,
+    goto_position,
+    safe_home_turntable,
+    turntable_safe_goto,
+)
 from vfr.turntable import go_collision_test_pos
 
 # calm down pyflakes static checker
@@ -48,7 +55,7 @@ class LimitDetectionFailure(Exception):
 def rewind_fpus(rig, abs_alpha, abs_beta):
     # depending on options, we reset & rewind the FPUs
     if rig.opts.always_reset_fpus:
-        print("resetting FPUs.... ", "end=' '")
+        print("resetting FPUs.... ", end=" ")
         flush()
         rig.gd.resetFPUs(rig.grid_state, fpuset=rig.measure_fpuset)
         print("OK")
@@ -70,7 +77,7 @@ def test_datum(rig, dbe, dasel=DASEL_BOTH):
     failed_fpus = []
 
     if rig.opts.always_reset_fpus:
-        print("resetting FPUs.... ", "end=' '")
+        print("resetting FPUs.... ", end=" ")
         flush()
         rig.gd.resetFPUs(rig.grid_state, fpuset=rig.measure_fpuset)
         print("OK")
@@ -158,7 +165,7 @@ def test_limit(rig, dbe, which_limit, pars=None):
 
     if which_limit != "beta_collision":
         # home turntable
-        rig.hw.safe_home_turntable(rig, rig.grid_state)
+        safe_home_turntable(rig, rig.grid_state)
 
     for fpu_id, stage_position in get_sorted_positions(
         rig.measure_fpuset, pars.COLDECT_POSITIONS
@@ -185,7 +192,7 @@ def test_limit(rig, dbe, which_limit, pars=None):
                 print("pre-finding datum....")
                 rig.gd.findDatum(rig.grid_state)
                 print("OK")
-                rig.hw.safe_home_turntable(rig, rig.grid_state, opts=rig.opts)
+                safe_home_turntable(rig, rig.grid_state, opts=rig.opts)
                 # inform mocked hardware about place of collision it has to simulate
                 go_collision_test_pos(fpu_id, rig.opts)
 
@@ -196,7 +203,7 @@ def test_limit(rig, dbe, which_limit, pars=None):
 
             if which_limit == "beta_collision":
                 # move rotary stage to POS_REP_POSN_N
-                rig.hw.turntable_safe_goto(rig, rig.grid_state, stage_position)
+                turntable_safe_goto(rig, rig.grid_state, stage_position)
 
             if which_limit == "beta_collision":
                 goto_position(
@@ -340,7 +347,7 @@ def test_limit(rig, dbe, which_limit, pars=None):
 
     if which_limit == "beta_collision":
         # home turntable
-        rig.hw.safe_home_turntable(rig, rig.grid_state)
+        safe_home_turntable(rig, rig.grid_state)
 
     if failed_fpus:
         if which_limit == "beta_collision":

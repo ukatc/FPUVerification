@@ -17,7 +17,15 @@ from vfr.db.metrology_calibration import (
     save_metrology_calibration_images,
     save_metrology_calibration_result,
 )
-from vfr.tests_common import get_sorted_positions, store_image, timestamp
+from vfr.tests_common import (
+    get_sorted_positions,
+    store_image,
+    timestamp,
+    safe_home_turntable,
+    turntable_safe_goto,
+    home_linear_stage,
+    linear_stage_goto,
+)
 
 
 def measure_metrology_calibration(rig, dbe, pars=None):
@@ -25,8 +33,8 @@ def measure_metrology_calibration(rig, dbe, pars=None):
     tstamp = timestamp()
 
     # home turntable
-    rig.hw.safe_home_turntable(rig, rig.grid_state)
-    rig.hw.home_linear_stage()
+    safe_home_turntable(rig, rig.grid_state)
+    home_linear_stage(rig)
     rig.lctrl.switch_all_off()
 
     MET_CAL_CAMERA_CONF = {
@@ -42,7 +50,7 @@ def measure_metrology_calibration(rig, dbe, pars=None):
         rig.measure_fpuset, pars.METROLOGY_CAL_POSITIONS
     ):
         # move rotary stage to POS_REP_POSN_N
-        rig.hw.turntable_safe_goto(rig, rig.grid_state, stage_position)
+        turntable_safe_goto(rig, rig.grid_state, stage_position)
 
         # initialize pos_rep camera
         # set pos_rep camera exposure time to DATUM_REP_EXPOSURE milliseconds
@@ -72,7 +80,7 @@ def measure_metrology_calibration(rig, dbe, pars=None):
 
         met_cal_cam.SetExposureTime(pars.METROLOGY_CAL_FIBRE_EXPOSURE_MS)
 
-        rig.hw.linear_stage_goto(pars.METROLOGY_CAL_LINPOSITIONS[fpu_id])
+        linear_stage_goto(rig, pars.METROLOGY_CAL_LINPOSITIONS[fpu_id])
 
         with rig.lctrl.use_backlight(pars.METROLOGY_CAL_BACKLIGHT_VOLTAGE):
             fibre_ipath = capture_image(met_cal_cam, "fibre")
@@ -83,7 +91,7 @@ def measure_metrology_calibration(rig, dbe, pars=None):
 
         save_metrology_calibration_images(dbe, fpu_id, record)
 
-    rig.hw.home_linear_stage()  # bring linear stage to home pos
+    home_linear_stage(rig)  # bring linear stage to home pos
 
 
 def eval_metrology_calibration(

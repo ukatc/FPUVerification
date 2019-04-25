@@ -17,7 +17,13 @@ from vfr.db.metrology_height import (
     save_metrology_height_images,
     save_metrology_height_result,
 )
-from vfr.tests_common import get_sorted_positions, store_image, timestamp
+from vfr.tests_common import (
+    get_sorted_positions,
+    store_image,
+    timestamp,
+    safe_home_turntable,
+    turntable_safe_goto,
+)
 
 
 def measure_metrology_height(rig, dbe, pars=None):
@@ -25,7 +31,7 @@ def measure_metrology_height(rig, dbe, pars=None):
     tstamp = timestamp()
 
     # home turntable
-    rig.hw.safe_home_turntable(rig, rig.grid_state)
+    safe_home_turntable(rig, rig.grid_state)
     rig.lctrl.switch_all_off()
 
     with rig.lctrl.use_silhouettelight():
@@ -44,7 +50,7 @@ def measure_metrology_height(rig, dbe, pars=None):
             rig.measure_fpuset, pars.MET_HEIGHT_POSITIONS
         ):
             # move rotary stage to POS_REP_POSN_N
-            rig.hw.turntable_safe_goto(rig, rig.grid_state, stage_position)
+            turntable_safe_goto(rig, rig.grid_state, stage_position)
 
             # initialize pos_rep camera
             # set pos_rep camera exposure time to DATUM_REP_EXPOSURE milliseconds

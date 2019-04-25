@@ -6,6 +6,8 @@ import sys
 import time
 from ast import literal_eval
 from math import floor
+from numpy import isfinite
+
 from os import path
 from os.path import expanduser, expandvars
 import camera_calibration
@@ -23,7 +25,12 @@ from FpuGridDriver import (
     SEARCH_CLOCKWISE,
 )
 from numpy import array, zeros
-from vfr.conf import DB_TIME_FORMAT, IMAGE_ROOT_FOLDER
+from vfr.conf import (
+    DB_TIME_FORMAT,
+    IMAGE_ROOT_FOLDER,
+    NR360_SERIALNUMBER,
+    MTS50_SERIALNUMBER,
+)
 
 
 def flush():
@@ -204,30 +211,94 @@ def get_stepcounts(gd, grid_state, fpu_id):
 
     return alpha_steps, beta_steps
 
+
 def lit_eval_file(file_name):
     def not_comment(line):
         if len(line) == 0:
             return False
 
-        return line.strip()[0] != '#'
-
+        return line.strip()[0] != "#"
 
     return literal_eval("".join(filter(not_comment, open(file_name).readlines())))
 
+
 def get_config_from_mapfile(filename):
     map_config = lit_eval_file(path.join("..", filename))
-    #current_dir = os.getcwd()
-    #cd_to_image_root(path.join(IMAGE_ROOT_FOLDER, ".."))
+    # current_dir = os.getcwd()
+    # cd_to_image_root(path.join(IMAGE_ROOT_FOLDER, ".."))
     config_file_name = map_config["calibration_config_file"]
     algorithm = map_config["algorithm"]
 
     rel_config_file_name = path.join("..", config_file_name)
     print("loading cal config from %s/%s" % (IMAGE_ROOT_FOLDER, rel_config_file_name))
     config = camera_calibration.Config.load(rel_config_file_name)
-    #os.chdir(current_dir)
+    # os.chdir(current_dir)
     config_dict = config.to_dict()
 
-    return {
-        'algorithm' : algorithm,
-        'config' : config_dict,
-    }
+    return {"algorithm": algorithm, "config": config_dict}
+
+
+def safe_home_turntable(rig, grid_state, opts=None):
+    with rig.lctrl.use_ambientlight():
+        find_datum(rig.gd, grid_state, opts=opts)
+
+        with rig.hw.pyAPT.NR360S(serial_number=NR360_SERIALNUMBER) as con:
+            print("\tHoming stage...", end=" ")
+            con.home(clockwise=False)
+            print("homed")
+        print("OK")
+
+
+def turntable_safe_goto(rig, grid_state, stage_position, wait=True, monitor=False):
+    with rig.lctrl.use_ambientlight():
+        find_datum(rig.gd, grid_state, opts=rig.opts)
+        print("moving turntable to position %f" % stage_position)
+        assert isfinite(stage_position), "stage position is not valid number"
+        with rig.hw.pyAPT.NR360S(serial_number=NR360_SERIALNUMBER) as con:
+            print("Found APT controller S/N", NR360_SERIALNUMBER)
+            st = time.time()
+            con.goto(stage_position, wait=wait)
+            #        if monitor:
+            #            stat = con.status()
+            #            while stat.moving:
+            #                out = "        pos %3.2f %s vel %3.2f %s/s" % (
+            #                    stat.position,
+            #                    con.unit,
+            #                    stat.velocity,
+            #                    con.unit,
+            #                )
+            #                sys.stdout.write(out)
+            #                time.sleep(0.01)
+            #                stat = con.status()
+            #                l = len(out)
+            #                sys.stdout.write("\b" * l)
+            #                sys.stdout.write(" " * l)
+            #                sys.stdout.write("\b" * l)
+            print("\tMove completed in %.2fs" % (time.time() - st))
+            print("\tNew position: %.2f %s" % (con.position(), con.unit))
+            if monitor:
+                print("\tStatus:", con.status())
+            return 0
+
+            print("\tNew position: %.2f %s" % (con.position(), con.unit))
+            print("\tStatus:", con.status())
+    print("OK")
+
+
+def home_linear_stage(rig):
+    with rig.hw.pyAPT.MTS50(serial_number=MTS50_SERIALNUMBER) as con:
+        print("\tHoming linear stage...", end=" ")
+        con.home()
+        print("homed")
+    print("OK")
+
+
+def linear_stage_goto(rig, stage_position):
+    print("moving linear stage to position %f" % stage_position)
+    assert isfinite(stage_position), "stage position is not valid number"
+    with rig.hw.pyAPT.MTS50(serial_number=MTS50_SERIALNUMBER) as con:
+        print("Found APT controller S/N", MTS50_SERIALNUMBER)
+        con.goto(stage_position, wait=True)
+        print("\tNew position: %.2f %s" % (con.position(), con.unit))
+        print("\tStatus:", con.status())
+    print("OK")

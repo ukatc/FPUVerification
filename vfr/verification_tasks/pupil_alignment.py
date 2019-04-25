@@ -27,6 +27,10 @@ from vfr.tests_common import (
     goto_position,
     store_image,
     timestamp,
+    safe_home_turntable,
+    turntable_safe_goto,
+    home_linear_stage,
+    linear_stage_goto,
 )
 
 
@@ -53,8 +57,8 @@ def measure_pupil_alignment(rig, dbe, pars=None):
         return
 
     # home turntable
-    rig.hw.safe_home_turntable(rig, rig.grid_state)
-    rig.hw.home_linear_stage()
+    safe_home_turntable(rig, rig.grid_state)
+    home_linear_stage(rig)
     rig.lctrl.switch_all_off()
 
     with rig.lctrl.use_backlight(pars.PUP_ALGN_LAMP_VOLTAGE):
@@ -91,19 +95,21 @@ def measure_pupil_alignment(rig, dbe, pars=None):
                 print("FPU %s : limit test value missing, skipping test" % sn)
                 continue
 
-            if ((range_limits.alpha_min > -170.0)
+            if (
+                (range_limits.alpha_min > -170.0)
                 or (range_limits.beta_min > -170.0)
                 or (range_limits.alpha_max < +100.0)
-                or (range_limits.beta_max < +100.0)):
-                print("FPU %s : range limits insufficient for pupil alignment test,"
-                      " skipping test" % sn)
+                or (range_limits.beta_max < +100.0)
+            ):
+                print(
+                    "FPU %s : range limits insufficient for pupil alignment test,"
+                    " skipping test" % sn
+                )
                 continue
 
-
-
             # move rotary stage to PUP_ALGN_POSN_N
-            rig.hw.turntable_safe_goto(rig, rig.grid_state, stage_position)
-            rig.hw.linear_stage_goto(pars.PUP_ALGN_LINPOSITIONS[fpu_id])
+            turntable_safe_goto(rig, rig.grid_state, stage_position)
+            linear_stage_goto(rig, pars.PUP_ALGN_LINPOSITIONS[fpu_id])
 
             sn = rig.fpu_config[fpu_id]["serialnumber"]
 
@@ -151,7 +157,7 @@ def measure_pupil_alignment(rig, dbe, pars=None):
             )
             save_pupil_alignment_images(dbe, fpu_id, record)
 
-    rig.hw.home_linear_stage()  # bring linear stage to home pos
+    home_linear_stage(rig)  # bring linear stage to home pos
 
 
 def eval_pupil_alignment(
@@ -168,14 +174,16 @@ def eval_pupil_alignment(
         images = measurement["images"]
 
         mapfile = measurement["calibration_mapfile"]
-        USE_MAPFILE = False # False because we do not yet have a
-                            # working calibration - delete this when
-                            # it's fixed
+        USE_MAPFILE = False  # False because we do not yet have a
+        # working calibration - delete this when
+        # it's fixed
         if mapfile and USE_MAPFILE:
             # this is a temporary solution because ultimately we want to
             # pass a function reference to calibrate points, because that's
             # more efficient.
-            PUP_ALGN_ANALYSIS_PARS.PUP_ALGN_CALIBRATION_PARS = get_config_from_mapfile(mapfile)
+            PUP_ALGN_ANALYSIS_PARS.PUP_ALGN_CALIBRATION_PARS = get_config_from_mapfile(
+                mapfile
+            )
 
         def analysis_func(ipath):
             return pupalnCoordinates(ipath, pars=PUP_ALGN_ANALYSIS_PARS)

@@ -14,7 +14,6 @@ from ImageAnalysisFuncs.analyze_positional_repeatability import (
     posrepCoordinates,
 )
 from numpy import NaN
-from fpu_constants import ALPHA_DATUM_OFFSET
 from vfr.conf import POS_REP_CAMERA_IP_ADDRESS
 from vfr.db.base import TestResult
 from vfr.db.colldect_limits import get_range_limits
@@ -40,6 +39,8 @@ from vfr.tests_common import (
     get_stepcounts,
     store_image,
     timestamp,
+    safe_home_turntable,
+    turntable_safe_goto,
 )
 
 
@@ -79,7 +80,7 @@ def measure_positional_verification(rig, dbe, pars=None):
     gd = rig.gd
     grid_state = rig.grid_state
 
-    rig.hw.safe_home_turntable(rig, grid_state)
+    safe_home_turntable(rig, grid_state)
     rig.lctrl.switch_all_off()
 
     with rig.lctrl.use_ambientlight():
@@ -181,7 +182,7 @@ def measure_positional_verification(rig, dbe, pars=None):
             gearbox_record_count = pr_result["record-count"]
 
             # move rotary stage to POS_VER_POSN_N
-            rig.hw.turntable_safe_goto(rig, grid_state, stage_position)
+            turntable_safe_goto(rig, grid_state, stage_position)
 
             image_dict = {}
 
@@ -288,7 +289,9 @@ def eval_positional_verification(dbe, pos_ver_analysis_pars, pos_ver_evaluation_
             # passing coefficients is a temporary solution because
             # ultimately we want to pass a function reference to
             # calibrate points, because that's more efficient.
-            pos_ver_analysis_pars.POS_REP_CALIBRATION_PARS = get_config_from_mapfile(mapfile)
+            pos_ver_analysis_pars.POS_REP_CALIBRATION_PARS = get_config_from_mapfile(
+                mapfile
+            )
 
             def analysis_func(ipath):
                 return posrepCoordinates(ipath, pars=pos_ver_analysis_pars)

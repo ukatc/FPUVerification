@@ -25,7 +25,14 @@ from vfr.db.datum_repeatability import (
     save_datum_repeatability_images,
     save_datum_repeatability_result,
 )
-from vfr.tests_common import dirac, get_sorted_positions, store_image, timestamp
+from vfr.tests_common import (
+    dirac,
+    get_sorted_positions,
+    store_image,
+    timestamp,
+    safe_home_turntable,
+    turntable_safe_goto,
+)
 
 
 def check_skip(rig, dbe, fpu_id):
@@ -167,7 +174,7 @@ def record_images_from_fpu(rig, fpu_id, capture_image, num_iterations):
 
 def measure_datum_repeatability(rig, dbe, pars=None):
     # go to defined start configuration
-    rig.hw.safe_home_turntable(rig, rig.grid_state)
+    safe_home_turntable(rig, rig.grid_state)
     rig.lctrl.switch_all_off()
 
     with rig.lctrl.use_ambientlight():
@@ -201,7 +208,7 @@ def measure_datum_repeatability(rig, dbe, pars=None):
                 continue
 
             # move rotary stage to measurement position
-            rig.hw.turntable_safe_goto(rig, rig.grid_state, stage_position)
+            turntable_safe_goto(rig, rig.grid_state, stage_position)
             # measure images
             image_record = record_images_from_fpu(
                 rig, fpu_id, capture_image, pars.DATUM_REP_ITERATIONS

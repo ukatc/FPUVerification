@@ -32,6 +32,8 @@ from vfr.tests_common import (
     goto_position,
     store_image,
     timestamp,
+    safe_home_turntable,
+    turntable_safe_goto,
 )
 from vfr.verification_tasks.measure_datum_repeatability import (
     get_datum_repeatability_passed_p,
@@ -68,7 +70,7 @@ def check_skip_reason(dbe, fpu_id, sn, repeat_passed_tests=None, skip_fibre=Fals
 
 def initialize_rig(rig):
     # home turntable
-    rig.hw.safe_home_turntable(rig, rig.grid_state)
+    safe_home_turntable(rig, rig.grid_state)
     # switch lamps off
     rig.lctrl.switch_all_off()
 
@@ -287,7 +289,7 @@ def measure_positional_repeatability(rig, dbe, pars=None):
                 return ipath
 
             # move rotary stage to POS_REP_POSN_N
-            rig.hw.turntable_safe_goto(rig, rig.grid_state, stage_position)
+            turntable_safe_goto(rig, rig.grid_state, stage_position)
 
             record = get_images_for_fpu(rig, fpu_id, range_limits, pars, capture_image)
 
@@ -311,7 +313,9 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
             # passing coefficients is a temporary solution because
             # ultimately we want to pass a function reference to
             # calibrate points, because that's more efficient.
-            pos_rep_analysis_pars.POS_REP_CALIBRATION_PARS = get_config_from_mapfile(mapfile)
+            pos_rep_analysis_pars.POS_REP_CALIBRATION_PARS = get_config_from_mapfile(
+                mapfile
+            )
 
         def analysis_func(ipath):
             return posrepCoordinates(ipath, pars=pos_rep_analysis_pars)

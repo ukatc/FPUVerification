@@ -4,6 +4,8 @@ import inspect
 import os
 import os.path
 import warnings
+import time
+from contextlib import contextmanager
 
 import ImageAnalysisFuncs  # used to look up images
 
@@ -16,7 +18,6 @@ from vfr.conf import (
     POS_REP_CAMERA_IP_ADDRESS,
     PUP_ALGN_CAMERA_IP_ADDRESS,
 )
-from vfr.tests_common import find_datum
 
 # here a nice explanation how the context managers work:
 # https://jeffknupp.com/blog/2016/03/07/python-with-context-managers/
@@ -54,34 +55,50 @@ class lampController(LampControllerBase):
         return previous_state
 
 
-def turntable_safe_goto(rig, grid_state, stage_position, opts=None):
-    with rig.lctrl.use_ambientlight():
-        find_datum(rig.gd, grid_state, opts=opts)
+class StageController:
+    def __init__(self, name, unit="mm"):
+        self.name = name
+        self.unit = unit
+        self._position = 0.0
 
-        print("moving turntable to position %5.2f" % stage_position)
+    def position(self):
+        return self._position
+
+    def status(self):
+        return "OK"
+
+    def home(self, clockwise=None):
+        print("homing %s stage..." % self.name)
+        self._position = 0.0
+        time.sleep(1.0)
+        print("stage %s is homed" % self.name)
+
+    def goto(self, position, wait=None):
+        print("moving %s stage to %f..." % (self.name, position))
+        self._position = position
+        time.sleep(1.0)
+        print("stage %s is now at position %f" % (self.name, position))
 
 
-def safe_home_turntable(rig, grid_state, opts=None):
-    if (opts is not None) and opts.verbosity > 2:
-        print("issuing findDatum:")
-    # gd.findDatum(grid_state, timeout=DATUM_TIMEOUT_DISABLE)
-    with rig.lctrl.use_ambientlight():
-        find_datum(rig.gd, grid_state, opts=opts)
-        if (opts is not None) and opts.verbosity > 2:
-            print("findDatum finished")
+class _pyAPT:
+    @contextmanager
+    def NR360S(self, serial_number=None):
+        try:
+            yield StageController("NR360S", unit="degrees")
 
-        print("moving turntable to home position")
+        finally:
+            time.sleep(1.0)
+
+    @contextmanager
+    def MTS50(self, serial_number=None):
+        try:
+            yield StageController("MTS50", unit="mm")
+
+        finally:
+            time.sleep(1.0)
 
 
-def home_linear_stage():
-    print("\tHoming linear stage...", "end=' '")
-    print("homed")
-
-
-def linear_stage_goto(stage_position):
-    print("Found APT controller S/N", "[MOCKUP]")
-    print("\tNew position: %.2fmm %s" % (stage_position, "mm"))
-    print("\tStatus:", "OK")
+pyAPT = _pyAPT()
 
 
 class GigECamera:
