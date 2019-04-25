@@ -6,6 +6,8 @@ import cv2 as cv
 from enum import IntEnum
 import numpy as np
 
+assert conf
+
 
 class Correction(IntEnum):
     """

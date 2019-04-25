@@ -2,7 +2,6 @@ import attr
 import cv2 as cv
 import math
 import numpy as np
-from typing import Optional, Union
 
 
 @attr.s(cmp=False)

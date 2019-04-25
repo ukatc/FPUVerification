@@ -1,6 +1,5 @@
 import camera_calibration as calib
 import numpy as np
-from tempfile import TemporaryFile
 import sys
 
 

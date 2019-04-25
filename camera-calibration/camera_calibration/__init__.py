@@ -5,3 +5,8 @@ from camera_calibration.correction import (
     correct_image,
     Correction,
 )
+
+# make pyflakes happy
+assert (
+    Config or Corners or correct_point or correct_points or correct_image or Correction
+)
