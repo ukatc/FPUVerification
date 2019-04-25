@@ -28,7 +28,7 @@ from vfr.options import parse_args, check_sns_unique
 from vfr.posdb import init_position
 from vfr.TaskLogic import T, resolve
 from vfr.task_config import MEASUREMENT_TASKS
-from vfr.tests_common import find_datum, flush, cd_to_image_root
+from vfr.tests_common import find_datum, flush, cd_to_image_root, set_quit_handler
 from vfr.verification_tasks.functional_tests import (DASEL_ALPHA, DASEL_BETA,
                                                      DASEL_BOTH, rewind_fpus, test_datum,
                                                      test_limit)
@@ -177,6 +177,8 @@ if __name__ == "__main__":
             )
 
     # switch to protected driver instance, if needed
+
+    set_quit_handler()
 
     if T.TASK_INIT_GD in tasks:
 

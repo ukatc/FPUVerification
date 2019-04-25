@@ -33,6 +33,7 @@ from vfr.tests_common import (
     goto_position,
     safe_home_turntable,
     turntable_safe_goto,
+    check_for_quit,
 )
 from vfr.turntable import go_collision_test_pos
 
@@ -62,6 +63,7 @@ def rewind_fpus(rig, abs_alpha, abs_beta):
 
     rig.gd.pingFPUs(rig.grid_state, fpuset=rig.measure_fpuset)
 
+    check_for_quit()
     goto_position(
         rig.gd,
         abs_alpha,
@@ -70,10 +72,12 @@ def rewind_fpus(rig, abs_alpha, abs_beta):
         fpuset=rig.measure_fpuset,
         allow_uninitialized=True,
     )
+    check_for_quit()
 
 
 def test_datum(rig, dbe, dasel=DASEL_BOTH):
 
+    check_for_quit()
     failed_fpus = []
 
     if rig.opts.always_reset_fpus:
@@ -122,10 +126,12 @@ def test_datum(rig, dbe, dasel=DASEL_BOTH):
 
     if failed_fpus:
         raise DatumFailure("Datum test failed for FPUs %r" % failed_fpus)
+    check_for_quit()
 
 
 def test_limit(rig, dbe, which_limit, pars=None):
 
+    check_for_quit()
     failed_fpus = []
 
     abs_alpha_def = -180.0
@@ -172,6 +178,7 @@ def test_limit(rig, dbe, which_limit, pars=None):
     ):
         sn = rig.fpu_config[fpu_id]["serialnumber"]
 
+        check_for_quit()
         if (
             get_anglimit_passed_p(dbe, fpu_id, which_limit)
             and (
@@ -344,6 +351,7 @@ def test_limit(rig, dbe, which_limit, pars=None):
         )
         print("searching datum for FPU %i, to resolve collision" % fpu_id)
         rig.gd.findDatum(rig.grid_state, fpuset=[fpu_id])
+        check_for_quit()
 
     if which_limit == "beta_collision":
         # home turntable

@@ -10,6 +10,7 @@ from numpy import isfinite
 
 from os import path
 from os.path import expanduser, expandvars
+import signal
 import camera_calibration
 
 from fpu_commands import gen_wf, list_states
@@ -31,6 +32,21 @@ from vfr.conf import (
     NR360_SERIALNUMBER,
     MTS50_SERIALNUMBER,
 )
+
+
+got_quit_request = False # global flag to initiate orderly termination
+
+def handle_quit(signum, stack):
+  global got_quit_request
+  got_quit_request = True
+  print("SIGQUIT received, setting flag to exit")
+
+def set_quit_handler():
+    signal.signal(signal.SIGQUIT, handle_quit)
+
+def check_for_quit():
+    if got_quit_request:
+        raise SystemExit("quit signal received - terminating orderly")
 
 
 def flush():
@@ -64,6 +80,7 @@ def goto_position(
     soft_protection=True,
     verbosity=0,
 ):
+    check_for_quit()
     gd.pingFPUs(grid_state)
     current_angles = gd.trackedAngles(grid_state, retrieve=True)
     current_alpha = array([x.as_scalar() for x, y in current_angles])
@@ -84,8 +101,10 @@ def goto_position(
         warn_unsafe=soft_protection,
         verbosity=verbosity,
     )
+    check_for_quit()
 
     gd.executeMotion(grid_state, fpuset=fpuset)
+    check_for_quit()
 
     if CAN_PROTOCOL_VERSION == 1:
         gd.pingFPUs(grid_state)
@@ -97,6 +116,7 @@ def goto_position(
 def find_datum(gd, grid_state, opts=None, uninitialized=False):
 
     verbosity = opts.verbosity if opts else 0
+    check_for_quit()
     gd.pingFPUs(grid_state)
     if verbosity > 9:
         print("pre datum:")
@@ -126,6 +146,7 @@ def find_datum(gd, grid_state, opts=None, uninitialized=False):
             soft_protection=True,
             verbosity=verbosity,
         )
+        check_for_quit()
 
         if uninitialized:
             if verbosity > 0:
@@ -165,6 +186,7 @@ def find_datum(gd, grid_state, opts=None, uninitialized=False):
     if verbosity > 9:
         print("FPU states = ", list_states(grid_state))
 
+    check_for_quit()
     return gd, grid_state
 
 
@@ -194,6 +216,7 @@ def store_image(camera, format_string, **kwargs):
             raise
     camera.saveImage(ipath)
 
+    check_for_quit()
     return ipath
 
 
@@ -239,6 +262,7 @@ def get_config_from_mapfile(filename):
 
 
 def safe_home_turntable(rig, grid_state, opts=None):
+    check_for_quit()
     with rig.lctrl.use_ambientlight():
         find_datum(rig.gd, grid_state, opts=opts)
 
@@ -247,9 +271,10 @@ def safe_home_turntable(rig, grid_state, opts=None):
             con.home(clockwise=False)
             print("homed")
         print("OK")
-
+    check_for_quit()
 
 def turntable_safe_goto(rig, grid_state, stage_position, wait=True, monitor=False):
+    check_for_quit()
     with rig.lctrl.use_ambientlight():
         find_datum(rig.gd, grid_state, opts=rig.opts)
         print("moving turntable to position %f" % stage_position)
@@ -282,18 +307,22 @@ def turntable_safe_goto(rig, grid_state, stage_position, wait=True, monitor=Fals
 
             print("\tNew position: %.2f %s" % (con.position(), con.unit))
             print("\tStatus:", con.status())
+    check_for_quit()
     print("OK")
 
 
 def home_linear_stage(rig):
+    check_for_quit()
     with rig.hw.pyAPT.MTS50(serial_number=MTS50_SERIALNUMBER) as con:
         print("\tHoming linear stage...", end=" ")
         con.home()
         print("homed")
+    check_for_quit()
     print("OK")
 
 
 def linear_stage_goto(rig, stage_position):
+    check_for_quit()
     print("moving linear stage to position %f" % stage_position)
     assert isfinite(stage_position), "stage position is not valid number"
     with rig.hw.pyAPT.MTS50(serial_number=MTS50_SERIALNUMBER) as con:
@@ -301,4 +330,5 @@ def linear_stage_goto(rig, stage_position):
         con.goto(stage_position, wait=True)
         print("\tNew position: %.2f %s" % (con.position(), con.unit))
         print("\tStatus:", con.status())
+    check_for_quit()
     print("OK")
