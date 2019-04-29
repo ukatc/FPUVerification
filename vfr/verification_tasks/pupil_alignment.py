@@ -174,10 +174,8 @@ def eval_pupil_alignment(
         images = measurement["images"]
 
         mapfile = measurement["calibration_mapfile"]
-        USE_MAPFILE = False  # False because we do not yet have a
-        # working calibration - delete this when
-        # it's fixed
-        if mapfile and USE_MAPFILE:
+
+        if mapfile:
             # this is a temporary solution because ultimately we want to
             # pass a function reference to calibrate points, because that's
             # more efficient.
