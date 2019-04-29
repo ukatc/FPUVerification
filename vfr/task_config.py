@@ -367,7 +367,7 @@ task_expansions = [
         T.TST_LIMITS,
         [
             T.TST_COLLDETECT,
-            #            T.TST_LIMITS_ALPHA,
+            T.TST_LIMITS_ALPHA,
             T.TST_LIMITS_BETA,
         ],
     ),

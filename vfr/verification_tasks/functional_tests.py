@@ -17,7 +17,7 @@ from FpuGridDriver import (
     LimitBreachError,
     MovementError,
 )
-from numpy import NaN, ceil
+from numpy import NaN, ceil, sign
 from vfr.db.base import TestResult
 from vfr.db.colldect_limits import (
     LimitTestResult,
@@ -300,6 +300,22 @@ def test_limit(rig, dbe, which_limit, pars=None):
             # bring FPU back into valid range and protected state
             N = rig.opts.N
             if which_limit in ["alpha_max", "alpha_min"]:
+                n_steps = 10 * sign(int(dw))
+                n_moves = 10
+                for k in range(n_moves):
+                    print("alpha limit recovery: moving fpu %i back by %i steps [%i]"
+                          % (fpu_id, n_steps, k))
+                    rig.gd.resetFPUs(rig.grid_state, [fpu_id])
+                    wf = gen_wf(n_steps * dirac(fpu_id, N), 0, units='steps')
+                    rig.gd.configMotion(
+                        wf,
+                        rig.grid_state,
+                        soft_protection=False,
+                        warn_unsafe=False,
+                        allow_uninitialized=True,
+                    )
+                    rig.gd.executeMotion(rig.grid_state, fpuset=[fpu_id])
+
                 print("moving fpu %i back by %i degree" % (fpu_id, dw))
                 rig.gd.resetFPUs(rig.grid_state, [fpu_id])
                 wf = gen_wf(dw * dirac(fpu_id, N), 0)
