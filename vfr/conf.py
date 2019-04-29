@@ -80,8 +80,8 @@ DATUM_REP_MEASUREMENT_PARS = Namespace(
 
 
 DAT_REP_PLATESCALE = (
-    0.00668
-)  # millimeter per pixel, for the metology calibration camera
+    0.00693
+)  # millimeter per pixel, for the metrology calibration camera
 
 
 DAT_REP_CALIBRATION_PARS = {"algorithm": "scale", "scale_factor": DAT_REP_PLATESCALE}
