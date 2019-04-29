@@ -314,7 +314,7 @@ task_dependencies = [
     (
         T.TASK_MEASURE_NONFIBRE,
         [
-            T.TASK_SELFTEST,
+            T.TASK_SELFTEST_NONFIBRE,
             T.TST_GATEWAY_CONNECTION,
             T.TST_CAN_CONNECTION,
             T.TST_POS_REP_CAM_CONNECTION,

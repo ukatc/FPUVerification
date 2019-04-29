@@ -10,7 +10,7 @@ from numpy import Inf
 
 DEFAULT_TASKS = ["selftest", "test_functional", "measure_all", "eval_all", "report"]
 DEFAULT_TASKS_NONFIBRE = [
-    "selftest",
+    "selftest_nonfibre",
     "test_functional",
     "measure_nonfibre",
     "eval_nonfibre",

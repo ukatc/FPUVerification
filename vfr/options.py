@@ -37,7 +37,7 @@ def parse_args():
     parser.add_argument(
         "tasks",
         nargs="*",
-        default=DEFAULT_TASKS,
+        default=[],
         help="""list of tasks to perform (default: %(default)s)""",
     )
 
@@ -191,15 +191,25 @@ def parse_args():
         "--reinit-db",
         default=False,
         action="store_true",
-        help="reinitialize posiiton database entry",
+        help="reinitialize position database entry",
     )
 
     parser.add_argument(
         "-sf",
         "--skip-fibre",
-        default=False,
+        default=True,
         action="store_true",
-        help="skip measurements and dependencies which require fibres to be present",
+        dest="skip_fibre",
+        help="skip measurements and dependencies which require fibres to be present (default: %(default)s)",
+    )
+
+    parser.add_argument(
+        "-mf",
+        "--measure-fibre",
+        default=True,
+        action="store_false",
+        dest="skip_fibre",
+        help="explicitly perform measurements and dependencies which require fibres to be present",
     )
 
     parser.add_argument(
