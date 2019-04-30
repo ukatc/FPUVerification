@@ -134,6 +134,8 @@ def posrepCoordinates(
             # finds contour momenIA.posrepCoordinates("./PT25_posrep_1_001.bmp")ts,
             # which can be used to derive centre of mass
             M = cv2.moments(c)
+            if M["m00"] == 0:
+                raise RepeatabilityAnalysisError("Moment m00 is zero, causes division by zero")
             cX = M["m10"] / M["m00"]
             cY = M["m01"] / M["m00"]
             centres[circle] = (cX, cY, circularity, i)
