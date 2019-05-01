@@ -4,7 +4,7 @@ from __future__ import absolute_import, division, print_function
 
 from argparse import Namespace
 from math import ceil
-from os import environ
+import os
 
 from numpy import Inf
 
@@ -37,10 +37,11 @@ NR360_SERIALNUMBER = 40873952
 MTS50_SERIALNUMBER = 83822910
 
 # if you work on another machine (for example testing image analysis
-# scripts), you should set the environment variable IMAGE_ROOT_FOLDER
-# to the path which contains the images. Shorthands like ~/, ~user, or
-# ${HOME} are expanded before use.
-IMAGE_ROOT_FOLDER = environ.get("IMAGE_ROOT_FOLDER", "/moonsdata/verification/images")
+# scripts), you should set the environment variable
+# VERIFICATION_ROOT_FOLDER to the path which contains the images and
+# calibration data. Shorthands like ~/, ~user, or ${HOME} are expanded
+# before use.
+VERIFICATION_ROOT_FOLDER = os.environ.get("VERIFICATION_ROOT_FOLDER", "/moonsdata/verification/")
 
 POS_REP_CAMERA_IP_ADDRESS = "169.254.187.121"
 
@@ -194,10 +195,10 @@ POS_REP_MEASUREMENT_PARS = Namespace(
     POS_REP_EXPOSURE_MS=200,  # the exposure time in
     # milliseconds for a correctly
     # exposed image
-    POS_REP_NUM_INCREMENTS=15,  # the number of movements made
+    POS_REP_NUM_INCREMENTS=10,  # the number of movements made
     # within each positive sweep from
     # the starting position
-    POS_REP_ITERATIONS=2,  # the number of times each FPU
+    POS_REP_ITERATIONS=3,  # the number of times each FPU
     # sweeps back and forth
     POS_REP_SAFETY_MARGIN=5.0,  # safety margin, in degree, for
     # distance to range limits when testing

@@ -2,6 +2,9 @@ from __future__ import absolute_import, division, print_function
 
 import sys
 from warnings import warn
+import logging
+from os.path import abspath
+from vfr.auditlog import get_fpuLogger
 
 from GigE.GigECamera import BASLER_DEVICE_CLASS, DEVICE_CLASS, IP_ADDRESS
 from ImageAnalysisFuncs.base import ImageAnalysisError
@@ -30,7 +33,8 @@ from vfr.tests_common import (
 
 
 def selftest_pup_algn(rig, pars=None, PUP_ALGN_ANALYSIS_PARS=None, capture_image=None):
-    print("selftest: pupil alignment")
+    logger = logging.getLogger(__name__)
+    logger.info("selftest: pupil alignment")
 
     try:
         # home turntable
@@ -54,16 +58,17 @@ def selftest_pup_algn(rig, pars=None, PUP_ALGN_ANALYSIS_PARS=None, capture_image
                 rig.measure_fpuset, pars.PUP_ALGN_LINPOSITIONS
             )[0]
 
-            print("fpu_id=", fpu_id)
+            logger.debug("fpu_id=", fpu_id)
             stage_position = pars.PUP_ALGN_POSITIONS[fpu_id]
-            print("lin_position=", lin_position)
-            print("stage_position=", stage_position)
+            logger.debug("lin_position=", lin_position)
+            logger.debug("stage_position=", stage_position)
 
             # move rotary stage to PUP_ALN_POSN_N
             turntable_safe_goto(rig, rig.grid_state, stage_position)
             linear_stage_goto(rig, lin_position)
 
             ipath_selftest_pup_algn = capture_image(pup_aln_cam, "pupil-alignment")
+            logger.debug("saving pupil alignment image to %r" % abspath(ipath_selftest_pup_algn))
 
             try:
                 result = pupalnCoordinates(
@@ -71,8 +76,9 @@ def selftest_pup_algn(rig, pars=None, PUP_ALGN_ANALYSIS_PARS=None, capture_image
                 )
                 del result
             except ImageAnalysisError as err:
+                logger.exception("image analysis for FPU %s failed with message %r" % (fpu_id, err))
                 if rig.opts.ignore_analysis_failures:
-                    warn(
+                    logger.warning(
                         "FAILED: self-test pupil alignment image"
                         " analysis (ignored), message = %s" % repr(err)
                     )
@@ -92,7 +98,8 @@ def selftest_metrology_calibration(
     capture_image=None,
 ):
 
-    print("selftest: metrology calibration")
+    logger = logging.getLogger(__name__)
+    logger.info("selftest: metrology calibration")
 
     try:
         # home turntable
@@ -128,6 +135,7 @@ def selftest_metrology_calibration(
         with rig.lctrl.use_ambientlight():
             ipath_selftest_met_cal_target = capture_image(met_cal_cam, "met-cal-target")
 
+        logger.debug("saving met cal target image to %r" % abspath(ipath_selftest_met_cal_target))
         met_cal_cam.SetExposureTime(pars.METROLOGY_CAL_FIBRE_EXPOSURE_MS)
         linear_stage_goto(rig, lin_position)
         rig.lctrl.switch_all_off()
@@ -135,14 +143,16 @@ def selftest_metrology_calibration(
         with rig.lctrl.use_backlight(pars.METROLOGY_CAL_BACKLIGHT_VOLTAGE):
             ipath_selftest_met_cal_fibre = capture_image(met_cal_cam, "met-cal-fibre")
 
+        logger.debug("saving met cal fibre image to %r" % abspath(ipath_selftest_met_cal_fibre))
         try:
             target_coordinates = metcalTargetCoordinates(
                 ipath_selftest_met_cal_target, pars=MET_CAL_TARGET_ANALYSIS_PARS
             )
             del target_coordinates
         except ImageAnalysisError as err:
+            logger.exception("image analysis for FPU %s failed with message %r" % (fpu_id, err))
             if rig.opts.ignore_analysis_failures:
-                warn(
+                logger.warning(
                     "FAILED: self-test metrology calibration image"
                     " analysis (ignored), message = %s" % repr(err)
                 )
@@ -162,7 +172,8 @@ def selftest_metrology_height(
     rig, MET_HEIGHT_ANALYSIS_PARS=None, pars=None, capture_image=None
 ):
 
-    print("selftest: metrology height")
+    logger = logging.getLogger(__name__)
+    logger.info("selftest: metrology height")
 
     try:
         safe_home_turntable(rig, rig.grid_state)
@@ -188,6 +199,7 @@ def selftest_metrology_height(
                 met_height_cam, "metrology-height"
             )
 
+        logger.debug("saving met height image to %r" % abspath(ipath_selftest_met_height))
         try:
             metht_small_target_height_mm, metht_large_target_height_mm = methtHeight(
                 ipath_selftest_met_height, pars=MET_HEIGHT_ANALYSIS_PARS
@@ -196,8 +208,9 @@ def selftest_metrology_height(
             del metht_large_target_height_mm
 
         except ImageAnalysisError as err:
+            logger.exception("image analysis for FPU %s failed with message %r" % (fpu_id, err))
             if rig.opts.ignore_analysis_failures:
-                warn(
+                logger.warning(
                     "FAILED: self-test metrology height image"
                     " analysis (ignored), message = %r" % repr(err)
                 )
@@ -212,7 +225,8 @@ def selftest_positional_repeatability(
     rig, pars=None, POS_REP_ANALYSIS_PARS=None, capture_image=None
 ):
 
-    print("selftest: positional repeatability")
+    logger = logging.getLogger(__name__)
+    logger.info("selftest: positional repeatability")
 
     try:
         safe_home_turntable(rig, rig.grid_state)
@@ -238,14 +252,16 @@ def selftest_positional_repeatability(
                 pos_rep_cam, "positional-repeatability"
             )
 
+        logger.debug("saving pos rep image to %r" % abspath(selftest_ipath_pos_rep))
         try:
             coords = posrepCoordinates(
                 selftest_ipath_pos_rep, pars=POS_REP_ANALYSIS_PARS
             )
             del coords
         except ImageAnalysisError as err:
+            logger.exception("image analysis for FPU %s failed with message %r" % (fpu_id, err))
             if rig.opts.ignore_analysis_failures:
-                warn(
+                logger.warning(
                     "FAILED: self-test positional repeatability image"
                     " analysis (ignored), message = %r" % repr(err)
                 )
@@ -265,7 +281,8 @@ def selftest_nonfibre(
     PUP_ALGN_MEASUREMENT_PARS=None,
 ):
 
-    print("selftest: tests without fibre involved")
+    logger = logging.getLogger(__name__)
+    logger.info("selftest: tests without fibre involved")
 
     tstamp = timestamp()
 
@@ -284,7 +301,7 @@ def selftest_nonfibre(
 
     # except Exception as e:
     except SystemError as e:
-        print("metrology height self-test failed", repr(e))
+        logger.critical("metrology height self-test failed", repr(e))
         sys.exit(1)
 
     try:
@@ -295,9 +312,9 @@ def selftest_nonfibre(
             pars=POS_REP_MEASUREMENT_PARS,
         )
     except SystemError as e:
-        print("positional repeatability self-test failed", repr(e))
+        logger.critical("positional repeatability self-test failed", repr(e))
         sys.exit(1)
-    print(">>>> selftest: tests without fibre succeeded")
+    logger.info(">>>> selftest: tests without fibre succeeded")
 
 
 def selftest_fibre(
@@ -309,7 +326,8 @@ def selftest_fibre(
     PUP_ALGN_MEASUREMENT_PARS=None,
 ):
 
-    print("selftest: tests requiring fibre")
+    logger = logging.getLogger(__name__)
+    logger.info("selftest: tests requiring fibre")
     tstamp = timestamp()
 
     def capture_image(cam, subtest):
@@ -326,7 +344,7 @@ def selftest_fibre(
         )
 
     except SystemError as e:
-        print("pupil alignment self-test failed:", repr(e))
+        logger.critical("pupil alignment self-test failed:", repr(e))
         sys.exit(1)
 
     try:
@@ -338,7 +356,7 @@ def selftest_fibre(
             pars=MET_CAL_MEASUREMENT_PARS,
         )
     except SystemError as e:
-        print("metrology calibration self-test failed", repr(e))
+        logger.critical("metrology calibration self-test failed", repr(e))
         sys.exit(1)
 
-    print(">>>> selftest: tests requiring fibre succeeded")
+    logger.info(">>>> selftest: tests requiring fibre succeeded")

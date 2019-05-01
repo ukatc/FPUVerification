@@ -1,5 +1,8 @@
 from __future__ import absolute_import, division, print_function
 
+import logging
+import warnings
+from vfr.auditlog import get_fpuLogger
 from fpu_constants import StepsPerDegreeBeta
 from fpu_commands import gen_wf
 from FpuGridDriver import (
@@ -54,12 +57,13 @@ class LimitDetectionFailure(Exception):
 
 
 def rewind_fpus(rig, abs_alpha, abs_beta):
+    logger = logging.getLogger(__name__)
     # depending on options, we reset & rewind the FPUs
     if rig.opts.always_reset_fpus:
-        print("resetting FPUs.... ", end=" ")
+        logger.info("resetting FPUs.... ")
         flush()
         rig.gd.resetFPUs(rig.grid_state, fpuset=rig.measure_fpuset)
-        print("OK")
+        logger.info("resetting FPUs.... OK")
 
     rig.gd.pingFPUs(rig.grid_state, fpuset=rig.measure_fpuset)
 
@@ -78,13 +82,14 @@ def rewind_fpus(rig, abs_alpha, abs_beta):
 def test_datum(rig, dbe, dasel=DASEL_BOTH):
 
     check_for_quit()
+    logger = logging.getLogger(__name__)
+
     failed_fpus = []
 
     if rig.opts.always_reset_fpus:
-        print("resetting FPUs.... ", end=" ")
-        flush()
+        logger.info("resetting FPUs.... ")
         rig.gd.resetFPUs(rig.grid_state, fpuset=rig.measure_fpuset)
-        print("OK")
+        logger.info("resetting FPUs.... OK")
 
     rig.gd.pingFPUs(rig.grid_state, fpuset=rig.measure_fpuset)
 
@@ -92,7 +97,7 @@ def test_datum(rig, dbe, dasel=DASEL_BOTH):
     # this command finished, we pass the rig.grid_state variable.
 
     modes = {fpu_id: SEARCH_CLOCKWISE for fpu_id in rig.measure_fpuset}
-    print("issuing findDatum (%s):" % dasel)
+    logger.info("issuing findDatum (%s):" % dasel)
     try:
         rig.gd.findDatum(
             rig.grid_state,
@@ -113,7 +118,7 @@ def test_datum(rig, dbe, dasel=DASEL_BOTH):
         valid = False
         rigstate = str(e)
 
-    print("findDatum finished, success=%s, rigstate=%s" % (success, rigstate))
+    logger.info("findDatum finished, success=%s, rigstate=%s" % (success, rigstate))
 
     if valid:
         save_datum_result(rig, dbe, dasel, rigstate)
@@ -122,9 +127,13 @@ def test_datum(rig, dbe, dasel=DASEL_BOTH):
         if fpu_id not in rig.measure_fpuset:
             continue
         if not success:
-            failed_fpus.append((fpu_id, rig.fpu_config[fpu_id]["serialnumber"]))
+            fpu_logger = get_fpuLogger(fpu_id, rig.fpu_config, __name__)
+            serial_number = rig.fpu_config[fpu_id]["serialnumber"]
+            fpu_logger.critical("Datum test failed for FPU %r" % serial_number)
+            failed_fpus.append((fpu_id, serial_number))
 
     if failed_fpus:
+        logger.critical("Datum test failed for FPUs %r" % failed_fpus)
         raise DatumFailure("Datum test failed for FPUs %r" % failed_fpus)
     check_for_quit()
 
@@ -132,6 +141,9 @@ def test_datum(rig, dbe, dasel=DASEL_BOTH):
 def test_limit(rig, dbe, which_limit, pars=None):
 
     check_for_quit()
+
+    logger = logging.getLogger(__name__)
+
     failed_fpus = []
 
     abs_alpha_def = -180.0
@@ -177,6 +189,8 @@ def test_limit(rig, dbe, which_limit, pars=None):
         rig.measure_fpuset, pars.COLDECT_POSITIONS
     ):
         sn = rig.fpu_config[fpu_id]["serialnumber"]
+        fpu_logger = get_fpuLogger(fpu_id, rig.fpu_config, __name__)
+        fpu_logger.info("testing FPU %s for correct handling of limit %s" % (sn, which_limit))
 
         check_for_quit()
         if (
@@ -187,7 +201,7 @@ def test_limit(rig, dbe, which_limit, pars=None):
             and (not rig.opts.repeat_limit_tests)
         ):
 
-            print(
+            fpu_logger.info(
                 "FPU %s : limit test %r already passed, skipping test"
                 % (sn, which_limit)
             )
@@ -196,17 +210,18 @@ def test_limit(rig, dbe, which_limit, pars=None):
         try:
             if which_limit == "beta_collision":
                 # home turntable
-                print("pre-finding datum....")
+                fpu_logger.info("pre-finding datum....")
                 rig.gd.findDatum(rig.grid_state)
-                print("OK")
+                fpu_logger.info("pre-finding datum.... OK")
                 safe_home_turntable(rig, rig.grid_state, opts=rig.opts)
                 # inform mocked hardware about place of collision it has to simulate
                 go_collision_test_pos(fpu_id, rig.opts)
 
-            print(
-                "limit test %s: moving fpu %i to position (%6.2f, %6.2f)"
+            fpu_logger.info(
+                "limit test %s: provoking limit breach: moving fpu %i to position (%6.2f, %6.2f)"
                 % (which_limit, fpu_id, abs_alpha, abs_beta)
             )
+            fpu_logger.info("NOTE: FPU collision or limit breach error occuring next is intentional and part of test")
 
             if which_limit == "beta_collision":
                 # move rotary stage to POS_REP_POSN_N
@@ -248,15 +263,18 @@ def test_limit(rig, dbe, which_limit, pars=None):
             test_succeeded = True
             test_valid = True
             diagnostic = "correctly detected"
-            print("detected : ", str(e))
+            logger.debug("detected : %s" % str(e))
 
         except MovementError as e:
             test_succeeded = False
             test_valid = False
             diagnostic = str(e)
-            failed_fpus.append((fpu_id, rig.fpu_config[fpu_id]["serialnumber"]))
+            serial_number = rig.fpu_config[fpu_id]["serialnumber"]
+            fpu_logger.critical("FPU %s failed for limit test %r, diagnostic = %s" %
+                                (serial_number, which_limit, diagnostic))
+            failed_fpus.append((fpu_id, serial_number))
 
-        print(
+        fpu_logger.info(
             "FPU %i test result: valid=%s, succeeded=%r, diagnostic=%s"
             % (fpu_id, test_valid, test_succeeded, diagnostic)
         )
@@ -266,7 +284,7 @@ def test_limit(rig, dbe, which_limit, pars=None):
             limit_val = (
                 rig.gd.trackedAngles(rig.grid_state, retrieve=True)[fpu_id][idx]
             ).as_scalar()
-            print("%s limit hit at position %f" % (which_limit, limit_val))
+            fpu_logger.info("%s limit hit at position %7.3f" % (which_limit, limit_val))
         else:
             limit_val = NaN
 
@@ -283,16 +301,15 @@ def test_limit(rig, dbe, which_limit, pars=None):
             save_angular_limit(dbe, which_limit, record)
 
         if test_valid and test_succeeded and (which_limit != "beta_collision"):
-            if rig.opts.verbosity > 0:
-                print(
-                    "FPU %i = %s: setting limit %s to %7.2f"
-                    % (
-                        fpu_id,
-                        rig.fpu_config[fpu_id]["serialnumber"],
-                        which_limit,
-                        limit_val,
-                    )
+            fpu_logger.audit(
+                "FPU %i = %s: setting limit %s to %7.2f"
+                % (
+                    fpu_id,
+                    rig.fpu_config[fpu_id]["serialnumber"],
+                    which_limit,
+                    limit_val,
                 )
+            )
 
             set_protection_limit(dbe, rig.grid_state, which_limit, record)
 
@@ -303,9 +320,9 @@ def test_limit(rig, dbe, which_limit, pars=None):
                 n_steps = 10 * sign(int(dw))
                 n_moves = 10
                 for k in range(n_moves):
-                    print("alpha limit recovery: moving fpu %i back by %i steps [%i]"
+                    fpu_logger.trace("alpha limit recovery: moving fpu %i back by %i steps [%i]"
                           % (fpu_id, n_steps, k))
-                    rig.gd.resetFPUs(rig.grid_state, [fpu_id])
+                    rig.gd.resetFPUs(rig.grid_state, [fpu_id], verbose=False)
                     wf = gen_wf(n_steps * dirac(fpu_id, N), 0, units='steps')
                     rig.gd.configMotion(
                         wf,
@@ -316,7 +333,7 @@ def test_limit(rig, dbe, which_limit, pars=None):
                     )
                     rig.gd.executeMotion(rig.grid_state, fpuset=[fpu_id])
 
-                print("moving fpu %i back by %i degree" % (fpu_id, dw))
+                fpu_logger.debug("moving fpu %i back by %i degree" % (fpu_id, dw))
                 rig.gd.resetFPUs(rig.grid_state, [fpu_id])
                 wf = gen_wf(dw * dirac(fpu_id, N), 0)
                 rig.gd.configMotion(
@@ -328,7 +345,7 @@ def test_limit(rig, dbe, which_limit, pars=None):
                 )
                 rig.gd.executeMotion(rig.grid_state, fpuset=[fpu_id])
             else:
-                print("moving fpu %i back by %i steps" % (fpu_id, 10))
+                fpu_logger.debug("moving fpu %i back by %i steps" % (fpu_id, 10))
                 RECOVERY_STEPS_PER_ITERATION = 10
                 recovery_steps = pars.RECOVERY_ANGLE_DEG * StepsPerDegreeBeta
                 recovery_iterations = int(
@@ -342,7 +359,7 @@ def test_limit(rig, dbe, which_limit, pars=None):
                     rig.gd.pingFPUs(rig.grid_state, [fpu_id])
                     angle = rig.gd.trackedAngles(rig.grid_state, retrieve=True)[fpu_id]
                     if (k % 10) == 0:
-                        print("recovering FPU, current angle = %s" % repr(angle))
+                        fpu_logger.debug("recovering FPU, current angle = %s" % repr(angle))
 
                 rig.gd.enableBetaCollisionProtection(rig.grid_state)
                 wf = gen_wf(0, dw * dirac(fpu_id, N))
@@ -356,16 +373,18 @@ def test_limit(rig, dbe, which_limit, pars=None):
                 rig.gd.executeMotion(rig.grid_state, fpuset=[fpu_id])
 
         # bring fpu back to default position
-        goto_position(
-            rig.gd,
-            abs_alpha_def,
-            abs_beta_def,
-            rig.grid_state,
-            fpuset=[fpu_id],
-            allow_uninitialized=True,
-            soft_protection=False,
-        )
-        print("searching datum for FPU %i, to resolve collision" % fpu_id)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            goto_position(
+                rig.gd,
+                abs_alpha_def,
+                abs_beta_def,
+                rig.grid_state,
+                fpuset=[fpu_id],
+                allow_uninitialized=True,
+                soft_protection=False,
+            )
+        fpu_logger.debug("searching datum for FPU %i, to resolve collision" % fpu_id)
         rig.gd.findDatum(rig.grid_state, fpuset=[fpu_id])
         check_for_quit()
 
@@ -374,6 +393,7 @@ def test_limit(rig, dbe, which_limit, pars=None):
         safe_home_turntable(rig, rig.grid_state)
 
     if failed_fpus:
+        logger.critical("limit test %r failed for FPUs %r" % (which_limit, failed_fpus))
         if which_limit == "beta_collision":
             raise CollisionDetectionFailure(
                 "test of beta collision detection failed for FPUs %r" % failed_fpus

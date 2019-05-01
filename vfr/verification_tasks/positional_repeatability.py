@@ -2,6 +2,9 @@ from __future__ import absolute_import, division, print_function
 
 import warnings
 from collections import namedtuple
+import logging
+from os.path import abspath
+from vfr.auditlog import get_fpuLogger
 
 from Gearbox.gear_correction import GearboxFitError, fit_gearbox_correction
 from GigE.GigECamera import BASLER_DEVICE_CLASS, DEVICE_CLASS, IP_ADDRESS
@@ -161,22 +164,23 @@ def get_step_counts(rig, fpu_id):
 
 
 def capture_fpu_position(rig, fpu_id, midx, target_pos, capture_image):
-    if rig.opts.verbosity > 0:
-        sn = rig.fpu_config[fpu_id]["serialnumber"]
-        print(
-            "FPU %s measurement [i%2i, j%2i, k%2i]: going to position (%7.2f, %7.2f)"
-            % (
-                sn,
-                midx.i_iteration,
-                midx.j_direction,
-                midx.k_increment,
-                target_pos.alpha,
-                target_pos.beta,
-            )
+    fpu_log = get_fpuLogger(fpu_id, rig.fpu_config, __name__)
+
+    sn = rig.fpu_config[fpu_id]["serialnumber"]
+    fpu_log.info(
+        "FPU %s measurement [i%2i, j%2i, k%2i]: going to position (%7.2f, %7.2f)"
+        % (
+            sn,
+            midx.i_iteration,
+            midx.j_direction,
+            midx.k_increment,
+            target_pos.alpha,
+            target_pos.beta,
         )
+    )
 
     goto_position(
-        rig.gd, target_pos.alpha, target_pos.beta, rig.grid_state, fpuset=[fpu_id]
+        rig.gd, target_pos.alpha, target_pos.beta, rig.grid_state, fpuset=[fpu_id], loglevel=logging.DEBUG
     )
 
     # We use the real and uncorrected position to index the images.
@@ -188,6 +192,7 @@ def capture_fpu_position(rig, fpu_id, midx, target_pos, capture_image):
     real_steps = get_step_counts(rig, fpu_id)
 
     ipath = capture_image(midx, real_position)
+    fpu_log.audit("saving image for position %r to %r" % (real_position, abspath(ipath)))
     key = (
         real_position.alpha,
         real_position.beta,
@@ -252,6 +257,8 @@ def measure_positional_repeatability(rig, dbe, pars=None):
             rig.measure_fpuset, pars.POS_REP_POSITIONS
         ):
 
+            fpu_log = get_fpuLogger(fpu_id, rig.fpu_config, __name__)
+
             sn = rig.fpu_config[fpu_id]["serialnumber"]
             skip_message = check_skip_reason(
                 dbe,
@@ -262,13 +269,13 @@ def measure_positional_repeatability(rig, dbe, pars=None):
             )
 
             if skip_message:
-                print(skip_message)
+                fpu_log.info(skip_message)
                 continue
 
             range_limits = get_range_limits(dbe, rig, fpu_id)
 
             if range_limits is None:
-                print("FPU %s : limit test value missing, skipping test" % sn)
+                fpu_log.info("FPU %s : limit test value missing, skipping test" % sn)
                 continue
 
             def capture_image(measurement_index, real_pos):
@@ -292,17 +299,19 @@ def measure_positional_repeatability(rig, dbe, pars=None):
             turntable_safe_goto(rig, rig.grid_state, stage_position)
 
             record = get_images_for_fpu(rig, fpu_id, range_limits, pars, capture_image)
+            fpu_log.debug("saving result record = %r" % (record,))
 
             save_positional_repeatability_images(dbe, fpu_id, record)
 
 
 def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation_pars):
 
+    logger = logging.getLogger(__name__)
     for fpu_id in dbe.eval_fpuset:
         measurement = get_positional_repeatability_images(dbe, fpu_id)
 
         if measurement is None:
-            print("FPU %s: no positional repeatability measurement data found" % fpu_id)
+            logger.info("FPU %s: no positional repeatability measurement data found" % fpu_id)
             continue
 
         images_alpha = measurement["images_alpha"]
@@ -417,6 +426,7 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
             min_quality_beta = NaN
             arg_max_alpha_error = NaN
             arg_max_beta_error = NaN
+            logger.exception("image analysis for FPU %s failed with message %s" % (fpu_id, errmsg))
 
         record = PositionalRepeatabilityResults(
             calibration_pars=pos_rep_analysis_pars.POS_REP_CALIBRATION_PARS,
@@ -438,4 +448,5 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
             algorithm_version=POSITIONAL_REPEATABILITY_ALGORITHM_VERSION,
         )
 
+        logger.debug("FPU %r: saving result record = %r" % (fpu_id, record))
         save_positional_repeatability_result(dbe, fpu_id, record)

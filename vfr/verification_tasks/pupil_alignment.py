@@ -9,6 +9,9 @@ from ImageAnalysisFuncs.analyze_pupil_alignment import (
     pupalnCoordinates,
 )
 from numpy import NaN
+import logging
+from os.path import abspath
+from vfr.auditlog import get_fpuLogger
 from vfr.conf import PUP_ALGN_CAMERA_IP_ADDRESS
 from vfr.db.base import TestResult
 from vfr.db.colldect_limits import get_range_limits
@@ -79,12 +82,14 @@ def measure_pupil_alignment(rig, dbe, pars=None):
             rig.measure_fpuset, pars.PUP_ALGN_POSITIONS
         ):
 
+            fpu_log = get_fpuLogger(fpu_id, rig.fpu_config, __name__)
+
+            sn = rig.fpu_config[fpu_id]["serialnumber"]
             if get_pupil_alignment_passed_p(dbe, fpu_id) and (
                 not rig.opts.repeat_passed_tests
             ):
 
-                sn = rig.fpu_config[fpu_id]["serialnumber"]
-                print(
+                fpu_log.info(
                     "FPU %s : pupil alignment test already passed,"
                     " skipping test for this FPU" % sn
                 )
@@ -92,7 +97,7 @@ def measure_pupil_alignment(rig, dbe, pars=None):
 
             range_limits = get_range_limits(dbe, rig, fpu_id)
             if range_limits is None:
-                print("FPU %s : limit test value missing, skipping test" % sn)
+                fpu_log.info("FPU %s : limit test value missing, skipping test" % sn)
                 continue
 
             if (
@@ -101,17 +106,17 @@ def measure_pupil_alignment(rig, dbe, pars=None):
                 or (range_limits.alpha_max < +100.0)
                 or (range_limits.beta_max < +100.0)
             ):
-                print(
+                fpu_log.info(
                     "FPU %s : range limits insufficient for pupil alignment test,"
                     " skipping test" % sn
                 )
                 continue
 
+            fpu_log.info("FPU %s: measuring pupil alignment" % sn)
             # move rotary stage to PUP_ALGN_POSN_N
             turntable_safe_goto(rig, rig.grid_state, stage_position)
             linear_stage_goto(rig, pars.PUP_ALGN_LINPOSITIONS[fpu_id])
 
-            sn = rig.fpu_config[fpu_id]["serialnumber"]
 
             def capture_image(count, alpha, beta):
 
@@ -131,23 +136,23 @@ def measure_pupil_alignment(rig, dbe, pars=None):
             images = {}
             for count, (coords, do_capture) in enumerate(generate_positions()):
                 abs_alpha, abs_beta = coords
-                if rig.opts.verbosity > 3:
-                    print(
-                        "FPU %s: go to position (%7.2f, %7.2f)"
-                        % (sn, abs_alpha, abs_beta)
-                    )
+                fpu_log.debug(
+                    "FPU %s: go to position (%7.2f, %7.2f)"
+                    % (sn, abs_alpha, abs_beta)
+                )
 
                 goto_position(
                     rig.gd, abs_alpha, abs_beta, rig.grid_state, fpuset=[fpu_id]
                 )
 
                 if do_capture:
-                    if rig.opts.verbosity > 0:
-                        print(
-                            "FPU %s: saving image for (%7.2f, %7.2f)"
-                            % (sn, abs_alpha, abs_beta)
-                        )
+                    fpu_log.info(
+                        "FPU %s: saving image for (%7.2f, %7.2f)"
+                        % (sn, abs_alpha, abs_beta)
+                    )
                     ipath = capture_image(count, abs_alpha, abs_beta)
+                    fpu_log.audit("saving pupil image to %r" % abspath(ipath))
+
                     images[(abs_alpha, abs_beta)] = ipath
 
             find_datum(rig.gd, rig.grid_state, rig.opts)
@@ -155,6 +160,8 @@ def measure_pupil_alignment(rig, dbe, pars=None):
             record = PupilAlignmentImages(
                 images=images, calibration_mapfile=pars.PUP_ALGN_CALIBRATION_MAPFILE
             )
+
+            fpu_log.debug("FPU %r: saving result record = %r" % (sn, record))
             save_pupil_alignment_images(dbe, fpu_id, record)
 
     home_linear_stage(rig)  # bring linear stage to home pos
@@ -164,11 +171,13 @@ def eval_pupil_alignment(
     dbe, PUP_ALGN_ANALYSIS_PARS=None, PUP_ALGN_EVALUATION_PARS=None
 ):
 
+    logger = logging.getLogger(__name__)
+
     for fpu_id in dbe.eval_fpuset:
         measurement = get_pupil_alignment_images(dbe, fpu_id)
 
         if measurement is None:
-            print("FPU %s: no pupil alignment measurement data found" % fpu_id)
+            logger.info("FPU %s: no pupil alignment measurement data found" % fpu_id)
             continue
 
         images = measurement["images"]
@@ -212,6 +221,7 @@ def eval_pupil_alignment(
             pupalnTotalErr = NaN
             pupil_alignment_has_passed = TestResult.NA
             min_quality = NaN
+            logger.exception("image analysis for FPU %s failed with message %s" % (fpu_id, errmsg))
 
         pupil_alignment_measures = {
             "chassis_error": pupalnChassisErr,
@@ -230,4 +240,5 @@ def eval_pupil_alignment(
             error_message=errmsg,
             algorithm_version=PUPIL_ALIGNMENT_ALGORITHM_VERSION,
         )
+        logger.debug("FPU %r: saving result record = %r" % (fpu_id, record))
         save_pupil_alignment_result(dbe, fpu_id, record)

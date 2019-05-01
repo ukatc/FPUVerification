@@ -1,6 +1,9 @@
 from __future__ import absolute_import, division, print_function
 
 import warnings
+import logging
+from os.path import abspath
+from vfr.auditlog import get_fpuLogger
 
 from functools import partial
 
@@ -87,8 +90,9 @@ def move_then_datum(rig, fpu_id):
     then datumed, so that impact of movements on
     the FPUs mechanical precision is measured.
     """
-    if rig.opts.verbosity > 0:
-        print("moving FPU %i to (30,30) and back" % fpu_id)
+    fpu_log = get_fpuLogger(fpu_id, rig.fpu_config, __name__)
+    fpu_log.audit("moving FPU %i to (30,30) and back" % fpu_id)
+
     wf = gen_wf(30 * dirac(fpu_id, rig.opts.N), 30)
     verbosity = max(rig.opts.verbosity - 3, 0)
     gd = rig.gd
@@ -105,16 +109,19 @@ def grab_datumed_images(rig, fpu_id, capture_func, iterations):
     """perform a number of datum operations, store
     an image after each, and return the path names
     of the images, together with the residual count."""
+    fpu_log = get_fpuLogger(fpu_id, rig.fpu_config, __name__)
 
     datumed_images = []
     datumed_residuals = []
     for count in range(iterations):
 
-        print("capturing datumed-%02i" % count)
+        fpu_log = get_fpuLogger(fpu_id, rig.fpu_config, __name__)
+        fpu_log.info("capturing datumed-%02i" % count)
 
         rig.gd.findDatum(rig.grid_state, fpuset=[fpu_id])
 
         ipath = capture_func("datumed", count)
+        fpu_log.audit("saving image %i to %r" % (count, abspath(ipath)))
         datumed_images.append(ipath)
 
         alpha_dev, beta_dev = get_counter_residuals(rig, fpu_id)
@@ -128,14 +135,17 @@ def grab_moved_images(rig, fpu_id, capture_func, iterations):
     collect images, and return resulting images and residual counts.
     """
 
+    fpu_log = get_fpuLogger(fpu_id, rig.fpu_config, __name__)
+
     rig.gd.findDatum(rig.grid_state)
     moved_images = []
     moved_residuals = []
     for count in range(iterations):
         move_then_datum(rig, fpu_id)
 
-        print("capturing moved+datumed-%02i" % count)
+        fpu_log.info("capturing moved+datumed-%02i" % count)
         ipath = capture_func("moved+datumed", count)
+        fpu_log.audit("saving image %i to %r" % (count, abspath(ipath)))
         moved_images.append(ipath)
 
         alpha_dev, beta_dev = get_counter_residuals(rig, fpu_id)
@@ -176,6 +186,7 @@ def measure_datum_repeatability(rig, dbe, pars=None):
     # go to defined start configuration
     safe_home_turntable(rig, rig.grid_state)
     rig.lctrl.switch_all_off()
+    logger = logging.getLogger(__name__)
 
     with rig.lctrl.use_ambientlight():
 
@@ -202,9 +213,10 @@ def measure_datum_repeatability(rig, dbe, pars=None):
             rig.measure_fpuset, pars.DATUM_REP_POSITIONS
         ):
 
+            fpu_log = get_fpuLogger(fpu_id, rig.fpu_config, __name__)
             skip_reason = check_skip(rig, dbe, fpu_id)
             if skip_reason:
-                print(skip_reason)
+                fpu_logger.info(skip_reason)
                 continue
 
             # move rotary stage to measurement position
@@ -219,10 +231,12 @@ def measure_datum_repeatability(rig, dbe, pars=None):
 
 def eval_datum_repeatability(dbe, dat_rep_analysis_pars):
 
+    logger = logging.getLogger(__name__)
+
     for fpu_id in dbe.eval_fpuset:
         measurement = get_datum_repeatability_images(dbe, fpu_id)
         if measurement is None:
-            print("FPU %s: no datum repeatability measurement data found" % fpu_id)
+            logger.info("FPU %s: no datum repeatability measurement data found" % fpu_id)
             continue
 
         images = measurement["images"]
@@ -279,6 +293,8 @@ def eval_datum_repeatability(dbe, dat_rep_analysis_pars):
             datumed_errors = None
             moved_errors = None
 
+            logger.exception("image analysis for FPU %s failed with message %s" % (fpu_id, errmsg))
+
             if dat_rep_analysis_pars.FIXME_FAKE_RESULT:
                 warnings.warn(
                     "Faking passed result for datum repeatability "
@@ -304,4 +320,5 @@ def eval_datum_repeatability(dbe, dat_rep_analysis_pars):
             result=datum_repeatability_has_passed,
         )
 
+        logger.debug("FPU %r: saving result record = %r" % (fpu_id, record))
         save_datum_repeatability_result(dbe, fpu_id, record)

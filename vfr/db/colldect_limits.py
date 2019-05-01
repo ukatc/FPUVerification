@@ -2,6 +2,8 @@ from __future__ import absolute_import, division, print_function
 
 from collections import namedtuple
 from numpy import isnan
+import logging
+from vfr.auditlog import get_fpuLogger
 
 from fpu_constants import (
     ALPHA_MAX_DEGREE,
@@ -23,11 +25,11 @@ LimitTestResult = namedtuple(
 
 def save_angular_limit(dbe, which_limit, record):
 
-    if dbe.opts.verbosity > 3:
-        print("saving limit value")
 
     serialnumber = record.serialnumber
     fpu_id = record.fpu_id
+    fpu_log = get_fpuLogger(fpu_id, dbe.fpu_config, __name__)
+    fpu_log.debug("FPU %s: saving limit value %r as %r" % (fpu_id, which_limit, record))
 
     def keyfunc(fpu_id):
         if which_limit == "beta_collision":
@@ -78,6 +80,7 @@ def set_protection_limit(dbe, grid_state, which_limit, record):
     either the update flag is True, or the current entry is the default value.
     """
     fpu_id = record.fpu_id
+    fpu_log = get_fpuLogger(fpu_id, dbe.fpu_config, __name__)
     measured_val = record.val
     serialnumber = record.serialnumber
 
@@ -112,7 +115,7 @@ def set_protection_limit(dbe, grid_state, which_limit, record):
                 val_max = measured_val - PROTECTION_TOLERANCE
 
         new_val = Interval(val_min, val_max)
-        print("limit %s: replacing %r by %r" % (which_limit, val, new_val))
+        fpu_log.debug("limit %s: replacing %r by %r" % (which_limit, val, new_val))
         ProtectionDB.putInterval(txn, serialnumber, subkey, new_val, offset)
 
 

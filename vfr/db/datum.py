@@ -1,5 +1,7 @@
 from __future__ import absolute_import, division, print_function
 
+import logging
+from vfr.auditlog import get_fpuLogger
 from FpuGridDriver import CAN_PROTOCOL_VERSION, DASEL_ALPHA, DASEL_BETA, DASEL_BOTH
 from vfr.tests_common import timestamp
 from vfr.db.base import TestResult, get_test_result, save_test_result
@@ -11,8 +13,8 @@ def save_datum_result(rig, dbe, dasel, rigstate):
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
-        serialnumber = dbe.fpu_config[fpu_id]["serialnumber"]
-        keybase = (serialnumber, RECORD_TYPE, str(dasel))
+        serial_number = dbe.fpu_config[fpu_id]["serialnumber"]
+        keybase = (serial_number, RECORD_TYPE, str(dasel))
         return keybase
 
     def valfunc(fpu_id):
@@ -24,7 +26,9 @@ def save_datum_result(rig, dbe, dasel, rigstate):
             a_ok = rig.grid_state.FPU[fpu_id].alpha_was_calibrated
             b_ok = rig.grid_state.FPU[fpu_id].beta_was_calibrated
 
-        print("%i : (alpha datumed=%s, beta datumed = %s)" % (fpu_id, a_ok, b_ok))
+        serial_number = dbe.fpu_config[fpu_id]["serialnumber"]
+        fpu_log = get_fpuLogger(fpu_id, dbe.fpu_config, __name__)
+        fpu_log.audit("FPU %s (%i) : (alpha datumed=%s, beta datumed = %s)" % (serial_number, fpu_id, a_ok, b_ok))
 
         if (
             ((dasel == DASEL_ALPHA) and a_ok)

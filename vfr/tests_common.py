@@ -7,7 +7,7 @@ import time
 from ast import literal_eval
 from math import floor
 from numpy import isfinite
-
+import logging
 from os import path
 from os.path import expanduser, expandvars
 import signal
@@ -28,7 +28,7 @@ from FpuGridDriver import (
 from numpy import array, zeros
 from vfr.conf import (
     DB_TIME_FORMAT,
-    IMAGE_ROOT_FOLDER,
+    VERIFICATION_ROOT_FOLDER,
     NR360_SERIALNUMBER,
     MTS50_SERIALNUMBER,
 )
@@ -39,7 +39,8 @@ got_quit_request = False # global flag to initiate orderly termination
 def handle_quit(signum, stack):
   global got_quit_request
   got_quit_request = True
-  print("SIGQUIT received, setting flag to exit")
+  logger = logging.getLogger(__name__)
+  logger.warning("SIGQUIT received, setting flag to exit")
 
 def set_quit_handler():
     signal.signal(signal.SIGQUIT, handle_quit)
@@ -79,16 +80,16 @@ def goto_position(
     allow_uninitialized=False,
     soft_protection=True,
     verbosity=0,
+    loglevel=logging.INFO
 ):
+    logger = logging.getLogger(__name__)
     check_for_quit()
     gd.pingFPUs(grid_state)
     current_angles = gd.trackedAngles(grid_state, retrieve=True)
     current_alpha = array([x.as_scalar() for x, y in current_angles])
     current_beta = array([y.as_scalar() for x, y in current_angles])
-    if verbosity > 8:
-        print("current positions:\n%r" % current_angles)
-    if verbosity > 0:
-        print("moving FPUs %s to (%6.2f,%6.2f)" % (fpuset, abs_alpha, abs_beta))
+    logger.debug("current positions:\n%r" % current_angles)
+    logger.log(loglevel, "moving FPUs %s to (%6.2f,%6.2f)" % (fpuset, abs_alpha, abs_beta))
 
     wf = gen_wf(abs_alpha - current_alpha, abs_beta - current_beta)
     wf2 = {k: v for k, v in wf.items() if k in fpuset}
@@ -109,26 +110,25 @@ def goto_position(
     if CAN_PROTOCOL_VERSION == 1:
         gd.pingFPUs(grid_state)
 
-    if verbosity > 8:
-        print("FPU states=", list_states(grid_state))
+    logger.trace("FPU states=", list_states(grid_state))
 
 
 def find_datum(gd, grid_state, opts=None, uninitialized=False):
 
     verbosity = opts.verbosity if opts else 0
+    logger = logging.getLogger(__name__)
     check_for_quit()
+    logger.info("moving FPUs to datum position")
     gd.pingFPUs(grid_state)
-    if verbosity > 9:
-        print("pre datum:")
-        gd.trackedAngles(grid_state)
-    if verbosity > 9:
-        print("states=", list_states(grid_state))
-    if verbosity > 8:
-        for fpu_id, fpu in enumerate(grid_state.FPU):
-            print(
-                "FPU %i (alpha_initalized, beta_initialized) = (%s, %s)"
-                % (fpu_id, fpu.alpha_was_zeroed, fpu.beta_was_zeroed)
-            )
+
+    logger.trace("pre datum: %r" % gd.trackedAngles(grid_state, display=False) )
+    logger.trace("states= %r" % list_states(grid_state))
+
+    for fpu_id, fpu in enumerate(grid_state.FPU):
+      logger.trace(
+        "FPU %i (alpha_initalized, beta_initialized) = (%s, %s)"
+        % (fpu_id, fpu.alpha_was_zeroed, fpu.beta_was_zeroed)
+      )
 
     unreferenced = []
     for fpu_id, fpu in enumerate(grid_state.FPU):
@@ -149,8 +149,7 @@ def find_datum(gd, grid_state, opts=None, uninitialized=False):
         check_for_quit()
 
         if uninitialized:
-            if verbosity > 0:
-                print("issuing initial findDatum (%i FPUs):" % len(unreferenced))
+            logger.audit("issuing initial findDatum (%i FPUs):" % len(unreferenced))
 
             modes = {fpu_id: SEARCH_CLOCKWISE for fpu_id in unreferenced}
 
@@ -164,48 +163,46 @@ def find_datum(gd, grid_state, opts=None, uninitialized=False):
 
         else:
             timeout = DATUM_TIMEOUT_ENABLE
-            if verbosity > 3:
-                print(
+            logger.debug(
                     "issuing findDatum (%i FPUs, timeout=%r):"
                     % (len(unreferenced), timeout)
                 )
             gd.findDatum(grid_state, fpuset=unreferenced, timeout=timeout)
 
-        if verbosity > 5:
-            print("findDatum finished, states=", list_states(grid_state))
+        logger.trace("findDatum finished, states=", list_states(grid_state))
     else:
-        if verbosity > 1:
-            print("find_datum(): all FPUs already at datum")
+      logger.debug("find_datum(): all FPUs already at datum")
 
     # We can use grid_state to display the starting position
-    if verbosity > 9:
-        print(
-            "datum finished, the FPU positions (in degrees) are:",
-            gd.trackedAngles(grid_state, retrieve=True),
-        )
-    if verbosity > 9:
-        print("FPU states = ", list_states(grid_state))
+    logger.trace(
+      "datum finished, the FPU positions (in degrees) are: %r" %
+      gd.trackedAngles(grid_state, display=False),
+    )
+    logger.trace("FPU states = %r" % list_states(grid_state))
 
     check_for_quit()
     return gd, grid_state
 
 
-def cd_to_image_root(image_root_folder):
-    image_root_path = expanduser(expandvars(image_root_folder))
+def cd_to_data_root(root_folder):
+    logger = logging.getLogger(__name__)
+    data_root_path = expanduser(expandvars(root_folder))
     try:
-        os.makedirs(image_root_path)
+        os.makedirs(data_root_path)
     except OSError, e:
         if e.errno == errno.EEXIST:
             pass
         else:
             raise
-    os.chdir(image_root_path)
+    logger.debug("changing working directory to %s" % data_root_path)
+    os.chdir(data_root_path)
 
 
 def store_image(camera, format_string, **kwargs):
+    logger = logging.getLogger(__name__)
 
     # requires current work directory set to image root folder
-    ipath = format_string.format(**kwargs)
+    ipath = os.path.join("images", format_string.format(**kwargs))
 
     try:
         os.makedirs(path.dirname(ipath))
@@ -246,15 +243,14 @@ def lit_eval_file(file_name):
 
 
 def get_config_from_mapfile(filename):
-    map_config = lit_eval_file(path.join("..", filename))
+    logger = logging.getLogger(__name__)
+    map_config = lit_eval_file(filename)
     # current_dir = os.getcwd()
-    # cd_to_image_root(path.join(IMAGE_ROOT_FOLDER, ".."))
     config_file_name = map_config["calibration_config_file"]
     algorithm = map_config["algorithm"]
 
-    rel_config_file_name = path.join("..", config_file_name)
-    print("loading cal config from %s/%s" % (IMAGE_ROOT_FOLDER, rel_config_file_name))
-    config = camera_calibration.Config.load(rel_config_file_name)
+    logger.audit("loading cal config from %s/%s" % (VERIFICATION_ROOT_FOLDER, config_file_name))
+    config = camera_calibration.Config.load(config_file_name)
     # os.chdir(current_dir)
     config_dict = config.to_dict()
 
@@ -263,72 +259,55 @@ def get_config_from_mapfile(filename):
 
 def safe_home_turntable(rig, grid_state, opts=None):
     check_for_quit()
+    logger = logging.getLogger(__name__)
     with rig.lctrl.use_ambientlight():
         find_datum(rig.gd, grid_state, opts=opts)
 
+        st = time.time()
         with rig.hw.pyAPT.NR360S(serial_number=NR360_SERIALNUMBER) as con:
-            print("\tHoming stage...", end=" ")
+            logger.info("Homing stage...")
             con.home(clockwise=False)
-            print("homed")
-        print("OK")
+            logger.info("Homing stage... OK")
+
+        logger.debug("\tHoming completed in %.2fs" % (time.time() - st))
     check_for_quit()
 
-def turntable_safe_goto(rig, grid_state, stage_position, wait=True, monitor=False):
+def turntable_safe_goto(rig, grid_state, stage_position, wait=True):
     check_for_quit()
+    logger = logging.getLogger(__name__)
     with rig.lctrl.use_ambientlight():
         find_datum(rig.gd, grid_state, opts=rig.opts)
-        print("moving turntable to position %f" % stage_position)
+        logger.info("moving turntable to position %7.3f" % stage_position)
         assert isfinite(stage_position), "stage position is not valid number"
         with rig.hw.pyAPT.NR360S(serial_number=NR360_SERIALNUMBER) as con:
-            print("Found APT controller S/N", NR360_SERIALNUMBER)
+            logger.trace("Found APT controller S/N %r" % NR360_SERIALNUMBER)
             st = time.time()
             con.goto(stage_position, wait=wait)
-            #        if monitor:
-            #            stat = con.status()
-            #            while stat.moving:
-            #                out = "        pos %3.2f %s vel %3.2f %s/s" % (
-            #                    stat.position,
-            #                    con.unit,
-            #                    stat.velocity,
-            #                    con.unit,
-            #                )
-            #                sys.stdout.write(out)
-            #                time.sleep(0.01)
-            #                stat = con.status()
-            #                l = len(out)
-            #                sys.stdout.write("\b" * l)
-            #                sys.stdout.write(" " * l)
-            #                sys.stdout.write("\b" * l)
-            print("\tMove completed in %.2fs" % (time.time() - st))
-            print("\tNew position: %.2f %s" % (con.position(), con.unit))
-            if monitor:
-                print("\tStatus:", con.status())
-            return 0
-
-            print("\tNew position: %.2f %s" % (con.position(), con.unit))
-            print("\tStatus:", con.status())
+            logger.debug("\tMove completed in %.2fs" % (time.time() - st))
+            logger.trace("\tNew position: %.3f %s" % (con.position(), con.unit))
+            logger.debug("\tStatus: %r" % con.status())
     check_for_quit()
-    print("OK")
 
 
 def home_linear_stage(rig):
+    logger = logging.getLogger(__name__)
     check_for_quit()
     with rig.hw.pyAPT.MTS50(serial_number=MTS50_SERIALNUMBER) as con:
-        print("\tHoming linear stage...", end=" ")
+        logger.info("\tHoming linear stage...")
         con.home()
-        print("homed")
+        logger.info("\tHoming linear stage... OK")
     check_for_quit()
-    print("OK")
 
 
 def linear_stage_goto(rig, stage_position):
+    logger = logging.getLogger(__name__)
     check_for_quit()
-    print("moving linear stage to position %f" % stage_position)
+    logger.info("moving linear stage to position %7.3f ..." % stage_position)
     assert isfinite(stage_position), "stage position is not valid number"
     with rig.hw.pyAPT.MTS50(serial_number=MTS50_SERIALNUMBER) as con:
-        print("Found APT controller S/N", MTS50_SERIALNUMBER)
+        logger.trace("Found APT controller S/N", MTS50_SERIALNUMBER)
         con.goto(stage_position, wait=True)
-        print("\tNew position: %.2f %s" % (con.position(), con.unit))
-        print("\tStatus:", con.status())
+        logger.debug("\tNew position: %.3f %s" % (con.position(), con.unit))
+        logger.trace("\tStatus:", con.status())
     check_for_quit()
-    print("OK")
+    logger.info("moving linear stage to position %f ... OK" % stage_position)

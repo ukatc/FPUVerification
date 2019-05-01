@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
+import logging
 from vfr.task_config import (
     T,
     conditional_dependencies,
@@ -26,12 +27,12 @@ def all_true(testfun, sequence):
 
 
 def expand_tasks(tasks, goal, expansion, delete=False, verbosity=0):
+    logger = logging.getLogger(__name__)
     if goal in tasks:
-        if verbosity > 2:
-            print("[expanding %s to %r] ###" % (goal, expansion))
+        logger.debug("[expanding %s to %r] ###" % (goal, expansion))
 
         if delete:
-            print("deleting %s " % goal)
+            logger.trace("deleting %s " % goal)
             tasks.remove(goal)
 
         tasks.update(expansion)
@@ -40,6 +41,7 @@ def expand_tasks(tasks, goal, expansion, delete=False, verbosity=0):
 
 
 def resolve(tasks, rigparams, dbe):
+    logger = logging.getLogger(__name__)
     tasks = set(tasks)
 
     fpuset = set(rigparams.measure_fpuset) | set(dbe.eval_fpuset)
@@ -75,9 +77,12 @@ def resolve(tasks, rigparams, dbe):
 
         # check for equality with last iteration
         # -- if equal, expansion is finished
-        if verbosity > 4:
-            print("tasks = ", tasks)
+        if verbosity > 5:
+            logger.info("tasks = %r" % tasks)
+        else:
+            logger.debug("tasks = %r" % tasks)
         if tasks == last_tasks:
             break
 
+    logger.info("resolved tasks = %r" % tasks)
     return tasks
