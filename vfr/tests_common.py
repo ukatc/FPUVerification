@@ -11,6 +11,7 @@ import logging
 from os import path
 from os.path import expanduser, expandvars
 import signal
+import warnings
 import camera_calibration
 
 from fpu_commands import gen_wf, list_states
@@ -266,7 +267,17 @@ def safe_home_turntable(rig, grid_state, opts=None):
         st = time.time()
         with rig.hw.pyAPT.NR360S(serial_number=NR360_SERIALNUMBER) as con:
             logger.info("Homing stage...")
-            con.home(clockwise=False)
+            # we filter out an annoying warning related to undocumented
+            # controller behaviour
+            with warnings.catch_warnings():
+              warnings.filterwarnings(#
+                "ignore",
+                "extra message received with"
+                " ID 128, param1=108, param2= 0, data = None",
+                UserWarning,
+                "pyAPT.controller",
+              )
+              con.home(clockwise=False)
             logger.info("Homing stage... OK")
 
         logger.debug("\tHoming completed in %.2fs" % (time.time() - st))
@@ -282,10 +293,20 @@ def turntable_safe_goto(rig, grid_state, stage_position, wait=True):
         with rig.hw.pyAPT.NR360S(serial_number=NR360_SERIALNUMBER) as con:
             logger.trace("Found APT controller S/N %r" % NR360_SERIALNUMBER)
             st = time.time()
-            con.goto(stage_position, wait=wait)
+            # we filter out an annoying warning related to undocumented
+            # controller behaviour
+            with warnings.catch_warnings():
+              warnings.filterwarnings(
+                "ignore",
+                "extra message received with"
+                " ID 128, param1=108, param2= 0, data = None",
+                UserWarning,
+                "pyAPT.controller",
+              )
+              con.goto(stage_position, wait=wait)
             logger.debug("\tMove completed in %.2fs" % (time.time() - st))
-            logger.trace("\tNew position: %.3f %s" % (con.position(), con.unit))
-            logger.debug("\tStatus: %r" % con.status())
+            logger.debug("\tNew position: %.3f %s" % (con.position(), con.unit))
+            #logger.debug("\tStatus: %r" % con.status())
     check_for_quit()
 
 
