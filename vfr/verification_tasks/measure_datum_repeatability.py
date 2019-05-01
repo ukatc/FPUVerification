@@ -216,7 +216,7 @@ def measure_datum_repeatability(rig, dbe, pars=None):
             fpu_log = get_fpuLogger(fpu_id, rig.fpu_config, __name__)
             skip_reason = check_skip(rig, dbe, fpu_id)
             if skip_reason:
-                fpu_logger.info(skip_reason)
+                fpu_log.info(skip_reason)
                 continue
 
             # move rotary stage to measurement position
