@@ -9,6 +9,7 @@ from DistortionCorrection import correct
 from ImageAnalysisFuncs.base import ImageAnalysisError, rss
 from numpy import NaN, array, hstack, mean, std
 from numpy.linalg import norm
+import logging
 
 # exceptions which are raised if image analysis functions fail
 
@@ -46,6 +47,9 @@ def posrepCoordinates(
     # function.  (Also, 'PLATESCALE' means normally something
     # different, it normally thescribes the ratio between a ppixel
     # number and an angle, not a pixel number and a distance.)
+
+    logger = logging.getLogger(__name__)
+    logger.debug("analyzing image %s" % image_path)
 
     smallPerimeterLo = (
         (pars.POS_REP_SMALL_DIAMETER - pars.POS_REP_DIAMETER_TOLERANCE)
