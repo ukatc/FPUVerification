@@ -323,6 +323,28 @@ if __name__ == "__main__":
                 pars=COLLDECT_MEASUREMENT_PARS
             )
 
+        if measure_fpuset:
+            info("*" * 60)
+            info("functional tests passed, all OK!")
+            print(r"""
+
+     _
+   _| |                functional tests passed, all OK!
+ _| | |                functional tests passed, all OK!
+| | | |                functional tests passed, all OK!
+| | | | __             functional tests passed, all OK!
+| | | |/  \            functional tests passed, all OK!
+|       /\ \           functional tests passed, all OK!
+|      /  \/           functional tests passed, all OK!
+|      \  /\           functional tests passed, all OK!
+|       \/ /           functional tests passed, all OK!
+ \        /            functional tests passed, all OK!
+  |     /              functional tests passed, all OK!
+  |    |               functional tests passed, all OK!
+                       functional tests passed, all OK!
+
+""")
+
         if T.TASK_INIT_GD2 in tasks:
             # this re-initializes the driver because
             # the range limits might have changed,
