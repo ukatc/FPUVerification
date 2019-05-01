@@ -1,5 +1,7 @@
 from __future__ import absolute_import, division
 
+import logging
+
 from .controller import Controller
 
 
@@ -11,7 +13,7 @@ class NR360S(Controller):
   It comes with an imperial and a metric-dimension mount
   (NR360S and NR360S/M), the distinction however
   does not seem to affect any protocol aspects.
-  
+
   """
 
     def __init__(self, *args, **kwargs):
@@ -62,6 +64,7 @@ class NR360S(Controller):
     def request_home_params(
         self, clockwise=None, lswitch=None, velocity=5.0, offset=None, channel=1
     ):
+        logger = logging.getLogger(__name__)
         # retrieve homing parameters from
         # controller, using the method of the super class
         (
@@ -73,7 +76,7 @@ class NR360S(Controller):
         ) = Controller.request_home_params(self, channel=channel)
         # because these parameters do not work for the MTS50,
         # we try to adjust them
-        print("setting home params for NR360s, clockwise=%r .." % clockwise)
+        logger.debug("setting home params for NR360s, clockwise=%r .." % clockwise)
 
         if velocity != None:
             print("setting speed %f with scale = %f" % (velocity, self.velocity_scale))
@@ -85,10 +88,10 @@ class NR360S(Controller):
         lswitch = 1
 
         if clockwise:
-            print("homing clockwise")
+            logger.debug("homing clockwise")
             homing_velocity = abs(homing_velocity)
         else:
-            print("homing anti-clockwise")
+            logger.debug("homing anti-clockwise")
             homing_velocity = -abs(homing_velocity)
 
         # override lswitch setting if set

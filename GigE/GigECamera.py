@@ -25,7 +25,7 @@ Pylon software - PyPylon is just python bindings to the C++ pylon software, the 
 """
 from __future__ import division, print_function
 
-
+import logging
 import numpy as np
 
 __version__ = "0.3.2"
@@ -35,7 +35,7 @@ try:
     from pypylon import pylon
     from pypylon import genicam
 except ImportError:
-    print(
+    logging.warning(
         ">>>>>>>>>>> Warning: Import of Basler pylon software failed - probably not installed."
     )
     pylon = None
@@ -44,7 +44,7 @@ except ImportError:
 try:
     from scipy.misc import imsave
 except ImportError:
-    print(
+    logging.warning(
         ">>>>>>>>>>> Warning: Import of scipy.misc.imsave failed - probably dependency mismatch."
     )
 
@@ -78,9 +78,10 @@ class GigECamera(object):
         device_config : dictionary
             dictionary containing the device configuration, currently this is the IP address (IpAddress) and the pypylon class device (DeviceClass). The only useful value for DeviceClass is currently "BaslerGigE". If None is given, will use the camera finding tool and connect to the first one found.
         """
-        print("Starting Setup")
+        logger = logging.getLogger(__name__)
+        logger.debug("Starting Setup")
         if device_config is None:
-            print("No device config specified, using first camera found")
+            logger.debug("No device config specified, using first camera found")
             self.camera = pylon.InstantCamera(
                 pylon.TlFactory.GetInstance().CreateFirstDevice()
             )
@@ -92,12 +93,12 @@ class GigECamera(object):
             device = factory.CreateDevice(di)
             self.camera = pylon.InstantCamera(device)
 
-        print("Gained access to Camera")
+        logger.debug("Gained access to Camera")
 
         # FROM HERE USES SAMPLES/GRAB.PY
 
         # Print the model name of the camera.
-        print("Using device ", self.camera.GetDeviceInfo().GetModelName())
+        logger.debug("Using device %s" % self.camera.GetDeviceInfo().GetModelName())
 
         # Camera needs to be open to change the exposure time, normal camera.StartGrabbingMax will open a camera but this is an explicit call
         self.camera.Open()
@@ -111,6 +112,7 @@ class GigECamera(object):
             sets the raw exposure time in ms.
         """
 
+        logger = logging.getLogger(__name__)
         # convert exposure time from milliseconds to
         # microseconds where the value is an integral multiple of 35
         # microseconds
@@ -119,11 +121,11 @@ class GigECamera(object):
         exposure_time_us = EXPOSURE_STEP_US * int(
             round(US_PER_MS * exposure_time / float(EXPOSURE_STEP_US))
         )
-        print("setting exposure time to %f us" % exposure_time_us)
+        logger.debug("Setting exposure time to %f us" % exposure_time_us)
         if genicam.IsWritable(self.camera.ExposureTimeRaw):
             self.camera.ExposureTimeRaw.SetValue(exposure_time_us)
         else:
-            print(
+            logger.warning(
                 "Exposure Time is not settable, continuing with current exposure time."
             )
 
@@ -137,6 +139,7 @@ class GigECamera(object):
             Path to location where the image will be saved.
 
         """
+        logger = logging.getLogger(__name__)
         # The parameter MaxNumBuffer can be used to control the count of buffers
         # allocated for grabbing. The default value of this parameter is 10.
         self.camera.MaxNumBuffer = 1
@@ -162,18 +165,19 @@ class GigECamera(object):
                 # Access the image data.
                 img = grabResult.Array
                 imsave(filename, np.asarray(img))
-                print("Filesaved as : {}".format(filename))
+                logger.debug("File saved as : {}".format(filename))
             else:
-                print("Error: ", grabResult.ErrorCode, grabResult.ErrorDescription)
+                logger.error("Error: %r %s" % (grabResult.ErrorCode, grabResult.ErrorDescription))
         grabResult.Release()
 
     def close(self):
         """If open, close access to camera.
         """
+        logger = logging.getLogger(__name__)
         if self.camera.IsOpen():
             self.camera.Close()
         else:
-            print("Camera is already closed.")
+            logger.error("Camera is already closed.")
 
     def __del__(self):
         self.close()

@@ -1,5 +1,7 @@
 from __future__ import absolute_import
 
+import logging
+
 try:
     import pylibftdi
 
@@ -37,6 +39,7 @@ NR360S = nr360s.NR360S
 
 OutOfRangeError = controller.OutOfRangeError
 
+logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 def add_PID(pid):
     """
