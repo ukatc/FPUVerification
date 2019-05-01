@@ -4,7 +4,7 @@ from __future__ import absolute_import, division, print_function
 
 from argparse import Namespace
 from math import ceil
-from os import environ
+import os
 
 from numpy import Inf
 
@@ -37,10 +37,11 @@ NR360_SERIALNUMBER = 40873952
 MTS50_SERIALNUMBER = 83822910
 
 # if you work on another machine (for example testing image analysis
-# scripts), you should set the environment variable IMAGE_ROOT_FOLDER
-# to the path which contains the images. Shorthands like ~/, ~user, or
-# ${HOME} are expanded before use.
-IMAGE_ROOT_FOLDER = environ.get("IMAGE_ROOT_FOLDER", "/moonsdata/verification/images")
+# scripts), you should set the environment variable
+# VERIFICATION_ROOT_FOLDER to the path which contains the images and
+# calibration data. Shorthands like ~/, ~user, or ${HOME} are expanded
+# before use.
+VERIFICATION_ROOT_FOLDER = os.environ.get("VERIFICATION_ROOT_FOLDER", "/moonsdata/verification/")
 
 POS_REP_CAMERA_IP_ADDRESS = "169.254.187.121"
 

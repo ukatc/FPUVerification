@@ -2,6 +2,9 @@ from __future__ import absolute_import, division, print_function
 
 import random
 import warnings
+import logging
+from os.path import abspath
+from vfr.auditlog import get_fpuLogger
 
 from fpu_commands import gen_wf
 from Gearbox.gear_correction import GearboxFitError, apply_gearbox_correction
@@ -100,9 +103,11 @@ def measure_positional_verification(rig, dbe, pars=None):
             rig.measure_fpuset, pars.POS_REP_POSITIONS
         ):
 
+            fpu_log = get_fpuLogger(fpu_id, rig.fpu_config, __name__)
+
             sn = rig.fpu_config[fpu_id]["serialnumber"]
             if not get_datum_repeatability_passed_p(dbe, fpu_id):
-                print(
+                fpu_log.info(
                     "FPU %s: skipping positional verification measurement because"
                     " there is no passed datum verification test" % sn
                 )
@@ -110,12 +115,12 @@ def measure_positional_verification(rig, dbe, pars=None):
 
             if not get_pupil_alignment_passed_p(dbe, fpu_id):
                 if opts.skip_fibre:
-                    print(
+                    fpu_log.info(
                         "FPU %s: ignoring missing pupil alignment test,\n"
                         " because '--skip-fibre' option is set." % sn
                     )
                 else:
-                    print(
+                    fpu_log.info(
                         "FPU %s: skipping positional verification measurement,\n"
                         "because there is no passed pupil alignment test \n"
                         "(set option '--skip-fibre' to ignore missing test)" % sn
@@ -123,7 +128,7 @@ def measure_positional_verification(rig, dbe, pars=None):
                     continue
 
             if not get_positional_repeatability_passed_p(dbe, fpu_id):
-                print(
+                fpu_log.info(
                     "FPU %s: skipping positional verification measurement because"
                     " there is no passed positional repeatability test" % sn
                 )
@@ -133,7 +138,7 @@ def measure_positional_verification(rig, dbe, pars=None):
                 not opts.repeat_passed_tests
             ):
 
-                print(
+                fpu_log.info(
                     "FPU %s : positional verification test already passed,"
                     "and flag '--repeat-passed-tests' not set, skipping test" % sn
                 )
@@ -141,7 +146,7 @@ def measure_positional_verification(rig, dbe, pars=None):
 
             range_limits = get_range_limits(dbe, rig, fpu_id)
             if range_limits is None:
-                print("FPU %s : limit test value missing, skipping test" % sn)
+                fpu_log.info("FPU %s : limit test value missing, skipping test" % sn)
                 continue
 
             alpha_min = range_limits.alpha_min
@@ -150,16 +155,16 @@ def measure_positional_verification(rig, dbe, pars=None):
             beta_max = range_limits.beta_max
 
             if opts.verbosity > 0:
-                print(
+                fpu_log.audit(
                     "FPU %s: limits: alpha = %7.2f .. %7.2f"
                     % (sn, alpha_min, alpha_max)
                 )
-                print(
+                fpu_log.audit(
                     "FPU %s: limits: beta = %7.2f .. %7.2f" % (sn, beta_min, beta_max)
                 )
 
             if (alpha_min and alpha_max and beta_min and beta_max) is None:
-                print(
+                fpu_log.info(
                     "FPU %s : positional verification test skipped, range limits missing"
                     % sn
                 )
@@ -224,8 +229,7 @@ def measure_positional_verification(rig, dbe, pars=None):
 
                 verbosity = opts.verbosity
 
-                if verbosity > 0:
-                    print(
+                fpu_log.info(
                         "FPU %s: measurement #%i - moving to (%7.2f, %7.2f) degrees = (%i, %i) steps"
                         % (sn, k, alpha, beta, asteps_target, bsteps_target)
                     )
@@ -254,10 +258,10 @@ def measure_positional_verification(rig, dbe, pars=None):
                     beta_actualsteps == bsteps_target
                 ), "could not reach corrected step count"
 
-                if verbosity > 0:
-                    print("FPU %s: saving image # %i..." % (sn, k))
+                fpu_log.debug("FPU %s: saving image # %i..." % (sn, k))
 
                 ipath = capture_image(k, alpha, beta)
+                fpu_log.audit("saving image for position (%7.3f, %7.3f) to %r" % (alpha, beta, abspath(ipath)))
 
                 image_dict[(k, alpha, beta)] = ipath
 
@@ -271,16 +275,19 @@ def measure_positional_verification(rig, dbe, pars=None):
                 gearbox_record_count=gearbox_record_count,
                 calibration_mapfile=pars.POS_VER_CALIBRATION_MAPFILE,
             )
+
+            fpu_log.debug("FPU %r: saving result record = %r" % (sn, record))
             save_positional_verification_images(dbe, fpu_id, record)
 
 
 def eval_positional_verification(dbe, pos_ver_analysis_pars, pos_ver_evaluation_pars):
 
+    logger = logging.getLogger(__name__)
     for fpu_id in dbe.eval_fpuset:
         measurement = get_positional_verification_images(dbe, fpu_id)
 
         if measurement is None:
-            print("FPU %s: no positional verification measurement data found" % fpu_id)
+            logger.info("FPU %s: no positional verification measurement data found" % fpu_id)
             continue
 
         images = measurement["images"]
@@ -345,6 +352,7 @@ def eval_positional_verification(dbe, pos_ver_analysis_pars, pos_ver_evaluation_
             positional_verification_has_passed = TestResult.NA
             min_quality = NaN
             arg_max_error = NaN
+            logger.exception("image analysis for FPU %s failed with message %s" % (fpu_id, errmsg))
 
         record = PositionalVerificationResult(
             calibration_pars=pos_ver_analysis_pars.POS_REP_CALIBRATION_PARS,
@@ -358,4 +366,5 @@ def eval_positional_verification(dbe, pos_ver_analysis_pars, pos_ver_evaluation_
             error_message=errmsg,
             algorithm_version=POSITIONAL_REPEATABILITY_ALGORITHM_VERSION,
         )
+        logger.debug("FPU %r: saving result record = %r" % (fpu_id, record))
         save_positional_verification_result(dbe, fpu_id, record)

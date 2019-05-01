@@ -2,6 +2,7 @@ from __future__ import absolute_import, division, print_function
 
 import ast
 import inspect
+import logging
 import os.path
 import subprocess
 
@@ -32,6 +33,7 @@ class TestResult:
 
 
 def save_test_result(dbe, fpuset, keyfunc, valfunc, verbosity=None):
+    trace = logging.getLogger(__name__).trace
 
     if verbosity is None:
         verbosity = dbe.opts
@@ -54,17 +56,14 @@ def save_test_result(dbe, fpuset, keyfunc, valfunc, verbosity=None):
             val = valfunc(fpu_id)
 
             if verbosity > 8:
-                print("putting %r : %r" % (key1, count))
-                print("putting %r : %r" % (key2, val))
+                trace("putting %r : %r" % (key1, count))
+                trace("putting %r : %r" % (key2, val))
 
             txn.put(key1, str(count))
             txn.put(key2, val)
 
 
 def get_test_result(dbe, fpu_id, keyfunc, count=None, verbosity=None):
-
-    if verbosity is None:
-        verbosity = dbe.opts.verbosity
 
     with dbe.env.begin(write=False, db=dbe.vfdb) as txn:
 
@@ -101,8 +100,8 @@ def get_test_result(dbe, fpu_id, keyfunc, count=None, verbosity=None):
                 val = eval(val)
             val["record-count"] = count
 
-        if verbosity > 8:
-            print("got %r : %r" % (key2, val))
+        trace = logging.getLogger(__name__).trace
+        trace("got %r : %r" % (key2, val))
 
     return val
 
@@ -110,6 +109,8 @@ def get_test_result(dbe, fpu_id, keyfunc, count=None, verbosity=None):
 def save_named_record(
     record_type, dbe, fpu_id, record, include_fpu_id=False, verbosity_offset=0
 ):
+
+    trace = logging.getLogger(__name__).trace
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
@@ -126,10 +127,8 @@ def save_named_record(
         return repr(val)
 
     verbosity = max(dbe.opts.verbosity - verbosity_offset, 0)
-    if verbosity > 6:
-        print("saving %r = %r" % (record_type, record))
-    elif verbosity > 3:
-        print("saving " + str(record_type))
+    trace("saving %r = %r" % (record_type, record))
+    trace("saving " + str(record_type))
 
     save_test_result(dbe, [fpu_id], keyfunc, valfunc)
 
@@ -145,9 +144,11 @@ def get_named_record(record_type, dbe, fpu_id, count=None, verbosity_offset=0):
     rval = get_test_result(dbe, fpu_id, keyfunc, count=count)
 
     verbosity = max(dbe.opts.verbosity - verbosity_offset, 0)
+
+    logger = logging.getLogger(__name__)
     if verbosity > 6:
-        print("getting %r = %r" % (record_type, rval))
+        logger.debug("getting %r = %r" % (record_type, rval))
     elif verbosity > 3:
-        print("getting " + str(record_type))
+        logger.trace("getting " + str(record_type))
 
     return rval

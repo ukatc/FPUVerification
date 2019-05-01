@@ -6,7 +6,7 @@ import os
 #   average deviation: 0.364139029306mm
 #   max deviation:     0.832382619819mm
 # this data was generated with the script "search_for_best_pupil_cinfig.py", with
-# the input image in $IMAGE_ROOT_FOLDER/../calibration/images/pup-algn/distcor_004.bmp
+# the input image in $VERIFICATION_ROOT_FOLDER/calibration/images/pup-algn/distcor_004.bmp
 
 from_constructor = calib.Config(
     distorted_camera_matrix=np.array(
@@ -98,11 +98,10 @@ from_dict = calib.Config.from_dict(
 # passed as the camera calibration for each image to the image
 # analysis script.
 
-IMAGE_ROOT_FOLDER = os.environ.get("IMAGE_ROOT_FOLDER", "/moonsdata/verification/images")
+VERIFICATION_ROOT_FOLDER = os.environ.get("VERIFICATION_ROOT_FOLDER", "/moonsdata/verification")
 
 cal_file_name = os.path.join(
-    IMAGE_ROOT_FOLDER,
-    '..',
+    VERIFICATION_ROOT_FOLDER,
     "calibration",
     "cal_al_20190429_chessboard.npz"
 )
@@ -123,8 +122,7 @@ mapping = """# file: calibration/mapping/pup-aln-2019-04-10.cfg
 """
 
 map_file_name = os.path.join(
-    IMAGE_ROOT_FOLDER,
-    '..',
+    VERIFICATION_ROOT_FOLDER,
     "calibration",
     "mapping",
     "pup-aln-2019-04-10.cfg"

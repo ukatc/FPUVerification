@@ -25,32 +25,32 @@ from vfr.conf import (
 
 class lampController(LampControllerBase):
     def __init__(self):
-        print("initializing mocked-up lamp controller...")
+        print("HWS: initializing mocked-up lamp controller...")
         self.backlight_state = 0.0
         self.ambientlight_state = 0.0
         self.silhouettelight_state = 0.0
 
     def switch_fibre_backlight(self, state):
         previous_state = self.backlight_state
-        print("'switch state of backlight to %r and presse <enter>'" % state)
+        print("HWS: 'switch state of backlight to %r and press <enter>'" % state)
         self.backlight_state = state
         return previous_state
 
     def switch_fibre_backlight_voltage(self, voltage):
         previous_state = self.backlight_state
-        print("'switch voltage of backlight to %3.1f and presse <enter>'" % voltage)
+        print("HWS: 'switch voltage of backlight to %3.1f and press <enter>'" % voltage)
         self.backlight_state = voltage
         return previous_state
 
     def switch_ambientlight(self, state):
         previous_state = self.ambientlight_state
-        print("'switch state of ambient light to %r and presse <enter>'" % state)
+        print("HWS: 'switch state of ambient light to %r and press <enter>'" % state)
         self.ambientlight_state = state
         return previous_state
 
     def switch_silhouettelight(self, state, manual_lamp_control=False):
         previous_state = self.silhouettelight_state
-        print("'switch state of silhouette light to %r and presse <enter>'" % state)
+        print("HWS: 'switch state of silhouette light to %r and press <enter>'" % state)
         self.silhouettelight_state = state
         return previous_state
 
@@ -68,16 +68,16 @@ class StageController:
         return "OK"
 
     def home(self, clockwise=None):
-        print("homing %s stage..." % self.name)
+        print("HWS: homing %s stage..." % self.name)
         self._position = 0.0
         time.sleep(1.0)
-        print("stage %s is homed" % self.name)
+        print("HWS: stage %s is homed" % self.name)
 
     def goto(self, position, wait=None):
-        print("moving %s stage to %f..." % (self.name, position))
+        print("HWS: moving %s stage to %f..." % (self.name, position))
         self._position = position
         time.sleep(1.0)
-        print("stage %s is now at position %f" % (self.name, position))
+        print("HWS: stage %s is now at position %f" % (self.name, position))
 
 
 class _pyAPT:
