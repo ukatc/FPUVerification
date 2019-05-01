@@ -245,6 +245,8 @@ def get_images_for_fpu(rig, fpu_id, range_limits, pars, capture_image):
 def measure_positional_repeatability(rig, dbe, pars=None):
 
     tstamp = timestamp()
+    logger = logging.getLogger(__name__)
+    logger.info("capturing positional repeatability")
 
     initialize_rig(rig)
 
@@ -302,6 +304,7 @@ def measure_positional_repeatability(rig, dbe, pars=None):
             fpu_log.debug("saving result record = %r" % (record,))
 
             save_positional_repeatability_images(dbe, fpu_id, record)
+    logger.info("positional repeatability captured successfully")
 
 
 def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation_pars):

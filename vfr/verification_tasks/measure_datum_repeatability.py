@@ -187,6 +187,7 @@ def measure_datum_repeatability(rig, dbe, pars=None):
     safe_home_turntable(rig, rig.grid_state)
     rig.lctrl.switch_all_off()
     logger = logging.getLogger(__name__)
+    logger.info("capturing datum repeatability")
 
     with rig.lctrl.use_ambientlight():
 
@@ -227,6 +228,8 @@ def measure_datum_repeatability(rig, dbe, pars=None):
             )
             # store to database
             save_datum_repeatability_images(dbe, fpu_id, image_record)
+
+    logger.info("datum repeatability successfully captured")
 
 
 def eval_datum_repeatability(dbe, dat_rep_analysis_pars):

@@ -78,6 +78,8 @@ def measure_positional_verification(rig, dbe, pars=None):
 
     # home turntable
     tstamp = timestamp()
+    logger = logging.getLogger(__name__)
+    logger.info("capturing positional verification")
 
     opts = rig.opts
     gd = rig.gd
@@ -278,6 +280,8 @@ def measure_positional_verification(rig, dbe, pars=None):
 
             fpu_log.debug("FPU %r: saving result record = %r" % (sn, record))
             save_positional_verification_images(dbe, fpu_id, record)
+
+    logger.info("positional verification captured sucessfully")
 
 
 def eval_positional_verification(dbe, pos_ver_analysis_pars, pos_ver_evaluation_pars):

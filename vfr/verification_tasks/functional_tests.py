@@ -97,7 +97,7 @@ def test_datum(rig, dbe, dasel=DASEL_BOTH):
     # this command finished, we pass the rig.grid_state variable.
 
     modes = {fpu_id: SEARCH_CLOCKWISE for fpu_id in rig.measure_fpuset}
-    logger.info("issuing findDatum (%s):" % dasel)
+    logger.info("datum functional test: issuing findDatum (%s):" % dasel)
     try:
         rig.gd.findDatum(
             rig.grid_state,
@@ -136,6 +136,7 @@ def test_datum(rig, dbe, dasel=DASEL_BOTH):
         logger.critical("Datum test failed for FPUs %r" % failed_fpus)
         raise DatumFailure("Datum test failed for FPUs %r" % failed_fpus)
     check_for_quit()
+    logger.info("datum functional test with dasel=%s finished successfully" % dasel)
 
 
 def test_limit(rig, dbe, which_limit, pars=None):
@@ -143,6 +144,7 @@ def test_limit(rig, dbe, which_limit, pars=None):
     check_for_quit()
 
     logger = logging.getLogger(__name__)
+    logger.info("functional limit test for %s started" % which_limit)
 
     failed_fpus = []
 
@@ -221,12 +223,13 @@ def test_limit(rig, dbe, which_limit, pars=None):
                 "limit test %s: provoking limit breach: moving fpu %i to position (%6.2f, %6.2f)"
                 % (which_limit, fpu_id, abs_alpha, abs_beta)
             )
-            fpu_logger.info("NOTE: FPU collision or limit breach error occuring next is intentional and part of test")
 
             if which_limit == "beta_collision":
                 # move rotary stage to POS_REP_POSN_N
                 turntable_safe_goto(rig, rig.grid_state, stage_position)
 
+            msg_assurance = ("NOTE: FPU collision or limit breach error occuring"
+                             " next is intentional and part of test")
             if which_limit == "beta_collision":
                 goto_position(
                     rig.gd,
@@ -236,6 +239,7 @@ def test_limit(rig, dbe, which_limit, pars=None):
                     fpuset=[fpu_id],
                     soft_protection=False,
                 )
+                fpu_logger.info(msg_assurance)
                 goto_position(
                     rig.gd,
                     abs_alpha,
@@ -246,6 +250,7 @@ def test_limit(rig, dbe, which_limit, pars=None):
                 )
 
             else:
+                fpu_logger.info(msg_assurance)
                 goto_position(
                     rig.gd,
                     abs_alpha,
@@ -402,3 +407,4 @@ def test_limit(rig, dbe, which_limit, pars=None):
             raise LimitDetectionFailure(
                 "limit detection for %s failed for FPUs %r" % (which_limit, failed_fpus)
             )
+    logger.info("functional limit test for %s successfully passed" % which_limit)

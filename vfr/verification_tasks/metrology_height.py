@@ -33,6 +33,8 @@ def measure_metrology_height(rig, dbe, pars=None):
 
     tstamp = timestamp()
 
+    logger = logging.getLogger(__name__)
+    logger.info("capturing metrology height")
     # home turntable
     safe_home_turntable(rig, rig.grid_state)
     rig.lctrl.switch_all_off()
@@ -78,6 +80,7 @@ def measure_metrology_height(rig, dbe, pars=None):
             record = MetrologyHeightImages(images=ipath)
             fpu_log.debug("saving result record = %r" % record)
             save_metrology_height_images(dbe, fpu_id, record)
+    logger.info("metrology height captured successfully")
 
 
 def eval_metrology_height(dbe, met_height_analysis_pars, met_height_evaluation_pars):

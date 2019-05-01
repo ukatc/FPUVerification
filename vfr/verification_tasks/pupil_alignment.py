@@ -54,6 +54,8 @@ def generate_positions():
 def measure_pupil_alignment(rig, dbe, pars=None):
 
     tstamp = timestamp()
+    logger = logging.getLogger(__name__)
+    logger.info("capturing pupil alignment")
 
     if rig.opts.skip_fibre:
         print("option '--skip-fibre' is set -- skipping pupil alignment test")
@@ -165,6 +167,7 @@ def measure_pupil_alignment(rig, dbe, pars=None):
             save_pupil_alignment_images(dbe, fpu_id, record)
 
     home_linear_stage(rig)  # bring linear stage to home pos
+    logger.info("pupil alignment captured successfully")
 
 
 def eval_pupil_alignment(

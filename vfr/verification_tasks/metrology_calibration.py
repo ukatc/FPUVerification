@@ -35,6 +35,8 @@ def measure_metrology_calibration(rig, dbe, pars=None):
 
     tstamp = timestamp()
 
+    logger = logging.getLogger(__name__)
+    logger.info("capturing metrology calibration")
     # home turntable
     safe_home_turntable(rig, rig.grid_state)
     home_linear_stage(rig)
@@ -100,6 +102,7 @@ def measure_metrology_calibration(rig, dbe, pars=None):
         save_metrology_calibration_images(dbe, fpu_id, record)
 
     home_linear_stage(rig)  # bring linear stage to home pos
+    logger.info("metrology calibration captured successfully")
 
 
 def eval_metrology_calibration(

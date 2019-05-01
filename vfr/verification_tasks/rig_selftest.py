@@ -282,7 +282,7 @@ def selftest_nonfibre(
 ):
 
     logger = logging.getLogger(__name__)
-    logger.info("selftest: tests without fibre involved")
+    logger.info("selftest: starting tests without fibre involved")
 
     tstamp = timestamp()
 
@@ -327,7 +327,7 @@ def selftest_fibre(
 ):
 
     logger = logging.getLogger(__name__)
-    logger.info("selftest: tests requiring fibre")
+    logger.info("selftest: starting tests requiring fibre")
     tstamp = timestamp()
 
     def capture_image(cam, subtest):
