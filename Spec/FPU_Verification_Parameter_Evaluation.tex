@@ -1,0 +1,331 @@
+% -*- mode: latex; eval: (flyspell-mode 1) -*-
+\documentclass[11pt,a4paper]{scrartcl}
+
+
+%\usepackage{minted}
+%\usepackage{euler}
+%\usepackage{concrete}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{framed}
+\usepackage{gensymb}
+\usepackage{cmbright}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage{makeidx}
+\usepackage{amsmath}
+\DeclareMathOperator{\round}{round}
+\DeclareMathOperator{\stdev}{stdev}
+\DeclareMathOperator{\RSS}{RSS}
+\makeindex
+
+
+\pagestyle{headings}
+\begin{document}
+
+\title{Specification of Parameter evaluations in the automated FPU verification software}
+
+\author{Johannes Nix}
+
+\maketitle
+\tableofcontents
+
+\section{Purpose of document}
+
+The specification of the verification system contains some notes on
+desired parameter evaluations. These are in non-formal language
+and leave room to interpretation and even misunderstandings.
+
+This document has the purpose to define the parameter evaluations in a
+formal description so that time-consuming re-runs of FPU measurements
+can be avoided.
+
+\section{Used symbols}
+\begin{description}
+\item[$ \left< \{ x_1, x_2, x_3, \ldots \} \right> $] Arithmetic
+  mean of values in the set of values $\{ x_n \} $ (where
+  $x_n$ can be a scalar or a vector).
+\item[$\max(\{x_1, x_2, x_3, \ldots \})$] Maximum element of
+  the set of scalar values $\{ x_n \}$.
+\item[$I_{\alpha,\beta}$] Image of FPU captured at arm coordinates
+  $\alpha$ and $\beta$.
+\item[$\mathcal{L(I)}$] Function which returns vector coordinates of
+  the large metrology target of an FPU.
+\item[$\mathcal{S(I)}$] Function which returns vector coordinates of
+  the small metrology target of an FPU.
+\item[$\mathcal{F(I)}$] Function which returns vector coordinates of
+  the illuminated fibre of an FPU.
+\item[$\mathcal{P(I)}$] Function which returns vector coordinates of
+  blob center in a pupil alignment image.
+  \item[$||\vec{a}||$] Magnitude or length of vector $\vec{a}$
+\end{description}
+
+All distances are entered and displayed in millimeters, and all angles
+are displayed in degrees.
+
+\section{Metrology target calibration}
+
+This is specified in the specification document in section 5.1.
+\subsection{Symbols}
+
+\begin{description}
+\item[$d_l$] distance from fibre to large metrology target
+\item[$d_s$] distance from fibre to small metrology target
+\item[$\angle_{lfs}$] angle from large tagret, to fibre, to small target
+\item[$I_M$] is the corresponding metrology target image
+\item[$I_F$] is the corresponding image of the fibre
+\end{description}
+
+\subsection{Definitions}
+
+\begin{eqnarray}
+  \vec{a} & =  & \mathcal{L(I_M)} - \mathcal{F(I_F)} \\
+  d_{lf} & = &  ||\vec{a}||
+\end{eqnarray}
+
+\begin{eqnarray}
+  \vec{b} & = & \mathcal{S(I_M)} - \mathcal{F(I_F)} \\
+  d_{sf} & =  & ||\vec{b}||
+\end{eqnarray}
+
+\begin{eqnarray}
+  \angle_{lfs} & = &  \sin^{-1}( \frac{\vec{a} \times \vec{b}}{||\vec{a}|| \dot ||\vec{b}||} )
+\end{eqnarray}
+
+
+\section{Pupil alignment}
+\subsection{Symbols}
+\begin{itemize}
+  \item[$I_{p,\alpha,\beta}$] pupil alignment image for arm angles $(\alpha,\beta)$
+\item[$\mathcal{P}(I_{p,\alpha,\beta})$] function which returns blob center of pupil alignment image
+\item[$\vec{c} = (x_c, y_c)$] calibrated central coordinate (set as configuration parameter)
+\item[$\vec{s_{\alpha,\beta}}$]  coordinates of spot for angle coordinates $(\alpha, \beta)$
+\item[$\{ \alpha_1, \alpha_2, \alpha_3, \alpha_4\}$] measured alpha coordinates with values -170\degree, -80\degree, 10\degree, 100\degree degrees
+\item[$\{ \beta_1, \beta_2, \beta_3, \beta_4\}$] measured beta coordinates  with values -170\degree, -80\degree, 10\degree, 100\degree degrees
+\item[$\epsilon_\alpha$] mean error for alpha variation
+\item[$\epsilon_\beta$] mean error for beta variation
+\item[$L_f$] instrument focal length or radius
+\item[$\epsilon_\mathrm{chassis}$] chassis error
+\item[$\epsilon_\mathrm{tot}$] total error
+
+\end{itemize}
+
+\subsection{Definitions}
+\begin{eqnarray}
+  \vec{s}_{\alpha_j,\beta_k} & =  & \mathcal{P}(I_{p,\alpha_j,\beta_k}) \\
+  \vec{u}_{\mathrm{avg}, \alpha_j} & = & \frac{1}{4} \sum_{k=1}^{4} \vec{s}_{\alpha_j,\beta_k} = \left<\vec{s}_{\alpha_j,\beta_k}, k = 1 \ldots 4 \right>\\
+  \epsilon_\beta & = & \left< ||\vec{s}_{\alpha_j,\beta_k} - \vec{u}_{\mathrm{avg}, \alpha_j} || : j = 1 \ldots 4, k = 1 \ldots 4 \right>
+\end{eqnarray}
+
+\begin{eqnarray}
+  \vec{v}_\mathrm{avg} & = & \left< \vec{u}_{\mathrm{avg}, \alpha_j}, j = 1 \ldots 4 \right> \\
+  \epsilon_\alpha & = & \left< ||\vec{s}_{\mathrm{avg}, \alpha_j} - \vec{v}_\mathrm{avg} || : j = 1 \ldots 4 \right>
+\end{eqnarray}
+
+\begin{eqnarray}
+  \vec{x_c} & = & || \left< \vec{s}_{\alpha_j,\beta_k} - \vec{c} : j = 1 \ldots 4, k = 1 \ldots 4 \right> || \\
+  \epsilon_\mathrm{chassis} & = & \tan^{-1}(\frac{x_c}{L_f})
+\end{eqnarray}
+
+
+
+\section{Datum repeatability}
+\subsection{Symbols}
+\begin{itemize}
+\item[$I_{\mathrm{only},j}$] Image of FPU captured after datum only
+\item[$I_{\mathrm{moved},k}$] Image of FPU captured after move, then datum
+\item[$\mathcal{L(I)}$] Function which returns vector coordinates of
+  the large metrology target of an FPU.
+\item[$\mathcal{S(I)}$] Function which returns vector coordinates of
+  the small metrology target of an FPU.
+
+\item[$\epsilon_\mathrm{max,only}$] maximum error for datum-only operation
+\item[$\sigma_\mathrm{max,only}$] standard deviation for datum-only operation
+\item[$\epsilon_\mathrm{max,moved}$] maximum error for move-then-datum operation
+\item[$\sigma_\mathrm{max,moved}$] standard deviation for move-then-datum operation
+
+
+\end{itemize}
+\subsection{Definitions}
+
+First, two baseline points for all measurements are defined:
+\begin{eqnarray}
+  \vec{l_c} & =  & \left< \mathcal{L(I)}, \mathrm{ all images} \right> \\
+  \vec{s_c} & =  & \left< \mathcal{S(I)}, \mathrm{ all images} \right> \\
+\end{eqnarray}
+
+These are used to derive the error distances:
+\begin{eqnarray}
+  d_{\mathrm{large}, \mathrm{only}, j} & = & || \mathcal{L}(I_{\mathrm{only},j}) - \vec{l_c} ||\\
+  d_{\mathrm{small}, \mathrm{only}, k} & = & || \mathcal{S}(I_{\mathrm{only},j}) - \vec{s_c} ||\\
+  d_{\mathrm{large}, \mathrm{moved}, j} & = & ||  \mathcal{L}(I_{\mathrm{moved},j}) - \vec{l_c}|| \\
+  d_{\mathrm{small}, \mathrm{moved}, k} & = & || \mathcal{S}(I_{\mathrm{moved},j}) - \vec{s_c} ||
+\end{eqnarray}
+With the sets
+\begin{eqnarray}
+  D & = & \{d_{\mathrm{large}, \mathrm{only}, j} | k = 1 \ldots, d_{\mathrm{small}, \mathrm{only}, j} | j = 1 \ldots \} \\
+  M & = & \{d_{\mathrm{large}, \mathrm{moved}, j | k = 1 \ldots}, d_{\mathrm{small}, \mathrm{moved}, j}    | j = 1 \ldots \}
+\end{eqnarray}
+
+these distances are used to define maximum errors and standard deviations for both
+the datumed-only, and the datumed-then-moved case:
+\begin{eqnarray}
+  \epsilon_\mathrm{max,only} & = & \max(\{d | d \in D\}) \\
+  \epsilon_\mathrm{max,moved} & = & \max(\{m | m \in M\}) \\
+  \sigma_\mathrm{only} & = & \stdev(\{d | d \in D\}) \\
+  \sigma_\mathrm{moved} & = & \stdev(\{m | m \in M\})
+\end{eqnarray}
+
+
+\section{Positional repeatability}
+\subsection{Symbols}
+\begin{itemize}
+  \item[]
+\item[$I_{\alpha_i,\beta_i,i}$] Image of FPU captured after move to position $(\alpha_i,\beta_i)$
+\item[$\mathcal{L(I)}$] Function which returns vector coordinates of
+  the large metrology target of an FPU.
+\item[$\mathcal{S(I)}$] Function which returns vector coordinates of
+  the small metrology target of an FPU.
+\item[$A = \{ \alpha_j\}$] set of all measured alpha angles
+\item[$B = \{ \beta_k\}$] set of all measured beta angles
+  \item[$\epsilon^{a}_\alpha$] maximum positional error (distance) for images with a common
+    alpha position of $\alpha$.
+  \item[$\epsilon^{b}_\beta$] maximum positional error (distance) for images with a common
+    beta position of $\beta$.
+    \item[$\epsilon_\mathrm{all}$] largest positional error distance,
+      over all images taken
+\end{itemize}
+
+\subsection{Definitions}
+For each value $\alpha \in A$ and $\beta \in B$, there is a set of all
+pictures which were taken at that angle:
+\begin{eqnarray}
+  S^a_\alpha & = &  \{ I_{\alpha',\beta,i} | \alpha' = \alpha \} \\
+  S^b_\beta & = &  \{ I_{\alpha,\beta',i} | \beta' = \beta \}
+\end{eqnarray}
+
+Then, we define for each $\alpha \in A$ and for each $\beta \in B$
+center coordinates, for both the small and the large metrology target
+\[
+\vec{p}_c^\mathrm{\,small}
+\] and
+\[
+\vec{p}_c^\mathrm{\,large}
+\]
+of focal plane positions, by averaging over all images which have
+one coordinate of the same value, for either $\alpha$ or $\beta$:
+\begin{eqnarray}
+  \vec{p}_{c,\alpha}^\mathrm{\,small,a} & = &  \left< \{ \mathcal{S}(I) | I \in S^a_\alpha  \} \right> \\
+  \vec{p}_{c,\beta}^\mathrm{\,small,b}  & = &  \left< \{ \mathcal{S}(I) | I \in S^b_\beta \} \right> \\
+  \vec{p}_{c,\alpha}^\mathrm{\,large,a} & = &  \left< \{ \mathcal{L}(I) | I \in S^a_\alpha \} \right> \\
+  \vec{p}_{c,\beta}^\mathrm{\,large,b}  & = &  \left< \{ \mathcal{L}(I) | I \in S^b_\beta \} \right>
+\end{eqnarray}
+
+Using these center coordinates, we can compute error distances for
+images from each set, and each center coordinate:
+\begin{eqnarray}
+  d^\mathrm{\,small,a}_{\alpha,\beta,i} & = & ||\mathcal{S}(I_{\alpha,\beta,i}) - \vec{p}_{c,\alpha}^\mathrm{\,small,a} ||,  I_{\alpha,\beta,i} \in S^a_\alpha \\
+  d^\mathrm{\,large,a}_{\alpha,\beta,i} & = & ||\mathcal{L}(I_{\alpha,\beta,i}) - \vec{p}_{c,\alpha}^\mathrm{\,large,a} ||,  I_{\alpha,\beta,i} \in S^b_\beta  \\
+  d^\mathrm{\,small,b}_{\alpha,\beta,i} & = & ||\mathcal{S}(I_{\alpha,\beta,i}) - \vec{p}_{c,\beta}^\mathrm{\,small,b} ||,   I_{\alpha,\beta,i} \in S^a_\alpha \\
+  d^\mathrm{\,large,b}_{\alpha,\beta,i} & = & ||\mathcal{L}(I_{\alpha,\beta,i}) - \vec{p}_{c,\beta}^\mathrm{\,large,b} ||,   I_{\alpha,\beta,i} \in S^b_\beta
+\end{eqnarray}
+
+and find the maximum distance within each set of values with a common element from $A$ or $B$, respectively:
+
+\begin{eqnarray}
+\epsilon^{a}_\alpha & = & \max(\{ d^\mathrm{\,small,a}_{\alpha',\beta,i}, d^\mathrm{\,large,a}_{\alpha',\beta,i} | \alpha' = \alpha \in A \}) \\
+\epsilon^{b}_\beta & = & \max(\{ d^\mathrm{\,small,b}_{\alpha,\beta',i}, d^\mathrm{\,large,b}_{\alpha,\beta',i} | \beta' = \beta \in B \}) \\
+\end{eqnarray}
+
+The specification defines
+\begin{eqnarray}
+  \mathrm{POSREP\_ALPHA\_MAX} & = &  \max(\{ \epsilon^{a}_\alpha | \alpha \in A \}) \\
+  \mathrm{POSREP\_BETA\_MAX} & = & \max(\{ \epsilon^{b}_\beta | \beta \in B \})
+\end{eqnarray}
+
+
+The maximum overall error is then
+\begin{equation}
+  \epsilon_\mathrm{all} = \max(\{\epsilon^{a}_\alpha | \alpha \in A, \epsilon^{b}_\beta | \beta \in B \})
+\end{equation}.
+
+%% Note that
+%% \begin{equation}
+%%   \label{eq:maxmax}
+%% \max(\{\epsilon^{a}_\alpha | \alpha \in A\}) = \max(\{\epsilon^{b}_\beta | \beta \in B\})
+%% \end{equation}
+%% because every element of an $S^a_\alpha$ is also an element of
+%% $S^b_\beta$, and therefore the maximum of $\{ \epsilon^{a}_\alpha |
+%% \alpha \in A \}$ is also the maximum of $\{ \epsilon^{b}_\beta | \beta
+%% \in B \}$.
+%%
+
+For the overall error, the specification uses the RSS or root sum
+square value, which is defined as
+\[
+\RSS(x_1, x_2, x_3, \ldots) = \sqrt{x_1^2 + x_2^2 + x_3^2 + \ldots}
+\]
+very similar to a vector magnitude or L2 norm, so that
+\[
+\RSS(x_1, x_2, x_3, \ldots) = ||\vec{x}||
+\]
+
+The specification defines the value $\mathrm{POSREP\_RSS}$ as
+\begin{eqnarray}
+  \mathrm{POSREP\_RSS} & = &  \RSS( \max(\{\epsilon^{a}_\alpha| \alpha \in A\}), \max(\{\epsilon^{b}_\beta| \beta \in B\}) ) \\
+  & = & \sqrt{\max(\{\epsilon^{a}_\alpha| \alpha \in A\})^2 + \max(\{\epsilon^{b}_\beta| \beta \in B\})^2 }
+%%   & = & \sqrt{2 \cdot (\epsilon_\mathrm{all})^2} \\
+%%   & = & \sqrt{2} \cdot \epsilon_\mathrm{all}
+\end{eqnarray}
+
+
+\section{Positional verification}
+\subsection{Symbols}
+\begin{itemize}
+  \item[]
+\item[$I_{\alpha_i,\beta_i}$] Image of FPU captured after move to position $(\alpha_i,\beta_i)$
+\item[$\mathcal{L(I)}$] Function which returns vector coordinates of
+  the large metrology target of an FPU.
+\item[$\mathcal{S(I)}$] Function which returns vector coordinates of
+  the small metrology target of an FPU.
+
+\end{itemize}
+
+\subsection{Definitions}
+
+The positional verification computation is not yet defined.
+The measurement moves the FPU to $N$ different positions,
+and takes images
+
+\[
+I_{\alpha_i,\beta_i}, i = 1 \ldots N
+\]
+From these images, the coordinates in the focal surface are computed.
+Possibly, these coordinates are projected on a plane surface,
+because systematic aberrations matter here, in difference
+to other verification steps.
+
+From these images, the observed position
+\[
+\vec{x_i}
+\]
+is computed, and compared to a nominal position
+\[
+\tilde{\vec{x_i}} = f(\alpha_i,\beta_i)
+\]
+with some undefined function $f$.
+The length of the difference vector
+\[
+d_i = || \vec{x_i} - \tilde{\vec{x_i}}||
+\]
+is the positional error for this measurement.  The suggested extracted
+measures are maximum and standard deviation of this error. It is also
+possible to compute statistical deciles, which give information about
+the distribution of errors. Within the verification system, it is only
+planned to measure about 10 to 20 positions for the positional verification.
+
+\begin{eqnarray}
+\end{eqnarray}
+
+\end{document}
