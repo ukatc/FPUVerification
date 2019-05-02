@@ -5,6 +5,7 @@ import errno
 import logging
 
 from vfr.conf import VERIFICATION_ROOT_FOLDER
+from vfr.tests_common import timestamp
 
 class Filter_FPU(logging.Filter):
     def __init__(self, name=""):
@@ -12,6 +13,13 @@ class Filter_FPU(logging.Filter):
 
     def filter(self, record):
         return record.name.startswith(self.name)
+
+class Filter_Level(logging.Filter):
+    def __init__(self, level=logging.INFO):
+        self.levelno = level
+
+    def filter(self, record):
+        return record.levelno >= self.levelno
 
 def addLoggingLevel(levelName, levelNum, methodName=None):
     """
@@ -62,9 +70,21 @@ def addLoggingLevel(levelName, levelNum, methodName=None):
     setattr(logging.getLoggerClass(), methodName, logForLevel)
     setattr(logging, methodName, logToRoot)
 
+# create root logger
+# this needs to happen soon enough, otherwise a default
+# stderr handler is created which logs with level
+# debug to console, which we don't want.
 
 
-def configure_logs(measure_fpuset, fpu_config):
+logger = logging.getLogger("")
+logger.setLevel(logging.DEBUG)
+#logger.addHandler(logging.NullHandler())
+logging.captureWarnings(True)
+streamhandler = logging.StreamHandler()
+logger.addHandler(streamhandler)
+
+
+def configure_logs(measure_fpuset, fpu_config, loglevel=logging.INFO):
     logpath = os.path.join(VERIFICATION_ROOT_FOLDER, "logs")
     try:
         os.makedirs(logpath)
@@ -77,26 +97,24 @@ def configure_logs(measure_fpuset, fpu_config):
     addLoggingLevel("AUDIT", logging.DEBUG + 5)
     addLoggingLevel("TRACE", logging.DEBUG - 5)
 
-    # create root logger
-    logger = logging.getLogger("")
-    logger.setLevel(logging.DEBUG)
-    logging.captureWarnings(True)
 
-    logname = os.path.join(logpath, "verification.log")
+    logname = os.path.join(logpath, "verification-%s.log" % timestamp())
     filehandler = logging.FileHandler(logname)
     filehandler.setLevel(logging.DEBUG)
-    logger.addHandler(filehandler)
-    streamhandler = logging.StreamHandler()
-    streamhandler.setLevel(logging.INFO)
-    # create formatter
     file_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(funcName)s - %(message)s')
+    filehandler.setFormatter(file_formatter)
+    logger.addHandler(filehandler)
+
+    print("setting log level for streamhandler to %s" % loglevel)
+    streamhandler.setLevel(loglevel)
+    # create formatter
     console_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(funcName)s : %(message)s', "%H:%M:%S")
 
     # add formatter to ch
-    filehandler.setFormatter(file_formatter)
     streamhandler.setFormatter(console_formatter)
+    #stream_filter = Filter_Level(level=loglevel)
+    #streamhandler.addFilter(stream_filter)
 
-    logger.addHandler(streamhandler)
 
     # add one audit logger for each FPU which is _measured_.
     # We don't create an audit log for all evaluated FPUs,

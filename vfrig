@@ -57,13 +57,13 @@ if __name__ == "__main__":
 
     fpu_config, measure_fpuset, eval_fpuset = dbe.load_fpu_config_and_sets(opts.setup_file, opts)
 
-    configure_logs(measure_fpuset, fpu_config)
+    configure_logs(measure_fpuset, fpu_config, opts.loglevel)
     logger = logging.getLogger("")
 
     info = logger.info
     info("starting verification")
     info("vfrig command line tasks = %r" % opts.tasks)
-    info("vfrig command line options = %r" % opts)
+    logger.debug("vfrig command line options = %r" % opts)
     try:
 
         rig_params = Namespace(

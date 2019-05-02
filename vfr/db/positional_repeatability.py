@@ -34,19 +34,19 @@ PositionalRepeatabilityResults = namedtuple(
 
 
 save_positional_repeatability_images = partial(
-    save_named_record, (RECORD_TYPE, "images"), verbosity_offset=3, include_fpu_id=True
+    save_named_record, (RECORD_TYPE, "images"), include_fpu_id=True
 )
 
 get_positional_repeatability_images = partial(
-    get_named_record, (RECORD_TYPE, "images"), verbosity_offset=3
+    get_named_record, (RECORD_TYPE, "images")
 )
 
 save_positional_repeatability_result = partial(
-    save_named_record, (RECORD_TYPE, "result"), verbosity_offset=3
+    save_named_record, (RECORD_TYPE, "result"),
 )
 
 get_positional_repeatability_result = partial(
-    get_named_record, (RECORD_TYPE, "result"), verbosity_offset=3
+    get_named_record, (RECORD_TYPE, "result"),
 )
 
 

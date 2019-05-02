@@ -26,7 +26,7 @@ def all_true(testfun, sequence):
     return passed
 
 
-def expand_tasks(tasks, goal, expansion, delete=False, verbosity=0):
+def expand_tasks(tasks, goal, expansion, delete=False):
     logger = logging.getLogger(__name__)
     if goal in tasks:
         logger.debug("[expanding %s to %r] ###" % (goal, expansion))
@@ -51,19 +51,18 @@ def resolve(tasks, rigparams, dbe):
 
             raise ValueError("invalid task name '%s'" % tsk)
 
-    verbosity = rigparams.opts.verbosity
     while True:
 
         last_tasks = tasks.copy()
         # check for expansions (replace user shorthands by detailed task breakdown)
         for tsk, expansion in task_expansions:
             tasks = expand_tasks(
-                tasks, tsk, expansion, delete=True, verbosity=verbosity
+                tasks, tsk, expansion, delete=True,
             )
 
         # add dependencies (add tasks required to do a test)
         for tsk, expansion in task_dependencies:
-            tasks = expand_tasks(tasks, tsk, expansion, verbosity=verbosity)
+            tasks = expand_tasks(tasks, tsk, expansion)
 
         # add conditional dependencies (add tests which need to be passed before,
         # and are not already passed by all FPUs)
@@ -72,15 +71,12 @@ def resolve(tasks, rigparams, dbe):
                 tfun = lambda fpu_id: testfun(dbe, fpu_id)
                 if (not all_true(tfun, fpuset)) or rigparams.opts.repeat_passed_tests:
                     tasks = expand_tasks(
-                        tasks, tsk, cond_expansion, delete=True, verbosity=verbosity
+                        tasks, tsk, cond_expansion, delete=True,
                     )
 
         # check for equality with last iteration
         # -- if equal, expansion is finished
-        if verbosity > 5:
-            logger.info("tasks = %r" % tasks)
-        else:
-            logger.debug("tasks = %r" % tasks)
+        logger.debug("tasks = %r" % tasks)
         if tasks == last_tasks:
             break
 

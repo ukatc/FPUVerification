@@ -58,10 +58,10 @@ def selftest_pup_algn(rig, pars=None, PUP_ALGN_ANALYSIS_PARS=None, capture_image
                 rig.measure_fpuset, pars.PUP_ALGN_LINPOSITIONS
             )[0]
 
-            logger.debug("fpu_id=", fpu_id)
+            logger.debug("fpu_id= %s" % fpu_id)
             stage_position = pars.PUP_ALGN_POSITIONS[fpu_id]
-            logger.debug("lin_position=", lin_position)
-            logger.debug("stage_position=", stage_position)
+            logger.debug("lin_position= %s" % lin_position)
+            logger.debug("stage_position= %s" % stage_position)
 
             # move rotary stage to PUP_ALN_POSN_N
             turntable_safe_goto(rig, rig.grid_state, stage_position)
@@ -312,7 +312,7 @@ def selftest_nonfibre(
             pars=POS_REP_MEASUREMENT_PARS,
         )
     except SystemError as e:
-        logger.critical("positional repeatability self-test failed", repr(e))
+        logger.critical("positional repeatability self-test failed %r" % repr(e))
         sys.exit(1)
     logger.info(">>>> selftest: tests without fibre succeeded")
 
@@ -344,7 +344,7 @@ def selftest_fibre(
         )
 
     except SystemError as e:
-        logger.critical("pupil alignment self-test failed:", repr(e))
+        logger.critical("pupil alignment self-test failed: %s" % repr(e))
         sys.exit(1)
 
     try:
@@ -356,7 +356,7 @@ def selftest_fibre(
             pars=MET_CAL_MEASUREMENT_PARS,
         )
     except SystemError as e:
-        logger.critical("metrology calibration self-test failed", repr(e))
+        logger.critical("metrology calibration self-test failed %s" % repr(e))
         sys.exit(1)
 
     logger.info(">>>> selftest: tests requiring fibre succeeded")

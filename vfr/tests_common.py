@@ -80,8 +80,7 @@ def goto_position(
     fpuset=None,
     allow_uninitialized=False,
     soft_protection=True,
-    verbosity=0,
-    loglevel=logging.INFO
+    loglevel=logging.INFO,
 ):
     logger = logging.getLogger(__name__)
     check_for_quit()
@@ -94,14 +93,13 @@ def goto_position(
 
     wf = gen_wf(abs_alpha - current_alpha, abs_beta - current_beta)
     wf2 = {k: v for k, v in wf.items() if k in fpuset}
-    verbosity = max(verbosity - 3, 0)
     gd.configMotion(
         wf2,
         grid_state,
         allow_uninitialized=allow_uninitialized,
         soft_protection=soft_protection,
         warn_unsafe=soft_protection,
-        verbosity=verbosity,
+        verbosity=0,
     )
     check_for_quit()
 
@@ -116,7 +114,6 @@ def goto_position(
 
 def find_datum(gd, grid_state, opts=None, uninitialized=False):
 
-    verbosity = opts.verbosity if opts else 0
     logger = logging.getLogger(__name__)
     check_for_quit()
     logger.info("moving FPUs to datum position")
@@ -145,7 +142,6 @@ def find_datum(gd, grid_state, opts=None, uninitialized=False):
             fpuset=unreferenced,
             allow_uninitialized=True,
             soft_protection=True,
-            verbosity=verbosity,
         )
         check_for_quit()
 
