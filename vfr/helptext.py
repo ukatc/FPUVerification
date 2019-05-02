@@ -250,10 +250,10 @@ examples = cleandoc(
 
     This command:
 
-    ./vfrig -f fpus_batch1.cfg --verbosity=5 --mockup   -S"['MP010']" {TST_DATUM_REP}
+    ./vfrig -f fpus_batch1.cfg  --mockup   -S"['MP010']" {TST_DATUM_REP}
 
 
-    will perform the datum repetability test for the FPU with serial number 'MP010',
+    will perform the datum repeatability test for the FPU with serial number 'MP010',
     and any tests which are required to do it.
 
     """

@@ -7,6 +7,7 @@ import types
 import warnings
 from ast import literal_eval
 from os import environ
+import logging
 
 from fpu_constants import (
     ALPHA_MIN_DEGREE,
@@ -23,10 +24,10 @@ from vfr.task_config import USERTASKS, T
 
 def parse_args():
     try:
-        DEFAULT_VERBOSITY = int(environ.get("VFR_VERBOSITY", "0"))
+        DEFAULT_LOGLEVEL = int(environ.get("VFR_LOGLEVEL", str(logging.INFO)))
     except:
-        print("VFR_VERBOSITY has invalid value, setting verbosity to one")
-        DEFAULT_VERBOSITY = 1
+        print("VFR_LOGLEVEL has invalid value, setting level to INFO")
+        DEFAULT_LOGLEVEL = logging.INFO
 
     parser = argparse.ArgumentParser(
         description=summary.format(DEFAULT_TASKS=DEFAULT_TASKS, **T.__dict__),
@@ -292,13 +293,13 @@ def parse_args():
     )
 
     parser.add_argument(
-        "-v",
-        "--verbosity",
-        metavar="VERBOSITY",
+        "-L",
+        "--loglevel",
+        metavar="LOGLEVEL",
         type=int,
-        default=DEFAULT_VERBOSITY,
-        help="verbosity level of progress messages, between 0 and 15 "
-        "(can be set by environment variable VFR_VERBOSITY, default: %(default)s)",
+        default=DEFAULT_LOGLEVEL,
+        help="logging level "
+        "(can be set by environment variable VFR_LOGLEVEL, default: %(default)s)",
     )
 
     args = parser.parse_args()
@@ -329,7 +330,7 @@ def parse_args():
             for k in [
                 "mockup",
                 "report_format",
-                "verbosity",
+                "loglevel",
                 "re_initialize",
                 "output_file",
                 "reuse_serialnum",
@@ -350,7 +351,7 @@ def parse_args():
             for k in [
                 "gateway_address",
                 "gateway_port",
-                "verbosity",
+                "loglevel",
                 "mockup",
                 "manual_lamp_control",
                 "always_reset_fpus",

@@ -94,13 +94,12 @@ def move_then_datum(rig, fpu_id):
     fpu_log.audit("moving FPU %i to (30,30) and back" % fpu_id)
 
     wf = gen_wf(30 * dirac(fpu_id, rig.opts.N), 30)
-    verbosity = max(rig.opts.verbosity - 3, 0)
     gd = rig.gd
     grid_state = rig.grid_state
 
-    gd.configMotion(wf, grid_state, verbosity=verbosity)
+    gd.configMotion(wf, grid_state, verbosity=0)
     gd.executeMotion(grid_state, fpuset=[fpu_id])
-    gd.reverseMotion(grid_state, fpuset=[fpu_id], verbosity=verbosity)
+    gd.reverseMotion(grid_state, fpuset=[fpu_id], verbosity=0)
     gd.executeMotion(grid_state, fpuset=[fpu_id])
     gd.findDatum(grid_state, fpuset=[fpu_id])
 

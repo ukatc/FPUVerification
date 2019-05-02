@@ -156,14 +156,13 @@ def measure_positional_verification(rig, dbe, pars=None):
             beta_min = range_limits.beta_min
             beta_max = range_limits.beta_max
 
-            if opts.verbosity > 0:
-                fpu_log.audit(
-                    "FPU %s: limits: alpha = %7.2f .. %7.2f"
-                    % (sn, alpha_min, alpha_max)
-                )
-                fpu_log.audit(
-                    "FPU %s: limits: beta = %7.2f .. %7.2f" % (sn, beta_min, beta_max)
-                )
+            fpu_log.audit(
+                "FPU %s: limits: alpha = %7.2f .. %7.2f"
+                % (sn, alpha_min, alpha_max)
+            )
+            fpu_log.audit(
+                "FPU %s: limits: beta = %7.2f .. %7.2f" % (sn, beta_min, beta_max)
+            )
 
             if (alpha_min and alpha_max and beta_min and beta_max) is None:
                 fpu_log.info(
@@ -229,8 +228,6 @@ def measure_positional_verification(rig, dbe, pars=None):
                     (alpha, beta), coeffs=fpu_coeffs
                 )
 
-                verbosity = opts.verbosity
-
                 fpu_log.info(
                         "FPU %s: measurement #%i - moving to (%7.2f, %7.2f) degrees = (%i, %i) steps"
                         % (sn, k, alpha, beta, asteps_target, bsteps_target)
@@ -246,9 +243,7 @@ def measure_positional_verification(rig, dbe, pars=None):
                     dirac(fpu_id, N) * adelta, dirac(fpu_id, N) * bdelta, units="steps"
                 )
 
-                verbosity_ = max(verbosity - 3, 0)
-
-                gd.configMotion(wf, grid_state, verbosity=verbosity_)
+                gd.configMotion(wf, grid_state, verbosity=0)
                 gd.executeMotion(grid_state)
 
                 gd.pingFPUs(grid_state)

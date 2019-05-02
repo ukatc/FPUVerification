@@ -32,11 +32,8 @@ class TestResult:
     NA = "NA"
 
 
-def save_test_result(dbe, fpuset, keyfunc, valfunc, verbosity=None):
+def save_test_result(dbe, fpuset, keyfunc, valfunc):
     trace = logging.getLogger(__name__).trace
-
-    if verbosity is None:
-        verbosity = dbe.opts
 
     with dbe.env.begin(write=True, db=dbe.vfdb) as txn:
 
@@ -55,15 +52,14 @@ def save_test_result(dbe, fpuset, keyfunc, valfunc, verbosity=None):
 
             val = valfunc(fpu_id)
 
-            if verbosity > 8:
-                trace("putting %r : %r" % (key1, count))
-                trace("putting %r : %r" % (key2, val))
+            trace("putting %r : %r" % (key1, count))
+            trace("putting %r : %r" % (key2, val))
 
             txn.put(key1, str(count))
             txn.put(key2, val)
 
 
-def get_test_result(dbe, fpu_id, keyfunc, count=None, verbosity=None):
+def get_test_result(dbe, fpu_id, keyfunc, count=None):
 
     with dbe.env.begin(write=False, db=dbe.vfdb) as txn:
 
@@ -107,10 +103,10 @@ def get_test_result(dbe, fpu_id, keyfunc, count=None, verbosity=None):
 
 
 def save_named_record(
-    record_type, dbe, fpu_id, record, include_fpu_id=False, verbosity_offset=0
+        record_type, dbe, fpu_id, record, include_fpu_id=False, loglevel=logging.DEBUG-5,
 ):
 
-    trace = logging.getLogger(__name__).trace
+    log = logging.getLogger(__name__).trace
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
@@ -126,14 +122,12 @@ def save_named_record(
             val.update({"fpu_id": fpu_id})
         return repr(val)
 
-    verbosity = max(dbe.opts.verbosity - verbosity_offset, 0)
-    trace("saving %r = %r" % (record_type, record))
-    trace("saving " + str(record_type))
+    log(loglevel, "saving %r = %r" % (record_type, record))
 
     save_test_result(dbe, [fpu_id], keyfunc, valfunc)
 
 
-def get_named_record(record_type, dbe, fpu_id, count=None, verbosity_offset=0):
+def get_named_record(record_type, dbe, fpu_id, count=None, loglevel=logging.DEBUG-5):
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
@@ -143,12 +137,7 @@ def get_named_record(record_type, dbe, fpu_id, count=None, verbosity_offset=0):
 
     rval = get_test_result(dbe, fpu_id, keyfunc, count=count)
 
-    verbosity = max(dbe.opts.verbosity - verbosity_offset, 0)
-
     logger = logging.getLogger(__name__)
-    if verbosity > 6:
-        logger.debug("getting %r = %r" % (record_type, rval))
-    elif verbosity > 3:
-        logger.trace("getting " + str(record_type))
+    logger.log(loglevel, "getting " + str(record_type))
 
     return rval

@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
+import logging
 from ast import literal_eval
 
 KEY = "serial-number-set"
@@ -23,8 +24,8 @@ def add_sns_to_set(dbe, new_serialnumbers):
     processed FPUs.
 
     """
-    verbosity = dbe.opts.verbosity
 
+    logger = logging.getLogger(__name__)
     with dbe.env.begin(write=True, db=dbe.vfdb) as txn:
         existing_serial_numbers = _get_set(txn, KEY)
 
@@ -35,11 +36,10 @@ def add_sns_to_set(dbe, new_serialnumbers):
             # we need to store this as list because
             # literal_eval cannot parse a set (in Python2.7)
             txn.put(KEY, repr(list(existing_serial_numbers)))
-            if verbosity > 2:
-                print(
-                    "db: adding serial numbers %r to set of seen FPUs"
-                    % new_serialnumbers
-                )
+            logger.debug(
+                "db: adding serial numbers %r to set of seen FPUs"
+                % new_serialnumbers
+            )
 
 
 def get_snset(env, vfdb, opts):

@@ -156,7 +156,6 @@ def test_limit(rig, dbe, which_limit, pars=None):
         abs_beta_def,
         rig.grid_state,
         fpuset=rig.measure_fpuset,
-        verbosity=rig.opts.verbosity,
     )
 
     if which_limit == "alpha_min":
