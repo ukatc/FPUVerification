@@ -328,3 +328,18 @@ def linear_stage_goto(rig, stage_position):
         logger.trace("\tStatus:", con.status())
     check_for_quit()
     logger.info("moving linear stage to position %f ... OK" % stage_position)
+
+
+def fixup_ipath(ipath):
+  """this fixes up a relocation in relative image database paths, so
+  that older test images are still found.  (The reason is that early
+  versions stored image pathnames without the "images/" subfolder,
+  which required special handling for calibration data.)
+
+  See function store_image above to compare current layout.
+
+  """
+  if ipath.startswith("images/"):
+    return ipath
+  else:
+    return os.path.join("images/", ipath)

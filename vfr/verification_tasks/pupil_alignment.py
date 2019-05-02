@@ -24,6 +24,7 @@ from vfr.db.pupil_alignment import (
     save_pupil_alignment_result,
 )
 from vfr.tests_common import (
+    fixup_ipath,
     find_datum,
     get_config_from_mapfile,
     get_sorted_positions,
@@ -196,7 +197,7 @@ def eval_pupil_alignment(
             )
 
         def analysis_func(ipath):
-            return pupalnCoordinates(ipath, pars=PUP_ALGN_ANALYSIS_PARS)
+            return pupalnCoordinates(fixup_ipath(ipath), pars=PUP_ALGN_ANALYSIS_PARS)
 
         try:
             coords = dict((k, analysis_func(v)) for k, v in images.items())

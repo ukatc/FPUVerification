@@ -35,6 +35,7 @@ from vfr.db.positional_verification import (
 )
 from vfr.db.pupil_alignment import get_pupil_alignment_passed_p
 from vfr.tests_common import (
+    fixup_ipath,
     dirac,
     find_datum,
     get_config_from_mapfile,
@@ -300,7 +301,7 @@ def eval_positional_verification(dbe, pos_ver_analysis_pars, pos_ver_evaluation_
             )
 
             def analysis_func(ipath):
-                return posrepCoordinates(ipath, pars=pos_ver_analysis_pars)
+                return posrepCoordinates(fixup_ipath(ipath), pars=pos_ver_analysis_pars)
 
         try:
             analysis_results = {}

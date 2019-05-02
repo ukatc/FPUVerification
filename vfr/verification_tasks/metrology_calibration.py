@@ -21,6 +21,7 @@ from vfr.db.metrology_calibration import (
     save_metrology_calibration_result,
 )
 from vfr.tests_common import (
+    fixup_ipath,
     get_sorted_positions,
     store_image,
     timestamp,
@@ -122,10 +123,10 @@ def eval_metrology_calibration(
         logger.debug("images= %r" % images)
         try:
             target_coordinates = metcalTargetCoordinates(
-                images["target"], pars=metcal_target_analysis_pars
+                fixup_ipath(images["target"]), pars=metcal_target_analysis_pars
             )
             fibre_coordinates = metcalFibreCoordinates(
-                images["fibre"], pars=metcal_fibre_analysis_pars
+                fixup_ipath(images["fibre"]), pars=metcal_fibre_analysis_pars
             )
 
             coords = {

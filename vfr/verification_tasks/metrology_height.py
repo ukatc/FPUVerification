@@ -21,6 +21,7 @@ from vfr.db.metrology_height import (
     save_metrology_height_result,
 )
 from vfr.tests_common import (
+    fixup_ipath,
     get_sorted_positions,
     store_image,
     timestamp,
@@ -93,7 +94,7 @@ def eval_metrology_height(dbe, met_height_analysis_pars, met_height_evaluation_p
             logger.info("FPU %s: no metrology height measurement data found" % fpu_id)
             continue
 
-        images = measurement["images"]
+        images = fixup_ipath(measurement["images"])
 
         try:
 

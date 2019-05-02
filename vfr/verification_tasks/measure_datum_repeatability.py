@@ -30,6 +30,7 @@ from vfr.db.datum_repeatability import (
 )
 from vfr.tests_common import (
     dirac,
+    fixup_ipath,
     get_sorted_positions,
     store_image,
     timestamp,
@@ -246,7 +247,7 @@ def eval_datum_repeatability(dbe, dat_rep_analysis_pars):
         residual_counts = measurement["residual_counts"]
 
         def analysis_func(ipath):
-            return posrepCoordinates(ipath, pars=dat_rep_analysis_pars)
+            return posrepCoordinates(fixup_ipath(ipath), pars=dat_rep_analysis_pars)
 
         try:
 

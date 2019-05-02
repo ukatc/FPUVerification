@@ -29,6 +29,7 @@ from vfr.db.positional_repeatability import (
 )
 from vfr.db.pupil_alignment import get_pupil_alignment_passed_p
 from vfr.tests_common import (
+    fixup_ipath,
     find_datum,
     get_config_from_mapfile,
     get_sorted_positions,
@@ -330,7 +331,7 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
             )
 
         def analysis_func(ipath):
-            return posrepCoordinates(ipath, pars=pos_rep_analysis_pars)
+            return posrepCoordinates(fixup_ipath(ipath), pars=pos_rep_analysis_pars)
 
         try:
             analysis_results_alpha = {}
