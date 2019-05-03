@@ -31,6 +31,7 @@ def posrepCoordinates(image_path,pars=None):
 
 
     :return: A tuple length 6 containing the x,y coordinate and quality factor for the small and large targets
+    Where quality is measured by 4 * pi * (area / (perimeter * perimeter)).
     (small_x, small_y, small_qual, big_x, big_y, big_qual)
     """
 
