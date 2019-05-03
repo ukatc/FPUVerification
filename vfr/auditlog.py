@@ -107,6 +107,7 @@ def configure_logs(measure_fpuset, fpu_config, loglevel=logging.INFO):
 
     print("setting log level for streamhandler to %s" % loglevel)
     streamhandler.setLevel(loglevel)
+    logger.setLevel(min(logging.DEBUG, loglevel))
     # create formatter
     console_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(funcName)s : %(message)s', "%H:%M:%S")
 
