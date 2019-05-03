@@ -1,5 +1,5 @@
 % -*- mode: latex; eval: (flyspell-mode 1) -*-
-\documentclass[11pt,a4paper]{scrartcl}
+\documentclass[11pt,a4paper,twoside]{scrartcl}
 
 
 %\usepackage{minted}
@@ -16,7 +16,7 @@
 \usepackage{makeidx}
 \usepackage{amsmath}
 \DeclareMathOperator{\round}{round}
-\DeclareMathOperator{\stdev}{stdev}
+\DeclareMathOperator{\std}{std}
 \DeclareMathOperator{\RSS}{RSS}
 \makeindex
 
@@ -31,11 +31,14 @@
 \maketitle
 \tableofcontents
 
+\cleardoublepage
 \section{Purpose of document}
 
 The specification of the verification system contains some notes on
-desired parameter evaluations. These are in non-formal language
-and leave room to interpretation and even misunderstandings.
+desired parameter evaluations. These are in non-formal language and
+leave room to interpretation and even misunderstandings.  Correcting
+the evaluation can be potentially extremely time-consuming, if
+required input data needs to be captured anew.
 
 This document has the purpose to define the parameter evaluations in a
 formal description so that time-consuming re-runs of FPU measurements
@@ -48,6 +51,14 @@ can be avoided.
   $x_n$ can be a scalar or a vector).
 \item[$\max(\{x_1, x_2, x_3, \ldots \})$] Maximum element of
   the set of scalar values $\{ x_n \}$.
+\item[$\std(\{x_1, x_2, x_3, \ldots \})$] Standard deviation of the
+  elements in the the set $\{ x_n \}$.
+\item[$\RSS(\{x_1, x_2, x_3, \ldots \})$] "Root Sum Square" value of
+  elements in the the set $\{ x_n \}$, defined as
+  \[
+  \RSS(\{x_1, x_2, x_3, \ldots\}) = \sqrt{x_1^2 + x_2^2 + x_3^2 + \ldots}
+  \]
+
 \item[$I_{\alpha,\beta}$] Image of FPU captured at arm coordinates
   $\alpha$ and $\beta$.
 \item[$\mathcal{L(I)}$] Function which returns vector coordinates of
@@ -90,7 +101,7 @@ This is specified in the specification document in section 5.1.
 \end{eqnarray}
 
 \begin{eqnarray}
-  \angle_{lfs} & = &  \sin^{-1}( \frac{\vec{a} \times \vec{b}}{||\vec{a}|| \dot ||\vec{b}||} )
+  \angle_{lfs} & = &  \sin^{-1}( \frac{\vec{a} \times \vec{b}}{||\vec{a}|| \cdot ||\vec{b}||} )
 \end{eqnarray}
 
 
@@ -112,20 +123,29 @@ This is specified in the specification document in section 5.1.
 \end{itemize}
 
 \subsection{Definitions}
+We define two level of center points. The first is when only $\beta$ is varied,
+and the beta arm is moved around one position. This is used to derive
+the beta error value:
+
 \begin{eqnarray}
   \vec{s}_{\alpha_j,\beta_k} & =  & \mathcal{P}(I_{p,\alpha_j,\beta_k}) \\
   \vec{u}_{\mathrm{avg}, \alpha_j} & = & \frac{1}{4} \sum_{k=1}^{4} \vec{s}_{\alpha_j,\beta_k} = \left<\vec{s}_{\alpha_j,\beta_k}, k = 1 \ldots 4 \right>\\
   \epsilon_\beta & = & \left< ||\vec{s}_{\alpha_j,\beta_k} - \vec{u}_{\mathrm{avg}, \alpha_j} || : j = 1 \ldots 4, k = 1 \ldots 4 \right>
 \end{eqnarray}
 
+The second level of center points averages over the beta center points
+to get an alpha center point. This is used to derive the alpha error
+value.
 \begin{eqnarray}
   \vec{v}_\mathrm{avg} & = & \left< \vec{u}_{\mathrm{avg}, \alpha_j}, j = 1 \ldots 4 \right> \\
   \epsilon_\alpha & = & \left< ||\vec{s}_{\mathrm{avg}, \alpha_j} - \vec{v}_\mathrm{avg} || : j = 1 \ldots 4 \right>
 \end{eqnarray}
 
+The average of the error over all points is converted to an angle,
+which is the chassis error:
 \begin{eqnarray}
-  \vec{x_c} & = & || \left< \vec{s}_{\alpha_j,\beta_k} - \vec{c} : j = 1 \ldots 4, k = 1 \ldots 4 \right> || \\
-  \epsilon_\mathrm{chassis} & = & \tan^{-1}(\frac{x_c}{L_f})
+  \vec{x_c} & = &  \left< \vec{s}_{\alpha_j,\beta_k} - \vec{c} : j = 1 \ldots 4, k = 1 \ldots 4 \right> \\
+  \epsilon_\mathrm{chassis} & = & \tan^{-1}\left(\frac{||x_c||}{L_f}\right)
 \end{eqnarray}
 
 
@@ -162,21 +182,28 @@ These are used to derive the error distances:
   d_{\mathrm{large}, \mathrm{moved}, j} & = & ||  \mathcal{L}(I_{\mathrm{moved},j}) - \vec{l_c}|| \\
   d_{\mathrm{small}, \mathrm{moved}, k} & = & || \mathcal{S}(I_{\mathrm{moved},j}) - \vec{s_c} ||
 \end{eqnarray}
-With the sets
+
+We define two sets which contain the error distances for both the
+large and the small metrology target:
 \begin{eqnarray}
   D & = & \{d_{\mathrm{large}, \mathrm{only}, j} | k = 1 \ldots, d_{\mathrm{small}, \mathrm{only}, j} | j = 1 \ldots \} \\
   M & = & \{d_{\mathrm{large}, \mathrm{moved}, j | k = 1 \ldots}, d_{\mathrm{small}, \mathrm{moved}, j}    | j = 1 \ldots \}
 \end{eqnarray}
 
-these distances are used to define maximum errors and standard deviations for both
+With these sets, these distances are used to define maximum errors and standard deviations for both
 the datumed-only, and the datumed-then-moved case:
 \begin{eqnarray}
   \epsilon_\mathrm{max,only} & = & \max(\{d | d \in D\}) \\
   \epsilon_\mathrm{max,moved} & = & \max(\{m | m \in M\}) \\
-  \sigma_\mathrm{only} & = & \stdev(\{d | d \in D\}) \\
-  \sigma_\mathrm{moved} & = & \stdev(\{m | m \in M\})
+  \sigma_\mathrm{only} & = & \std(\{d | d \in D\}) \\
+  \sigma_\mathrm{moved} & = & \std(\{m | m \in M\})
 \end{eqnarray}
 
+The estimate of the standard deviation should use Bessel's correction,
+as the mean which is used internally, is a statistical estimate itself.
+
+Estimating percentile values might be of interest for drawing
+conclusions about reliability.
 
 \section{Positional repeatability}
 \subsection{Symbols}
@@ -205,6 +232,10 @@ pictures which were taken at that angle:
   S^b_\beta & = &  \{ I_{\alpha,\beta',i} | \beta' = \beta \}
 \end{eqnarray}
 
+Note that the pictures taken have the property that between two
+pictures, at most only one of $\alpha$ or $\beta$ can be different;
+this property is not used here.
+
 Then, we define for each $\alpha \in A$ and for each $\beta \in B$
 center coordinates, for both the small and the large metrology target
 \[
@@ -213,8 +244,9 @@ center coordinates, for both the small and the large metrology target
 \[
 \vec{p}_c^\mathrm{\,large}
 \]
-of focal plane positions, by averaging over all images which have
-one coordinate of the same value, for either $\alpha$ or $\beta$:
+of focal plane positions, by averaging over all images from a single
+set (and which have consequently one coordinate with the same value, for
+either $\alpha$ or $\beta$):
 \begin{eqnarray}
   \vec{p}_{c,\alpha}^\mathrm{\,small,a} & = &  \left< \{ \mathcal{S}(I) | I \in S^a_\alpha  \} \right> \\
   \vec{p}_{c,\beta}^\mathrm{\,small,b}  & = &  \left< \{ \mathcal{S}(I) | I \in S^b_\beta \} \right> \\
@@ -222,8 +254,13 @@ one coordinate of the same value, for either $\alpha$ or $\beta$:
   \vec{p}_{c,\beta}^\mathrm{\,large,b}  & = &  \left< \{ \mathcal{L}(I) | I \in S^b_\beta \} \right>
 \end{eqnarray}
 
+Note that these center points do \emph{not} correspond only to images
+where the FPU was driven to the same $(\alpha, \beta)$ position;
+rather, it is an average over all measurements where the FPU was at
+one alpha value.
+
 Using these center coordinates, we can compute error distances for
-images from each set, and each center coordinate:
+images from each set, and each associated center point:
 \begin{eqnarray}
   d^\mathrm{\,small,a}_{\alpha,\beta,i} & = & ||\mathcal{S}(I_{\alpha,\beta,i}) - \vec{p}_{c,\alpha}^\mathrm{\,small,a} ||,  I_{\alpha,\beta,i} \in S^a_\alpha \\
   d^\mathrm{\,large,a}_{\alpha,\beta,i} & = & ||\mathcal{L}(I_{\alpha,\beta,i}) - \vec{p}_{c,\alpha}^\mathrm{\,large,a} ||,  I_{\alpha,\beta,i} \in S^b_\beta  \\
@@ -235,7 +272,7 @@ and find the maximum distance within each set of values with a common element fr
 
 \begin{eqnarray}
 \epsilon^{a}_\alpha & = & \max(\{ d^\mathrm{\,small,a}_{\alpha',\beta,i}, d^\mathrm{\,large,a}_{\alpha',\beta,i} | \alpha' = \alpha \in A \}) \\
-\epsilon^{b}_\beta & = & \max(\{ d^\mathrm{\,small,b}_{\alpha,\beta',i}, d^\mathrm{\,large,b}_{\alpha,\beta',i} | \beta' = \beta \in B \}) \\
+\epsilon^{b}_\beta & = & \max(\{ d^\mathrm{\,small,b}_{\alpha,\beta',i}, d^\mathrm{\,large,b}_{\alpha,\beta',i} | \beta' = \beta \in B \})
 \end{eqnarray}
 
 The specification defines
@@ -243,6 +280,10 @@ The specification defines
   \mathrm{POSREP\_ALPHA\_MAX} & = &  \max(\{ \epsilon^{a}_\alpha | \alpha \in A \}) \\
   \mathrm{POSREP\_BETA\_MAX} & = & \max(\{ \epsilon^{b}_\beta | \beta \in B \})
 \end{eqnarray}
+
+For these $ S^a_\alpha $ and $S^b_\beta$ which only have one element,
+the associated error distance is zero, which however does not affect
+the parameters descfribed next.
 
 
 The maximum overall error is then
@@ -262,14 +303,7 @@ The maximum overall error is then
 %%
 
 For the overall error, the specification uses the RSS or root sum
-square value, which is defined as
-\[
-\RSS(x_1, x_2, x_3, \ldots) = \sqrt{x_1^2 + x_2^2 + x_3^2 + \ldots}
-\]
-very similar to a vector magnitude or L2 norm, so that
-\[
-\RSS(x_1, x_2, x_3, \ldots) = ||\vec{x}||
-\]
+square value.
 
 The specification defines the value $\mathrm{POSREP\_RSS}$ as
 \begin{eqnarray}
@@ -278,6 +312,8 @@ The specification defines the value $\mathrm{POSREP\_RSS}$ as
 %%   & = & \sqrt{2 \cdot (\epsilon_\mathrm{all})^2} \\
 %%   & = & \sqrt{2} \cdot \epsilon_\mathrm{all}
 \end{eqnarray}
+The only difference to the vector magnitude is that the input
+arguments are distances, not coordinates from a coordinate system.
 
 
 \section{Positional verification}
@@ -314,7 +350,11 @@ is computed, and compared to a nominal position
 \[
 \tilde{\vec{x_i}} = f(\alpha_i,\beta_i)
 \]
-with some undefined function $f$.
+with some undefined function $f$. The nominal position is a function
+of the angles, the motor axis geometry and some estimate of the alpha
+and beta arm lengths, which could be derived by fitting or using the
+metrology calibration measurement.
+
 The length of the difference vector
 \[
 d_i = || \vec{x_i} - \tilde{\vec{x_i}}||
