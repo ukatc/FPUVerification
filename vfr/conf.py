@@ -195,7 +195,7 @@ POS_REP_MEASUREMENT_PARS = Namespace(
     POS_REP_EXPOSURE_MS=200,  # the exposure time in
     # milliseconds for a correctly
     # exposed image
-    POS_REP_NUM_INCREMENTS=10,  # the number of movements made
+    POS_REP_NUM_INCREMENTS=25,  # the number of movements made
     # within each positive sweep from
     # the starting position
     POS_REP_ITERATIONS=3,  # the number of times each FPU
