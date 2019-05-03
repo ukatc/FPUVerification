@@ -19,7 +19,7 @@ def find_bright_sharp_circles(path, minradius, maxradius, grouprange=None, show=
 
     Setting grouprange to a number will mean only circles within that distance of other circles are returned,
     however if only 1 is found, it will be returned and grouprange will have no effect.
-    :return: a list of (center_x, center_y, radius) tuples for each detected dot.
+    :return: a list of opencv blobs for each detected dot.
     """
     image = cv2.imread(path)
     greyscale = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -58,6 +58,7 @@ def find_bright_sharp_circles(path, minradius, maxradius, grouprange=None, show=
         print([(blob.pt[0], blob.pt[1], blob.size / 2.0) for blob in binary_blobs])
 
     circles = []
+    target_blob_list = []
     for blob in blobs:
         for binary_blob in binary_blobs:
             # They match if center's and radii are similar
@@ -67,6 +68,7 @@ def find_bright_sharp_circles(path, minradius, maxradius, grouprange=None, show=
                 < 6.0
             ):
                 circles.append((blob.pt[0], blob.pt[1], blob.size / 2.0))
+                target_blob_list.append(blob)
                 print(
                     distance(blob.pt, binary_blob.pt)
                     + abs(blob.size / 2.0 - binary_blob.size / 2.0)
@@ -109,7 +111,22 @@ def find_bright_sharp_circles(path, minradius, maxradius, grouprange=None, show=
         cv2.moveWindow(path, 0, 0)
         print()
 
-    return circles
+    return target_blob_list
+
+def posrepCoordinates(image_path, pars):
+    """Wrapper for find_bright_sharp_circles
+
+    :param image_path: 
+    :param pars: 
+    :return: A tuple length 6 containing the x,y coordinate and quality factor for the small and large targets
+    (small_x, small_y, small_qual, big_x, big_y, big_qual)
+    """
+
+    circles = find_bright_sharp_circles(image_path,
+                                        pars.POS_REP_BLOB_MINRADIUS,
+                                        pars.POS_REP_BLOB_MAXRADIUS,
+                                        pars.POS_REP_BLOB_GROUPRANGE)
+
 
 
 if __name__ == "__main__":
