@@ -70,16 +70,19 @@ def parse_args():
         "-fmt",
         "--report-format",
         default="terse",
-        choices=["status", "brief", "terse", "complete", "long", "extended"],
+        choices=["status", "brief", "terse", "complete", "long", "extended", "csv"],
         help="""output format of 'report' task (one of 'status', 'terse', 'complete', 'long',
-        'extended', default is 'terse'). The options do the following:
+        'extended', 'csv', default is 'terse'). The options do the following:
 
         'status': print a single line with the overall status for each FPU
         'brief' : print one line for each test section
         'terse' : print essential information
         'complete' : print additional information, like angles with maximum errors
         'long'  : in addition, list values for each angle
-        'extended' : print nearly full information, including a list of images""",
+        'extended' : print nearly full information, including a list of images
+        'csv'   : produce a comma-separated export format which can be included in
+                  spreadsheets. See option "-o" for storing the report into an output file.
+        """,
     )
 
     parser.add_argument(
