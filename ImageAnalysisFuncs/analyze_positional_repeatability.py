@@ -34,9 +34,9 @@ def posrepCoordinates(image_path,pars=None):
     (small_x, small_y, small_qual, big_x, big_y, big_qual)
     """
 
-    if pars.POS_REP_AlGORITHM == "CONTOUR":
+    if pars.POS_REP_AlGORITHM == CONTOUR_ALGORITHM:
         analysis_func = analyze_positional_repeatability_contours.posrepCoordinates
-    elif pars.POS_REP_AlGORITHM == "BLOB":
+    elif pars.POS_REP_AlGORITHM == BLOB_ALGORITHM:
         analysis_func = analyze_positional_repeatability_blobs.posreps
     else:
         raise ImageAnalysisError("POS_REP_ALORITHM ({}) does not match an algorithm.".format(pars.POS_REP_AlGORITHM))
