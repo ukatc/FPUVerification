@@ -21,8 +21,8 @@ from ImageAnalysisFuncs.base import ImageAnalysisError
 from ImageAnalysisFuncs import analyze_positional_repeatability_contours, analyze_positional_repeatability_blobs
 
 
-CONTOUR_ALGORITHM = "CONTOUR"
-BLOB_ALGORITHM = "BLOB"
+CONTOUR_ALGORITHM = "contour"
+BLOB_ALGORITHM = "blob"
 
 
 def posrepCoordinates(image_path,pars=None):
