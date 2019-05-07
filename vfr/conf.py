@@ -148,6 +148,10 @@ POS_REP_ANALYSIS_PARS = Namespace(
     POS_REP_THRESHOLD=70,  # 0-255
     POS_REP_QUALITY_METRIC=0.8,  # dimensionless
     POS_REP_CALIBRATION_PARS=POS_REP_CALIBRATION_PARS,
+    POS_REP_AlGORITHM="blob",  # "blob" or "contour"
+    POS_REP_BLOB_MINRADIUS=15,  # in pixels
+    POS_REP_BLOB_MAXRADIUS=55,  # in pixels
+    POS_REP_BLOB_GROUPRANGE=200,  # in pixels
     display=False,
     verbosity=0,
 )
@@ -160,6 +164,10 @@ MET_CAL_TARGET_ANALYSIS_PARS = Namespace(
     MET_CAL_GAUSS_BLUR=3,  # pixels - MUST BE AN ODD NUMBER
     MET_CAL_THRESHOLD=80,  # 0-255
     MET_CAL_QUALITY_METRIC=0.8,  # dimensionless
+    MET_CAL_AlGORITHM="blob",  # "blob" or "contour"
+    MET_CAL_BLOB_MINRADIUS=45,  # in pixels
+    MET_CAL_BLOB_MAXRADIUS=200,  # in pixels
+    MET_CAL_BLOB_GROUPRANGE=525,  # in pixels
     display=False,  # will display image with contours annotated
     verbosity=0,
 )
