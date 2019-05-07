@@ -1,10 +1,16 @@
 from __future__ import print_function
+
 import numpy as np
 import cv2
 import math
 import os
 from itertools import chain
 
+from ImageAnalysisFuncs.base import ImageAnalysisError
+
+
+class BlobRepeatabilityAnalysisError(ImageAnalysisError):
+    pass
 
 def distance(p1, p2):
     return math.hypot(p1[0] - p2[0], p1[1] - p2[1])
@@ -122,11 +128,26 @@ def posrepCoordinates(image_path, pars):
     (small_x, small_y, small_qual, big_x, big_y, big_qual)
     """
 
-    circles = find_bright_sharp_circles(image_path,
+    blobs = find_bright_sharp_circles(image_path,
                                         pars.POS_REP_BLOB_MINRADIUS,
                                         pars.POS_REP_BLOB_MAXRADIUS,
                                         pars.POS_REP_BLOB_GROUPRANGE)
+    if len(blobs) != 2:
+        raise BlobRepeatabilityAnalysisError("{} blobs found in image {}, there should only be two".format(len(blobs),
+                                                                                                           image_path))
 
+    # check blobs are in the correct order
+    if blobs[0].area < blobs[1].area:
+        small_blob, large_blob = blobs
+    else:
+        large_blob, small_blob = blobs
+
+    small_quality = 4 * math.pi * small_blob.area / (small_blob.length * small_blob.length)
+
+    large_quality = 4 * math.pi * large_blob.area / (large_blob.length * large_blob.length)
+
+    return (small_blob.centroid.x, small_blob.centroid.y, small_quality,
+            large_blob.centroid.x, large_blob.centroid.y, large_quality)
 
 
 if __name__ == "__main__":
@@ -188,13 +209,13 @@ if __name__ == "__main__":
         for file in files:
             path = os.path.join(root, file)
             if ("posrep" in path or "positional" in path) and os.stat(path).st_size > 0:
-                circles = find_bright_sharp_circles(
+                blobs = find_bright_sharp_circles(
                     path, 15, 55, grouprange=200, show=True
                 )
                 cv2.waitKey()
                 cv2.destroyWindow(path)
-                if len(circles) != 2:
-                    print(path, circles)
+                if len(blobs) != 2:
+                    print(path, blobs)
                     opened += 1
                 checked += 1
     print(checked, opened)
@@ -209,13 +230,13 @@ if __name__ == "__main__":
             if (
                 "metcal" in path or "datumed" in path or "met-cal-target" in path
             ) and os.stat(path).st_size > 0:
-                circles = find_bright_sharp_circles(
+                blobs = find_bright_sharp_circles(
                     path, 45, 200, grouprange=525, show=True
                 )
                 cv2.waitKey()
                 cv2.destroyWindow(path)
-                if len(circles) != 2:
-                    print(path, circles)
+                if len(blobs) != 2:
+                    print(path, blobs)
                     opened += 1
                 checked += 1
     print(checked, opened)
