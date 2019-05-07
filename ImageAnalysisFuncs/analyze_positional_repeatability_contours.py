@@ -10,7 +10,7 @@ from ImageAnalysisFuncs.base import ImageAnalysisError, rss
 # exceptions which are raised if image analysis functions fail
 
 
-class RepeatabilityAnalysisError(ImageAnalysisError):
+class ContourRepeatabilityAnalysisError(ImageAnalysisError):
     pass
 
 
@@ -162,24 +162,24 @@ def posrepCoordinates(
                 raw_input("Press enter to continue")
 
     if multipleSmall == True:
-        raise RepeatabilityAnalysisError(
+        raise ContourRepeatabilityAnalysisError(
             "Image %s: Multiple small targets found - tighten parameters or use "
             "display option to investigate images for contamination" % image_path
         )
     if multipleLarge == True:
-        raise RepeatabilityAnalysisError(
+        raise ContourRepeatabilityAnalysisError(
             "Image %s: Multiple large targets found - tighten parameters or"
             " use display option to investigate images for contamination" % image_path
         )
 
     if smallTargetFound == False:
-        raise RepeatabilityAnalysisError(
+        raise ContourRepeatabilityAnalysisError(
             "Image %s: Small target not found - "
             "loosen diameter tolerance or change image thresholding" % image_path
         )
 
     if largeTargetFound == False:
-        raise RepeatabilityAnalysisError(
+        raise ContourRepeatabilityAnalysisError(
             "Image %s: Large target not found - "
             "loosen diameter tolerance or change image thresholding" % image_path
         )
@@ -237,7 +237,7 @@ def posrepCoordinates(
 
     # if targetSeparation > 2.475 or targetSeparation < 2.275:
     if targetSeparation > 30 or targetSeparation < 2.2:
-        raise RepeatabilityAnalysisError(
+        raise ContourRepeatabilityAnalysisError(
             "Image %s: Target separation has a value of %.3f which is out of spec - "
             "use display option to check for target-like reflections" % (
                 image_path, targetSeparation)
