@@ -50,6 +50,28 @@ summary = cleandoc(
     which looks, for example, like this:
 
         [
+        {{ 'serialnumber' : 'MP010', 'can_id' : 1, 'pos' : (-180, 0) }}
+        {{ 'serialnumber' : 'MP001', 'can_id' : 2, 'pos' : (-180, 3.2) }}
+        {{ 'serialnumber' : 'MP002', 'can_id' : 3, 'pos' : (-180, 0) }} ,
+        {{ 'serialnumber' : 'MP003', 'can_id' : 4, 'pos' : (-180, 0) }}
+        {{ 'serialnumber' : 'MP004', 'can_id' : 5, 'pos' : (-180, 0) }}
+        {{ 'serialnumber' : 'MP005', 'can_id' : 6, 'pos' : (-180, 0) }}
+        ]
+
+    The structure is a list of dictionaries, one for each FPU. Each
+    entry has the serial number under the key "serialnumber", and the
+    configured FPU CAN id under the key "can_id". This is the number
+    configured in binary coding with the DIP switch on the PCB attached
+    to the FPU. It *ALWAYS* has to match the bay number on the turntable.
+    The initial (alpha, beta) coordinates under the key "pos".
+
+
+    As an alternative to the "can_id" field, it is also possible to
+    pass the identity of the FPU with its logital id, using
+    the "fpu_id" field name. For purposes of the verification software,
+    the fpu_id is always *exactly one less* than the CAN ID.
+
+        [
         {{ 'serialnumber' : 'MP010', 'fpu_id' : 0, 'pos' : (-180, 0) }}
         {{ 'serialnumber' : 'MP001', 'fpu_id' : 1, 'pos' : (-180, 3.2) }}
         {{ 'serialnumber' : 'MP002', 'fpu_id' : 2, 'pos' : (-180, 0) }} ,
@@ -57,11 +79,6 @@ summary = cleandoc(
         {{ 'serialnumber' : 'MP004', 'fpu_id' : 4, 'pos' : (-180, 0) }}
         {{ 'serialnumber' : 'MP005', 'fpu_id' : 5, 'pos' : (-180, 0) }}
         ]
-
-    The structure is a list of dictionaries, one for each FPU. Each
-    entry has the serial number under the key "serialnumber", the
-    logical FPU id under the key "fpu_id", and the initial (alpha, beta)
-    coordinates under the key "pos".
 
     OVERVIEW ON TASKS & OPERATIONS:
     ===============================
