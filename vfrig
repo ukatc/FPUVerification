@@ -371,7 +371,7 @@ if __name__ == "__main__":
                 if opts.mail_on_error:
                     # add email logger for any critical errors
                     # (but not normal exit or manual termination)
-                    add_amail_handler(opts.mail_on_error)
+                    add_email_handler(opts.mail_on_error)
 
             if T.TASK_INIT_GD2 in tasks:
                 # this re-initializes the driver because

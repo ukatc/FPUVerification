@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function
 import os
 import errno
 import logging
+import logging.handlers
 
 from vfr.conf import VERIFICATION_ROOT_FOLDER
 from vfr.tests_common import timestamp
@@ -159,13 +160,14 @@ def add_email_handler(
     if not toaddrs:
         return
 
-    mailhost="outlook.office365.com",
-    fromaddress="verificationrig@hotmail.com",
+    mailhost="outlook.office365.com"
+    mailport=993
+    fromaddress="verificationrig@hotmail.com"
     credentials=("verificationrig@hotmail.com", "ApQ353K!")
 
     mail_handler = logging.handlers.SMTPHandler(
-        mailhost,
-        fromaddr,
+        (mailhost, mailport),
+        fromaddress,
         toaddrs,
         subject,
         credentials=credentials)
