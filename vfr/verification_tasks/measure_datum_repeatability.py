@@ -36,7 +36,9 @@ from vfr.tests_common import (
     timestamp,
     safe_home_turntable,
     turntable_safe_goto,
+    check_image_analyzability,
 )
+from vfr.conf import DATUM_REP_ANALYSIS_PARS
 
 
 def check_skip(rig, dbe, fpu_id):
@@ -122,6 +124,7 @@ def grab_datumed_images(rig, fpu_id, capture_func, iterations):
 
         ipath = capture_func("datumed", count)
         fpu_log.audit("saving image %i to %r" % (count, abspath(ipath)))
+        check_image_analyzability(ipath, posrepCoordinates, pars=DATUM_REP_ANALYSIS_PARS)
         datumed_images.append(ipath)
 
         alpha_dev, beta_dev = get_counter_residuals(rig, fpu_id)
@@ -146,6 +149,7 @@ def grab_moved_images(rig, fpu_id, capture_func, iterations):
         fpu_log.info("capturing moved+datumed-%02i" % count)
         ipath = capture_func("moved+datumed", count)
         fpu_log.audit("saving image %i to %r" % (count, abspath(ipath)))
+        check_image_analyzability(ipath, posrepCoordinates, pars=DATUM_REP_ANALYSIS_PARS)
         moved_images.append(ipath)
 
         alpha_dev, beta_dev = get_counter_residuals(rig, fpu_id)

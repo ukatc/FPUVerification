@@ -35,8 +35,9 @@ from vfr.tests_common import (
     turntable_safe_goto,
     home_linear_stage,
     linear_stage_goto,
+    check_image_analyzability,
 )
-
+from vfr.conf import PUP_ALGN_ANALYSIS_PARS
 
 def generate_positions():
     a0 = -170.0
@@ -155,6 +156,7 @@ def measure_pupil_alignment(rig, dbe, pars=None):
                     )
                     ipath = capture_image(count, abs_alpha, abs_beta)
                     fpu_log.audit("saving pupil image to %r" % abspath(ipath))
+                    check_image_analyzability(ipath, pupalnCoordinates, pars=PUP_ALGN_ANALYSIS_PARS)
 
                     images[(abs_alpha, abs_beta)] = ipath
 

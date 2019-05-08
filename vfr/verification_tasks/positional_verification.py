@@ -45,8 +45,9 @@ from vfr.tests_common import (
     timestamp,
     safe_home_turntable,
     turntable_safe_goto,
+    check_image_analyzability,
 )
-
+from vfr.conf import POS_REP_ANALYSIS_PARS
 
 def generate_tested_positions(
     niterations, alpha_min=NaN, alpha_max=NaN, beta_min=NaN, beta_max=NaN
@@ -260,6 +261,7 @@ def measure_positional_verification(rig, dbe, pars=None):
 
                 ipath = capture_image(k, alpha, beta)
                 fpu_log.audit("saving image for position (%7.3f, %7.3f) to %r" % (alpha, beta, abspath(ipath)))
+                check_image_analyzability(ipath, posrepCoordinates, pars=POS_REP_ANALYSIS_PARS)
 
                 image_dict[(k, alpha, beta)] = ipath
 

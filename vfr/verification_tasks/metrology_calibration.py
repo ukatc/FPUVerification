@@ -29,8 +29,9 @@ from vfr.tests_common import (
     turntable_safe_goto,
     home_linear_stage,
     linear_stage_goto,
+    check_image_analyzability,
 )
-
+from vfr.conf import MET_CAL_TARGET_ANALYSIS_PARS, MET_CAL_FIBRE_ANALYSIS_PARS
 
 def measure_metrology_calibration(rig, dbe, pars=None):
 
@@ -88,6 +89,7 @@ def measure_metrology_calibration(rig, dbe, pars=None):
             target_ipath = capture_image(met_cal_cam, "target")
 
         fpu_log.audit("saving target image to %r" % abspath(target_ipath))
+        check_image_analyzability(target_ipath, metcalTargetCoordinates, pars=MET_CAL_TARGET_ANALYSIS_PARS)
         met_cal_cam.SetExposureTime(pars.METROLOGY_CAL_FIBRE_EXPOSURE_MS)
 
         linear_stage_goto(rig, pars.METROLOGY_CAL_LINPOSITIONS[fpu_id])
@@ -96,6 +98,7 @@ def measure_metrology_calibration(rig, dbe, pars=None):
             fibre_ipath = capture_image(met_cal_cam, "fibre")
 
         fpu_log.audit("saving fibre image to %r" % abspath(fibre_ipath))
+        check_image_analyzability(fibre_ipath, metcalFibreCoordinates, pars=MET_CAL_FIBRE_ANALYSIS_PARS)
         images = {"target": target_ipath, "fibre": fibre_ipath}
 
         record = MetrologyCalibrationImages(images=images)
