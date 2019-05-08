@@ -45,7 +45,9 @@ class T:
     TASK_REPORT = "report"
     TASK_DUMP = "dump"
     TASK_PARK_FPUS = "park_fpus"
+    TASK_HOME_TURNTABLE = "home_turntable"
     TASK_REWIND_FPUS = "rewind_fpus"
+    TASK_RESET_FPUS = "resetFPUs"
     # elementary tests
     TST_ALPHA_MAX = "search_alpha_max"
     TST_ALPHA_MIN = "search_alpha_min"
@@ -104,6 +106,7 @@ USERTASKS = set(
         T.TASK_SELFTEST_FIBRE,
         T.TASK_PARK_FPUS,
         T.TASK_REWIND_FPUS,
+        T.TASK_RESET_FPUS,
         T.TST_ALPHA_MAX,
         T.TST_ALPHA_MIN,
         T.TST_BETA_MAX,
@@ -118,6 +121,7 @@ USERTASKS = set(
         T.TST_FLASH,
         T.TST_FUNCTIONAL,
         T.TST_GATEWAY_CONNECTION,
+        T.TASK_HOME_TURNTABLE,
         T.TST_INIT,
         T.TST_INITPOS,
         T.TST_LIMITS,
@@ -176,7 +180,13 @@ task_dependencies = [
     (T.TST_CAN_CONNECTION, [T.TST_GATEWAY_CONNECTION, T.TASK_INIT_RD]),
     (T.TST_FLASH, [T.TASK_INIT_RD, T.TST_CAN_CONNECTION]),
     (T.TST_INITPOS, []),
-    (T.TASK_SELFTEST, [T.TASK_SELFTEST_NONFIBRE, T.TASK_SELFTEST_FIBRE]),
+    (T.TASK_SELFTEST,
+     [
+         T.TASK_SELFTEST_NONFIBRE,
+         T.TASK_SELFTEST_FIBRE,
+         T.TASK_HOME_TURNTABLE,
+     ]
+    ),
     (
         T.TASK_SELFTEST_NONFIBRE,
         [
@@ -220,7 +230,7 @@ task_dependencies = [
     ),
     (T.TASK_REFERENCE, [T.REQ_DATUM_PASSED]),
     (T.TASK_REFERENCE2, [T.REQ_DATUM_PASSED, T.TASK_INIT_GD2]),
-    (T.TST_COLLDETECT, [T.REQ_DATUM_PASSED, T.TASK_REFERENCE]),
+    (T.TST_COLLDETECT, [T.REQ_DATUM_PASSED, T.TASK_REFERENCE, T.TASK_HOME_TURNTABLE]),
     (
         T.MEASURE_DATUM_REP,
         [
@@ -230,6 +240,7 @@ task_dependencies = [
             T.REQ_COLLDECT_PASSED,
             T.TASK_REFERENCE2,
             T.TASK_INIT_GD2,
+            T.TASK_HOME_TURNTABLE,
         ],
     ),
     (
@@ -243,6 +254,7 @@ task_dependencies = [
             # T.REQ_PUP_ALGN_PASSED,
             T.REQ_DATUM_REP_PASSED,
             T.TASK_INIT_GD2,
+            T.TASK_HOME_TURNTABLE,
         ],
     ),
     (
@@ -257,6 +269,7 @@ task_dependencies = [
             T.REQ_POS_REP_PASSED,
             T.TASK_REFERENCE2,
             T.TASK_INIT_GD2,
+            T.TASK_HOME_TURNTABLE,
         ],
     ),
     (
@@ -266,6 +279,7 @@ task_dependencies = [
             T.TST_MET_CAL_CAM_CONNECTION,
             T.TASK_INIT_GD2,
             T.TASK_REFERENCE2,
+            T.TASK_HOME_TURNTABLE,
         ],
     ),
     (
@@ -275,6 +289,7 @@ task_dependencies = [
             T.TST_MET_HEIGHT_CAM_CONNECTION,
             T.TASK_INIT_GD2,
             T.TASK_REFERENCE2,
+            T.TASK_HOME_TURNTABLE,
         ],
     ),
     (
@@ -286,6 +301,7 @@ task_dependencies = [
             T.REQ_COLLDECT_PASSED,
             T.TASK_REFERENCE2,
             T.TASK_INIT_GD2,
+            T.TASK_HOME_TURNTABLE,
         ],
     ),
     (
@@ -309,6 +325,7 @@ task_dependencies = [
             T.MEASURE_MET_HEIGHT,
             T.TST_PUP_ALGN,
             T.MEASURE_PUP_ALGN,
+            T.TASK_HOME_TURNTABLE,
         ],
     ),
     (

@@ -38,16 +38,18 @@ from vfr.conf import (
 got_quit_request = False # global flag to initiate orderly termination
 
 def handle_quit(signum, stack):
-  global got_quit_request
-  got_quit_request = True
-  logger = logging.getLogger(__name__)
-  logger.warning("SIGQUIT received, setting flag to exit")
+    global got_quit_request
+    got_quit_request = True
+    logger = logging.getLogger(__name__)
+    logger.warning("SIGQUIT received, setting flag to exit")
 
 def set_quit_handler():
     signal.signal(signal.SIGQUIT, handle_quit)
 
 def check_for_quit():
+    global got_quit_request
     if got_quit_request:
+        got_quit_request = False
         raise SystemExit("quit signal received - terminating orderly")
 
 

@@ -93,6 +93,9 @@ summary = cleandoc(
 
     {TASK_REWIND_FPUS!r:<20}  - rewind FPUs to position which is safe for datum scan
 
+    {TASK_RESET_FPUS!r:<20}  - reset FPUs to clear any error state. This does not
+                               clear the recorded position.
+
     {TST_DATUM!r:<20}  - test functionality of datum operation, and store result
 
     {TST_FUNCTIONAL!r:<20}  - perform all functional tests
@@ -162,7 +165,11 @@ summary = cleandoc(
     {TASK_MEASURE_NONFIBRE!r:<20}  - perform all measurements except those involving fibres
 
 
-    3c) EVALUATION ALONE
+    3c) TIDYING UP
+
+    {TASK_HOME_TURNTABLE!r:<20}  - move turntable to home position
+
+    3d) EVALUATION ALONE
     ....................
 
     These evaluations operate on stored data and can be done
@@ -250,11 +257,70 @@ examples = cleandoc(
 
     This command:
 
-    ./vfrig -f fpus_batch1.cfg  --mockup   -S"['MP010']" {TST_DATUM_REP}
+    ./vfrig -f fpus_batch1.cfg   -S"['MP010']" {TST_DATUM_REP}
 
 
     will perform the datum repeatability test for the FPU with serial number 'MP010',
     and any tests which are required to do it.
+
+
+    STOPPING THE HARDWARE
+    ---------------------
+
+    There are two key combinations to stop a running measurement:
+
+    <Ctrl>-<\>   "QUIT" This key combination sends a Unix QUIT signal to the process,
+                  which has the effect to exit the program when any ongoing
+                  movement is finished, and before the next movement is started.
+                  The turntable will be re-wound to its initial position.
+                  Any measurement data which was not saved as this point is lost.
+                  Data in the database will remain consistent.
+
+                  This key combination should be used if a the measurement
+                  process needs to be orderly stopped, the rig inspected,
+                  or similar.
+
+    <Ctrl>-<C>   "SIGINT" This key combination generates a Unix INTERRUPT signal.
+                 When the Thorlabs stages are moving, the stages are stopped.
+                 When FPUs are moving, the FPUs are sent an ABORT message,
+                 which usually will immediately stop them.
+                 After this, the program exits. If Python was started
+                 interactively, the running script will be aborted, and
+                 the interpreter will return to the command line.
+
+                 Note that FPUs in ABORTED state need to execute a reset command
+                 before they can be moved again, for safety reasons.
+
+                 This key combination should only be used in an emergency
+                 situation, if there is any ongoing hardware damage or
+                 immediate danger of such damage. Note that the ABORT command
+                 can reduce the precision of the FPU, because it can cause
+                 a very sudden stop.
+
+                 Data in the database will remain consistent.
+
+
+    ENVIRONMENT
+    -----------
+
+    the following environment variables are evaluated:
+
+    - VERIFICATION_ROOT_FOLDER   - This environment variable points to the image database and
+                                   calibration data. It needs to be set if one tries to
+                                   evaluate measurements on a different computer, and
+                                   the path of that data is different from
+                                   /moonsdata/verification.
+
+
+   - VFR_LOGLEVEL                - This variable contains the numerical log level for
+                                   messages which are logged to the console. The levels
+                                   are as documented for the python logging module, in
+                                   https://docs.python.org/2/library/logging.html?highlight=logging#levels .
+                                   The default value is 30, which will log messages with
+                                   level "INFO" or higher. The capability to change the level
+                                   is primarily intended for development and debugging purposes,
+                                   not for normal use.
+
 
     """
 )
