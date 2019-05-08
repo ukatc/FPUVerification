@@ -18,11 +18,20 @@ from numpy import NaN, array, hstack, mean, std
 from numpy.linalg import norm
 
 from ImageAnalysisFuncs.base import ImageAnalysisError
-from ImageAnalysisFuncs import analyze_positional_repeatability_contours, analyze_positional_repeatability_blobs
+from ImageAnalysisFuncs import target_detection_contours, target_detection_otsu
 
+# version number for analysis algorithm
+# (each different result for the same data
+# should yield a version number increase)
+
+DATUM_REPEATABILITY_ALGORITHM_VERSION = 0.1
+
+POSITIONAL_REPEATABILITY_ALGORITHM_VERSION = 0.1
+
+POSITIONAL_VERIFICATION_ALGORITHM_VERSION = 0.1
 
 CONTOUR_ALGORITHM = "contour"
-BLOB_ALGORITHM = "blob"
+OTSU_ALGORITHM = "otsu"
 
 
 def posrepCoordinates(image_path,pars=None):
@@ -35,14 +44,19 @@ def posrepCoordinates(image_path,pars=None):
     (small_x, small_y, small_qual, big_x, big_y, big_qual)
     """
 
-    if pars.POS_REP_AlGORITHM == CONTOUR_ALGORITHM:
-        analysis_func = analyze_positional_repeatability_contours.posrepCoordinates
-    elif pars.POS_REP_AlGORITHM == BLOB_ALGORITHM:
-        analysis_func = analyze_positional_repeatability_blobs.posreps
+    if pars.POS_REP_TARGET_DETECTION_AlGORITHM == CONTOUR_ALGORITHM:
+        analysis_func = target_detection_contours.targetCoordinates
+        func_pars = pars.POS_REP_TARGET_DETECTION_OTSU_PARS
+    elif pars.AlGORITHM == OTSU_ALGORITHM:
+        analysis_func = target_detection_otsu.targetCoordinates
+        func_pars = pars.POS_REP_TARGET_DETECTION_OTSU_PARS
     else:
         raise ImageAnalysisError("POS_REP_ALORITHM ({}) does not match an algorithm.".format(pars.POS_REP_AlGORITHM))
 
-    return analysis_func(image_path, pars)
+    func_pars.display = pars.display
+    func_pars.verbosity = pars.verbosity
+
+    return analysis_func(image_path, func_pars)
 
 def evaluate_datum_repeatability(datumed_coords, moved_coords, pars=None):
     """Takes two lists of (x,y) coordinates : coordinates

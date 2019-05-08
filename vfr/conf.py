@@ -138,36 +138,49 @@ POS_REP_PLATESCALE = 0.0235  # millimeter per pixel
 # which the map file points to.
 POS_REP_CALIBRATION_PARS = {"algorithm": "scale", "scale_factor": POS_REP_PLATESCALE}
 
+POS_REP_TARGET_DETECTION_OTSU_PARS = Namespace(
+    MIN_RADIUS=15,  # in pixels
+    MAX_RADIUS=55,  # in pixels
+    GROUP_RANGE=200,  # in pixels
+)
+POS_REP_TARGET_DETECTION_CONTOURS_PARS = Namespace(
+    SMALL_DIAMETER=1.45,  # millimeter
+    LARGE_DIAMETER=2.45,  # millimeter
+    DIAMETER_TOLERANCE=0.15,  # millimeter
+    PLATESCALE=POS_REP_PLATESCALE,  # millimeter per pixel
+    THRESHOLD=70,  # 0-255
+    QUALITY_METRIC=0.8,  # dimensionless
+)
 
 # this needs to e adjuster - parameters do not work
 POS_REP_ANALYSIS_PARS = Namespace(
-    POS_REP_PLATESCALE=POS_REP_PLATESCALE,
-    POS_REP_SMALL_DIAMETER=1.45,  # millimeter (does not work)
-    POS_REP_LARGE_DIAMETER=2.45,  # millimeter (does not work)
-    POS_REP_DIAMETER_TOLERANCE=0.15,  # millimeter
-    POS_REP_THRESHOLD=70,  # 0-255
-    POS_REP_QUALITY_METRIC=0.8,  # dimensionless
     POS_REP_CALIBRATION_PARS=POS_REP_CALIBRATION_PARS,
-    POS_REP_AlGORITHM="blob",  # "blob" or "contour"
-    POS_REP_BLOB_MINRADIUS=15,  # in pixels
-    POS_REP_BLOB_MAXRADIUS=55,  # in pixels
-    POS_REP_BLOB_GROUPRANGE=200,  # in pixels
+    POS_REP_TARGET_DETECTION_ALGORITHM="otsu",  # "otsu" or "contours"
+    POS_REP_TARGET_DETECTION_OTSU_PARS=POS_REP_TARGET_DETECTION_OTSU_PARS,
+    POS_REP_TARGET_DETECTION_CONTOURS_PARS=POS_REP_TARGET_DETECTION_CONTOURS_PARS,
     display=False,
     verbosity=0,
 )
 
+MET_CAL_TARGET_DETECTION_OTSU_PARS = Namespace(
+    MIN_RADIUS=45,  # in pixels
+    MAX_RADIUS=200,  # in pixels
+    GROUP_RANGE=525,  # in pixels
+)
+MET_CAL_TARGET_DETECTION_CONTOUR_PARS = Namespace(
+    SMALL_DIAMETER=1.42,  # millimeter
+    LARGE_DIAMETER=2.42,  # millimeter
+    DIAMETER_TOLERANCE=0.15,  # millimeter
+    PLATESCALE=0.00668,  # millimeter per pixel
+    THRESHOLD=80,  # 0-255
+    QUALITY_METRIC=0.8,  # dimensionless
+)
+
 MET_CAL_TARGET_ANALYSIS_PARS = Namespace(
-    MET_CAL_PLATESCALE=0.00668,  # millimeter per pixel
-    MET_CAL_SMALL_DIAMETER=1.42,  # millimeter
-    MET_CAL_LARGE_DIAMETER=2.42,  # millimeter
-    MET_CAL_DIAMETER_TOLERANCE=0.15,  # millimeter
     MET_CAL_GAUSS_BLUR=3,  # pixels - MUST BE AN ODD NUMBER
-    MET_CAL_THRESHOLD=80,  # 0-255
-    MET_CAL_QUALITY_METRIC=0.8,  # dimensionless
-    MET_CAL_AlGORITHM="blob",  # "blob" or "contour"
-    MET_CAL_BLOB_MINRADIUS=45,  # in pixels
-    MET_CAL_BLOB_MAXRADIUS=200,  # in pixels
-    MET_CAL_BLOB_GROUPRANGE=525,  # in pixels
+    MET_CAL_TARGET_DETECTION_ALGORITHM="otsu",  # "otsu" or "contours"
+    MET_CAL_TARGET_DETECTION_OTSU_PARS=MET_CAL_TARGET_DETECTION_OTSU_PARS,
+    MET_CAL_TARGET_DETECTION_CONTOUR_PARS=MET_CAL_TARGET_DETECTION_CONTOUR_PARS,
     display=False,  # will display image with contours annotated
     verbosity=0,
 )

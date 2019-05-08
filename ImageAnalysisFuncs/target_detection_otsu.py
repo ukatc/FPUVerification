@@ -119,7 +119,7 @@ def find_bright_sharp_circles(path, minradius, maxradius, grouprange=None, show=
 
     return target_blob_list
 
-def posrepCoordinates(image_path, pars):
+def targetCoordinates(image_path, pars):
     """Wrapper for find_bright_sharp_circles
 
     :param image_path: 

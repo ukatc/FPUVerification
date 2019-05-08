@@ -10,22 +10,11 @@ from ImageAnalysisFuncs.base import ImageAnalysisError, rss
 # exceptions which are raised if image analysis functions fail
 
 
-class ContourRepeatabilityAnalysisError(ImageAnalysisError):
+class TargetDetectionContoursError(ImageAnalysisError):
     pass
 
 
-# version number for analysis algorithm
-# (each different result for the same data
-# should yield a version number increase)
-
-DATUM_REPEATABILITY_ALGORITHM_VERSION = 0.1
-
-POSITIONAL_REPEATABILITY_ALGORITHM_VERSION = 0.1
-
-POSITIONAL_VERIFICATION_ALGORITHM_VERSION = 0.1
-
-
-def posrepCoordinates(
+def targetCoordinates(
     image_path,
     # configurable parameters
     pars=None,
@@ -45,24 +34,24 @@ def posrepCoordinates(
     # number and an angle, not a pixel number and a distance.)
 
     smallPerimeterLo = (
-        (pars.POS_REP_SMALL_DIAMETER - pars.POS_REP_DIAMETER_TOLERANCE)
+        (pars.SMALL_DIAMETER - pars.DIAMETER_TOLERANCE)
         * pi
-        / pars.POS_REP_PLATESCALE
+        / pars.PLATESCALE
     )
     smallPerimeterHi = (
-        (pars.POS_REP_SMALL_DIAMETER + pars.POS_REP_DIAMETER_TOLERANCE)
+        (pars.SMALL_DIAMETER + pars.DIAMETER_TOLERANCE)
         * pi
-        / pars.POS_REP_PLATESCALE
+        / pars.PLATESCALE
     )
     largePerimeterLo = (
-        (pars.POS_REP_LARGE_DIAMETER - pars.POS_REP_DIAMETER_TOLERANCE)
+        (pars.LARGE_DIAMETER - pars.DIAMETER_TOLERANCE)
         * pi
-        / pars.POS_REP_PLATESCALE
+        / pars.PLATESCALE
     )
     largePerimeterHi = (
-        (pars.POS_REP_LARGE_DIAMETER + pars.POS_REP_DIAMETER_TOLERANCE)
+        (pars.LARGE_DIAMETER + pars.DIAMETER_TOLERANCE)
         * pi
-        / pars.POS_REP_PLATESCALE
+        / pars.PLATESCALE
     )
 
     if pars.verbosity > 5:
@@ -87,7 +76,7 @@ def posrepCoordinates(
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     # FIXME: gray is unused!
     blur = cv2.GaussianBlur(gray, (9, 9), 0)
-    thresh = cv2.threshold(blur, pars.POS_REP_THRESHOLD, 255, cv2.THRESH_BINARY)[1]
+    thresh = cv2.threshold(blur, pars.THRESHOLD, 255, cv2.THRESH_BINARY)[1]
 
     # find contours from thresholded image
     cnts = sorted(
@@ -114,7 +103,7 @@ def posrepCoordinates(
                 "Image %s: ContourID - %i; perimeter - %.2f; circularity - %.2f"
                 % (image_path, i, perimeter, circularity)
             )
-        if circularity > pars.POS_REP_QUALITY_METRIC:
+        if circularity > pars.QUALITY_METRIC:
             if perimeter > smallPerimeterLo and perimeter < smallPerimeterHi:
                 if smallTargetFound == True:
                     multipleSmall = True
@@ -162,24 +151,24 @@ def posrepCoordinates(
                 raw_input("Press enter to continue")
 
     if multipleSmall == True:
-        raise ContourRepeatabilityAnalysisError(
+        raise TargetDetectionContoursError(
             "Image %s: Multiple small targets found - tighten parameters or use "
             "display option to investigate images for contamination" % image_path
         )
     if multipleLarge == True:
-        raise ContourRepeatabilityAnalysisError(
+        raise TargetDetectionContoursError(
             "Image %s: Multiple large targets found - tighten parameters or"
             " use display option to investigate images for contamination" % image_path
         )
 
     if smallTargetFound == False:
-        raise ContourRepeatabilityAnalysisError(
+        raise TargetDetectionContoursError(
             "Image %s: Small target not found - "
             "loosen diameter tolerance or change image thresholding" % image_path
         )
 
     if largeTargetFound == False:
-        raise ContourRepeatabilityAnalysisError(
+        raise TargetDetectionContoursError(
             "Image %s: Large target not found - "
             "loosen diameter tolerance or change image thresholding" % image_path
         )
@@ -200,22 +189,22 @@ def posrepCoordinates(
     # scale and straighten the result coordinates
     # the distortion correction is applied here, using the 'correct' function
     # from the distortion correction module
-    if pars.POS_REP_CALIBRATION_PARS is None:
-        pars.POS_REP_CALIBRATION_PARS = {
+    if pars.CALIBRATION_PARS is None:
+        pars.CALIBRATION_PARS = {
             "algorithm": "scale",
-            "scale_factor": pars.POS_REP_PLATESCALE,
+            "scale_factor": pars.PLATESCALE,
         }
 
     posrep_small_target_x, posrep_small_target_y = correct(
         pixels_posrep_small_target_x,
         pixels_posrep_small_target_y,
-        calibration_pars=pars.POS_REP_CALIBRATION_PARS,
+        calibration_pars=pars.CALIBRATION_PARS,
     )
 
     posrep_large_target_x, posrep_large_target_y = correct(
         pixels_posrep_large_target_x,
         pixels_posrep_large_target_y,
-        calibration_pars=pars.POS_REP_CALIBRATION_PARS,
+        calibration_pars=pars.CALIBRATION_PARS,
     )
 
     # target separation check - the values here are not configurable, as
@@ -237,7 +226,7 @@ def posrepCoordinates(
 
     # if targetSeparation > 2.475 or targetSeparation < 2.275:
     if targetSeparation > 30 or targetSeparation < 2.2:
-        raise ContourRepeatabilityAnalysisError(
+        raise TargetDetectionContoursError(
             "Image %s: Target separation has a value of %.3f which is out of spec - "
             "use display option to check for target-like reflections" % (
                 image_path, targetSeparation)
