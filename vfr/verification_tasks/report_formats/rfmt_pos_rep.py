@@ -19,6 +19,19 @@ POS_REP_GEARALGO = cleandoc(
     positional repeatability: gearbox correction algorithm version = {algorithm_version}"""
 )
 
+POS_REP_CALPARS_CSV = (
+    """positional repeatability,calibration_pars,{calibration_pars!r}"""
+)
+
+POS_REP_GEARCOR_CSV = (
+    """positional repeatability,gearbox correction,{gearbox_correction}"""
+)
+
+POS_REP_GEARALGO_CSV = cleandoc(
+    """
+    positional repeatability,gearbox correction algorithm version,{algorithm_version}"""
+)
+
 POS_REP_RESULT_TERSE = cleandoc(
     """
     positional repeatability: passed        = {result},

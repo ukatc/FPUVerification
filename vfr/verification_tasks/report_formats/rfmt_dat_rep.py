@@ -76,7 +76,7 @@ DAT_REP_RESULT_CSV = cleandoc(
     datum repeatability,threshold,{pass_threshold_mm:8.4f}
     datum repeatability,datum only max,{datum_repeatability_only_max_mm:7.3},mm
     datum repeatability,datum only std,{datum_repeatability_only_std_mm:7.3},mm
-    datum repeatability,datum only max residual count,{datum_repeatability_max_residual_datumed}
+    datum repeatability,datum only max residual count,{datum_repeatability_max_residual_datumed[0]},{datum_repeatability_max_residual_datumed[1]}
     datum repeatability,datum+move max,{datum_repeatability_move_max_mm:7.3},mm
     datum repeatability,datum+move std,{datum_repeatability_move_std_mm:7.3},mm
     datum repeatability,datum+move max residual count,{datum_repeatability_max_residual_moved}
@@ -101,3 +101,5 @@ DAT_REP_ERRMSG_CSV = (
 DAT_REP_IMAGES = "datum repeatability images : {!r}"
 
 DAT_REP_COORDS = "datum repeatability coordinates : {coords}"
+
+DAT_REP_COORDS_CSV = "datum repeatability coordinates,{coords}"

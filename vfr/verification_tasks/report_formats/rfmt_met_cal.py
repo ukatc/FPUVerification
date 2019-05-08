@@ -76,4 +76,9 @@ MET_CAL_ERRMSG = (
     "version = {algorithm_version}"
 )
 
+MET_CAL_ERRMSG_CSV = (
+    "metrology calibration,{error_message},time,{time:.16},record,{record-count},"
+    "version,{algorithm_version}"
+)
+
 MET_CAL_IMAGES = "metrology cal. images     : {!r}"

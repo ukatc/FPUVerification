@@ -15,6 +15,11 @@ POS_VER_ERRMSG = (
     " version = {algorithm_version}"
 )
 
+POS_VER_ERRMSG_CSV = (
+    "positional verification,message,{error_message}, time,{time:.16},record,{record-count},"
+    "version,{algorithm_version}"
+)
+
 POS_VER_RESULT_TERSE = cleandoc(
     """
     positional verification : passed           = {result},
@@ -64,7 +69,7 @@ POS_VER_RESULT_CSV = cleandoc(
     positional verification,passed,{result}
     positional verification,pass_threshold,{pass_threshold_mm}
     positional verification,posver_error_max,{posver_error_max_mm:8.4f} mm
-    positional verification,arg_max_error (count, α, β),{arg_max_error}
+    positional verification,arg_max_error,count,{arg_max_error[0]},α,{arg_max_error[1]},β,{arg_max_error[2]}
     positional verification,min image quality,{min_quality:8.4f}
     positional verification,time,{time:.16},record,{record-count}
     positional verification,analysis version,{algorithm_version}

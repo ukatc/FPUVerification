@@ -29,6 +29,6 @@ DATUM_RESULT_CSV = cleandoc(
     datum test,alpha datumed,{datumed[0]}
     datum test,beta datumed,{datumed[1]}
     datum test,fpu_id,{fpu_id},FPU state,{result_state}
-    datum test,counter deviations,{counter_deviation!r}
+    datum test,counter deviations,{counter_deviation[0]!r},{counter_deviation[1]!r}
     datum test,time,{time:.16},record,{record-count}"""
 )
