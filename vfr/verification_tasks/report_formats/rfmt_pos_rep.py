@@ -4,6 +4,7 @@ from __future__ import absolute_import, division, print_function
 from inspect import cleandoc
 
 POS_REP_NA = "positional repeatability  : n/a"
+POS_REP_NA_CSV = "positional repeatability,n/a"
 
 POS_REP_CALPARS = (
     """positional repeatability: calibration_pars = {calibration_pars!r}"""
@@ -16,6 +17,19 @@ POS_REP_GEARCOR = (
 POS_REP_GEARALGO = cleandoc(
     """
     positional repeatability: gearbox correction algorithm version = {algorithm_version}"""
+)
+
+POS_REP_CALPARS_CSV = (
+    """positional repeatability,calibration_pars,{calibration_pars!r}"""
+)
+
+POS_REP_GEARCOR_CSV = (
+    """positional repeatability,gearbox correction,{gearbox_correction}"""
+)
+
+POS_REP_GEARALGO_CSV = cleandoc(
+    """
+    positional repeatability,gearbox correction algorithm version,{algorithm_version}"""
 )
 
 POS_REP_RESULT_TERSE = cleandoc(
@@ -74,6 +88,22 @@ POS_REP_RESULT_EXTENDED = cleandoc(
     positional repeatability: time/record     = {time:.16}/{record-count}
     positional repeatability: anlysis version = {algorithm_version}
     positional repeatability: git version     = {git_version}"""
+)
+
+POS_REP_RESULT_CSV = cleandoc(
+    """
+    positional repeatability,passed,{result}
+    positional repeatability,pass_threshold,{pass_threshold_mm:8.4f},mm
+    positional repeatability,alpha_max,{posrep_alpha_max_mm:8.4f},mm
+    positional repeatability,beta_max,{posrep_beta_max_mm:8.4f},mm
+    positional repeatability,posrep_rss_mm,{posrep_rss_mm:8.4f},mm
+    positional repeatability,arg_max_alpha,{arg_max_alpha_error:8.4f}
+    positional repeatability,arg_max_beta,{arg_max_beta_error:8.4f}
+    positional repeatability,alpha quality,{min_quality_alpha:8.4f}
+    positional repeatability,beta quality,{min_quality_beta:8.4f}
+    positional repeatability,time,{time:.16},record,{record-count}
+    positional repeatability,anlysis version,{algorithm_version}
+    positional repeatability,git version,{git_version}"""
 )
 
 POS_REP_ERRMSG = (

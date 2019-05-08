@@ -50,6 +50,28 @@ summary = cleandoc(
     which looks, for example, like this:
 
         [
+        {{ 'serialnumber' : 'MP010', 'can_id' : 1, 'pos' : (-180, 0) }}
+        {{ 'serialnumber' : 'MP001', 'can_id' : 2, 'pos' : (-180, 3.2) }}
+        {{ 'serialnumber' : 'MP002', 'can_id' : 3, 'pos' : (-180, 0) }} ,
+        {{ 'serialnumber' : 'MP003', 'can_id' : 4, 'pos' : (-180, 0) }}
+        {{ 'serialnumber' : 'MP004', 'can_id' : 5, 'pos' : (-180, 0) }}
+        {{ 'serialnumber' : 'MP005', 'can_id' : 6, 'pos' : (-180, 0) }}
+        ]
+
+    The structure is a list of dictionaries, one for each FPU. Each
+    entry has the serial number under the key "serialnumber", and the
+    configured FPU CAN id under the key "can_id". This is the number
+    configured in binary coding with the DIP switch on the PCB attached
+    to the FPU. It *ALWAYS* has to match the bay number on the turntable.
+    The initial (alpha, beta) coordinates under the key "pos".
+
+
+    As an alternative to the "can_id" field, it is also possible to
+    pass the identity of the FPU with its logital id, using
+    the "fpu_id" field name. For purposes of the verification software,
+    the fpu_id is always *exactly one less* than the CAN ID.
+
+        [
         {{ 'serialnumber' : 'MP010', 'fpu_id' : 0, 'pos' : (-180, 0) }}
         {{ 'serialnumber' : 'MP001', 'fpu_id' : 1, 'pos' : (-180, 3.2) }}
         {{ 'serialnumber' : 'MP002', 'fpu_id' : 2, 'pos' : (-180, 0) }} ,
@@ -57,11 +79,6 @@ summary = cleandoc(
         {{ 'serialnumber' : 'MP004', 'fpu_id' : 4, 'pos' : (-180, 0) }}
         {{ 'serialnumber' : 'MP005', 'fpu_id' : 5, 'pos' : (-180, 0) }}
         ]
-
-    The structure is a list of dictionaries, one for each FPU. Each
-    entry has the serial number under the key "serialnumber", the
-    logical FPU id under the key "fpu_id", and the initial (alpha, beta)
-    coordinates under the key "pos".
 
     OVERVIEW ON TASKS & OPERATIONS:
     ===============================
@@ -92,6 +109,9 @@ summary = cleandoc(
     -------------------
 
     {TASK_REWIND_FPUS!r:<20}  - rewind FPUs to position which is safe for datum scan
+
+    {TASK_RESET_FPUS!r:<20}  - reset FPUs to clear any error state. This does not
+                               clear the recorded position.
 
     {TST_DATUM!r:<20}  - test functionality of datum operation, and store result
 
@@ -162,7 +182,11 @@ summary = cleandoc(
     {TASK_MEASURE_NONFIBRE!r:<20}  - perform all measurements except those involving fibres
 
 
-    3c) EVALUATION ALONE
+    3c) TIDYING UP
+
+    {TASK_HOME_TURNTABLE!r:<20}  - move turntable to home position
+
+    3d) EVALUATION ALONE
     ....................
 
     These evaluations operate on stored data and can be done
@@ -250,11 +274,70 @@ examples = cleandoc(
 
     This command:
 
-    ./vfrig -f fpus_batch1.cfg  --mockup   -S"['MP010']" {TST_DATUM_REP}
+    ./vfrig -f fpus_batch1.cfg   -S"['MP010']" {TST_DATUM_REP}
 
 
     will perform the datum repeatability test for the FPU with serial number 'MP010',
     and any tests which are required to do it.
+
+
+    STOPPING THE HARDWARE
+    ---------------------
+
+    There are two key combinations to stop a running measurement:
+
+    <Ctrl>-<\>   "QUIT" This key combination sends a Unix QUIT signal to the process,
+                  which has the effect to exit the program when any ongoing
+                  movement is finished, and before the next movement is started.
+                  The turntable will be re-wound to its initial position.
+                  Any measurement data which was not saved as this point is lost.
+                  Data in the database will remain consistent.
+
+                  This key combination should be used if a the measurement
+                  process needs to be orderly stopped, the rig inspected,
+                  or similar.
+
+    <Ctrl>-<C>   "SIGINT" This key combination generates a Unix INTERRUPT signal.
+                 When the Thorlabs stages are moving, the stages are stopped.
+                 When FPUs are moving, the FPUs are sent an ABORT message,
+                 which usually will immediately stop them.
+                 After this, the program exits. If Python was started
+                 interactively, the running script will be aborted, and
+                 the interpreter will return to the command line.
+
+                 Note that FPUs in ABORTED state need to execute a reset command
+                 before they can be moved again, for safety reasons.
+
+                 This key combination should only be used in an emergency
+                 situation, if there is any ongoing hardware damage or
+                 immediate danger of such damage. Note that the ABORT command
+                 can reduce the precision of the FPU, because it can cause
+                 a very sudden stop.
+
+                 Data in the database will remain consistent.
+
+
+    ENVIRONMENT
+    -----------
+
+    the following environment variables are evaluated:
+
+    - VERIFICATION_ROOT_FOLDER   - This environment variable points to the image database and
+                                   calibration data. It needs to be set if one tries to
+                                   evaluate measurements on a different computer, and
+                                   the path of that data is different from
+                                   /moonsdata/verification.
+
+
+   - VFR_LOGLEVEL                - This variable contains the numerical log level for
+                                   messages which are logged to the console. The levels
+                                   are as documented for the python logging module, in
+                                   https://docs.python.org/2/library/logging.html?highlight=logging#levels .
+                                   The default value is 30, which will log messages with
+                                   level "INFO" or higher. The capability to change the level
+                                   is primarily intended for development and debugging purposes,
+                                   not for normal use.
+
 
     """
 )

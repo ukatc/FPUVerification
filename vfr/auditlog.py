@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function
 import os
 import errno
 import logging
+import logging.handlers
 
 from vfr.conf import VERIFICATION_ROOT_FOLDER
 from vfr.tests_common import timestamp
@@ -149,3 +150,27 @@ def get_fpuLogger(fpu_id, fpu_config, *args):
     fpu_logger = logging.getLogger(lname)
 
     return fpu_logger
+
+
+def add_email_handler(
+        toaddrs,
+        subject="critical errors in verification rig",
+
+):
+    if not toaddrs:
+        return
+
+    mailhost="outlook.office365.com"
+    mailport=993
+    fromaddress="verificationrig@hotmail.com"
+    credentials=("verificationrig@hotmail.com", "ApQ353K!")
+
+    mail_handler = logging.handlers.SMTPHandler(
+        (mailhost, mailport),
+        fromaddress,
+        toaddrs,
+        subject,
+        credentials=credentials)
+
+    mail_handler.setLevel(logging.CRITICAL)
+    logger.addHandler(mail_handler)

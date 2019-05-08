@@ -27,8 +27,9 @@ from vfr.tests_common import (
     timestamp,
     safe_home_turntable,
     turntable_safe_goto,
+    check_image_analyzability,
 )
-
+from vfr.conf import MET_HEIGHT_ANALYSIS_PARS
 
 def measure_metrology_height(rig, dbe, pars=None):
 
@@ -77,6 +78,7 @@ def measure_metrology_height(rig, dbe, pars=None):
 
             ipath = capture_image(met_height_cam)
             fpu_log.audit("saving height image to %r" % abspath(ipath))
+            check_image_analyzability(ipath, methtHeight, pars=MET_HEIGHT_ANALYSIS_PARS)
 
             record = MetrologyHeightImages(images=ipath)
             fpu_log.debug("saving result record = %r" % record)

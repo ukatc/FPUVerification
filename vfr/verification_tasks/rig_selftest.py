@@ -76,13 +76,13 @@ def selftest_pup_algn(rig, pars=None, PUP_ALGN_ANALYSIS_PARS=None, capture_image
                 )
                 del result
             except ImageAnalysisError as err:
-                logger.exception("image analysis for FPU %s failed with message %r" % (fpu_id, err))
                 if rig.opts.ignore_analysis_failures:
                     logger.warning(
                         "FAILED: self-test pupil alignment image"
                         " analysis (ignored), message = %s" % repr(err)
                     )
                 else:
+                    logger.error("image analysis for FPU %s failed with message %r" % (fpu_id, err))
                     raise
 
     finally:
@@ -150,13 +150,13 @@ def selftest_metrology_calibration(
             )
             del target_coordinates
         except ImageAnalysisError as err:
-            logger.exception("image analysis for FPU %s failed with message %r" % (fpu_id, err))
             if rig.opts.ignore_analysis_failures:
                 logger.warning(
                     "FAILED: self-test metrology calibration image"
                     " analysis (ignored), message = %s" % repr(err)
                 )
             else:
+                logger.error("image analysis for FPU %s failed with message %r" % (fpu_id, err))
                 raise
 
         fibre_coordinates = metcalFibreCoordinates(
@@ -208,13 +208,13 @@ def selftest_metrology_height(
             del metht_large_target_height_mm
 
         except ImageAnalysisError as err:
-            logger.exception("image analysis for FPU %s failed with message %r" % (fpu_id, err))
             if rig.opts.ignore_analysis_failures:
                 logger.warning(
                     "FAILED: self-test metrology height image"
                     " analysis (ignored), message = %r" % repr(err)
                 )
             else:
+                logger.error("image analysis for FPU %s failed with message %r" % (fpu_id, err))
                 raise
 
     finally:
@@ -259,13 +259,13 @@ def selftest_positional_repeatability(
             )
             del coords
         except ImageAnalysisError as err:
-            logger.exception("image analysis for FPU %s failed with message %r" % (fpu_id, err))
             if rig.opts.ignore_analysis_failures:
                 logger.warning(
                     "FAILED: self-test positional repeatability image"
                     " analysis (ignored), message = %r" % repr(err)
                 )
             else:
+                logger.error("image analysis for FPU %s failed with message %r" % (fpu_id, err))
                 raise
 
     finally:

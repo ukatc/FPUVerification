@@ -33,21 +33,24 @@ from vfr.conf import (
     NR360_SERIALNUMBER,
     MTS50_SERIALNUMBER,
 )
+from ImageAnalysisFuncs.base import ImageAnalysisError
 
 
 got_quit_request = False # global flag to initiate orderly termination
 
 def handle_quit(signum, stack):
-  global got_quit_request
-  got_quit_request = True
-  logger = logging.getLogger(__name__)
-  logger.warning("SIGQUIT received, setting flag to exit")
+    global got_quit_request
+    got_quit_request = True
+    logger = logging.getLogger(__name__)
+    logger.warning("SIGQUIT received, setting flag to exit")
 
 def set_quit_handler():
     signal.signal(signal.SIGQUIT, handle_quit)
 
 def check_for_quit():
+    global got_quit_request
     if got_quit_request:
+        got_quit_request = False
         raise SystemExit("quit signal received - terminating orderly")
 
 
@@ -343,3 +346,48 @@ def fixup_ipath(ipath):
     return ipath
   else:
     return os.path.join("images/", ipath)
+
+
+image_error_count = {}
+
+ECOUNT_QUEUE_LEN = 20 # length of error flag queue for image errors
+ECOUNT_LIMIT_WARN = 5 # limit for warnings
+ECOUNT_LIMIT_FATAL = 21 # limit to trigger a fatal error
+
+def check_image_analyzability(ipath, analysis_func, pars=None):
+  """Check whether a captured image can be analyzed successfully,
+  and keeps some statistics.
+  If this is not the case, it can be a rare failure.
+  However if such errors happen frequently,
+
+  """
+  fname = analysis_func.__name__
+  if not fname in image_error_count:
+    image_error_count[fname] = []
+
+  ecount = image_error_count[fname]
+  try:
+    analysis_func(ipath, pars=pars)
+    ecount.append(0)
+    if len(ecount) > ECOUNT_QUEUE_LEN:
+      ecount.pop(0)
+
+  except ImageAnalysisError, err:
+    ecount.append(1)
+    if len(ecount) > ECOUNT_QUEUE_LEN:
+      ecount.pop(0)
+    logger = logging.getLogger(__name__ + '.' + fname)
+    logger.error("image analysis function %s failed for image %s with message %s" % (
+      analysis_func.__name__,
+      ipath,
+      err))
+    logger.debug("error statistics for function %s: %r" % (fname, ecount))
+
+    if sum(ecount) >= ECOUNT_LIMIT_WARN:
+      logger.warning("image analysis function %s failed at least %i times"
+                     " for the last %i images- system error possible?" % (
+                       fname, ECOUNT_LIMIT_WARN, ECOUNT_QUEUE_LEN))
+    if sum(ecount) >= ECOUNT_LIMIT_FATAL:
+      raise SystemError("image analysis function %s failed %i times in %i images,"
+                        " last with image %s, message %s. Stopping verification system." % (
+                          fname, ECOUNT_LIMIT_FATAL, ECOUNT_QUEUE_LEN, ipath, err))

@@ -152,7 +152,7 @@ POS_REP_ANALYSIS_PARS = Namespace(
     POS_REP_QUALITY_METRIC=0.8,  # dimensionless
     POS_REP_CALIBRATION_PARS=POS_REP_CALIBRATION_PARS,
     display=False,
-    verbosity=6,
+    verbosity=0,
 )
 
 MET_CAL_TARGET_ANALYSIS_PARS = Namespace(

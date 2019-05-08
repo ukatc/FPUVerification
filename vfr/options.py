@@ -45,7 +45,7 @@ def parse_args():
     parser.add_argument(
         "-f",
         "--setup-file",
-        default="fpus_batch0.cfg",
+        default="",
         type=str,
         help="set FPU flashing and measurement configuration file",
     )
@@ -70,16 +70,19 @@ def parse_args():
         "-fmt",
         "--report-format",
         default="terse",
-        choices=["status", "brief", "terse", "complete", "long", "extended"],
+        choices=["status", "brief", "terse", "complete", "long", "extended", "csv"],
         help="""output format of 'report' task (one of 'status', 'terse', 'complete', 'long',
-        'extended', default is 'terse'). The options do the following:
+        'extended', 'csv', default is 'terse'). The options do the following:
 
         'status': print a single line with the overall status for each FPU
         'brief' : print one line for each test section
         'terse' : print essential information
         'complete' : print additional information, like angles with maximum errors
         'long'  : in addition, list values for each angle
-        'extended' : print nearly full information, including a list of images""",
+        'extended' : print nearly full information, including a list of images
+        'csv'   : produce a comma-separated export format which can be included in
+                  spreadsheets. See option "-o" for storing the report into an output file.
+        """,
     )
 
     parser.add_argument(
@@ -232,6 +235,15 @@ def parse_args():
     )
 
     parser.add_argument(
+        "-moe",
+        "--mail-on-error",
+        metavar="MAIL_ON_ERROR",
+        type=str,
+        default="",
+        help="Email address(es) to which reports on critical errors are sent to. (default: %(default)r)",
+    )
+
+    parser.add_argument(
         "-N",
         "--NUM_FPUS",
         metavar="NUM_FPUS",
@@ -317,7 +329,8 @@ def parse_args():
     if args.mockup:
         args.gateway_address = "127.0.0.1"
         args.gateway_port = 4700
-        args.setup_file = "mock-" + args.setup_file
+        if args.setup_file:
+            args.setup_file = "mock-" + args.setup_file
 
     if args.output_file is None:
         args.output_file = sys.stdout
@@ -486,7 +499,13 @@ def check_config_item(fpu_id, val):
 
 
 def load_config(config_file_name):
-    print("reading measurement configuratiom from %r..." % config_file_name)
+    logger = logging.getLogger(__name__)
+    if not config_file_name:
+        # no measurement configuration
+        logger.info("no measurement configuration passed")
+        return {}
+
+    logger.info("reading measurement configuratiom from %r..." % config_file_name)
     cfg_list = lit_eval_file(config_file_name)
 
     fconfig = dict(
@@ -496,7 +515,7 @@ def load_config(config_file_name):
                 {
                     "serialnumber": entry["serialnumber"],
                     "pos": entry["pos"],
-                    "fpu_id": entry["fpu_id"],
+                    "fpu_id": entry["fpu_id"] if ("fpu_id" in entry) else (entry["can_id"] - 1),
                 },
             )
             for entry in cfg_list

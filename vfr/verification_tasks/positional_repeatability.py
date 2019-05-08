@@ -38,10 +38,12 @@ from vfr.tests_common import (
     timestamp,
     safe_home_turntable,
     turntable_safe_goto,
+    check_image_analyzability,
 )
 from vfr.verification_tasks.measure_datum_repeatability import (
     get_datum_repeatability_passed_p,
 )
+from vfr.conf import POS_REP_ANALYSIS_PARS
 
 
 def check_skip_reason(dbe, fpu_id, sn, repeat_passed_tests=None, skip_fibre=False):
@@ -193,6 +195,7 @@ def capture_fpu_position(rig, fpu_id, midx, target_pos, capture_image):
     real_steps = get_step_counts(rig, fpu_id)
 
     ipath = capture_image(midx, real_position)
+    check_image_analyzability(ipath, posrepCoordinates, pars=POS_REP_ANALYSIS_PARS)
     fpu_log.audit("saving image for position %r to %r" % (real_position, abspath(ipath)))
     key = (
         real_position.alpha,
