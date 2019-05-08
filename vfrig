@@ -7,7 +7,7 @@ import os
 import sys
 from argparse import Namespace
 import logging
-from vfr.auditlog import configure_logs, get_fpuLogger
+from vfr.auditlog import configure_logs, get_fpuLogger, add_email_handler
 from vfr.verification_rig import Rig
 
 from vfr.conf import (COLLDECT_MEASUREMENT_PARS,
@@ -368,6 +368,10 @@ if __name__ == "__main__":
                                functional tests passed, all OK!
 
     """)
+                if opts.mail_on_error:
+                    # add email logger for any critical errors
+                    # (but not normal exit or manual termination)
+                    add_amail_handler(opts.mail_on_error)
 
             if T.TASK_INIT_GD2 in tasks:
                 # this re-initializes the driver because

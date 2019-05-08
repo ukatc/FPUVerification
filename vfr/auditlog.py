@@ -149,3 +149,26 @@ def get_fpuLogger(fpu_id, fpu_config, *args):
     fpu_logger = logging.getLogger(lname)
 
     return fpu_logger
+
+
+def add_email_handler(
+        toaddrs,
+        subject="critical errors in verification rig",
+
+):
+    if not toaddrs:
+        return
+
+    mailhost="outlook.office365.com",
+    fromaddress="verificationrig@hotmail.com",
+    credentials=("verificationrig@hotmail.com", "ApQ353K!")
+
+    mail_handler = logging.handlers.SMTPHandler(
+        mailhost,
+        fromaddr,
+        toaddrs,
+        subject,
+        credentials=credentials)
+
+    mail_handler.setLevel(logging.CRITICAL)
+    logger.addHandler(mail_handler)
