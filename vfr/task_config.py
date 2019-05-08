@@ -172,6 +172,10 @@ MEASUREMENT_TASKS = set(
         T.MEASURE_POS_REP,
         T.MEASURE_POS_VER,
         T.TASK_PARK_FPUS,
+        T.TASK_INIT_GD2,
+        T.TASK_HOME_TURNTABLE,
+        T.TASK_RESET_FPUS,
+        T.TASK_REFERENCE2,
     ]
 )
 
