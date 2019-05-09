@@ -10,3 +10,4 @@ lib/
 man/
 .~lock*
 mock-*.cfg
+fpus_batch_*.cfg
