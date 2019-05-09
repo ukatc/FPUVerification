@@ -308,17 +308,17 @@ def evaluate_datum_repeatability(datumed_coords, moved_coords, pars=None):
 
 
 def get_angular_error(dict_of_coords, idx):
-    coords_per_angles = {}
+    coords_per_angvec = {}
 
     for k, v in dict_of_coords.items():
-        ang = k[idx]
-        if not coords_per_angles.has_key(ang):
-            coords_per_angles[ang] = []
+        angvec = (k[0], k[1])
+        if not coords_per_angvec.has_key(angvec):
+            coords_per_angvec[angvec] = []
 
-        coords_per_angles[ang].append(v)
+        coords_per_angvec[angvec].append(v)
 
     max_err_at_angle = {}
-    for k, v in coords_per_angles.items():
+    for angvec, v in coords_per_angvec.items():
         va = array(v)
         avg = mean(
             va, axis=0
@@ -326,10 +326,16 @@ def get_angular_error(dict_of_coords, idx):
         err_small = map(norm, va[:, :2] - avg[:2])
         err_big = map(norm, va[:, 2:] - avg[2:])
 
-        # get maximum of both vectors
-        max_err_at_angle[k] = max(
-            hstack([err_small, err_big])
-        )  # this is a maximum of all errors
+        # get maximum for both targets
+        ang = angvec[idx]
+        if ang not in max_err_at_angle:
+            max_err_at_angle[ang] = 0
+
+        max_err_at_angle[ang] = max(
+            max_err_at_angle[ang],
+            max(hstack([err_small,
+                        err_big])))
+        # this is a maximum of all errors
 
     poserr_max = max(max_err_at_angle.values())
 
