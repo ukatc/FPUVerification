@@ -326,11 +326,16 @@ def get_angular_error(dict_of_coords, idx):
         err_small = map(norm, va[:, :2] - avg[:2])
         err_big = map(norm, va[:, 2:] - avg[2:])
 
-        # get maximum of both vectors
+        # get maximum for both targets
         ang = angvec[idx]
+        if ang not in max_err_at_angle:
+            max_err_at_angle[ang] = 0
+
         max_err_at_angle[ang] = max(
-            hstack([err_small, err_big])
-        )  # this is a maximum of all errors
+            max_err_at_angle[ang],
+            max(hstack([err_small,
+                        err_big])))
+        # this is a maximum of all errors
 
     poserr_max = max(max_err_at_angle.values())
 
