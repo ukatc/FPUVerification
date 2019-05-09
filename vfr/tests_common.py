@@ -352,7 +352,7 @@ image_error_count = {}
 
 ECOUNT_QUEUE_LEN = 20 # length of error flag queue for image errors
 ECOUNT_LIMIT_WARN = 5 # limit for warnings
-ECOUNT_LIMIT_FATAL = 3 # limit to trigger a fatal error
+ECOUNT_LIMIT_FATAL = 21 # limit to trigger a fatal error
 
 def check_image_analyzability(ipath, analysis_func, pars=None):
   """Check whether a captured image can be analyzed successfully,
