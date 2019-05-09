@@ -240,7 +240,7 @@ def parse_args():
         metavar="MAIL_ON_ERROR",
         type=str,
         default="",
-        help="Email address(es) to which reports on critical errors are sent to. (default: %(default)r)",
+        help="Email address of a user to which reports on critical errors are sent to. (default: %(default)r)",
     )
 
     parser.add_argument(
