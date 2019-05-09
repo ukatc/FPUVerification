@@ -1,19 +1,25 @@
 from __future__ import print_function, division, absolute_import
 
+import logging
+from functools import partial
+
 from ImageAnalysisFuncs.base import ImageAnalysisError
 import camera_calibration
 from numpy import array
+import logging
 
 class CorrectionError(ImageAnalysisError):
     pass
 
 
-def correct(x, y, calibration_pars=None):
+def correct(x, y, calibration_pars=None, loglevel=5):
+    log = partial(logging.getLogger(__name__).log, loglevel)
+
     if (calibration_pars == None) or (calibration_pars["algorithm"] == "identity"):
         return x, y
     elif calibration_pars["algorithm"] == "scale":
         platescale = calibration_pars["scale_factor"]
-        # print("Distortion correction: (%7.2f, %7.2f) --> (%6.3f, %6.3f), platescale = %f" % (
+        # log("Distortion correction: (%7.2f, %7.2f) --> (%6.3f, %6.3f), platescale = %f" % (
         #    x, y, x * platescale, y * platescale, platescale
         # ))
 
@@ -34,7 +40,7 @@ def correct(x, y, calibration_pars=None):
         x_corr, y_corr = camera_calibration.correct_point((x, y), config, level)
         x_scale = (x_corr - x_0) / float(x)
         y_scale = (y_corr - y_0) / float(y)
-        print(
+        log(
             "Distortion correction: (%7.2f, %7.2f) --> (%6.3f, %6.3f), platescale = %f/%f"
             % (x, y, x_corr, y_corr, x_scale, y_scale)
         )
@@ -53,7 +59,7 @@ def correct(x, y, calibration_pars=None):
         x_corr, y_corr = camera_calibration.correct_point(points, config, level)
         x_scale = (x_corr - x_0) / float(x)
         y_scale = (y_corr - y_0) / float(y)
-        print(
+        log(
             "Distortion correction: (%7.2f, %7.2f) --> (%6.3f, %6.3f), platescale = %f/%f"
             % (x, y, x_corr, y_corr, x_scale, y_scale)
         )
