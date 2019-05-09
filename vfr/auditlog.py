@@ -160,8 +160,8 @@ def add_email_handler(
     if not toaddrs:
         return
 
-    mailhost="smtp.office365.com"
-    mailport=587
+    #mailport=587
+    mailhost="SMTP.roe.ac.uk"
     fromaddress=os.environ.get("VERIFICATION_LOGMAIL_USER", "")
     password = os.environ.get("VERIFICATION_LOGMAIL_PASSWORD", "")
     if not (fromaddress and password):
@@ -170,7 +170,8 @@ def add_email_handler(
     credentials=(fromaddress, password)
 
     mail_handler = logging.handlers.SMTPHandler(
-        (mailhost, mailport),
+        #(mailhost, mailport),
+        mailhost,
         fromaddress,
         toaddrs,
         subject,
