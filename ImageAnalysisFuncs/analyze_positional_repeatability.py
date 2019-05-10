@@ -17,7 +17,7 @@ import warnings
 from numpy import NaN, array, hstack, mean, std
 from numpy.linalg import norm
 
-from ImageAnalysisFuncs.base import ImageAnalysisError
+from ImageAnalysisFuncs.base import ImageAnalysisError, rss
 from ImageAnalysisFuncs import target_detection_contours, target_detection_otsu
 
 # version number for analysis algorithm
@@ -44,10 +44,10 @@ def posrepCoordinates(image_path,pars=None):
     (small_x, small_y, small_qual, big_x, big_y, big_qual)
     """
 
-    if pars.POS_REP_TARGET_DETECTION_AlGORITHM == CONTOUR_ALGORITHM:
+    if pars.POS_REP_TARGET_DETECTION_ALGORITHM == CONTOUR_ALGORITHM:
         analysis_func = target_detection_contours.targetCoordinates
-        func_pars = pars.POS_REP_TARGET_DETECTION_OTSU_PARS
-    elif pars.AlGORITHM == OTSU_ALGORITHM:
+        func_pars = pars.POS_REP_TARGET_DETECTION_CONTOUR_PARS
+    elif pars.POS_REP_TARGET_DETECTION_ALGORITHM == OTSU_ALGORITHM:
         analysis_func = target_detection_otsu.targetCoordinates
         func_pars = pars.POS_REP_TARGET_DETECTION_OTSU_PARS
     else:
