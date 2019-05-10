@@ -6,6 +6,7 @@ import numpy.testing as npt
 from ImageAnalysisFuncs.analyze_positional_repeatability import posrepCoordinates
 from vfr.conf import POS_REP_ANALYSIS_PARS
 
+VERBOSE_TESTS = True
 
 class TestPosRepImageAnalysis(unittest.TestCase):
     def test_expected(self):
@@ -76,13 +77,13 @@ class TestPosRepImageAnalysis(unittest.TestCase):
             pos_limit = 2.15  # roughly equal to the old 0.01  # millimeter
             q_limit = 1.475  # roughtly equal to the old 0.05  # dimensionless
 
-            npt.assert_almost_equal(sx, small_x, pos_limit)
-            npt.assert_almost_equal(sy, small_y, pos_limit)
-            npt.assert_almost_equal(sq, small_q, q_limit)
+            npt.assert_almost_equal(sx, small_x, pos_limit, "small x failed", VERBOSE_TESTS)
+            npt.assert_almost_equal(sy, small_y, pos_limit, "small y failed", VERBOSE_TESTS)
+            npt.assert_almost_equal(sq, small_q, q_limit, "small qual failed", VERBOSE_TESTS)
 
-            npt.assert_almost_equal(lx, large_x, pos_limit)
-            npt.assert_almost_equal(ly, large_y, pos_limit)
-            npt.assert_almost_equal(lq, large_q, q_limit)
+            npt.assert_almost_equal(lx, large_x, pos_limit, "large x failed", VERBOSE_TESTS)
+            npt.assert_almost_equal(ly, large_y, pos_limit, "large y failed", VERBOSE_TESTS)
+            npt.assert_almost_equal(lq, large_q, q_limit, "large q failed", VERBOSE_TESTS)
 
 
 if __name__ == "__main__":
