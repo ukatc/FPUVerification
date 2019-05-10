@@ -72,8 +72,8 @@ class TestPosRepImageAnalysis(unittest.TestCase):
                 test_image, pars=POS_REP_ANALYSIS_PARS
             )
 
-            pos_limit = 2.15  # roughly equal to the old 0.01  # millimeter
-            q_limit = 1.475  # roughtly equal to the old 0.05  # dimensionless
+            pos_limit = 0.01  # millimeter
+            q_limit = 0.05  # dimensionless
 
             self.assertTrue(abs(small_x - sx) < pos_limit)
             self.assertTrue(abs(small_y - sy) < pos_limit)
