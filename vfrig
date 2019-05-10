@@ -507,7 +507,11 @@ if __name__ == "__main__":
 
     except Exception as exc:
         logger.exception("Exception triggered with message %r" % exc)
-        logger.critical("fatal: aborting verification process")
+        logger.critical("""fatal: exception hit with message:
+
+ %s
+
+Verification process aborted.""" % exc)
         raise
 
     info("verification finished")

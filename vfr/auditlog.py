@@ -154,28 +154,34 @@ def get_fpuLogger(fpu_id, fpu_config, *args):
 
 def add_email_handler(
         toaddrs,
-        subject="critical errors in verification rig",
+        subject="[MOONS verification rig] critical errors in verification rig",
 
 ):
     if not toaddrs:
         return
 
-    #mailport=587
-    mailhost="SMTP.roe.ac.uk"
-    fromaddress=os.environ.get("VERIFICATION_LOGMAIL_USER", "")
+    mailport=25
+    mailhost="smtp.roe.ac.uk"
+    fromaddress=os.environ.get("VERIFICATION_LOGMAIL_USER", "verificationrig@moons-pc01.roe.ac.uk")
     password = os.environ.get("VERIFICATION_LOGMAIL_PASSWORD", "")
-    if not (fromaddress and password):
+    if not fromaddress:
         return
 
-    credentials=(fromaddress, password)
+    if password:
+        credentials=(fromaddress, password)
 
-    mail_handler = logging.handlers.SMTPHandler(
-        #(mailhost, mailport),
-        mailhost,
-        fromaddress,
-        toaddrs,
-        subject,
-        credentials=credentials)
+        mail_handler = logging.handlers.SMTPHandler(
+            (mailhost, mailport),
+            fromaddress,
+            toaddrs,
+            subject,
+            credentials=credentials)
+    else:
+        mail_handler = logging.handlers.SMTPHandler(
+            (mailhost, mailport),
+            fromaddress,
+            toaddrs,
+            subject)
 
     mail_handler.setLevel(logging.CRITICAL)
     logger.addHandler(mail_handler)
