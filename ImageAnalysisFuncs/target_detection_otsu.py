@@ -129,9 +129,9 @@ def targetCoordinates(image_path, pars):
     """
 
     blobs = find_bright_sharp_circles(image_path,
-                                        pars.POS_REP_BLOB_MINRADIUS,
-                                        pars.POS_REP_BLOB_MAXRADIUS,
-                                        pars.POS_REP_BLOB_GROUPRANGE)
+                                        pars.MINRADIUS,
+                                        pars.MAXRADIUS,
+                                        pars.GROUPRANGE)
     if len(blobs) != 2:
         raise BlobRepeatabilityAnalysisError("{} blobs found in image {}, there should only be two".format(len(blobs),
                                                                                                            image_path))
