@@ -137,17 +137,19 @@ def targetCoordinates(image_path, pars):
                                                                                                            image_path))
 
     # check blobs are in the correct order
-    if blobs[0].area < blobs[1].area:
+    if blobs[0].size < blobs[1].size:
         small_blob, large_blob = blobs
     else:
         large_blob, small_blob = blobs
 
-    small_quality = 4 * math.pi * small_blob.area / (small_blob.length * small_blob.length)
+    #small_quality = 4 * math.pi * small_blob.area / (small_blob.length * small_blob.length)
 
-    large_quality = 4 * math.pi * large_blob.area / (large_blob.length * large_blob.length)
+    #large_quality = 4 * math.pi * large_blob.area / (large_blob.length * large_blob.length)
 
-    return (small_blob.centroid.x, small_blob.centroid.y, small_quality,
-            large_blob.centroid.x, large_blob.centroid.y, large_quality)
+    #return (small_blob.centroid.x, small_blob.centroid.y, small_quality,
+    #        large_blob.centroid.x, large_blob.centroid.y, large_quality)
+    return (small_blob.pt[0], small_blob.pt[1], 0.8,
+            large_blob.pt[0], large_blob.pt[1], 0.8)
 
 
 if __name__ == "__main__":
