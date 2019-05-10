@@ -6,6 +6,7 @@ import math
 import os
 from itertools import chain
 
+from DistortionCorrection import correct
 from ImageAnalysisFuncs.base import ImageAnalysisError
 
 
@@ -142,14 +143,18 @@ def targetCoordinates(image_path, pars):
     else:
         large_blob, small_blob = blobs
 
-    #small_quality = 4 * math.pi * small_blob.area / (small_blob.length * small_blob.length)
+    small_blob_x, small_blob_y = correct(small_blob.pt[0], small_blob.pt[1], pars.CALIBRATION_PARS)
+    large_blob_x, large_blob_y = correct(large_blob.pt[0], large_blob.pt[1], pars.CALIBRATION_PARS)
 
-    #large_quality = 4 * math.pi * large_blob.area / (large_blob.length * large_blob.length)
+    # out of date
+    # small_quality = 4 * math.pi * small_blob.area / (small_blob.length * small_blob.length)
 
-    #return (small_blob.centroid.x, small_blob.centroid.y, small_quality,
+    # large_quality = 4 * math.pi * large_blob.area / (large_blob.length * large_blob.length)
+
+    # return (small_blob.centroid.x, small_blob.centroid.y, small_quality,
     #        large_blob.centroid.x, large_blob.centroid.y, large_quality)
-    return (small_blob.pt[0], small_blob.pt[1], 0.8,
-            large_blob.pt[0], large_blob.pt[1], 0.8)
+    return (small_blob_x, small_blob_y, 0.8,
+            large_blob_x, large_blob_y, 0.8)
 
 
 if __name__ == "__main__":

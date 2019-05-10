@@ -139,11 +139,13 @@ POS_REP_PLATESCALE = 0.0235  # millimeter per pixel
 POS_REP_CALIBRATION_PARS = {"algorithm": "scale", "scale_factor": POS_REP_PLATESCALE}
 
 POS_REP_TARGET_DETECTION_OTSU_PARS = Namespace(
+    CALIBRATION_PARS=POS_REP_CALIBRATION_PARS,
     MIN_RADIUS=15,  # in pixels
     MAX_RADIUS=55,  # in pixels
     GROUP_RANGE=200,  # in pixels
 )
 POS_REP_TARGET_DETECTION_CONTOUR_PARS = Namespace(
+    CALIBRATION_PARS=POS_REP_CALIBRATION_PARS,
     SMALL_DIAMETER=1.45,  # millimeter
     LARGE_DIAMETER=2.45,  # millimeter
     DIAMETER_TOLERANCE=0.15,  # millimeter
