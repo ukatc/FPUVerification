@@ -76,10 +76,11 @@ def find_bright_sharp_circles(path, minradius, maxradius, grouprange=None, show=
             ):
                 circles.append((blob.pt[0], blob.pt[1], blob.size / 2.0))
                 target_blob_list.append(blob)
-                print(
-                    distance(blob.pt, binary_blob.pt)
-                    + abs(blob.size / 2.0 - binary_blob.size / 2.0)
-                )
+                if show:
+                    print(
+                        distance(blob.pt, binary_blob.pt)
+                        + abs(blob.size / 2.0 - binary_blob.size / 2.0)
+                    )
                 break
 
     if not (grouprange is None or len(circles) == 1):
@@ -87,7 +88,8 @@ def find_bright_sharp_circles(path, minradius, maxradius, grouprange=None, show=
         for i in range(len(circles)):
             for j in range(len(circles)):
                 if i != j:
-                    print(distance(circles[i], circles[j]))
+                    if show:
+                        print(distance(circles[i], circles[j]))
                     if distance(circles[i], circles[j]) < grouprange:
                         accepted.append(circles[i])
                         break
