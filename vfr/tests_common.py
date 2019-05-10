@@ -10,6 +10,7 @@ from numpy import isfinite
 import logging
 from os import path
 from os.path import expanduser, expandvars
+from textwrap import dedent
 import signal
 import warnings
 import camera_calibration
@@ -388,6 +389,13 @@ def check_image_analyzability(ipath, analysis_func, pars=None):
                      " for the last %i images- system error possible?" % (
                        fname, ECOUNT_LIMIT_WARN, ECOUNT_QUEUE_LEN))
     if sum(ecount) >= ECOUNT_LIMIT_FATAL:
-      raise SystemError("image analysis function %s failed %i times in %i images,"
-                        " last with image %s, message %s. Stopping verification system." % (
-                          fname, ECOUNT_LIMIT_FATAL, ECOUNT_QUEUE_LEN, ipath, err))
+      raise SystemError(dedent("""Fatal error:
+      Image analysis function %s failed %i times in %i images, failure limit exceeded.
+      Last failure was with
+
+      image path name = %r,
+
+      message = %r.
+
+      Stopping verification system.""" % (
+        fname, ECOUNT_LIMIT_FATAL, ECOUNT_QUEUE_LEN, ipath, err)))
