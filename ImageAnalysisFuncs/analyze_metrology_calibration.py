@@ -40,10 +40,10 @@ def metcalTargetCoordinates(image_path, pars=None):
     (small_x, small_y, small_qual, big_x, big_y, big_qual)
     """
 
-    if pars.MET_CAL_TARGET_DETECTION_AlGORITHM == CONTOUR_ALGORITHM:
+    if pars.MET_CAL_TARGET_DETECTION_ALGORITHM == CONTOUR_ALGORITHM:
         analysis_func = target_detection_contours.targetCoordinates
         func_pars = pars.MET_CAL_TARGET_DETECTION_CONTOUR_PARS
-    elif pars.AlGORITHM == OTSU_ALGORITHM:
+    elif pars.MET_CAL_TARGET_DETECTION_AlGORITHM == OTSU_ALGORITHM:
         analysis_func = target_detection_otsu.targetCoordinates
         func_pars = pars.MET_CAL_TARGET_DETECTION_OTSU_PARS
     else:

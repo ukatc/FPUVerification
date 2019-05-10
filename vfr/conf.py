@@ -143,7 +143,7 @@ POS_REP_TARGET_DETECTION_OTSU_PARS = Namespace(
     MAX_RADIUS=55,  # in pixels
     GROUP_RANGE=200,  # in pixels
 )
-POS_REP_TARGET_DETECTION_CONTOURS_PARS = Namespace(
+POS_REP_TARGET_DETECTION_CONTOUR_PARS = Namespace(
     SMALL_DIAMETER=1.45,  # millimeter
     LARGE_DIAMETER=2.45,  # millimeter
     DIAMETER_TOLERANCE=0.15,  # millimeter
