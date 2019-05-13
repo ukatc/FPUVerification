@@ -6,6 +6,7 @@ from math import asin, pi, sqrt
 import cv2
 from ImageAnalysisFuncs.base import ImageAnalysisError
 from ImageAnalysisFuncs import target_detection_contours, target_detection_otsu
+from target_detection_otsu import OtsuTargetFindingError
 from numpy import array, cross
 from numpy.linalg import norm
 
@@ -47,12 +48,17 @@ def metcalTargetCoordinates(image_path, pars=None):
         analysis_func = target_detection_otsu.targetCoordinates
         func_pars = pars.MET_CAL_TARGET_DETECTION_OTSU_PARS
     else:
-        raise ImageAnalysisError("MET_CAL_ALORITHM ({}) does not match an algorithm.".format(pars.POS_REP_AlGORITHM))
+        raise MetrologyAnalysisTargetError("MET_CAL_ALORITHM ({}) does not match an algorithm.".format(pars.POS_REP_AlGORITHM))
 
     func_pars.display = pars.display
     func_pars.verbosity = pars.verbosity
 
-    return analysis_func(image_path, func_pars)
+    try:
+        positions = analysis_func(image_path, func_pars)
+    except OtsuTargetFindingError as err:
+        raise MetrologyAnalysisTargetError(err.message + " from Image {}".format(image_path))
+
+    return positions
 
 
 
