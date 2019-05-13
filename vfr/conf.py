@@ -203,26 +203,27 @@ POS_REP_MEASUREMENT_PARS = Namespace(
     POS_REP_SAFETY_MARGIN=5.0,  # safety margin, in degree, for
     # distance to range limits when testing
     POS_REP_WAVEFORM_PARS={
-        "mode": "fast",
+        "mode": "limacc",
         "max_change": 1.2,
         "min_steps": STEPS_LOWER_LIMIT,
         "max_steps": STEPS_UPPER_LIMIT,
         "min_stop_steps": None,
         "max_change_alpha": None,
-        "max_acceleration_alpha": None,
+        "max_acceleration_alpha": 300,
         "max_deceleration_alpha": None,
         "min_steps_alpha": None,
         "min_stop_steps_alpha": None,
         "max_steps_alpha": None,
         "max_change_beta": None,
-        "max_acceleration_beta": None,
+        "max_acceleration_beta": 300,
         "max_deceleration_beta": None,
         "min_steps_beta": None,
         "min_stop_steps_beta": None,
         "max_steps_beta": None,
-        "max_acceleration": 35,
-        "max_deceleration": 35,
+        "max_acceleration": 100,
+        "max_deceleration": 100,
     },
+    POS_REP_WAVEFORM_RULESET=0, # '0' does switch off checking
     POS_REP_CALIBRATION_MAPFILE="calibration/mapping/pos-rep-2019-04-10.cfg",
 )
 

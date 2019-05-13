@@ -17,6 +17,7 @@ import camera_calibration
 
 from fpu_commands import gen_wf, list_states
 from fpu_constants import ALPHA_DATUM_OFFSET, BETA_DATUM_OFFSET
+import FpuGridDriver
 from FpuGridDriver import (
     CAN_PROTOCOL_VERSION,
 )  # see documentation reference for Exception hierarchy; (for CAN protocol 1, this is section 12. \
@@ -26,6 +27,7 @@ from FpuGridDriver import (
     DATUM_TIMEOUT_ENABLE,
     FPST_AT_DATUM,
     SEARCH_CLOCKWISE,
+    DEFAULT_WAVEFORM_RULESET_VERSION,
 )
 from numpy import array, zeros
 from vfr.conf import (
@@ -36,6 +38,7 @@ from vfr.conf import (
 )
 from ImageAnalysisFuncs.base import ImageAnalysisError
 
+assert tuple(map(int, FpuGridDriver.__version__.split("."))) >= (1,5,5), "FPU driver version must be 1.5.5 at least"
 
 got_quit_request = False # global flag to initiate orderly termination
 
@@ -85,6 +88,8 @@ def goto_position(
     allow_uninitialized=False,
     soft_protection=True,
     loglevel=logging.INFO,
+    waveform_ruleset=DEFAULT_WAVEFORM_RULESET_VERSION,
+    wf_pars={},
 ):
     logger = logging.getLogger(__name__)
     check_for_quit()
@@ -95,15 +100,25 @@ def goto_position(
     logger.debug("current positions:\n%r" % current_angles)
     logger.log(loglevel, "moving FPUs %s to (%6.2f,%6.2f)" % (fpuset, abs_alpha, abs_beta))
 
-    wf = gen_wf(abs_alpha - current_alpha, abs_beta - current_beta)
-    wf2 = {k: v for k, v in wf.items() if k in fpuset}
+    delta_alpha = abs_alpha - current_alpha
+    delta_beta = abs_beta - current_beta
+
+    # set movement for fpus which are not in set to zero
+    for k in range(len(delta_alpha)):
+        if fpuset and (k not in fpuset):
+            delta_alpha[k] = 0.0
+            delta_beta[k] = 0.0
+
+    wf = gen_wf(delta_alpha, delta_beta, **wf_pars)
+
     gd.configMotion(
-        wf2,
+        wf,
         grid_state,
         allow_uninitialized=allow_uninitialized,
         soft_protection=soft_protection,
         warn_unsafe=soft_protection,
         verbosity=0,
+        ruleset_version=waveform_ruleset,
     )
     check_for_quit()
 
