@@ -166,7 +166,7 @@ def get_step_counts(rig, fpu_id):
     return FPU_Position(alpha_steps, beta_steps)
 
 
-def capture_fpu_position(rig, fpu_id, midx, target_pos, capture_image):
+def capture_fpu_position(rig, fpu_id, midx, target_pos, capture_image, pars=None):
     fpu_log = get_fpuLogger(fpu_id, rig.fpu_config, __name__)
 
     sn = rig.fpu_config[fpu_id]["serialnumber"]
@@ -183,7 +183,14 @@ def capture_fpu_position(rig, fpu_id, midx, target_pos, capture_image):
     )
 
     goto_position(
-        rig.gd, target_pos.alpha, target_pos.beta, rig.grid_state, fpuset=[fpu_id], loglevel=logging.DEBUG
+        rig.gd,
+        target_pos.alpha,
+        target_pos.beta,
+        rig.grid_state,
+        fpuset=[fpu_id],
+        loglevel=logging.DEBUG,
+        waveform_ruleset=pars.POS_REP_WAVEFORM_RULESET,
+        wf_pars=pars.POS_REP_WAVEFORM_PARS,
     )
 
     # We use the real and uncorrected position to index the images.
@@ -224,7 +231,7 @@ def get_images_for_fpu(rig, fpu_id, range_limits, pars, capture_image):
         target_pos = get_target_position(range_limits, pars, measurement_index)
 
         key, val = capture_fpu_position(
-            rig, fpu_id, measurement_index, target_pos, capture_image
+            rig, fpu_id, measurement_index, target_pos, capture_image, pars=pars,
         )
 
         # the direction index tells whether the image
