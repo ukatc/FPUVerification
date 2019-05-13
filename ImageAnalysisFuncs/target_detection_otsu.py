@@ -10,14 +10,14 @@ from DistortionCorrection import correct
 from ImageAnalysisFuncs.base import ImageAnalysisError
 
 
-class BlobRepeatabilityAnalysisError(ImageAnalysisError):
+class OtsuTargetFindingError(ImageAnalysisError):
     pass
 
 def distance(p1, p2):
     return math.hypot(p1[0] - p2[0], p1[1] - p2[1])
 
 
-def find_bright_sharp_circles(path, minradius, maxradius, grouprange=None, show=False):
+def find_bright_sharp_circles(path, minradius, maxradius, grouprange=None, quality=0.4, show=False):
     """
     Finds circular dots in the given image within the radius range, displaying them on console and graphically if show is set to True
 
@@ -41,7 +41,7 @@ def find_bright_sharp_circles(path, minradius, maxradius, grouprange=None, show=
     params.maxArea = math.pi * maxradius ** 2
     params.blobColor = 255  # white
     params.filterByColor = True
-    params.minCircularity = 0.4  # smooth sided (0 is very pointy)
+    params.minCircularity = quality  # smooth sided (0 is very pointy) 0.4 was used by Alex
     params.filterByCircularity = True
     params.minInertiaRatio = 0.9  # non stretched
     params.filterByInertia = True
@@ -83,7 +83,7 @@ def find_bright_sharp_circles(path, minradius, maxradius, grouprange=None, show=
                     )
                 break
 
-    if not (grouprange is None or len(circles) == 1):
+    if not (grouprange is None or len(circles) >= 2):
         accepted = []
         for i in range(len(circles)):
             for j in range(len(circles)):
@@ -132,12 +132,13 @@ def targetCoordinates(image_path, pars):
     """
 
     blobs = find_bright_sharp_circles(image_path,
-                                        pars.MIN_RADIUS,
-                                        pars.MAX_RADIUS,
-                                        pars.GROUP_RANGE)
+                                      pars.MIN_RADIUS,
+                                      pars.MAX_RADIUS,
+                                      grouprange=pars.GROUP_RANGE,
+                                      quality=pars.QUALITY_METRIC)
     if len(blobs) != 2:
-        raise BlobRepeatabilityAnalysisError("{} blobs found in image {}, there should only be two".format(len(blobs),
-                                                                                                           image_path))
+        raise OtsuTargetFindingError("{} blobs found in image {}, there should only be two".format(len(blobs),
+                                                                                                   image_path))
 
     # check blobs are in the correct order
     if blobs[0].size < blobs[1].size:
@@ -155,8 +156,8 @@ def targetCoordinates(image_path, pars):
 
     # return (small_blob.centroid.x, small_blob.centroid.y, small_quality,
     #        large_blob.centroid.x, large_blob.centroid.y, large_quality)
-    return (small_blob_x, small_blob_y, 0.8,
-            large_blob_x, large_blob_y, 0.8)
+    return (small_blob_x, small_blob_y, pars.QUALITY_METRIC,
+            large_blob_x, large_blob_y, pars.QUALITY_METRIC)
 
 
 if __name__ == "__main__":
