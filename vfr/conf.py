@@ -164,7 +164,7 @@ POS_REP_ANALYSIS_PARS = Namespace(
     display=False,
     verbosity=0,
 )
-MET_CAL_PLATESCALE = 0.00668,  # millimeter per pixel
+MET_CAL_PLATESCALE = 0.00668  # millimeter per pixel
 MET_CAL_CALIBRATION_PARS = {"algorithm": "scale", "scale_factor": MET_CAL_PLATESCALE}
 MET_CAL_TARGET_DETECTION_OTSU_PARS = Namespace(
     CALIBRATION_PARS=MET_CAL_CALIBRATION_PARS,
