@@ -143,6 +143,7 @@ POS_REP_TARGET_DETECTION_OTSU_PARS = Namespace(
     MIN_RADIUS=15,  # in pixels
     MAX_RADIUS=55,  # in pixels
     GROUP_RANGE=200,  # in pixels
+    QUALITY_METRIC=0.4,  # dimensionless
 )
 POS_REP_TARGET_DETECTION_CONTOUR_PARS = Namespace(
     CALIBRATION_PARS=POS_REP_CALIBRATION_PARS,
@@ -163,17 +164,20 @@ POS_REP_ANALYSIS_PARS = Namespace(
     display=False,
     verbosity=0,
 )
-
+MET_CAL_PLATESCALE = 0.00668,  # millimeter per pixel
+MET_CAL_CALIBRATION_PARS = {"algorithm": "scale", "scale_factor": MET_CAL_PLATESCALE}
 MET_CAL_TARGET_DETECTION_OTSU_PARS = Namespace(
+    CALIBRATION_PARS=MET_CAL_CALIBRATION_PARS,
     MIN_RADIUS=45,  # in pixels
     MAX_RADIUS=200,  # in pixels
     GROUP_RANGE=525,  # in pixels
+    QUALITY_METRIC=0.4,  # dimensionless
 )
 MET_CAL_TARGET_DETECTION_CONTOUR_PARS = Namespace(
     SMALL_DIAMETER=1.42,  # millimeter
     LARGE_DIAMETER=2.42,  # millimeter
     DIAMETER_TOLERANCE=0.15,  # millimeter
-    PLATESCALE=0.00668,  # millimeter per pixel
+    PLATESCALE=MET_CAL_PLATESCALE,  # millimeter per pixel
     THRESHOLD=80,  # 0-255
     QUALITY_METRIC=0.8,  # dimensionless
 )
