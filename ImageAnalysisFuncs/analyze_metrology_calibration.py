@@ -43,7 +43,7 @@ def metcalTargetCoordinates(image_path, pars=None):
     if pars.MET_CAL_TARGET_DETECTION_ALGORITHM == CONTOUR_ALGORITHM:
         analysis_func = target_detection_contours.targetCoordinates
         func_pars = pars.MET_CAL_TARGET_DETECTION_CONTOUR_PARS
-    elif pars.MET_CAL_TARGET_DETECTION_AlGORITHM == OTSU_ALGORITHM:
+    elif pars.MET_CAL_TARGET_DETECTION_ALGORITHM  == OTSU_ALGORITHM:
         analysis_func = target_detection_otsu.targetCoordinates
         func_pars = pars.MET_CAL_TARGET_DETECTION_OTSU_PARS
     else:
