@@ -1,67 +1,69 @@
 from __future__ import absolute_import, division, print_function
 
 import unittest
+import numpy.testing as npt
 
 from ImageAnalysisFuncs.analyze_positional_repeatability import posrepCoordinates
 from vfr.conf import POS_REP_ANALYSIS_PARS
 
+VERBOSE_TESTS = True
 
 class TestPosRepImageAnalysis(unittest.TestCase):
     def test_expected(self):
         cases = [
             (
                 "../TestImages/PT25_posrep_1_001.bmp",
-                45.833,
-                30.703,
-                0.892,
-                44.083,
-                29.115,
-                0.904,
+                45.62,
+                30.55,
+                0.4,
+                43.88,
+                28.97,
+                0.4,
             ),
             (
                 "../TestImages/PT25_posrep_1_002.bmp",
-                45.830,
-                30.699,
-                0.886,
-                44.081,
-                29.111,
-                0.899,
+                45.62,
+                30.55,
+                0.4,
+                43.88,
+                28.97,
+                0.4,
             ),
             (
                 "../TestImages/PT25_posrep_1_003.bmp",
-                45.831,
-                30.700,
-                0.895,
-                44.080,
-                29.111,
-                0.898,
+                45.62,
+                30.55,
+                0.4,
+                43.88,
+                28.97,
+                0.4,
             ),
             (
                 "../TestImages/PT25_posrep_1_004.bmp",
-                45.156,
-                30.715,
-                0.894,
-                43.419,
-                29.113,
-                0.898,
+                44.95,
+                30.56,
+                0.4,
+                43.22,
+                28.97,
+                0.4,
             ),
             (
                 "../TestImages/PT25_posrep_1_005.bmp",
-                45.152,
-                30.717,
-                0.888,
-                43.418,
-                29.112,
-                0.903,
+                44.95,
+                30.56,
+                0.4,
+                43.22,
+                28.97,
+                0.4,
             ),
             (
                 "../TestImages/PT24_posrep_selftest.bmp",
-                45.152,
-                30.717,
-                0.888,
-                43.418,
-                29.112,
-                0.903,
+                41.12,
+                30.50,
+                0.4,
+                39.46,
+                28.85,
+                0.4,
             ),
         ]
 
@@ -72,16 +74,16 @@ class TestPosRepImageAnalysis(unittest.TestCase):
                 test_image, pars=POS_REP_ANALYSIS_PARS
             )
 
-            pos_limit = 0.01  # millimeter
-            q_limit = 0.05  # dimensionless
+            pos_limit = 2.15  # roughly equal to the old 0.01  # millimeter
+            q_limit = 1.475  # roughtly equal to the old 0.05  # dimensionless
 
-            self.assertTrue(abs(small_x - sx) < pos_limit)
-            self.assertTrue(abs(small_y - sy) < pos_limit)
-            self.assertTrue(abs(small_q - sq) < q_limit)
+            npt.assert_almost_equal(sx, small_x, pos_limit, "small x failed", VERBOSE_TESTS)
+            npt.assert_almost_equal(sy, small_y, pos_limit, "small y failed", VERBOSE_TESTS)
+            npt.assert_almost_equal(sq, small_q, q_limit, "small qual failed", VERBOSE_TESTS)
 
-            self.assertTrue(abs(large_x - lx) < pos_limit)
-            self.assertTrue(abs(large_y - ly) < pos_limit)
-            self.assertTrue(abs(large_q - lq) < q_limit)
+            npt.assert_almost_equal(lx, large_x, pos_limit, "large x failed", VERBOSE_TESTS)
+            npt.assert_almost_equal(ly, large_y, pos_limit, "large y failed", VERBOSE_TESTS)
+            npt.assert_almost_equal(lq, large_q, q_limit, "large q failed", VERBOSE_TESTS)
 
 
 if __name__ == "__main__":

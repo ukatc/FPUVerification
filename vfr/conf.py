@@ -87,16 +87,30 @@ DAT_REP_PLATESCALE = (
 
 DAT_REP_CALIBRATION_PARS = {"algorithm": "scale", "scale_factor": DAT_REP_PLATESCALE}
 
+DAT_REP_TARGET_DETECTION_OTSU_PARS = Namespace(
+    CALIBRATION_PARS=DAT_REP_CALIBRATION_PARS,
+    MIN_RADIUS=50,  # in pixels
+    MAX_RADIUS=187,  # in pixels
+    GROUP_RANGE=680,  # in pixels
+    QUALITY_METRIC=0.4,  # dimensionless
+)
+DAT_REP_TARGET_DETECTION_CONTOUR_PARS = Namespace(
+    CALIBRATION_PARS=DAT_REP_CALIBRATION_PARS,
+    SMALL_DIAMETER=1.45,  # millimeter
+    LARGE_DIAMETER=2.45,  # millimeter
+    DIAMETER_TOLERANCE=0.15,  # millimeter
+    PLATESCALE=DAT_REP_PLATESCALE,  # millimeter per pixel
+    # THRESHOLD=60,  # 0-255  
+    THRESHOLD=70,  # 0-255
+    QUALITY_METRIC=0.8,  # dimensionless
+)
+
 # this needs later adjustment (does not work currently)
 DATUM_REP_ANALYSIS_PARS = Namespace(
-    FIXME_FAKE_RESULT=True,  # DELETE THIS!! This is only for testing!
-    POS_REP_PLATESCALE=DAT_REP_PLATESCALE,
-    POS_REP_SMALL_DIAMETER=1.42,  # millimeter (does not work)
-    POS_REP_LARGE_DIAMETER=2.42,  # millimeter (does not work)
-    POS_REP_DIAMETER_TOLERANCE=0.15,  # millimeter
-    POS_REP_THRESHOLD=60,  # 0-255  (does not work)
-    POS_REP_QUALITY_METRIC=0.8,  # dimensionless
-    POS_REP_CALIBRATION_PARS=DAT_REP_CALIBRATION_PARS,
+    QUALITY_METRIC=0.8,  # dimensionless
+    TARGET_DETECTION_ALGORITHM="otsu",  # "otsu" or "contours"
+    TARGET_DETECTION_OTSU_PARS=DAT_REP_TARGET_DETECTION_OTSU_PARS,
+    TARGET_DETECTION_CONTOURS_PARS=DAT_REP_TARGET_DETECTION_CONTOUR_PARS,
     display=False,
     verbosity=0,
     DATUM_REP_PASS=20.0,  # the maximum single
@@ -134,35 +148,61 @@ MET_CAL_MEASUREMENT_PARS = Namespace(
 
 POS_REP_PLATESCALE = 0.0235  # millimeter per pixel
 
-# this is the fallback configuration, which is linear scaling.
-# If available, it is replaced by the calibration
-# which the map file points to.
+# This is the fallback configuration, which is linear scaling.
+#
+# If available, it is replaced by the distortion-correcting
+# calibration which the map file points to.
+
 POS_REP_CALIBRATION_PARS = {"algorithm": "scale", "scale_factor": POS_REP_PLATESCALE}
 
+POS_REP_TARGET_DETECTION_OTSU_PARS = Namespace(
+    CALIBRATION_PARS=POS_REP_CALIBRATION_PARS,
+    MIN_RADIUS=15,  # in pixels
+    MAX_RADIUS=55,  # in pixels
+    GROUP_RANGE=200,  # in pixels
+    QUALITY_METRIC=0.4,  # dimensionless
+)
+POS_REP_TARGET_DETECTION_CONTOUR_PARS = Namespace(
+    CALIBRATION_PARS=POS_REP_CALIBRATION_PARS,
+    SMALL_DIAMETER=1.45,  # millimeter
+    LARGE_DIAMETER=2.45,  # millimeter
+    DIAMETER_TOLERANCE=0.15,  # millimeter
+    PLATESCALE=POS_REP_PLATESCALE,  # millimeter per pixel
+    THRESHOLD=70,  # 0-255
+    QUALITY_METRIC=0.8,  # dimensionless
+)
 
-# this needs to e adjusted - parameters do not work
 POS_REP_ANALYSIS_PARS = Namespace(
-    # FIXME: omit POS_REP prefix in members after merging AOB's
-    # branch, as this struct is used by DAT_REP as well
-    POS_REP_PLATESCALE=POS_REP_PLATESCALE,
-    POS_REP_SMALL_DIAMETER=1.45,  # millimeter (does not work)
-    POS_REP_LARGE_DIAMETER=2.45,  # millimeter (does not work)
-    POS_REP_DIAMETER_TOLERANCE=0.15,  # millimeter
-    POS_REP_THRESHOLD=70,  # 0-255
-    POS_REP_QUALITY_METRIC=0.8,  # dimensionless
-    POS_REP_CALIBRATION_PARS=POS_REP_CALIBRATION_PARS,
+    CALIBRATION_PARS=POS_REP_CALIBRATION_PARS,
+    TARGET_DETECTION_ALGORITHM="otsu",  # "otsu" or "contours"
+    TARGET_DETECTION_OTSU_PARS=POS_REP_TARGET_DETECTION_OTSU_PARS,
+    TARGET_DETECTION_CONTOURS_PARS=POS_REP_TARGET_DETECTION_CONTOUR_PARS,
     display=False,
     verbosity=0,
 )
+MET_CAL_PLATESCALE = 0.00668  # millimeter per pixel
+MET_CAL_CALIBRATION_PARS = {"algorithm": "scale", "scale_factor": MET_CAL_PLATESCALE}
+MET_CAL_TARGET_DETECTION_OTSU_PARS = Namespace(
+    CALIBRATION_PARS=MET_CAL_CALIBRATION_PARS,
+    MIN_RADIUS=45,  # in pixels
+    MAX_RADIUS=200,  # in pixels
+    GROUP_RANGE=525,  # in pixels
+    QUALITY_METRIC=0.4,  # dimensionless
+)
+MET_CAL_TARGET_DETECTION_CONTOUR_PARS = Namespace(
+    SMALL_DIAMETER=1.42,  # millimeter
+    LARGE_DIAMETER=2.42,  # millimeter
+    DIAMETER_TOLERANCE=0.15,  # millimeter
+    PLATESCALE=MET_CAL_PLATESCALE,  # millimeter per pixel
+    THRESHOLD=80,  # 0-255
+    QUALITY_METRIC=0.8,  # dimensionless
+)
 
 MET_CAL_TARGET_ANALYSIS_PARS = Namespace(
-    MET_CAL_PLATESCALE=0.00668,  # millimeter per pixel
-    MET_CAL_SMALL_DIAMETER=1.42,  # millimeter
-    MET_CAL_LARGE_DIAMETER=2.42,  # millimeter
-    MET_CAL_DIAMETER_TOLERANCE=0.15,  # millimeter
     MET_CAL_GAUSS_BLUR=3,  # pixels - MUST BE AN ODD NUMBER
-    MET_CAL_THRESHOLD=80,  # 0-255
-    MET_CAL_QUALITY_METRIC=0.8,  # dimensionless
+    MET_CAL_TARGET_DETECTION_ALGORITHM="otsu",  # "otsu" or "contours"
+    MET_CAL_TARGET_DETECTION_OTSU_PARS=MET_CAL_TARGET_DETECTION_OTSU_PARS,
+    MET_CAL_TARGET_DETECTION_CONTOUR_PARS=MET_CAL_TARGET_DETECTION_CONTOUR_PARS,
     display=False,  # will display image with contours annotated
     verbosity=0,
 )

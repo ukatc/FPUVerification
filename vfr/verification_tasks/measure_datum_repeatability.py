@@ -302,13 +302,6 @@ def eval_datum_repeatability(dbe, dat_rep_analysis_pars):
 
             logger.exception("image analysis for FPU %s failed with message %s" % (fpu_id, errmsg))
 
-            if dat_rep_analysis_pars.FIXME_FAKE_RESULT:
-                warnings.warn(
-                    "Faking passed result for datum repeatability "
-                    "- does not work because test images is missing"
-                )
-                datum_repeatability_has_passed = TestResult.OK
-
         record = DatumRepeatabilityResult(
             algorithm_version=DATUM_REPEATABILITY_ALGORITHM_VERSION,
             coords=coords,

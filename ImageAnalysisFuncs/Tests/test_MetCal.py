@@ -1,6 +1,7 @@
 from __future__ import absolute_import, division, print_function
 
 import unittest
+import numpy.testing as npt
 
 from ImageAnalysisFuncs.analyze_metrology_calibration import (
     MetrologyAnalysisFibreError,
@@ -21,6 +22,15 @@ class TestMetCalImageAnalysis(unittest.TestCase):
                 0.874,
                 13.771,
                 8.620,
+                0.892,
+            ),
+            (
+                "../TestImages/PT25_metcal_1_002.bmp",
+                15.463,
+                10.265,
+                0.862,
+                13.771,
+                8.618,
                 0.892,
             ),
             (
@@ -62,25 +72,25 @@ class TestMetCalImageAnalysis(unittest.TestCase):
             pos_limit = 0.01  # millimeter
             q_limit = 0.05  # dimensionless
 
-            self.assertTrue(abs(small_x - sx) < pos_limit)
-            self.assertTrue(abs(small_y - sy) < pos_limit)
-            self.assertTrue(abs(small_q - sq) < q_limit)
+            npt.assert_almost_equal(sx, small_x, pos_limit)
+            npt.assert_almost_equal(sy, small_y, pos_limit)
+            npt.assert_almost_equal(sq, small_q, q_limit)
 
-            self.assertTrue(abs(large_x - lx) < pos_limit)
-            self.assertTrue(abs(large_y - ly) < pos_limit)
-            self.assertTrue(abs(large_q - lq) < q_limit)
+            npt.assert_almost_equal(lx, large_x, pos_limit)
+            npt.assert_almost_equal(ly, large_y, pos_limit)
+            npt.assert_almost_equal(lq, large_q, q_limit)
 
-    def test_notFound(self):
-        cases = ["../TestImages/PT25_metcal_1_002.bmp"]
-
-        with self.assertRaises(MetrologyAnalysisTargetError):
-            for test_image in cases:
-
-                print("Testing metcalTargetCoordinates with image %s.." % test_image)
-
-                (sx, sy, sq, lx, ly, lq) = metcalTargetCoordinates(
-                    test_image, pars=MET_CAL_TARGET_ANALYSIS_PARS
-                )
+    # def test_notFound(self):
+    #     cases = ["../TestImages/PT25_metcal_1_002.bmp"]
+    # 
+    #     with self.assertRaises(MetrologyAnalysisTargetError):
+    #         for test_image in cases:
+    # 
+    #             print("Testing metcalTargetCoordinates with image %s.." % test_image)
+    # 
+    #             (sx, sy, sq, lx, ly, lq) = metcalTargetCoordinates(
+    #                 test_image, pars=MET_CAL_TARGET_ANALYSIS_PARS
+    #             )
 
 
 if __name__ == "__main__":
