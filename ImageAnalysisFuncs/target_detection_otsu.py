@@ -137,7 +137,7 @@ def targetCoordinates(image_path, pars=None):
                                       grouprange=pars.GROUP_RANGE,
                                       quality=pars.QUALITY_METRIC)
     if len(blobs) != 2:
-        raise OtsuTargetFindingError("{} blobs found in image {}, there should be exactly two".format(len(blobs),
+        raise OtsuTargetFindingError("{} blobs found in image {}, there should be exactly two blobs".format(len(blobs),
                                                                                                       image_path))
 
     # check blobs are in the correct order
