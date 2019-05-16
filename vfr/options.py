@@ -19,7 +19,7 @@ from vfr.tests_common import lit_eval_file
 from vfr.conf import DEFAULT_TASKS, DEFAULT_TASKS_NONFIBRE
 from vfr.db.snset import get_snset
 from vfr.helptext import examples, summary
-from vfr.task_config import USERTASKS, T
+from vfr.task_config import USERTASKS, MEASUREMENT_TASKS, T
 
 
 def parse_args():
@@ -429,8 +429,15 @@ def get_sets(all_serial_numbers, fpu_config, opts):
     if eval_snset is None:
         # both mesured and evaluated sets are exclusively defined by
         # the measurement configuration file
-        measure_fpuset = fpu_config.keys()
-        eval_fpuset = measure_fpuset
+        if set(opts.tasks) & MEASUREMENT_TASKS:
+            # in this case, no measurements are needed,
+            # which means that we do not need to access
+            # protected resources like hardware or logfiles.
+            measure_fpuset = set(measure_config.keys())
+            eval_fpuset = measure_fpuset
+        else:
+            measure_fpuset = set()
+            eval_fpuset = fpu_config.keys()
     else:
         for sn in eval_snset:
             if not sn_pat.match(sn):
@@ -454,7 +461,10 @@ def get_sets(all_serial_numbers, fpu_config, opts):
             config_by_sn[sn]["fpu_id"]: config_by_sn[sn] for sn in measure_sns
         }
 
-        measure_fpuset = set(measure_config.keys())
+        if set(opts.tasks) & MEASUREMENT_TASKS:
+            measure_fpuset = set(measure_config.keys())
+        else:
+            measure_fpuset = set()
 
         extra_eval_sns = eval_snset.difference(measure_sns)
 
