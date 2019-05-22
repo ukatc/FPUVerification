@@ -1,0 +1,252 @@
+INSTALLATION INSTRUCTIONS FOR VERIFICATION SOFTWARE
+---------------------------------------------------
+
+This recipe describes a complete new install
+of the verification software. 
+
+PREREQUISITES
+=============
+
+
+1) A 64-bit Linux system with kernel 2.6 or newer.  (Debian >= 9,
+   Ubuntu >= 17.10, Ubuntu 18.04.2 LTS, Scientific Linux >= 2017,
+   Arch Linux are all supported). 
+
+
+2) To retrieve packages, both git and python-pip are needed:
+
+   sudo apt-get install git-core
+   sudo apt-get install python-pip
+
+3) The EtherCAN FPU driver and python interface
+
+   * fpu_driver
+
+   git clone jnix@dalriada/MOONS/fpu_driver
+   cd fpu_driver
+   git checkout can1
+
+4) The FPU Verification software
+
+   * FPUVerification verification software bundled with hardware interfaces
+   
+   git clone jnix@dalriada/MOONS/FPUVerification
+   
+
+
+4) for the C++ driver and static library
+
+ * gcc-4.9 (essentially, with support for C++11)
+ * Linux-2.6 or newer (requiring support for eventfd)
+ * glibc-2.3.2 (epoll support)
+ * liblmdb0 (Lightning Memory database, aka LMDB)
+ * lmdb-utils (contains backup utility for LMDB)
+
+5) for the test code and Python bindings
+
+ * Python-2.7
+ * boost-1-66 , which can be downloaded from http://www.boost.org/users/download/
+ * python-lmdb (Python bindings)
+ * pip install lmdb
+ * apt install lmdb-utils
+
+6) For the library which accesses the FTDI driver which controls the Thorlabs stages:
+
+ * libftdi-dev
+ * libftdi1
+
+  In source code available from https://www.intra2net.com/en/developer/libftdi/download.php .
+  Is already contained in Ubuntu and Debian:
+
+  apt install libftdi-dev libftd1
+
+
+7) for accessing the lamp DAQ controller
+
+ This requires libuldaq.
+
+ Source code: https://github.com/mccdaq/uldaq
+
+ This needs to be build and installed as in the instructions.
+
+ * libuldaq
+
+ # furthermore, a matching python module is needed
+ * pip install uldaq
+ 
+
+8) for the basler pylon software (can be used to view the cameras manually)
+
+ * pylon-5.0.0
+
+ https://www.graftek.biz/system/files/5191/original/Basler_Dart_Installation_Guide_-_Pylon_for_Windows.pdf?1480778989
+
+
+
+INSTALLATION
+============
+
+-- The following needs to be done as the system user,
+because it changes system-wide configuration.  --
+
+
+SYSTEM SETUP
+------------
+
+sudo apt-get install python-dev python-scipy python-numpy
+sudo apt-get install python-matplotlib python-lmdb python-pip python-enum34 python-imageio
+sudo apt-get install python-opencv python-pil:amd64 python-pygments python-subprocess32
+
+sudo apt-get install libusb-dev libusb-1.0.0-dev liblmdb0 
+sudo apt-get install git git-gui gitg gitk git-man
+
+# for running path planning algorithms written in racket, one needs the
+# racket compiler and run-time environment:
+
+sudo apt-get install racket 
+
+
+INSTALLING BOOST LIBRARIES
+--------------------------
+
+Recent Boost libraries are required to build the Python module, which
+is needed in the verification system (but not in the final ICS
+software).
+
+Please keep in mind that any installed different version of boost
+libraries is very likely an essential part of your Linux system, so do
+NOT uninstall older versions from your system!
+
+* Do the configuration/build from a normal user account,
+  and change to the root account for the install.
+  This should have the result that the library is
+  installed system-wide under /usr/local, where it
+  will be found.
+
+* for security, verify boost package signature using gnupg
+
+* unpack boost package:
+
+$ tar xzf boost_1_66_0.tar.gz
+
+* build package:
+
+$ cd boost_1_66_0/
+$ ./bootstrap.sh
+$ ./b2
+
+* install package into /usr/local directory:
+
+$ sudo ./b2 install
+
+To make the boost libraries accessible when the
+final program is run, you need to add the
+two commands
+
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
+
+export LIBRARY_PATH=$LIBRARY_PATH:/usr/local/lib
+
+to /etc/profile . 
+
+Also, you should add the directory with the boost header files (by
+default /usr/local/include) to the path configured in the environment
+variable CPLUS_INCLUDE_PATH:
+
+CPLUS_INCLUDE_PATH=/usr/local/include
+
+Logging out and logging in again activates these changes.
+
+
+
+INSTALLING UDEV RULES
+----------------------
+
+This is needed so that the Thorlabs interface
+gets permission to access the USB devices.
+
+sudo cp FPUVerification/config/99-libftdi.rules /etc/udev/config.d
+sudo udevadm trigger
+
+NETWORKING
+==========
+
+Cameras and EtherCAN gateways should be connected
+to an internal network interface. You need
+to configure this interface with IP number and netmask
+like this:
+
+vfrig@moons-pc01:/home/moonsadmin$ ip route
+169.254.0.0/16 dev enp4s0 proto kernel scope link src 169.254.0.0 metric 101
+192.168.0.0/24 via 192.168.0.2 dev enp4s0 proto static metric 30
+192.168.0.0/24 dev enp4s0 proto kernel scope link src 192.168.0.2 metric 101
+195.194.120.0/22 dev enp0s31f6 proto kernel scope link src 195.194.120.169 metric 100
+
+In Ubuntu, this can be done via the "wired internet connection"
+widget near the login and audio settings button.
+If in doubt, ask an expert.
+
+
+USER ADMINISTRATION AND SYSTEMWIDE FILES
+========================================
+
+
+As root user, create a user group moons.
+Assign this group to all users which are
+going to run the verification software,
+or the FPU driver.
+
+
+create the folders:
+
+/moonsdata/verification
+/moonsdata/fpudb
+
+Assign these directories to belong to the group moons:
+
+chgrp moons -R /moonsdata/verification
+chgrp moons -R /moonsdata/fpudb
+
+Either, mount the file system /moonsdata with the
+mount option bsdgroups, or set the "set group id" flag:
+
+chmod g+s /moonsdata/verification
+chmod g+s /moonsdata/fpudb
+
+
+
+
+BUILDING THE DRIVER AND PYTHON MODULE
+------------------------------------
+
+-- ONLY the following commands and installations should be done
+as a normal user --
+
+
+cd $HOME/fpu_driver
+
+Run
+
+# make wrapper
+
+This builds the binary extension module fpu_driver.so
+and places it into the subdirectory /python.
+In the same subdirectory, there are some test
+scripts which can be used to test the module.
+
+The paths with the driver library
+need to be added to $HOME/.profile like this:
+
+export PATH=$PATH:${HOME}/FPUVerification:${HOME}/FPUVerification/bin
+export PYTHONPATH=$PYTHONPATH:${HOME}/fpu_driver/python:${HOME}/FPUVerification/:${HOME}/FPUVerification/camera-calibration
+
+
+
+INSTALLING PIP REQUIREMENTS FOR VERIFICATION SOFTWARE
+-----------------------------------------------------
+
+pip install -r FPUVerification/requirements.txt
+
+
+
+
