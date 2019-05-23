@@ -77,8 +77,8 @@ def evaluate_datum_repeatability(datumed_coords, moved_coords, pars=None):
     xy_datumed = array(datumed_coords)
     xy_moved = array(moved_coords)
 
-    datumed_mean = mean(xy_datumed, axis=0)  # averages small and big targets
-    moved_mean = mean(xy_datumed, axis=0)
+    datumed_mean = mean(xy_datumed, axis=0)  # averages both small and big targets
+    moved_mean = mean(xy_moved, axis=0)
 
     datumed_errors_small = map(norm, xy_datumed[:, :2] - datumed_mean[:2])
     datumed_errors_big = map(norm, xy_datumed[:, 2:] - datumed_mean[2:])
