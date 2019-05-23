@@ -541,13 +541,14 @@ def load_config_and_sets(all_serial_numbers, config_file_name, opts=None):
 
 
 def check_sns_unique(rig, dbe):
+    logger = logging.getLogger(__name__)
     if not dbe.opts.reuse_serialnum:
         config_sns = set(
             [rig.fpu_config[fpu_id]["serialnumber"] for fpu_id in rig.measure_fpuset]
         )
         used_sns = get_snset(dbe.env, dbe.vfdb, dbe.opts)
         reused_sns = config_sns & used_sns
-        print(
+        logger.debug(
             "config_sns=%r, used_sns=%r, reused_sns=%r"
             % (config_sns, used_sns, reused_sns)
         )
