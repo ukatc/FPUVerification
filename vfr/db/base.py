@@ -122,7 +122,7 @@ def save_named_record(
             val.update({"fpu_id": fpu_id})
         return repr(val)
 
-    log(loglevel, "saving %r = %r" % (record_type, record))
+    log(loglevel, "saving {!r} = {!r}".format(record_type, record))
 
     save_test_result(dbe, [fpu_id], keyfunc, valfunc)
 
