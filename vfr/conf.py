@@ -100,7 +100,7 @@ DAT_REP_TARGET_DETECTION_CONTOUR_PARS = Namespace(
     LARGE_DIAMETER=2.45,  # millimeter
     DIAMETER_TOLERANCE=0.15,  # millimeter
     PLATESCALE=DAT_REP_PLATESCALE,  # millimeter per pixel
-    # THRESHOLD=60,  # 0-255  
+    # THRESHOLD=60,  # 0-255
     THRESHOLD=70,  # 0-255
     QUALITY_METRIC=0.8,  # dimensionless
 )
@@ -238,7 +238,7 @@ POS_REP_MEASUREMENT_PARS = Namespace(
     POS_REP_NUM_INCREMENTS=25,  # the number of movements made
     # within each positive sweep from
     # the starting position
-    POS_REP_ITERATIONS=3,  # the number of times each FPU
+    POS_REP_ITERATIONS=5,  # the number of times each FPU
     # sweeps back and forth
     POS_REP_SAFETY_MARGIN=5.0,  # safety margin, in degree, for
     # distance to range limits when testing
