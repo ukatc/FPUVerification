@@ -123,15 +123,13 @@ class GigECamera:
             iname = "PT25_posrep_1_001.bmp"
 
         elif ip_address == MET_CAL_CAMERA_IP_ADDRESS:
+            # we use the eposure time to discern between
+            # a target and a fibre image
             if (
                 self.exposure_time_ms
                 == MET_CAL_MEASUREMENT_PARS.METROLOGY_CAL_FIBRE_EXPOSURE_MS  # # pylint: disable=no-member
             ):
-                warnings.warn(
-                    "using target image in place of fibre image for met "
-                    "cal picture. This can't work! replace this!!"
-                )
-                iname = "PT25_metcal_1_001.bmp"
+                iname = "PT24_metcal_fibre_2019-04-09.bmp"
             else:
                 iname = "PT25_metcal_1_001.bmp"
 
@@ -139,11 +137,7 @@ class GigECamera:
             iname = "PT25_metht_1_003.bmp"
 
         elif ip_address == PUP_ALGN_CAMERA_IP_ADDRESS:
-            warnings.warn(
-                "setting surrogate image file for hardware simulation."
-                " This can't work! replace this!!"
-            )
-            iname = "PT25_metht_1_003.bmp"
+            iname = "PT24_pupil-alignment_2019-04-08_+010.000_-080.000.bmp"
 
         # we look up the folder with the images by referencing
         # the image analysis module, and getting its location
