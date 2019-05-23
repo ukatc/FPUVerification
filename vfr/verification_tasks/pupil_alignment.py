@@ -37,6 +37,7 @@ from vfr.tests_common import (
     linear_stage_goto,
     check_image_analyzability,
 )
+from DistortionCorrection import get_correction_func
 from vfr.conf import PUP_ALGN_ANALYSIS_PARS
 
 def generate_positions():
@@ -191,15 +192,15 @@ def eval_pupil_alignment(
         mapfile = measurement["calibration_mapfile"]
 
         if mapfile:
-            # this is a temporary solution because ultimately we want to
-            # pass a function reference to calibrate points, because that's
-            # more efficient.
             PUP_ALGN_ANALYSIS_PARS.PUP_ALGN_CALIBRATION_PARS = get_config_from_mapfile(
                 mapfile
             )
 
+        correct = get_correction_func(calibration_pars=PUP_ALGN_ANALYSIS_PARS.PUP_ALGN_CALIBRATION_PARS,
+                                      platescale=PUP_ALGN_ANALYSIS_PARS.PUP_ALGN_PLATESCALE,
+                                      loglevel=PUP_ALGN_ANALYSIS_PARS.loglevel)
         def analysis_func(ipath):
-            return pupalnCoordinates(fixup_ipath(ipath), pars=PUP_ALGN_ANALYSIS_PARS)
+            return pupalnCoordinates(fixup_ipath(ipath), pars=PUP_ALGN_ANALYSIS_PARS, correct=correct)
 
         try:
             coords = dict((k, analysis_func(v)) for k, v in images.items())
