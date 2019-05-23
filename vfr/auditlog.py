@@ -106,7 +106,6 @@ def configure_logs(measure_fpuset, fpu_config, loglevel=logging.INFO):
     filehandler.setFormatter(file_formatter)
     logger.addHandler(filehandler)
 
-    print("setting log level for streamhandler to %s" % loglevel)
     streamhandler.setLevel(loglevel)
     logger.setLevel(min(logging.DEBUG, loglevel))
     # create formatter
