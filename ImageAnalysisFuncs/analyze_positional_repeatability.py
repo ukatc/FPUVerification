@@ -35,7 +35,7 @@ CONTOUR_ALGORITHM = "contour"
 OTSU_ALGORITHM = "otsu"
 
 
-def posrepCoordinates(image_path,pars=None):
+def posrepCoordinates(image_path,pars=None, correct=None):
     """ Reads the image and analyse the location and quality of the targets
      using the chosen algorithm
 
@@ -57,7 +57,7 @@ def posrepCoordinates(image_path,pars=None):
     func_pars.display = pars.display
     func_pars.verbosity = pars.verbosity
 
-    return analysis_func(image_path, pars=func_pars)
+    return analysis_func(image_path, pars=func_pars, correct=correct)
 
 def evaluate_datum_repeatability(datumed_coords, moved_coords, pars=None):
     """Takes two lists of (x,y) coordinates : coordinates

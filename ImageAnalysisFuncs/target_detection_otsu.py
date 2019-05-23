@@ -6,7 +6,7 @@ import math
 import os
 from itertools import chain
 
-from DistortionCorrection import correct
+from DistortionCorrection import get_correction_func
 from ImageAnalysisFuncs.base import ImageAnalysisError
 
 
@@ -122,14 +122,19 @@ def find_bright_sharp_circles(path, minradius, maxradius, grouprange=None, quali
 
     return target_blob_list
 
-def targetCoordinates(image_path, pars=None):
+def targetCoordinates(image_path, pars=None, correct=None):
     """Wrapper for find_bright_sharp_circles
 
-    :param image_path: 
-    :param pars: 
+    :param image_path:
+    :param pars:
     :return: A tuple length 6 containing the x,y coordinate and quality factor for the small and large targets
     (small_x, small_y, small_qual, big_x, big_y, big_qual)
     """
+
+    if correct is None:
+        correct = get_correction_func(calibration_pars=pars.CALIBRATION_PARS,
+                                      platescale=pars.PLATESCALE,
+                                      loglevel=pars.loglevel)
 
     blobs = find_bright_sharp_circles(image_path,
                                       pars.MIN_RADIUS,
@@ -146,8 +151,8 @@ def targetCoordinates(image_path, pars=None):
     else:
         large_blob, small_blob = blobs
 
-    small_blob_x, small_blob_y = correct(small_blob.pt[0], small_blob.pt[1], pars.CALIBRATION_PARS)
-    large_blob_x, large_blob_y = correct(large_blob.pt[0], large_blob.pt[1], pars.CALIBRATION_PARS)
+    small_blob_x, small_blob_y = correct(small_blob.pt[0], small_blob.pt[1])
+    large_blob_x, large_blob_y = correct(large_blob.pt[0], large_blob.pt[1])
 
     # out of date
     # small_quality = 4 * math.pi * small_blob.area / (small_blob.length * small_blob.length)

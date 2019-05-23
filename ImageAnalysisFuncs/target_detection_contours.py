@@ -4,7 +4,7 @@ from __future__ import division, print_function
 from math import pi
 
 import cv2
-from DistortionCorrection import correct
+from DistortionCorrection import get_correction_func
 from ImageAnalysisFuncs.base import ImageAnalysisError, rss
 
 # exceptions which are raised if image analysis functions fail
@@ -15,9 +15,10 @@ class TargetDetectionContoursError(ImageAnalysisError):
 
 
 def targetCoordinates(
-    image_path,
-    # configurable parameters
-    pars=None,
+        image_path,
+        # configurable parameters
+        pars=None,
+        correct=None,
 ):  # will display image with contours annotated
 
     """reads an image from the positional repeatability camera and returns
@@ -32,6 +33,11 @@ def targetCoordinates(
     # function.  (Also, 'PLATESCALE' means normally something
     # different, it normally thescribes the ratio between a ppixel
     # number and an angle, not a pixel number and a distance.)
+
+    if correct is None:
+        correct = get_correction_func(calibration_pars=pars.CALIBRATION_PARS,
+                                      platescale=pars.PLATESCALE,
+                                      loglevel=pars.loglevel)
 
     smallPerimeterLo = (
         (pars.SMALL_DIAMETER - pars.DIAMETER_TOLERANCE)
@@ -192,22 +198,15 @@ def targetCoordinates(
     # scale and straighten the result coordinates
     # the distortion correction is applied here, using the 'correct' function
     # from the distortion correction module
-    if pars.CALIBRATION_PARS is None:
-        pars.CALIBRATION_PARS = {
-            "algorithm": "scale",
-            "scale_factor": pars.PLATESCALE,
-        }
 
     posrep_small_target_x, posrep_small_target_y = correct(
         pixels_posrep_small_target_x,
         pixels_posrep_small_target_y,
-        calibration_pars=pars.CALIBRATION_PARS,
     )
 
     posrep_large_target_x, posrep_large_target_y = correct(
         pixels_posrep_large_target_x,
         pixels_posrep_large_target_y,
-        calibration_pars=pars.CALIBRATION_PARS,
     )
 
     # target separation check - the values here are not configurable, as
@@ -243,5 +242,3 @@ def targetCoordinates(
         posrep_large_target_y,
         posrep_large_target_quality,
     )
-
-
