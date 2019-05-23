@@ -40,6 +40,7 @@ from vfr.tests_common import (
     turntable_safe_goto,
     check_image_analyzability,
 )
+from DistortionCorrection import get_correction_func
 from vfr.verification_tasks.measure_datum_repeatability import (
     get_datum_repeatability_passed_p,
 )
@@ -332,16 +333,22 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
         images_beta = measurement["images_beta"]
 
         mapfile = measurement["calibration_mapfile"]
+
+        if pos_rep_analysis_pars.TARGET_DETECTION_ALGORITHM == "otsu":
+            pars = pos_rep_analysis_pars.TARGET_DETECTION_OTSU_PARS
+        else:
+            pars = pos_rep_analysis_pars.TARGET_DETECTION_CONTOUR_PARS
+
         if mapfile:
-            # passing coefficients is a temporary solution because
-            # ultimately we want to pass a function reference to
-            # calibrate points, because that's more efficient.
-            pos_rep_analysis_pars.POS_REP_CALIBRATION_PARS = get_config_from_mapfile(
+            pars.CALIBRATION_PARS = get_config_from_mapfile(
                 mapfile
             )
 
+        correct = get_correction_func(calibration_pars=pars.CALIBRATION_PARS,
+                                      platescale=pars.PLATESCALE,
+                                      loglevel=pos_rep_analysis_pars.loglevel)
         def analysis_func(ipath):
-            return posrepCoordinates(fixup_ipath(ipath), pars=pos_rep_analysis_pars)
+            return posrepCoordinates(fixup_ipath(ipath), pars=pos_rep_analysis_pars, correct=correct)
 
         try:
             analysis_results_alpha = {}
@@ -443,7 +450,7 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
             logger.exception("image analysis for FPU %s failed with message %s" % (fpu_id, errmsg))
 
         record = PositionalRepeatabilityResults(
-            calibration_pars=pos_rep_analysis_pars.POS_REP_CALIBRATION_PARS,
+            calibration_pars=pars.CALIBRATION_PARS,
             analysis_results_alpha=analysis_results_alpha,
             analysis_results_beta=analysis_results_beta,
             posrep_alpha_max_at_angle=posrep_alpha_max_at_angle,

@@ -38,6 +38,7 @@ from vfr.tests_common import (
     turntable_safe_goto,
     check_image_analyzability,
 )
+from DistortionCorrection import get_correction_func
 from vfr.conf import DATUM_REP_ANALYSIS_PARS
 
 
@@ -250,8 +251,16 @@ def eval_datum_repeatability(dbe, dat_rep_analysis_pars):
 
         residual_counts = measurement["residual_counts"]
 
+        if dat_rep_analysis_pars.TARGET_DETECTION_ALGORITHM == "otsu":
+            pars = dat_rep_analysis_pars.TARGET_DETECTION_OTSU_PARS
+        else:
+            pars = dat_rep_analysis_pars.TARGET_DETECTION_CONTOUR_PARS
+
+        correct = get_correction_func(calibration_pars=pars.CALIBRATION_PARS,
+                                      platescale=pars.PLATESCALE,
+                                      loglevel=dat_rep_analysis_pars.loglevel)
         def analysis_func(ipath):
-            return posrepCoordinates(fixup_ipath(ipath), pars=dat_rep_analysis_pars)
+            return posrepCoordinates(fixup_ipath(ipath), pars=dat_rep_analysis_pars, correct=correct)
 
         try:
 

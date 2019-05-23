@@ -93,6 +93,7 @@ DAT_REP_TARGET_DETECTION_OTSU_PARS = Namespace(
     MAX_RADIUS=187,  # in pixels
     GROUP_RANGE=680,  # in pixels
     QUALITY_METRIC=0.4,  # dimensionless
+    PLATESCALE=DAT_REP_PLATESCALE,  # millimeter per pixel
 )
 DAT_REP_TARGET_DETECTION_CONTOUR_PARS = Namespace(
     CALIBRATION_PARS=DAT_REP_CALIBRATION_PARS,
@@ -100,7 +101,7 @@ DAT_REP_TARGET_DETECTION_CONTOUR_PARS = Namespace(
     LARGE_DIAMETER=2.45,  # millimeter
     DIAMETER_TOLERANCE=0.15,  # millimeter
     PLATESCALE=DAT_REP_PLATESCALE,  # millimeter per pixel
-    # THRESHOLD=60,  # 0-255  
+    # THRESHOLD=60,  # 0-255
     THRESHOLD=70,  # 0-255
     QUALITY_METRIC=0.8,  # dimensionless
 )
@@ -113,6 +114,7 @@ DATUM_REP_ANALYSIS_PARS = Namespace(
     TARGET_DETECTION_CONTOURS_PARS=DAT_REP_TARGET_DETECTION_CONTOUR_PARS,
     display=False,
     verbosity=0,
+    loglevel=0,
     DATUM_REP_PASS=20.0,  # the maximum single
     # deviation in microns from the
     # baseline position which represents an
@@ -161,6 +163,7 @@ POS_REP_TARGET_DETECTION_OTSU_PARS = Namespace(
     MAX_RADIUS=55,  # in pixels
     GROUP_RANGE=200,  # in pixels
     QUALITY_METRIC=0.4,  # dimensionless
+    PLATESCALE=POS_REP_PLATESCALE,  # millimeter per pixel
 )
 POS_REP_TARGET_DETECTION_CONTOUR_PARS = Namespace(
     CALIBRATION_PARS=POS_REP_CALIBRATION_PARS,
@@ -179,6 +182,7 @@ POS_REP_ANALYSIS_PARS = Namespace(
     TARGET_DETECTION_CONTOURS_PARS=POS_REP_TARGET_DETECTION_CONTOUR_PARS,
     display=False,
     verbosity=0,
+    loglevel=0,
 )
 MET_CAL_PLATESCALE = 0.00668  # millimeter per pixel
 MET_CAL_CALIBRATION_PARS = {"algorithm": "scale", "scale_factor": MET_CAL_PLATESCALE}
@@ -325,6 +329,7 @@ PUP_ALGN_ANALYSIS_PARS = Namespace(
     PUP_ALGN_CALIBRATION_PARS=PUP_ALGN_CALIBRATION_PARS,
     display=False,
     verbosity=0,
+    loglevel=0,
 )
 
 

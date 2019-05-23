@@ -3,7 +3,7 @@ from __future__ import division, print_function
 from math import atan
 
 import cv2
-from DistortionCorrection import correct
+from DistortionCorrection import get_correction_func
 from ImageAnalysisFuncs.base import ImageAnalysisError
 from numpy import array, mean
 from numpy.linalg import norm
@@ -25,9 +25,10 @@ PUPIL_ALIGNMENT_ALGORITHM_VERSION = 0.1
 
 
 def pupalnCoordinates(
-    image_path,
-    # configurable parameters
-    pars=None,
+        image_path,
+        # configurable parameters
+        pars=None,
+        correct=None,
 ):
 
     """reads an image from the pupil alignment camera and returns the
@@ -38,6 +39,11 @@ def pupalnCoordinates(
     # Johannes Nix (code imported and re-formatted)
 
     # pylint: disable=no-member
+    if correct is None:
+        correct = get_correction_func(calibration_pars=pars.PUP_ALGN_CALIBRATION_PARS,
+                                      platescale=pars.PUP_ALGN_PLATESCALE,
+                                      loglevel=pars.loglevel)
+
     image = cv2.imread(image_path)
 
     # image processing
@@ -54,15 +60,7 @@ def pupalnCoordinates(
 
     print("image %s: processing pupil alignment analysis" % image_path)
 
-    if pars.PUP_ALGN_CALIBRATION_PARS is None:
-        pars.PUP_ALGN_CALIBRATION_PARS = {
-            "algorithm": "scale",
-            "scale_factor": pars.PUP_ALGN_PLATESCALE,
-        }
-
-    pupaln_spot_x, pupaln_spot_y, = correct(
-        pupaln_spot_x, pupaln_spot_y, calibration_pars=pars.PUP_ALGN_CALIBRATION_PARS
-    )
+    pupaln_spot_x, pupaln_spot_y, = correct(pupaln_spot_x, pupaln_spot_y)
 
     return pupaln_spot_x, pupaln_spot_y, pupaln_quality
 
