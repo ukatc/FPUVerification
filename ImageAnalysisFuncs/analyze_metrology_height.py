@@ -114,8 +114,15 @@ def methtHeight(
         print("Large target points found - x:%s y:%s" % (largeTargetX, largeTargetY))
 
     # best fit straight line through 5 beta arm surface points
-    armSurfaceDom = Polynomial.fit(armSurfaceX, armSurfaceY, 1, domain=(-1, 1))
-    armSurface = armSurfaceDom.convert().coef
+    try:
+        armSurfaceDom = Polynomial.fit(armSurfaceX, armSurfaceY, 1, domain=(-1, 1))
+        armSurface = armSurfaceDom.convert().coef
+    except TypeError as err:
+        raise MetrologyHeightAnalysisError(
+            "Image %s: Polynomial fit failed with TypeError exception (message %s)"
+            % (image_path, str(err))
+        )
+
 
     # calculates normal distance from points on targets to beta arm surface
     # D = |a*x_n + b*y_n + c|/sqrt(a^2 + b^2) where line is defined as ax + by + c = 0
