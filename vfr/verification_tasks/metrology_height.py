@@ -41,48 +41,48 @@ def measure_metrology_height(rig, dbe, pars=None):
     safe_home_turntable(rig, rig.grid_state)
     rig.lctrl.switch_all_off()
 
-    with rig.lctrl.use_silhouettelight():
 
-        MET_HEIGHT_CAMERA_CONF = {
-            DEVICE_CLASS: BASLER_DEVICE_CLASS,
-            IP_ADDRESS: MET_HEIGHT_CAMERA_IP_ADDRESS,
-        }
+    MET_HEIGHT_CAMERA_CONF = {
+        DEVICE_CLASS: BASLER_DEVICE_CLASS,
+        IP_ADDRESS: MET_HEIGHT_CAMERA_IP_ADDRESS,
+    }
 
-        met_height_cam = rig.hw.GigECamera(MET_HEIGHT_CAMERA_CONF)
-        met_height_cam.SetExposureTime(pars.MET_HEIGHT_TARGET_EXPOSURE_MS)
+    met_height_cam = rig.hw.GigECamera(MET_HEIGHT_CAMERA_CONF)
+    met_height_cam.SetExposureTime(pars.MET_HEIGHT_TARGET_EXPOSURE_MS)
 
-        # get sorted positions (this is needed because the turntable can only
-        # move into one direction)
-        for fpu_id, stage_position in get_sorted_positions(
-            rig.measure_fpuset, pars.MET_HEIGHT_POSITIONS
-        ):
-            fpu_log = get_fpuLogger(fpu_id, rig.fpu_config, __name__)
-            fpu_log.info("capturing metrology height image")
-            # move rotary stage to POS_REP_POSN_N
-            turntable_safe_goto(rig, rig.grid_state, stage_position)
+    # get sorted positions (this is needed because the turntable can only
+    # move into one direction)
+    for fpu_id, stage_position in get_sorted_positions(
+        rig.measure_fpuset, pars.MET_HEIGHT_POSITIONS
+    ):
+        fpu_log = get_fpuLogger(fpu_id, rig.fpu_config, __name__)
+        fpu_log.info("capturing metrology height image")
+        # move rotary stage to POS_REP_POSN_N
+        turntable_safe_goto(rig, rig.grid_state, stage_position)
 
-            # initialize pos_rep camera
-            # set pos_rep camera exposure time to DATUM_REP_EXPOSURE milliseconds
+        # initialize pos_rep camera
+        # set pos_rep camera exposure time to DATUM_REP_EXPOSURE milliseconds
 
-            def capture_image(camera):
+        def capture_image(camera):
 
-                ipath = store_image(
-                    camera,
-                    "{sn}/{tn}/{ts}.bmp",
-                    sn=rig.fpu_config[fpu_id]["serialnumber"],
-                    tn="metrology-height",
-                    ts=tstamp,
-                )
+            ipath = store_image(
+                camera,
+                "{sn}/{tn}/{ts}.bmp",
+                sn=rig.fpu_config[fpu_id]["serialnumber"],
+                tn="metrology-height",
+                ts=tstamp,
+            )
 
-                return ipath
+            return ipath
 
+        with rig.lctrl.use_silhouettelight():
             ipath = capture_image(met_height_cam)
-            fpu_log.audit("saving height image to %r" % abspath(ipath))
-            check_image_analyzability(ipath, methtHeight, pars=MET_HEIGHT_ANALYSIS_PARS)
+        fpu_log.audit("saving height image to %r" % abspath(ipath))
+        check_image_analyzability(ipath, methtHeight, pars=MET_HEIGHT_ANALYSIS_PARS)
 
-            record = MetrologyHeightImages(images=ipath)
-            fpu_log.debug("saving result record = %r" % record)
-            save_metrology_height_images(dbe, fpu_id, record)
+        record = MetrologyHeightImages(images=ipath)
+        fpu_log.debug("saving result record = %r" % record)
+        save_metrology_height_images(dbe, fpu_id, record)
     logger.info("metrology height captured successfully")
 
 
