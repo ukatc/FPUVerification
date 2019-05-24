@@ -166,6 +166,7 @@ MEASUREMENT_TASKS = set(
         T.TST_ALPHA_MAX,
         T.TST_BETA_MAX,
         T.TST_BETA_MIN,
+        T.TST_MET_HEIGHT,
         T.MEASURE_MET_CAL,
         T.MEASURE_MET_HEIGHT,
         T.MEASURE_DATUM_REP,
