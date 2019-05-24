@@ -433,7 +433,7 @@ def get_sets(all_serial_numbers, fpu_config, opts):
             # in this case, no measurements are needed,
             # which means that we do not need to access
             # protected resources like hardware or logfiles.
-            measure_fpuset = set(measure_config.keys())
+            measure_fpuset = set(fpu_config.keys())
             eval_fpuset = measure_fpuset
         else:
             measure_fpuset = set()
