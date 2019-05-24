@@ -56,6 +56,8 @@ def posrepCoordinates(image_path,pars=None, correct=None):
 
     func_pars.display = pars.display
     func_pars.verbosity = pars.verbosity
+    func_pars.loglevel = pars.loglevel
+    func_pars.PLATESCALE = pars.PLATESCALE
 
     return analysis_func(image_path, pars=func_pars, correct=correct)
 
