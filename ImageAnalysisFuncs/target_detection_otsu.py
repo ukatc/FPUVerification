@@ -29,7 +29,10 @@ def find_bright_sharp_circles(path, minradius, maxradius, grouprange=None, quali
     :return: a list of opencv blobs for each detected dot.
     """
     image = cv2.imread(path)
-    greyscale = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    try:
+        greyscale = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    except cv2.error as err:
+        raise OtsuTargetFindingError("OpenCV returned error %s for image %s" % (str(err), path))
     blur = cv2.GaussianBlur(greyscale, (5, 5), 0)
     retval, thresholded = cv2.threshold(
         blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU
