@@ -250,7 +250,8 @@ def get_stepcounts(gd, grid_state, fpu_id):
 
 def lit_eval_file(file_name):
     def not_comment(line):
-        if len(line) == 0:
+        lstrip = line.strip()
+        if len(lstrip) == 0:
             return False
 
         return line.strip()[0] != "#"
