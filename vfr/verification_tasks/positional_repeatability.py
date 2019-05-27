@@ -358,9 +358,20 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
             analysis_results_alpha = {}
             analysis_results_alpha_short = {}
 
+            count_failures = 0
+            count_images = len(images_alpha) + len(images_beta)
             for k, v in images_alpha.items():
                 alpha_steps, beta_steps, ipath = v
-                analysis_results_alpha[k] = analysis_func(ipath)
+                try:
+                    analysis_results_alpha[k] = analysis_func(ipath)
+                except ImageAnalysisError as err:
+                    count_failures += 1
+                    if count_failures > count_images * pos_rep_analysis_pars.MAX_FAILURE_QUOTIENT:
+                        raise
+                    else:
+                        logger.warning("image analysis failed for image %s, "
+                                       "message = %s (continuing)" % (ipath, str(err)))
+                        continue
 
                 (
                     x_measured_small,
@@ -382,7 +393,18 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
 
             for k, v in images_beta.items():
                 alpha_steps, beta_steps, ipath = v
-                analysis_results_beta[k] = analysis_func(ipath)
+                try:
+                    analysis_results_beta[k] = analysis_func(ipath)
+                except ImageAnalysisError as err:
+                    count_failures += 1
+                    if count_failures > count_images * pos_rep_analysis_pars.MAX_FAILURE_QUOTIENT:
+                        raise
+                    else:
+                        logger.warning("image analysis failed for image %s, "
+                                       "message = %s (continuing)" % (ipath, str(err)))
+                        continue
+
+
                 (
                     x_measured_small,
                     y_measured_small,

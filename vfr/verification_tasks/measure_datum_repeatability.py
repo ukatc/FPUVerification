@@ -267,9 +267,33 @@ def eval_datum_repeatability(dbe, dat_rep_analysis_pars):
             return posrepCoordinates(fixup_ipath(ipath), pars=dat_rep_analysis_pars, correct=correct)
 
         try:
+            count_images = len(images["datumed_images"]) + len(images["moved_images"])
+            count_failures = 0
+            datumed_coords = []
+            for ipath in images["datumed_images"]:
+                try:
+                    datumed_coords.append(analysis_func(ipath))
+                except ImageAnalysisError as err:
+                    count_failures += 1
+                    if count_failures > count_images * dat_rep_analysis_pars.MAX_FAILURE_QUOTIENT:
+                        raise
+                    else:
+                        logger.warning("image analysis failed for image %s, "
+                                       "message = %s (continuing)" % (ipath, str(err)))
+                        continue
 
-            datumed_coords = map(analysis_func, images["datumed_images"])
-            moved_coords = map(analysis_func, images["moved_images"])
+            moved_coords = []
+            for ipath in images["moved_images"]:
+                try:
+                    moved_coords.append(analysis_func(ipath))
+                except ImageAnalysisError as err:
+                    count_failures += 1
+                    if count_failures > count_images * dat_rep_analysis_pars.MAX_FAILURE_QUOTIENT:
+                        raise
+                    else:
+                        logger.warning("image analysis failed for image %s, "
+                                       "message = %s (continuing)" % (ipath, str(err)))
+                        continue
 
             (
                 datrep_dat_only_max,
