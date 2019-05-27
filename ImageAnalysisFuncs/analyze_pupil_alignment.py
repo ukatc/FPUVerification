@@ -1,5 +1,6 @@
 from __future__ import division, print_function
 
+import logging
 from math import atan
 
 import cv2
@@ -38,6 +39,8 @@ def pupalnCoordinates(
     # Authors: Stephen Watson (initial algorithm March 4, 2019(
     # Johannes Nix (code imported and re-formatted)
 
+    logger = logging.getLogger(__name__)
+
     # pylint: disable=no-member
     if correct is None:
         correct = get_correction_func(calibration_pars=pars.PUP_ALGN_CALIBRATION_PARS,
@@ -58,7 +61,7 @@ def pupalnCoordinates(
     # exceptions
     # scale and straighten the result coordinates
 
-    print("image %s: processing pupil alignment analysis" % image_path)
+    logger.debug("image %s: processing pupil alignment analysis" % image_path)
 
     pupaln_spot_x, pupaln_spot_y, = correct(pupaln_spot_x, pupaln_spot_y)
 
