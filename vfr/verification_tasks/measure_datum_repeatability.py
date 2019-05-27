@@ -247,6 +247,8 @@ def eval_datum_repeatability(dbe, dat_rep_analysis_pars):
             logger.info("FPU %s: no datum repeatability measurement data found" % fpu_id)
             continue
 
+        logger.info("evaluating datum repeatability for FPU %s" % fpu_id)
+
         images = measurement["images"]
 
         residual_counts = measurement["residual_counts"]

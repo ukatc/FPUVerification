@@ -121,6 +121,8 @@ def eval_metrology_calibration(
             logger.info("FPU %s: no metrology calibration measurement data found" % fpu_id)
             continue
 
+        logger.info("evaluating metrology calibration for FPU %s" % fpu_id)
+
         images = measurement["images"]
 
         logger.debug("images= %r" % images)

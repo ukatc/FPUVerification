@@ -187,6 +187,8 @@ def eval_pupil_alignment(
             logger.info("FPU %s: no pupil alignment measurement data found" % fpu_id)
             continue
 
+        logger.info("evaluating pupil alignment for FPU %s" % fpu_id)
+
         images = measurement["images"]
 
         mapfile = measurement["calibration_mapfile"]

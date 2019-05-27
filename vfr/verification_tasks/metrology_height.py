@@ -96,6 +96,8 @@ def eval_metrology_height(dbe, met_height_analysis_pars, met_height_evaluation_p
             logger.info("FPU %s: no metrology height measurement data found" % fpu_id)
             continue
 
+        logger.info("evaluating metrology height for FPU %s" % fpu_id)
+
         images = fixup_ipath(measurement["images"])
 
         try:

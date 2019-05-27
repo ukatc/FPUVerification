@@ -329,6 +329,8 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
             logger.info("FPU %s: no positional repeatability measurement data found" % fpu_id)
             continue
 
+        logger.info("evaluating positional repeatability for FPU %s" % fpu_id)
+
         images_alpha = measurement["images_alpha"]
         images_beta = measurement["images_beta"]
 

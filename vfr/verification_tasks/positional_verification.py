@@ -292,6 +292,8 @@ def eval_positional_verification(dbe, pos_ver_analysis_pars, pos_ver_evaluation_
             logger.info("FPU %s: no positional verification measurement data found" % fpu_id)
             continue
 
+        logger.info("evaluating positional verification for FPU %s" % fpu_id)
+
         images = measurement["images"]
         mapfile = measurement["calibration_mapfile"]
         if mapfile:
