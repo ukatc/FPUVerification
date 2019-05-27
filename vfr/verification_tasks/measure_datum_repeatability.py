@@ -256,6 +256,8 @@ def eval_datum_repeatability(dbe, dat_rep_analysis_pars):
         else:
             pars = dat_rep_analysis_pars.TARGET_DETECTION_CONTOUR_PARS
 
+        pars.PLATESCALE=dat_rep_analysis_pars.PLATESCALE
+
         correct = get_correction_func(calibration_pars=pars.CALIBRATION_PARS,
                                       platescale=pars.PLATESCALE,
                                       loglevel=dat_rep_analysis_pars.loglevel)

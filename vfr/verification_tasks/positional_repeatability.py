@@ -339,6 +339,8 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
         else:
             pars = pos_rep_analysis_pars.TARGET_DETECTION_CONTOUR_PARS
 
+        pars.PLATESCALE=pos_rep_analysis_pars.PLATESCALE
+
         if mapfile:
             pars.CALIBRATION_PARS = get_config_from_mapfile(
                 mapfile
