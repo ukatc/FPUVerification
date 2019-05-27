@@ -222,12 +222,7 @@ def get_images_for_fpu(rig, fpu_id, range_limits, pars, capture_image):
     image_dict_alpha = {}
     image_dict_beta = {}
 
-    current_iteration = -1
     for measurement_index in index_positions(pars):
-        # go to datum at start of every new iteration
-        if measurement_index.i_iteration != current_iteration:
-            find_datum(rig.gd, rig.grid_state, opts=rig.opts)
-            current_iteration = measurement_index.i_iteration
 
         target_pos = get_target_position(range_limits, pars, measurement_index)
 
