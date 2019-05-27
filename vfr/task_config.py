@@ -78,7 +78,7 @@ class T:
     TST_PUP_ALGN = "test_pup_aln"
     TST_PUP_ALGN_CAM_CONNECTION = "test_pup_algn_cam_conn"
 
-
+# all tasks which may be requested by the user
 USERTASKS = set(
     [
         T.EVAL_DATUM_REP,
@@ -141,6 +141,7 @@ USERTASKS = set(
     ]
 )
 
+# set of all tasks which require hardware access
 MEASUREMENT_TASKS = set(
     [
         T.MEASURE_DATUM_REP,
@@ -153,12 +154,14 @@ MEASUREMENT_TASKS = set(
         T.TASK_INIT_GD,
         T.TASK_INIT_GD2,
         T.TASK_INIT_RD,
+        T.TASK_MEASURE_ALL,
+        T.TASK_MEASURE_NONFIBRE,
         T.TASK_PARK_FPUS,
         T.TASK_REFERENCE,
         T.TASK_REFERENCE2,
         T.TASK_RESET_FPUS,
         T.TASK_REWIND_FPUS,
-        T.TASK_REWIND_FPUS,
+        T.TASK_SELFTEST,
         T.TASK_SELFTEST_FIBRE,
         T.TASK_SELFTEST_NONFIBRE,
         T.TST_ALPHA_MAX,
@@ -167,17 +170,27 @@ MEASUREMENT_TASKS = set(
         T.TST_BETA_MIN,
         T.TST_CAN_CONNECTION,
         T.TST_COLLDETECT,
+        T.TST_DATUM,
         T.TST_DATUM_ALPHA,
         T.TST_DATUM_BETA,
         T.TST_DATUM_BOTH,
+        T.TST_DATUM_REP,
         T.TST_FLASH,
+        T.TST_FUNCTIONAL,
         T.TST_GATEWAY_CONNECTION,
+        T.TST_INIT,
         T.TST_INITPOS,
+        T.TST_LIMITS,
+        T.TST_LIMITS_ALPHA,
+        T.TST_LIMITS_BETA,
+        T.TST_MET_CAL,
         T.TST_MET_CAL_CAM_CONNECTION,
         T.TST_MET_HEIGHT,
         T.TST_MET_HEIGHT_CAM_CONNECTION,
+        T.TST_POS_REP,
         T.TST_POS_REP_CAM_CONNECTION,
-        T.TST_POS_REP_CAM_CONNECTION,
+        T.TST_POS_VER,
+        T.TST_PUP_ALGN,
         T.TST_PUP_ALGN_CAM_CONNECTION,
     ]
 )
