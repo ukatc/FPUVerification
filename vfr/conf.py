@@ -195,7 +195,6 @@ MET_CAL_TARGET_DETECTION_CONTOUR_PARS = Namespace(
     SMALL_DIAMETER=1.42,  # millimeter
     LARGE_DIAMETER=2.42,  # millimeter
     DIAMETER_TOLERANCE=0.15,  # millimeter
-    PLATESCALE=MET_CAL_PLATESCALE,  # millimeter per pixel
     THRESHOLD=80,  # 0-255
     QUALITY_METRIC=0.8,  # dimensionless
 )
@@ -205,8 +204,10 @@ MET_CAL_TARGET_ANALYSIS_PARS = Namespace(
     MET_CAL_TARGET_DETECTION_ALGORITHM="otsu",  # "otsu" or "contours"
     MET_CAL_TARGET_DETECTION_OTSU_PARS=MET_CAL_TARGET_DETECTION_OTSU_PARS,
     MET_CAL_TARGET_DETECTION_CONTOUR_PARS=MET_CAL_TARGET_DETECTION_CONTOUR_PARS,
+    PLATESCALE=MET_CAL_PLATESCALE,
     display=False,  # will display image with contours annotated
     verbosity=0,
+    loglevel=0,
 )
 
 MET_CAL_FIBRE_ANALYSIS_PARS = Namespace(

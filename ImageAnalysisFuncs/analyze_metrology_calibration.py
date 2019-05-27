@@ -52,6 +52,8 @@ def metcalTargetCoordinates(image_path, pars=None):
 
     func_pars.display = pars.display
     func_pars.verbosity = pars.verbosity
+    func_pars.loglevel = pars.loglevel
+    func_pars.PLATESCALE = pars.PLATESCALE
 
     try:
         positions = analysis_func(image_path, func_pars)
