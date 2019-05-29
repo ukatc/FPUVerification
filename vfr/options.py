@@ -86,6 +86,16 @@ def parse_args():
     )
 
     parser.add_argument(
+        "-sel",
+        "--plot-selection",
+        default="A",
+        type=str,
+        help="""Selection of plots
+        A) pos_rep scatter plot in (x,y) image plane
+        """,
+    )
+
+    parser.add_argument(
         "-m",
         "--mockup",
         default=False,
@@ -349,6 +359,7 @@ def parse_args():
                 "reuse_serialnum",
                 "update_protection_limits",
                 "protection_tolerance",
+                "plot_selection",
                 "display_alpha_max",
                 "display_alpha_min",
                 "display_beta_max",
