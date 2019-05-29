@@ -47,6 +47,7 @@ from vfr.verification_tasks.positional_verification import (eval_positional_veri
 from vfr.verification_tasks.pupil_alignment import (eval_pupil_alignment,
                                                     measure_pupil_alignment)
 from vfr.verification_tasks.report import dump_data, report
+from vfr.verification_tasks.plotting import plot
 from vfr.verification_tasks.rig_selftest import (selftest_fibre,
                                                  selftest_nonfibre)
 
@@ -326,6 +327,7 @@ if __name__ == "__main__":
 
             if measure_fpuset and (tasks - set([
                     T.TASK_REPORT,
+                    T.TASK_PLOT,
                     T.TASK_DUMP,
                     T.TST_BETA_MIN,
                     T.TST_BETA_MAX,
@@ -489,6 +491,10 @@ if __name__ == "__main__":
                     POS_REP_ANALYSIS_PARS,
                     POS_VER_EVALUATION_PARS,
                 )
+
+            if T.TASK_PLOT in tasks:
+                info("[%s] ###" % T.TASK_PLOT)
+                plot(dbe, opts)
 
             if T.TASK_REPORT in tasks:
                 info("[%s] ###" % T.TASK_REPORT)
