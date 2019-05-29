@@ -43,6 +43,7 @@ class T:
     TASK_SELFTEST_NONFIBRE = "selftest_nonfibre"
     TASK_SELFTEST_FIBRE = "selftest_fibre"
     TASK_REPORT = "report"
+    TASK_PLOT = "plot"
     TASK_DUMP = "dump"
     TASK_PARK_FPUS = "park_fpus"
     TASK_HOME_TURNTABLE = "home_turntable"
@@ -102,6 +103,7 @@ USERTASKS = set(
         T.TASK_MEASURE_ALL,
         T.TASK_MEASURE_NONFIBRE,
         T.TASK_PARK_FPUS,
+        T.TASK_PLOT,
         T.TASK_REFERENCE,
         T.TASK_REPORT,
         T.TASK_RESET_FPUS,
