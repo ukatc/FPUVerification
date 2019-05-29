@@ -7,19 +7,26 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def plot_pos_rep(analysis_results_alpha, analysis_results_beta):
-    fig, ax = plt.subplots()
-    for color in ['tab:blue', 'tab:orange', 'tab:green']:
-        n = 750
-        x, y = np.random.rand(2, n)
-        scale = 200.0 * np.random.rand(n)
-        ax.scatter(x, y, c=color, s=scale, label=color,
-                   alpha=0.3, edgecolors='none')
+def plot_pos_rep(fpu_id, analysis_results_alpha, analysis_results_beta):
+    colorcode = ['blue', 'red', 'green', 'cyan']
+    for label, series, sweeps in [('alpha arm', analysis_results_alpha, [0,1]),
+                                  ('beta arm', analysis_results_beta, [2, 3])]:
+        fig, ax = plt.subplots()
 
-    ax.legend()
-    ax.grid(True)
+        for sweep_idx in sweeps:
+            direction = "up" if sweep_idx in [0, 2] else "down"
 
-    plt.show()
+            color = colorcode[sweep_idx]
+            sweep_series = [ v for k, v in series.items() if (k[3] == sweep_idx)]
+            x, y = np.array(sweep_series).T[:2]
+            ax.scatter(x, y, c=color, label="%s %s" % (label, direction),
+                       alpha=0.7, edgecolors='none')
+
+            ax.legend()
+            ax.grid(True)
+            plt.title(fpu_id)
+
+        plt.show()
 
 
 def plot(dbe, opts):
@@ -33,4 +40,4 @@ def plot(dbe, opts):
             result_alpha = pos_rep_result["analysis_results_alpha"]
             result_beta = pos_rep_result["analysis_results_beta"]
 
-            lines = plot_pos_rep(result_alpha, result_beta)
+            lines = plot_pos_rep(fpu_id, result_alpha, result_beta)
