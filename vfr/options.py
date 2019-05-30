@@ -96,6 +96,15 @@ def parse_args():
     )
 
     parser.add_argument(
+        "-blb",
+        "--blob-type",
+        choices=["small", "large"],
+        default="large",
+        type=str,
+        help="""blob type selected for plotting, one of "small" or "large" """,
+    )
+
+    parser.add_argument(
         "-m",
         "--mockup",
         default=False,
@@ -360,6 +369,7 @@ def parse_args():
                 "update_protection_limits",
                 "protection_tolerance",
                 "plot_selection",
+                "blob_type",
                 "display_alpha_max",
                 "display_alpha_min",
                 "display_beta_max",
