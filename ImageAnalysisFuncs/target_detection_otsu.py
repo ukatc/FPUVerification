@@ -86,29 +86,32 @@ def find_bright_sharp_circles(path, minradius, maxradius, grouprange=None, quali
                     )
                 break
 
-    if not (grouprange is None or len(circles) >= 2):
+    if (grouprange is not None) or len(target_blob_list) >= 2:
         accepted = []
-        for i in range(len(circles)):
-            for j in range(len(circles)):
-                if i != j:
-                    if show:
-                        print(distance(circles[i], circles[j]))
-                    if distance(circles[i], circles[j]) < grouprange:
-                        accepted.append(circles[i])
-                        break
-        circles = accepted
+        for i in range(len(target_blob_list)):
+            for j in range(i + 1, len(target_blob_list)):
+                if show:
+                    print(distance(target_blob_list[i].pt, target_blob_list[j].pt))
+                if distance(target_blob_list[i].pt, target_blob_list[j].pt) < grouprange:
+                    accepted.append(target_blob_list[i])
+                    accepted.append(target_blob_list[j])
+                    break
+        target_blob_list = accepted
 
     if show:
         width, height = image.shape[1] // 4, image.shape[0] // 4
         shrunk_original = cv2.resize(image, (width, height))
         # ensure at least some circles were found
-        if circles is not None:
+        if target_blob_list is not None:
             # convert the (x, y) coordinates and radius of the circles to integers
             print("matching points:")
-            print(circles)
-            int_circles = np.round(np.array(circles)).astype("int")
+            print([(blob.pt[0], blob.pt[1], blob.size / 2.0) for blob in target_blob_list])
             # loop over the (x, y) coordinates and radius of the circles
-            for (x, y, r) in int_circles:
+            for circle in target_blob_list:
+                x, y = circle.pt
+                x = int(x)
+                y = int(y)
+                r = int(circle.size/2)
                 # draw the circle in the output image, then draw a rectangle
                 # corresponding to the center of the circle
                 cv2.circle(output, (x, y), r, (0, 255, 0), 4)
