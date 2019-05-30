@@ -12,7 +12,7 @@ class TestPosRepImageAnalysis(unittest.TestCase):
     def test_expected(self):
         cases = [
             (
-                "../TestImages/PT13d_positional-repeatability_2019-05-14T11:42:32.168BST_i001-j000-k001.bmp",
+                "../TestImages/PT13d_positional-repeatability_2019-05-14T11-42-32.168BST_i001-j000-k001.bmp",
                 45.62,
                 30.55,
                 0.4,
@@ -21,7 +21,7 @@ class TestPosRepImageAnalysis(unittest.TestCase):
                 0.4,
             ),
             (
-                "../TestImages/PT26e_positional-repeatability_2019-05-14T15:03:15.999BST_i000-j000-k016.bmp",
+                "../TestImages/PT26e_positional-repeatability_2019-05-14T15-03-15.999BST_i000-j000-k016.bmp",
                 45.62,
                 30.55,
                 0.4,
@@ -30,7 +30,7 @@ class TestPosRepImageAnalysis(unittest.TestCase):
                 0.4,
             ),
             (
-                "../TestImages/PT19e_positional-repeatability_2019-05-14T15:03:15.999BST_i001-j001-k024.bmp",
+                "../TestImages/PT19e_positional-repeatability_2019-05-14T15-03-15.999BST_i001-j001-k024.bmp",
                 45.62,
                 30.55,
                 0.4,
@@ -39,7 +39,7 @@ class TestPosRepImageAnalysis(unittest.TestCase):
                 0.4,
             ),
             (
-                "../TestImages/PT13e_positional-repeatability_2019-05-14T15:03:15.999BST_i001-j000-k001.bmp",
+                "../TestImages/PT13e_positional-repeatability_2019-05-14T15-03-15.999BST_i001-j000-k001.bmp",
                 45.62,
                 30.55,
                 0.4,
