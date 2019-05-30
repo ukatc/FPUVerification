@@ -4,6 +4,7 @@ from vfr.db.retrieval import get_data
 
 
 import numpy as np
+import types
 import matplotlib.pyplot as plt
 
 
@@ -11,6 +12,11 @@ def plot_pos_rep(fpu_id, analysis_results_alpha, analysis_results_beta):
     colorcode = ['blue', 'red', 'green', 'cyan']
     for label, series, sweeps in [('alpha arm', analysis_results_alpha, [0,1]),
                                   ('beta arm', analysis_results_beta, [2, 3])]:
+
+        if series is None:
+            print("no data found for FPU %s, %s" % (fpu_id, label))
+            continue
+
         fig, ax = plt.subplots()
 
         for sweep_idx in sweeps:
@@ -34,6 +40,8 @@ def plot(dbe, opts):
     plot_selection = dbe.opts.plot_selection
     for count, fpu_id in enumerate(dbe.eval_fpuset):
         ddict = vars(get_data(dbe, fpu_id))
+        if type(fpu_id) == types.IntType:
+            fpu_id = dbe.fpu_config[fpu_id]["serialnumber"]
 
         if "A" in plot_selection:
             pos_rep_result = ddict["positional_repeatability_result"]
