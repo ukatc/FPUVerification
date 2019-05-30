@@ -39,6 +39,32 @@ def plot_pos_rep(fpu_id, analysis_results_alpha, analysis_results_beta, opts):
 
         plt.show()
 
+def plot_dat_rep(fpu_id, datumed_coords, moved_coords, opts):
+    if opts.blob_type == "large":
+        blob_idx = slice(3,5)
+    else:
+        blob_idx = slice(0,2)
+
+    fig, ax = plt.subplots()
+    for label, series, color in [('datum only', datumed_coords, 'red'),
+                                 ('moved + datumed', moved_coords, 'blue')]:
+
+        if series is None:
+            print("no data found for FPU %s, %s" % (fpu_id, label))
+            continue
+
+
+        x, y = np.array(series).T[blob_idx]
+        ax.scatter(x, y, c=color, label=label,
+                   alpha=0.7, edgecolors='none')
+
+    ax.legend()
+
+    ax.grid(True)
+    plt.title("%s : datum repeatability" % fpu_id)
+
+    plt.show()
+
 
 def plot(dbe, opts):
 
@@ -49,6 +75,14 @@ def plot(dbe, opts):
             fpu_id = dbe.fpu_config[fpu_id]["serialnumber"]
 
         if "A" in plot_selection:
+            dat_rep_result = ddict["datum_repeatability_result"]["coords"]
+            coords_datumed = dat_rep_result["datumed_coords"]
+            coords_moved = dat_rep_result["moved_coords"]
+
+            plot_dat_rep(fpu_id, coords_datumed, coords_moved, opts)
+
+
+        if "B" in plot_selection:
             pos_rep_result = ddict["positional_repeatability_result"]
             result_alpha = pos_rep_result["analysis_results_alpha"]
             result_beta = pos_rep_result["analysis_results_beta"]

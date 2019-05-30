@@ -88,7 +88,7 @@ def parse_args():
     parser.add_argument(
         "-sel",
         "--plot-selection",
-        default="A",
+        default="AB",
         type=str,
         help="""Selection of plots
         A) pos_rep scatter plot in (x,y) image plane
