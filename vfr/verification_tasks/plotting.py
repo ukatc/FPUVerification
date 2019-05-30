@@ -24,7 +24,7 @@ def plot_pos_rep(fpu_id, analysis_results_alpha, analysis_results_beta):
 
             color = colorcode[sweep_idx]
             sweep_series = [ v for k, v in series.items() if (k[3] == sweep_idx)]
-            x, y = np.array(sweep_series).T[:2]
+            x, y = np.array(sweep_series).T[3:5]
             ax.scatter(x, y, c=color, label="%s %s" % (label, direction),
                        alpha=0.7, edgecolors='none')
 
