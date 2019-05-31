@@ -2,10 +2,78 @@
 from __future__ import absolute_import, division, print_function
 from vfr.db.retrieval import get_data
 
-
+from math import pi
 import numpy as np
 import types
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
+
+#import numpy as np
+from scipy import optimize
+from matplotlib import pyplot as plt, cm, colors
+
+def calc_R(x,y, xc, yc):
+    """ calculate the distance of each 2D points from the center (xc, yc) """
+    return np.sqrt((x-xc)**2 + (y-yc)**2)
+
+def f(c, x, y):
+    """ calculate the algebraic distance between the data points and the mean circle centered at c=(xc, yc) """
+    Ri = calc_R(x, y, *c)
+    return Ri - Ri.mean()
+
+def leastsq_circle(x,y):
+    # coordinates of the barycenter
+    x_m = np.mean(x)
+    y_m = np.mean(y)
+    center_estimate = x_m, y_m
+    center, ier = optimize.leastsq(f, center_estimate, args=(x,y), ftol=1.5e-10, xtol=1.5e-10)
+    xc, yc = center
+    Ri       = calc_R(x, y, *center)
+    R        = Ri.mean()
+    residu   = np.sum((Ri - R)**2)
+    return xc, yc, R, residu
+
+def plot_data_circle(x,y, xc, yc, R, title):
+    f = plt.figure( facecolor='white')  #figsize=(7, 5.4), dpi=72,
+    plt.axis('equal')
+
+    theta_fit = np.linspace(-pi, pi, 10 * 360)
+
+    x_fit = xc + R*np.cos(theta_fit)
+    y_fit = yc + R*np.sin(theta_fit)
+    plt.plot(x_fit, y_fit, 'b-' , label="fitted circle", lw=2)
+    plt.plot([xc], [yc], 'bD', mec='y', mew=1)
+    plt.xlabel('x')
+    plt.ylabel('y')
+    # plot data
+    plt.plot(x, y, 'r.', label='data', mew=1)
+
+    plt.legend(loc='best',labelspacing=0.1 )
+    plt.grid()
+    plt.title('Least Squares Circle ' + title)
+    plt.show()
+
+def fit_gearbox_calibration(par, analysis_results):
+    if analysis_results is None:
+        return None
+    # get list of points to which circle is fitted
+    nominal_angles = []
+    circle_points = []
+    #print("results = ", analysis_results)
+    for k, v in analysis_results.items():
+        alpha_nom, beta_nom, i, j, k = k
+        x1, y1, q1, x2, y2, q2 = v
+
+        x = (x1 + x2) * 0.5
+        y = (y1 + y2) * 0.5
+        circle_points.append((x, y))
+        nominal_angles.append((alpha_nom, beta_nom))
+    x, y = np.array(circle_points).T
+    alpha, beta = np.array(nominal_angles).T
+
+    xc, yc, R, residual = leastsq_circle(x,y)
+    print("xc = {}, yc = {}, R = {}, residual = {}".format(xc, yc, R, residual))
+
+    plot_data_circle(x, y, xc, yc, R, title=par)
 
 
 def plot_pos_rep(fpu_id, analysis_results_alpha, analysis_results_beta, opts):
@@ -88,3 +156,10 @@ def plot(dbe, opts):
             result_beta = pos_rep_result["analysis_results_beta"]
 
             plot_pos_rep(fpu_id, result_alpha, result_beta, opts)
+
+        if "C" in plot_selection:
+            pos_rep_result = ddict["positional_repeatability_result"]
+            result_alpha = pos_rep_result["analysis_results_alpha"]
+            result_beta = pos_rep_result["analysis_results_beta"]
+            fit_gearbox_calibration("alpha", result_alpha)
+            fit_gearbox_calibration("beta", result_beta)
