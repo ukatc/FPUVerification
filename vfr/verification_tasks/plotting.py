@@ -11,6 +11,16 @@ import types
 from scipy import optimize
 from matplotlib import pyplot as plt, cm, colors
 
+def cartesian2polar(x, y):
+    rho = np.sqrt(x**2 + y**2)
+    phi = np.arctan2(y, x)
+    return (phi, rho)
+
+def polar2cartesian(rho, phi):
+    x = rho * np.cos(phi)
+    y = rho * np.sin(phi)
+    return (x, y)
+
 def calc_R(x,y, xc, yc):
     """ calculate the distance of each 2D points from the center (xc, yc) """
     return np.sqrt((x-xc)**2 + (y-yc)**2)
@@ -52,7 +62,7 @@ def plot_data_circle(x,y, xc, yc, R, title):
     plt.title('Least Squares Circle ' + title)
     plt.show()
 
-def fit_gearbox_calibration(par, analysis_results):
+def fit_gearbox_calibration(fpu_id, par, analysis_results):
     if analysis_results is None:
         return None
     # get list of points to which circle is fitted
@@ -71,9 +81,50 @@ def fit_gearbox_calibration(par, analysis_results):
     alpha, beta = np.array(nominal_angles).T
 
     xc, yc, R, residual = leastsq_circle(x,y)
-    print("xc = {}, yc = {}, R = {}, residual = {}".format(xc, yc, R, residual))
 
-    plot_data_circle(x, y, xc, yc, R, title=par)
+    # print("xc = {}, yc = {}, R = {}, residual = {}".format(xc, yc, R, residual))
+
+    #plot_data_circle(x, y, xc, yc, R, title=par)
+    plot_data_circle(x-xc, y-yc, 0, 0, R, title=par)
+    phi_real, rho = cartesian2polar(y-yc, x-xc)
+
+    # change wrapping point to match it to nominal angle
+    # (reaching a piecewise linear function)
+    phi_real = np.where(phi_real > pi / 4, phi_real - 2 * pi, phi_real)
+    C = 180.0 / pi
+    phi_real = phi_real * C
+    if par == "alpha":
+        phi_nominal = alpha
+    else:
+        phi_nominal = beta
+
+
+    plt.plot(phi_nominal, phi_real, 'g.', label='real angle as function of nominal angle')
+    plt.title('FPU {}: real vs nominal angle for {}'.format(fpu_id, par))
+    plt.show()
+
+    # fit data to a linear curve
+    a0 = np.mean(phi_real - phi_nominal)
+    b0 = 1.0
+    print("a0=", a0)
+
+    def f(x, a, b):
+        return a + b*x
+
+    a, b = optimize.curve_fit(f, phi_nominal, phi_real, (a0, b0))[0]
+
+    phi_fitted = a + b * phi_nominal
+
+    err_phi = phi_real - phi_fitted
+
+    plt.plot(phi_nominal, phi_real, 'g.', label='real angle as function of nominal angle')
+    plt.plot(phi_nominal, phi_fitted, 'r-', label='fitted angle as function of nominal angle')
+    plt.title('FPU {}: fitted real vs nominal angle for {}'.format(fpu_id, par))
+    plt.show()
+
+    plt.plot(phi_nominal, err_phi, 'r.', label='residual angle as function of nominal angle')
+    plt.title('FPU {}: residual real vs nominal angle for {}'.format(fpu_id, par))
+    plt.show()
 
 
 def plot_pos_rep(fpu_id, analysis_results_alpha, analysis_results_beta, opts):
@@ -161,5 +212,5 @@ def plot(dbe, opts):
             pos_rep_result = ddict["positional_repeatability_result"]
             result_alpha = pos_rep_result["analysis_results_alpha"]
             result_beta = pos_rep_result["analysis_results_beta"]
-            fit_gearbox_calibration("alpha", result_alpha)
-            fit_gearbox_calibration("beta", result_beta)
+            fit_gearbox_calibration(fpu_id, "alpha", result_alpha)
+            fit_gearbox_calibration(fpu_id, "beta", result_beta)
