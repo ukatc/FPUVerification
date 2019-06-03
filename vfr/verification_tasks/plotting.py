@@ -62,10 +62,7 @@ def plot_data_circle(x,y, xc, yc, R, title):
     plt.title('Least Squares Circle ' + title)
     plt.show()
 
-def fit_gearbox_calibration(fpu_id, par, analysis_results,
-                            plot_circle=False,
-                            plot_func=False,
-                            plot_residuals=[1, 2]):
+def fit_gearbox_calibration(fpu_id, par, analysis_results):
     if analysis_results is None:
         return None
     # get list of points to which circle is fitted
@@ -85,29 +82,18 @@ def fit_gearbox_calibration(fpu_id, par, analysis_results,
 
     xc, yc, R, residual = leastsq_circle(x,y)
 
-    # print("xc = {}, yc = {}, R = {}, residual = {}".format(xc, yc, R, residual))
-
-    #plot_data_circle(x, y, xc, yc, R, title=par)
-    if plot_circle:
-        plot_data_circle(x-xc, y-yc, 0, 0, R, title=par)
-
     phi_real, rho = cartesian2polar(y-yc, x-xc)
 
     # change wrapping point to match it to nominal angle
     # (reaching a piecewise linear function)
     phi_real = np.where(phi_real > pi / 4, phi_real - 2 * pi, phi_real)
-    C = 180.0 / pi
-    phi_real = phi_real * C
+    #phi_real = np.unwrap(phi_real)
+
     if par == "alpha":
-        phi_nominal = alpha
+        phi_nominal = np.deg2rad(alpha)
     else:
-        phi_nominal = beta
+        phi_nominal = np.deg2rad(beta)
 
-
-    if plot_func:
-        plt.plot(phi_nominal, phi_real, 'g.', label='real angle as function of nominal angle')
-        plt.title('FPU {}: real vs nominal angle for {}'.format(fpu_id, par))
-        plt.show()
 
     # fit data to a linear curve
     a0 = np.mean(phi_real - phi_nominal)
@@ -123,12 +109,6 @@ def fit_gearbox_calibration(fpu_id, par, analysis_results,
 
     err_phi_1 = phi_real - phi_fitted
 
-    if 0 in plot_residuals:
-        plt.plot(phi_nominal, phi_real, 'g.', label='real angle as function of nominal angle')
-        plt.plot(phi_nominal, phi_fitted, 'r-', label='fitted angle as function of nominal angle')
-        plt.title('FPU {}: fitted real vs nominal angle for {}'.format(fpu_id, par))
-        plt.show()
-
     support_points = {}
     for (x, y) in zip(phi_nominal, err_phi_1):
         if x not in support_points:
@@ -142,20 +122,100 @@ def fit_gearbox_calibration(fpu_id, par, analysis_results,
     phi_corr_2 = [support_points[k] for k in phi_nom_2]
 
 
+    err_phi_2 = err_phi_1 - np.interp(phi_nominal, phi_nom_2, phi_corr_2, period=2*pi)
+
+    phi_fitted_2 = phi_fitted + np.interp(phi_nominal, phi_nom_2, phi_corr_2, period=2*pi)
+
+
+    return { 'algorithm' : 'linfit+piecewise_interpolation',
+             'x' : x,
+             'y' : y,
+             'xc' : xc,
+             'yc' : yc,
+             'R' : R,
+             'a' : a,
+             'b' : b,
+             'xp' : phi_nom_2,
+             'yp' : phi_corr_2,
+             'fits' : {
+                 0 : (phi_nominal, phi_real, 'real angle as function of nominal angle'),
+                 1 : (phi_nominal, phi_fitted, 'first-order fitted angle as function of nominal angle'),
+                 2 : (phi_nominal, phi_fitted_2, 'second-order fitted angle as function of nominal angle'),
+                 },
+             'residuals' : {
+                 1 : (phi_nominal, err_phi_1, 'first-order residual angle as function of nominal angle'),
+                 2 : (phi_nominal, err_phi_2, 'second-order residual angle as function of nominal angle')
+             }
+    }
+
+def plot_gearbox_calibration(fpu_id, par,
+                             algorithm=None,
+                             x=None,
+                             y=None,
+                             xc=None,
+                             yc=None,
+                             R=None,
+                             a=None,
+                             b=None,
+                             xp=None,
+                             yp=None,
+                             fits=None,
+                             residuals=None,
+                             plot_circle=False,
+                             plot_func=True,
+                             plot_fits=[0,1,2],
+                             plot_residuals=[0, 1, 2]):
+
+    r2d = np.rad2deg
+    # get list of points to which circle is fitted
+    if plot_circle:
+        plot_data_circle(x-xc, y-yc, 0, 0, R, title=par)
+
+
+    if plot_func:
+        plt.plot(r2d(fits[0][0]), r2d(fits[0][1]), 'g.', label=fits[0][2])
+        plt.title('FPU {}: real vs nominal angle for {}'.format(fpu_id, par))
+        plt.legend(loc='best',labelspacing=0.1 )
+        plt.xlabel("nominal angle [degrees]")
+        plt.ylabel("real angle [degrees]")
+        plt.show()
+
+
+    if 0 in plot_fits:
+        plt.plot(r2d(fits[0][0]), r2d(fits[0][1]), 'g.', label=fits[0][2])
+
+    if 1 in plot_fits:
+        plt.plot(r2d(fits[1][0]), r2d(fits[1][1]), 'b+', label=fits[1][2])
+
+    if 2 in plot_fits:
+        plt.plot(r2d(fits[2][0]), r2d(fits[2][1]), 'r.', label=fits[2][2])
+
+    if plot_fits:
+        plt.title('FPU {}: fitted real vs nominal angle for {}'.format(fpu_id, par))
+        plt.legend(loc='best',labelspacing=0.1 )
+        plt.xlabel("nominal angle [degrees]")
+        plt.ylabel("real angle [degrees]")
+        plt.show()
+
     if 1 in plot_residuals:
-        plt.plot(phi_nominal, err_phi_1, 'r.', label='residual angle as function of nominal angle')
-        plt.plot(phi_nom_2, phi_corr_2, 'b+', label='mean residual angle as function of nominal angle')
+        plt.plot(r2d(residuals[1][0]), r2d(residuals[1][1]), 'r.', label=residuals[1][2])
 
         plt.title('FPU {}: first-order residual real vs nominal angle for {}'.format(fpu_id, par))
+        plt.legend(loc='best',labelspacing=0.1 )
+        plt.xlabel("nominal angle [degrees]")
+        plt.ylabel("real angle deltas [degrees]")
         plt.show()
-
-    err_phi_2 = err_phi_1 - np.interp(phi_nominal, phi_nom_2, phi_corr_2, period=360)
 
     if 2 in plot_residuals:
-        plt.plot(phi_nominal, err_phi_2, 'b+', label='mean residual angle as function of nominal angle')
+        plt.plot(r2d(residuals[2][0]), r2d(residuals[2][1]), 'b+', label=residuals[2][2])
 
         plt.title('FPU {}: second-order residual real vs nominal angle for {}'.format(fpu_id, par))
+        plt.legend(loc='best',labelspacing=0.1 )
+        plt.xlabel("nominal angle [degrees]")
+        plt.ylabel("real angle deltas [degrees]")
         plt.show()
+
+
 
 
 def plot_pos_rep(fpu_id, analysis_results_alpha, analysis_results_beta, opts):
@@ -243,5 +303,12 @@ def plot(dbe, opts):
             pos_rep_result = ddict["positional_repeatability_result"]
             result_alpha = pos_rep_result["analysis_results_alpha"]
             result_beta = pos_rep_result["analysis_results_beta"]
-            fit_gearbox_calibration(fpu_id, "alpha", result_alpha)
-            fit_gearbox_calibration(fpu_id, "beta", result_beta)
+            fit_alpha = fit_gearbox_calibration(fpu_id, "alpha", result_alpha)
+            plot_gearbox_calibration(
+                fpu_id, "alpha", plot_fits=[0,1,2], plot_residuals=[1,2], **fit_alpha
+            )
+
+            fit_beta = fit_gearbox_calibration(fpu_id, "beta", result_beta)
+            plot_gearbox_calibration(
+                fpu_id, "beta", plot_fits=[0,1,2], plot_residuals=[1,2], **fit_beta
+            )
