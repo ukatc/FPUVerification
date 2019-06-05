@@ -10,13 +10,21 @@ POS_REP_CALPARS = (
     """positional repeatability: calibration_pars = {calibration_pars!r}"""
 )
 
-POS_REP_GEARCOR = (
-    """positional repeatability: gearbox correction = {gearbox_correction}"""
+POS_REP_GEARCOR = cleandoc(
+    """positional repeatability: gearbox correction alpha algorithm                 = {gearbox_correction[coeffs_alpha][algorithm]}
+       positional repeatability: gearbox correction alpha num support / data points = {gearbox_correction[coeffs_alpha][num_support_points]} / {gearbox_correction[coeffs_alpha][num_data_points]}
+       positional repeatability: gearbox correction alpha coefs                     a = {gearbox_correction[coeffs_alpha][a]:7.5}, b={gearbox_correction[coeffs_alpha][b]:7.5}
+       positional repeatability: gearbox correction alpha R                         = {gearbox_correction[coeffs_alpha][R]:6.5}
+       positional repeatability: gearbox correction beta algorithm                  = {gearbox_correction[coeffs_beta][algorithm]}
+       positional repeatability: gearbox correction beta num support / data points  = {gearbox_correction[coeffs_beta][num_support_points]} / {gearbox_correction[coeffs_beta][num_data_points]}
+       positional repeatability: gearbox correction beta coefs                      a = {gearbox_correction[coeffs_beta][a]:7.5}, b={gearbox_correction[coeffs_beta][b]:7.5}
+       positional repeatability: gearbox correction beta R                          = {gearbox_correction[coeffs_beta][R]:6.5}
+
+"""
 )
 
 POS_REP_GEARALGO = cleandoc(
-    """
-    positional repeatability: gearbox correction algorithm version = {algorithm_version}"""
+    """positional repeatability: gearbox correction algorithm version               = {gearbox_correction[version]}"""
 )
 
 POS_REP_CALPARS_CSV = (

@@ -160,6 +160,8 @@ def fit_gearbox_parameters(par, analysis_results):
              'b' : b,
              'xp' : phi_nom_2,
              'yp' : phi_corr_2,
+             'num_support_points' : len(phi_nom_2),
+             'num_data_points' : len(x_s),
              'y_corr' : y_corr,
              'fits' : {
                  0 : (phi_nominal, phi_real, 'real angle as function of nominal angle'),

@@ -343,7 +343,7 @@ def format_report_terse(
 
             yield EMPTY_LINE
 
-            yield fill(
+            yield (
                 rfmt_pos_rep.POS_REP_GEARCOR.format(**positional_repeatability_result)
             )
 
@@ -502,7 +502,7 @@ def format_report_complete(
 
             yield EMPTY_LINE
 
-            yield fill(
+            yield (
                 rfmt_pos_rep.POS_REP_GEARCOR.format(**positional_repeatability_result)
             )
 
@@ -714,7 +714,7 @@ def format_report_long(
 
             yield EMPTY_LINE
 
-            yield fill(
+            yield (
                 rfmt_pos_rep.POS_REP_GEARCOR.format(**positional_repeatability_result)
             )
 
@@ -930,7 +930,7 @@ def format_report_extended(
 
             yield EMPTY_LINE
 
-            yield fill(
+            yield (
                 rfmt_pos_rep.POS_REP_GEARCOR.format(**positional_repeatability_result)
             )
 
