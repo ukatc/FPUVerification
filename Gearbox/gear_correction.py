@@ -85,15 +85,17 @@ def fit_gearbox_parameters(par, analysis_results):
     # get list of points to which circle is fitted
     nominal_angles = []
     circle_points = []
+    midpoints = {}
 
-    for k, v in analysis_results.items():
-        alpha_nom, beta_nom, i, j, k = k
-        x1, y1, q1, x2, y2, q2 = v
+    for key, val in analysis_results.items():
+        alpha_nom, beta_nom, i, j, k = key
+        x1, y1, q1, x2, y2, q2 = val
 
         x = (x1 + x2) * 0.5
         y = (y1 + y2) * 0.5
         circle_points.append((x, y))
         nominal_angles.append((alpha_nom, beta_nom))
+        midpoints[key] = (x,y)
     x_s, y_s = np.array(circle_points).T
     alpha, beta = np.array(nominal_angles).T
 
@@ -146,6 +148,7 @@ def fit_gearbox_parameters(par, analysis_results):
     y_corr = np.array(phi_corr_2) + (a + np.array(phi_nom_2) * b)
 
     return { 'algorithm' : 'linfit+piecewise_interpolation',
+             'midpoints' : midpoints,
              'x' : x_s,
              'y' : y_s,
              'xc' : xc,
@@ -167,8 +170,50 @@ def fit_gearbox_parameters(par, analysis_results):
              }
     }
 
+def split_iterations(par, midpoints, xc=None, yc=None, a=None, b=None, xp=None, yp=None):
+    d2r = np.deg2rad
+    # get set of iteration indices
+    # loop and select measurements for each iteration
+
+    if par =='alpha':
+        directionlist = [0, 1]
+    else:
+        directionlist = [2, 3]
+
+    for selected_iteration in set([ k_[2] for k_ in midpoints.keys() ]):
+        for direction in directionlist:
+            residual_ang = []
+            nom_ang = []
+            match_sweep = lambda key: (key[2] == selected_iteration) and (key[3] == direction)
+
+            for key in filter(match_sweep, midpoints.keys()):
+
+                if par == "alpha":
+                    phi_nominal = d2r(key[0])
+                else:
+                    phi_nominal = d2r(key[1])
+
+                x, y = midpoints[key]
+
+                phi_real, rho = cartesian2polar(y-yc, x-xc)
+
+                phi_real = np.where(phi_real > pi / 4, phi_real - 2 * pi, phi_real)
+
+                phi_fitted = a + b * phi_nominal
+
+                err_phi_1 = phi_real - phi_fitted
+
+                err_phi_2 = err_phi_1 - np.interp(phi_nominal, xp, yp, period=2*pi)
+
+                nom_ang.append(phi_nominal)
+                residual_ang.append(err_phi_2)
+
+            yield selected_iteration, direction, nom_ang, residual_ang
+
+
 def plot_gearbox_calibration(fpu_id, par,
                              algorithm=None,
+                             midpoints=None,
                              x=None,
                              y=None,
                              xc=None,
@@ -234,6 +279,28 @@ def plot_gearbox_calibration(fpu_id, par,
         plt.xlabel("nominal angle [degrees]")
         plt.ylabel("real angle deltas [degrees]")
         plt.show()
+
+        plt.title('FPU {}: second-order residual vs nominal angle by iteration for {}'.format(fpu_id, par))
+        plt.xlabel("nominal angle [degrees]")
+        plt.ylabel("real angle deltas [degrees]")
+
+        for iteration, direction, nom_angles, residual_angles in split_iterations(
+                par, midpoints, xc=xc, yc=yc, a=a, b=b, xp=xp, yp=yp):
+
+            markers=['.','|','^','D',(5,1,0),"h",(7,1,0),"8","$9$","$10$","$11$","$12$",]
+            marker=markers[iteration]
+            dirlabel, color = { 0 : ("up", "r"),
+                                1 : ("down", "b"),
+                                2 : ("up", "r"),
+                                3 : ("down", "b"),
+            }[direction]
+            plt.plot(r2d(nom_angles), r2d(residual_angles), color, marker=marker, linestyle='',
+                     label="%s arm, direction=%s, iteration=%i" % (par, dirlabel, iteration))
+
+        plt.legend(loc='best',labelspacing=0.1 )
+        plt.show()
+
+
 
 
 def plot_correction(fpu_id, par,
