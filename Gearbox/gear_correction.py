@@ -101,7 +101,7 @@ def fit_gearbox_parameters(par, analysis_results):
 
     xc, yc, R, residual = leastsq_circle(x_s,y_s)
 
-    phi_real, rho = cartesian2polar(y_s-yc, x_s-xc)
+    phi_real, R_real = cartesian2polar(y_s-yc, x_s-xc)
 
     # change wrapping point to match it to nominal angle
     # (reaching a piecewise linear function)
@@ -151,6 +151,8 @@ def fit_gearbox_parameters(par, analysis_results):
              'midpoints' : midpoints,
              'x' : x_s,
              'y' : y_s,
+             'phi_nominal' : phi_nominal,
+             'R_real' : R_real,
              'xc' : xc,
              'yc' : yc,
              'R' : R,
@@ -221,6 +223,8 @@ def plot_gearbox_calibration(fpu_id, par,
                              R=None,
                              a=None,
                              b=None,
+                             R_real=None,
+                             phi_nominal=None,
                              xp=None,
                              yp=None,
                              y_corr=None,
@@ -260,6 +264,15 @@ def plot_gearbox_calibration(fpu_id, par,
         plt.legend(loc='best',labelspacing=0.1 )
         plt.xlabel("nominal angle [degrees]")
         plt.ylabel("real angle [degrees]")
+        plt.show()
+
+    if 1 in plot_residuals:
+        plt.plot(r2d(phi_nominal), R_real - R, 'r.', label="radial delta")
+
+        plt.title('FPU {}: first-order residual radius  for {}'.format(fpu_id, par))
+        plt.legend(loc='best',labelspacing=0.1 )
+        plt.xlabel("nominal angle [degrees]")
+        plt.ylabel("residual radius [millimeter]")
         plt.show()
 
     if 1 in plot_residuals:

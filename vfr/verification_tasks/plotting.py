@@ -102,14 +102,20 @@ def plot(dbe, opts):
             result_beta = pos_rep_result["analysis_results_beta"]
             fit_alpha = fit_gearbox_parameters("alpha", result_alpha)
             plot_circle = "D" in plot_selection
-            plot_gearbox_calibration(
-                fpu_id, "alpha", plot_circle=plot_circle, plot_fits=[0,1,2], plot_residuals=[1,2], **fit_alpha
-            )
+            if fit_alpha is None:
+                print("no parameters found for FPU %s, %s arm" % (fpu_id, "alpha"))
+            else:
+                plot_gearbox_calibration(
+                    fpu_id, "alpha", plot_circle=plot_circle, plot_fits=[0,1,2], plot_residuals=[1,2], **fit_alpha
+                )
 
-            plot_correction(fpu_id, "alpha", **fit_alpha)
+                plot_correction(fpu_id, "alpha", **fit_alpha)
 
             fit_beta = fit_gearbox_parameters("beta", result_beta)
-            plot_gearbox_calibration(
-                fpu_id, "beta", plot_circle=plot_circle, plot_fits=[0,1,2], plot_residuals=[1,2], **fit_beta
-            )
-            plot_correction(fpu_id, "beta", **fit_beta)
+            if fit_beta is None:
+                print("no parameters found for FPU %s, %s arm" % (fpu_id, "beta"))
+            else:
+                plot_gearbox_calibration(
+                    fpu_id, "beta", plot_circle=plot_circle, plot_fits=[0,1,2], plot_residuals=[1,2], **fit_beta
+                )
+                plot_correction(fpu_id, "beta", **fit_beta)
