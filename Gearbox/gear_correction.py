@@ -89,7 +89,7 @@ def fit_gearbox_parameters(par, analysis_results):
 
     for key, val in analysis_results.items():
         alpha_nom, beta_nom, i, j, k = key
-        x1, y1, q1, x2, y2, q2 = val
+        x1, y1, x2, y2, = val
 
         x = (x1 + x2) * 0.5
         y = (y1 + y2) * 0.5
