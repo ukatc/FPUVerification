@@ -89,7 +89,7 @@ def fit_gearbox_parameters(par, analysis_results):
 
     for key, val in analysis_results.items():
         alpha_nom, beta_nom, i, j, k = key
-        x1, y1, x2, y2, = val
+        x1, y1, q1, x2, y2, q2 = val
 
         x = (x1 + x2) * 0.5
         y = (y1 + y2) * 0.5
@@ -218,6 +218,8 @@ def split_iterations(par, midpoints, xc=None, yc=None, a=None, b=None, xp=None, 
 def plot_gearbox_calibration(fpu_id, par,
                              algorithm=None,
                              midpoints=None,
+                             num_support_points=None,
+                             num_data_points=None,
                              x=None,
                              y=None,
                              xc=None,
@@ -373,8 +375,10 @@ def fit_gearbox_correction(dict_of_coordinates_alpha, dict_of_coordinates_beta):
     coeffs_alpha = fit_gearbox_parameters("alpha", dict_of_coordinates_alpha)
     coeffs_beta = fit_gearbox_parameters("beta", dict_of_coordinates_beta)
     return {
-        "coeffs_alpha": coeffs_alpha,
-        "coeffs_beta": coeffs_beta,
+        "coeffs" : {
+            "coeffs_alpha": coeffs_alpha,
+            "coeffs_beta": coeffs_beta,
+        },
         "version": GEARBOX_CORRECTION_VERSION,
     }
 
