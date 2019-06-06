@@ -90,37 +90,3 @@ def metcalFibreCoordinates(image_path, pars=None):  # configurable parameters
     # exceptions: MetrologyAnalysisFibreError()
 
     return metcal_fibre_x, metcal_fibre_y, metcal_fibre_quality
-
-
-def fibre_target_distance(big_target_coords, small_target_coords, fibre_coords):
-    """
-    takes coordinates of the big metrology target, the small metrology target,
-    and the distance in millimeter, and returns
-
-    1) the distance between the large  metrology target and the fibre aperture in millimeter.
-    2) the distance between the small  metrology target and the fibre aperture in millimeter.
-    3) the angle of ∠(large target - fibre - small target), in degrees.
-    """
-
-    # Authors: Stephen Watson (initial algorithm March 4, 2019)
-
-    v_big = array(big_target_coords)
-    v_small = array(small_target_coords)
-
-    v_f = array(fibre_coords)
-
-    va = v_f - v_big
-    metcal_fibre_large_target_distance = norm(va)
-
-    vb = v_f - v_small
-    metcal_fibre_small_target_distance = norm(vb)
-
-    metcal_target_vector_angle = asin(cross(va, vb) / (norm(va) * norm(vb))) * (
-        180.0 / pi
-    )
-
-    return (
-        metcal_fibre_large_target_distance,
-        metcal_fibre_small_target_distance,
-        metcal_target_vector_angle,
-    )
