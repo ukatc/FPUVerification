@@ -60,8 +60,9 @@ def plot_dat_rep(fpu_id, datumed_coords, moved_coords, opts):
             print("no data found for FPU %s, %s" % (fpu_id, label))
             continue
 
-
-        x, y = np.array(series).T[blob_idx]
+        coords = np.array(series).T
+        coords_zeroed = coords - np.mean(coords, axis=1)[:,np.newaxis]
+        x, y = coords_zeroed[blob_idx]
         ax.scatter(x, y, c=color, label=label,
                    alpha=0.7, edgecolors='none')
 
