@@ -13,9 +13,9 @@ from ImageAnalysisFuncs.base import get_min_quality, arg_max_dict
 from ImageAnalysisFuncs.analyze_positional_repeatability import (
     POSITIONAL_REPEATABILITY_ALGORITHM_VERSION,
     ImageAnalysisError,
-    evaluate_positional_verification,
     posrepCoordinates,
 )
+from vfr.evaluation.eval_positional_verification import evaluate_positional_verification
 from numpy import NaN
 from vfr.conf import POS_REP_CAMERA_IP_ADDRESS
 from vfr.db.base import TestResult
@@ -48,6 +48,7 @@ from vfr.tests_common import (
     check_image_analyzability,
 )
 from vfr.conf import POS_REP_ANALYSIS_PARS
+
 
 def generate_tested_positions(
     niterations, alpha_min=NaN, alpha_max=NaN, beta_min=NaN, beta_max=NaN
@@ -159,8 +160,7 @@ def measure_positional_verification(rig, dbe, pars=None):
             beta_max = range_limits.beta_max
 
             fpu_log.audit(
-                "FPU %s: limits: alpha = %7.2f .. %7.2f"
-                % (sn, alpha_min, alpha_max)
+                "FPU %s: limits: alpha = %7.2f .. %7.2f" % (sn, alpha_min, alpha_max)
             )
             fpu_log.audit(
                 "FPU %s: limits: beta = %7.2f .. %7.2f" % (sn, beta_min, beta_max)
@@ -231,9 +231,9 @@ def measure_positional_verification(rig, dbe, pars=None):
                 )
 
                 fpu_log.info(
-                        "FPU %s: measurement #%i - moving to (%7.2f, %7.2f) degrees = (%i, %i) steps"
-                        % (sn, k, alpha, beta, asteps_target, bsteps_target)
-                    )
+                    "FPU %s: measurement #%i - moving to (%7.2f, %7.2f) degrees = (%i, %i) steps"
+                    % (sn, k, alpha, beta, asteps_target, bsteps_target)
+                )
 
                 # compute deltas of step counts
                 adelta = asteps_target - alpha_cursteps
@@ -260,8 +260,13 @@ def measure_positional_verification(rig, dbe, pars=None):
                 fpu_log.debug("FPU %s: saving image # %i..." % (sn, k))
 
                 ipath = capture_image(k, alpha, beta)
-                fpu_log.audit("saving image for position (%7.3f, %7.3f) to %r" % (alpha, beta, abspath(ipath)))
-                check_image_analyzability(ipath, posrepCoordinates, pars=POS_REP_ANALYSIS_PARS)
+                fpu_log.audit(
+                    "saving image for position (%7.3f, %7.3f) to %r"
+                    % (alpha, beta, abspath(ipath))
+                )
+                check_image_analyzability(
+                    ipath, posrepCoordinates, pars=POS_REP_ANALYSIS_PARS
+                )
 
                 image_dict[(k, alpha, beta)] = ipath
 
@@ -289,7 +294,9 @@ def eval_positional_verification(dbe, pos_ver_analysis_pars, pos_ver_evaluation_
         measurement = get_positional_verification_images(dbe, fpu_id)
 
         if measurement is None:
-            logger.info("FPU %s: no positional verification measurement data found" % fpu_id)
+            logger.info(
+                "FPU %s: no positional verification measurement data found" % fpu_id
+            )
             continue
 
         logger.info("evaluating positional verification for FPU %s" % fpu_id)
@@ -356,7 +363,9 @@ def eval_positional_verification(dbe, pos_ver_analysis_pars, pos_ver_evaluation_
             positional_verification_has_passed = TestResult.NA
             min_quality = NaN
             arg_max_error = NaN
-            logger.exception("image analysis for FPU %s failed with message %s" % (fpu_id, errmsg))
+            logger.exception(
+                "image analysis for FPU %s failed with message %s" % (fpu_id, errmsg)
+            )
 
         record = PositionalVerificationResult(
             calibration_pars=pos_ver_analysis_pars.POS_REP_CALIBRATION_PARS,

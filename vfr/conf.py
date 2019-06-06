@@ -41,7 +41,9 @@ MTS50_SERIALNUMBER = 83822910
 # VERIFICATION_ROOT_FOLDER to the path which contains the images and
 # calibration data. Shorthands like ~/, ~user, or ${HOME} are expanded
 # before use.
-VERIFICATION_ROOT_FOLDER = os.environ.get("VERIFICATION_ROOT_FOLDER", "/moonsdata/verification/")
+VERIFICATION_ROOT_FOLDER = os.environ.get(
+    "VERIFICATION_ROOT_FOLDER", "/moonsdata/verification/"
+)
 
 POS_REP_CAMERA_IP_ADDRESS = "169.254.187.121"
 
@@ -240,10 +242,10 @@ POS_REP_MEASUREMENT_PARS = Namespace(
     POS_REP_EXPOSURE_MS=200,  # the exposure time in
     # milliseconds for a correctly
     # exposed image
-    POS_REP_NUM_INCREMENTS=25,  # the number of movements made
+    POS_REP_NUM_INCREMENTS=15,  # the number of movements made
     # within each positive sweep from
     # the starting position
-    POS_REP_ITERATIONS=5,  # the number of times each FPU
+    POS_REP_ITERATIONS=3,  # the number of times each FPU
     # sweeps back and forth
     POS_REP_SAFETY_MARGIN=5.0,  # safety margin, in degree, for
     # distance to range limits when testing
@@ -268,7 +270,7 @@ POS_REP_MEASUREMENT_PARS = Namespace(
         "max_acceleration": 100,
         "max_deceleration": 100,
     },
-    POS_REP_WAVEFORM_RULESET=0, # '0' does switch off checking
+    POS_REP_WAVEFORM_RULESET=0,  # '0' does switch off checking
     POS_REP_CALIBRATION_MAPFILE="calibration/mapping/pos-rep-2019-04-10.cfg",
 )
 
@@ -289,7 +291,7 @@ POS_VER_MEASUREMENT_PARS = Namespace(
     POS_VER_EXPOSURE_MS=250,  # the exposure time in
     # milliseconds for a correctly
     # exposed image
-    POS_VER_ITERATIONS=100,  # the number of extra random sample points
+    POS_VER_ITERATIONS=10,  # the number of extra random sample points
     POS_VER_SAFETY_TOLERANCE=1.5,  # safety distance towards range limits
     POS_VER_CALIBRATION_MAPFILE="calibration/mapping/pos-rep-2019-04-10.cfg",
 )

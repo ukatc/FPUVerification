@@ -25,7 +25,6 @@ LimitTestResult = namedtuple(
 
 def save_angular_limit(dbe, which_limit, record):
 
-
     serialnumber = record.serialnumber
     fpu_id = record.fpu_id
     fpu_log = get_fpuLogger(fpu_id, dbe.fpu_config, __name__)

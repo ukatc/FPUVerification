@@ -4,9 +4,11 @@ from GigE.GigECamera import BASLER_DEVICE_CLASS, DEVICE_CLASS, IP_ADDRESS
 from ImageAnalysisFuncs.analyze_pupil_alignment import (
     PUPIL_ALIGNMENT_ALGORITHM_VERSION,
     ImageAnalysisError,
+    pupalnCoordinates,
+)
+from vfr.evaluation.eval_pupil_alignment import (
     evaluate_pupil_alignment,
     get_min_quality_pupil,
-    pupalnCoordinates,
 )
 from numpy import NaN
 import logging
@@ -39,6 +41,7 @@ from vfr.tests_common import (
 )
 from DistortionCorrection import get_correction_func
 from vfr.conf import PUP_ALGN_ANALYSIS_PARS
+
 
 def generate_positions():
     a0 = -170.0
@@ -122,7 +125,6 @@ def measure_pupil_alignment(rig, dbe, pars=None):
             turntable_safe_goto(rig, rig.grid_state, stage_position)
             linear_stage_goto(rig, pars.PUP_ALGN_LINPOSITIONS[fpu_id])
 
-
             def capture_image(count, alpha, beta):
 
                 ipath = store_image(
@@ -142,8 +144,7 @@ def measure_pupil_alignment(rig, dbe, pars=None):
             for count, (coords, do_capture) in enumerate(generate_positions()):
                 abs_alpha, abs_beta = coords
                 fpu_log.debug(
-                    "FPU %s: go to position (%7.2f, %7.2f)"
-                    % (sn, abs_alpha, abs_beta)
+                    "FPU %s: go to position (%7.2f, %7.2f)" % (sn, abs_alpha, abs_beta)
                 )
 
                 goto_position(
@@ -157,7 +158,9 @@ def measure_pupil_alignment(rig, dbe, pars=None):
                     )
                     ipath = capture_image(count, abs_alpha, abs_beta)
                     fpu_log.audit("saving pupil image to %r" % abspath(ipath))
-                    check_image_analyzability(ipath, pupalnCoordinates, pars=PUP_ALGN_ANALYSIS_PARS)
+                    check_image_analyzability(
+                        ipath, pupalnCoordinates, pars=PUP_ALGN_ANALYSIS_PARS
+                    )
 
                     images[(abs_alpha, abs_beta)] = ipath
 
@@ -198,11 +201,16 @@ def eval_pupil_alignment(
                 mapfile
             )
 
-        correct = get_correction_func(calibration_pars=PUP_ALGN_ANALYSIS_PARS.PUP_ALGN_CALIBRATION_PARS,
-                                      platescale=PUP_ALGN_ANALYSIS_PARS.PUP_ALGN_PLATESCALE,
-                                      loglevel=PUP_ALGN_ANALYSIS_PARS.loglevel)
+        correct = get_correction_func(
+            calibration_pars=PUP_ALGN_ANALYSIS_PARS.PUP_ALGN_CALIBRATION_PARS,
+            platescale=PUP_ALGN_ANALYSIS_PARS.PUP_ALGN_PLATESCALE,
+            loglevel=PUP_ALGN_ANALYSIS_PARS.loglevel,
+        )
+
         def analysis_func(ipath):
-            return pupalnCoordinates(fixup_ipath(ipath), pars=PUP_ALGN_ANALYSIS_PARS, correct=correct)
+            return pupalnCoordinates(
+                fixup_ipath(ipath), pars=PUP_ALGN_ANALYSIS_PARS, correct=correct
+            )
 
         try:
             coords = dict((k, analysis_func(v)) for k, v in images.items())
@@ -230,7 +238,9 @@ def eval_pupil_alignment(
             pupalnTotalErr = NaN
             pupil_alignment_has_passed = TestResult.NA
             min_quality = NaN
-            logger.exception("image analysis for FPU %s failed with message %s" % (fpu_id, errmsg))
+            logger.exception(
+                "image analysis for FPU %s failed with message %s" % (fpu_id, errmsg)
+            )
 
         pupil_alignment_measures = {
             "chassis_error": pupalnChassisErr,

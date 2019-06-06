@@ -12,8 +12,10 @@ from ImageAnalysisFuncs.base import get_min_quality, arg_max_dict
 from ImageAnalysisFuncs.analyze_positional_repeatability import (
     POSITIONAL_REPEATABILITY_ALGORITHM_VERSION,
     ImageAnalysisError,
-    evaluate_positional_repeatability,
     posrepCoordinates,
+)
+from vfr.evaluation.eval_positional_repeatability import (
+    evaluate_positional_repeatability,
 )
 from numpy import NaN
 from vfr.conf import POS_REP_CAMERA_IP_ADDRESS
@@ -204,7 +206,9 @@ def capture_fpu_position(rig, fpu_id, midx, target_pos, capture_image, pars=None
 
     ipath = capture_image(midx, real_position)
     check_image_analyzability(ipath, posrepCoordinates, pars=POS_REP_ANALYSIS_PARS)
-    fpu_log.audit("saving image for position %r to %r" % (real_position, abspath(ipath)))
+    fpu_log.audit(
+        "saving image for position %r to %r" % (real_position, abspath(ipath))
+    )
     key = (
         real_position.alpha,
         real_position.beta,
@@ -227,7 +231,7 @@ def get_images_for_fpu(rig, fpu_id, range_limits, pars, capture_image):
         target_pos = get_target_position(range_limits, pars, measurement_index)
 
         key, val = capture_fpu_position(
-            rig, fpu_id, measurement_index, target_pos, capture_image, pars=pars,
+            rig, fpu_id, measurement_index, target_pos, capture_image, pars=pars
         )
 
         # the direction index tells whether the image
@@ -321,7 +325,9 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
         measurement = get_positional_repeatability_images(dbe, fpu_id)
 
         if measurement is None:
-            logger.info("FPU %s: no positional repeatability measurement data found" % fpu_id)
+            logger.info(
+                "FPU %s: no positional repeatability measurement data found" % fpu_id
+            )
             continue
 
         logger.info("evaluating positional repeatability for FPU %s" % fpu_id)
@@ -336,18 +342,21 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
         else:
             pars = pos_rep_analysis_pars.TARGET_DETECTION_CONTOUR_PARS
 
-        pars.PLATESCALE=pos_rep_analysis_pars.PLATESCALE
+        pars.PLATESCALE = pos_rep_analysis_pars.PLATESCALE
 
         if mapfile:
-            pars.CALIBRATION_PARS = get_config_from_mapfile(
-                mapfile
-            )
+            pars.CALIBRATION_PARS = get_config_from_mapfile(mapfile)
 
-        correct = get_correction_func(calibration_pars=pars.CALIBRATION_PARS,
-                                      platescale=pars.PLATESCALE,
-                                      loglevel=pos_rep_analysis_pars.loglevel)
+        correct = get_correction_func(
+            calibration_pars=pars.CALIBRATION_PARS,
+            platescale=pars.PLATESCALE,
+            loglevel=pos_rep_analysis_pars.loglevel,
+        )
+
         def analysis_func(ipath):
-            return posrepCoordinates(fixup_ipath(ipath), pars=pos_rep_analysis_pars, correct=correct)
+            return posrepCoordinates(
+                fixup_ipath(ipath), pars=pos_rep_analysis_pars, correct=correct
+            )
 
         try:
             analysis_results_alpha = {}
@@ -361,11 +370,16 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
                     analysis_results_alpha[k] = analysis_func(ipath)
                 except ImageAnalysisError as err:
                     count_failures += 1
-                    if count_failures > count_images * pos_rep_analysis_pars.MAX_FAILURE_QUOTIENT:
+                    if (
+                        count_failures
+                        > count_images * pos_rep_analysis_pars.MAX_FAILURE_QUOTIENT
+                    ):
                         raise
                     else:
-                        logger.warning("image analysis failed for image %s, "
-                                       "message = %s (continuing)" % (ipath, str(err)))
+                        logger.warning(
+                            "image analysis failed for image %s, "
+                            "message = %s (continuing)" % (ipath, str(err))
+                        )
                         continue
 
                 (
@@ -392,13 +406,17 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
                     analysis_results_beta[k] = analysis_func(ipath)
                 except ImageAnalysisError as err:
                     count_failures += 1
-                    if count_failures > count_images * pos_rep_analysis_pars.MAX_FAILURE_QUOTIENT:
+                    if (
+                        count_failures
+                        > count_images * pos_rep_analysis_pars.MAX_FAILURE_QUOTIENT
+                    ):
                         raise
                     else:
-                        logger.warning("image analysis failed for image %s, "
-                                       "message = %s (continuing)" % (ipath, str(err)))
+                        logger.warning(
+                            "image analysis failed for image %s, "
+                            "message = %s (continuing)" % (ipath, str(err))
+                        )
                         continue
-
 
                 (
                     x_measured_small,
@@ -468,7 +486,9 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
             min_quality_beta = NaN
             arg_max_alpha_error = NaN
             arg_max_beta_error = NaN
-            logger.exception("image analysis for FPU %s failed with message %s" % (fpu_id, errmsg))
+            logger.exception(
+                "image analysis for FPU %s failed with message %s" % (fpu_id, errmsg)
+            )
 
         record = PositionalRepeatabilityResults(
             calibration_pars=pars.CALIBRATION_PARS,

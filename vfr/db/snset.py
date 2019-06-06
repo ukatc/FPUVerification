@@ -37,8 +37,7 @@ def add_sns_to_set(dbe, new_serialnumbers):
             # literal_eval cannot parse a set (in Python2.7)
             txn.put(KEY, repr(list(existing_serial_numbers)))
             logger.debug(
-                "db: adding serial numbers %r to set of seen FPUs"
-                % new_serialnumbers
+                "db: adding serial numbers %r to set of seen FPUs" % new_serialnumbers
             )
 
 

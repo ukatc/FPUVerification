@@ -56,9 +56,7 @@ def resolve(tasks, rigparams, dbe):
         last_tasks = tasks.copy()
         # check for expansions (replace user shorthands by detailed task breakdown)
         for tsk, expansion in task_expansions:
-            tasks = expand_tasks(
-                tasks, tsk, expansion, delete=True,
-            )
+            tasks = expand_tasks(tasks, tsk, expansion, delete=True)
 
         # add dependencies (add tasks required to do a test)
         for tsk, expansion in task_dependencies:
@@ -70,9 +68,7 @@ def resolve(tasks, rigparams, dbe):
             if tsk in tasks:
                 tfun = lambda fpu_id: testfun(dbe, fpu_id)
                 if (not all_true(tfun, fpuset)) or rigparams.opts.repeat_passed_tests:
-                    tasks = expand_tasks(
-                        tasks, tsk, cond_expansion, delete=True,
-                    )
+                    tasks = expand_tasks(tasks, tsk, cond_expansion, delete=True)
 
         # check for equality with last iteration
         # -- if equal, expansion is finished

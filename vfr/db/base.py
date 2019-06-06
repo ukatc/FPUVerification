@@ -103,7 +103,7 @@ def get_test_result(dbe, fpu_id, keyfunc, count=None):
 
 
 def save_named_record(
-        record_type, dbe, fpu_id, record, include_fpu_id=False, loglevel=logging.DEBUG-5,
+    record_type, dbe, fpu_id, record, include_fpu_id=False, loglevel=logging.DEBUG - 5
 ):
 
     log = logging.getLogger(__name__).trace
@@ -127,7 +127,7 @@ def save_named_record(
     save_test_result(dbe, [fpu_id], keyfunc, valfunc)
 
 
-def get_named_record(record_type, dbe, fpu_id, count=None, loglevel=logging.DEBUG-5):
+def get_named_record(record_type, dbe, fpu_id, count=None, loglevel=logging.DEBUG - 5):
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
