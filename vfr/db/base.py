@@ -6,6 +6,7 @@ import logging
 import os.path
 import subprocess
 
+from argparse import Namespace
 from numpy import array, Inf, NaN, inf, nan  # these values are used!!
 
 assert Inf or NaN or inf or nan or array or True
@@ -90,9 +91,10 @@ def get_test_result(dbe, fpu_id, keyfunc, count=None):
                 val = ast.literal_eval(val)
 
             except ValueError:
-                # we need to work around the disappointing fact that
+                # Resolve Namespace constructors.
+                # We also need to work around the disappointing fact that
                 # literal_eval() does not recognize IEEE754 NaN
-                # symbols
+                # symbols.
                 val = eval(val)
             val["record-count"] = count
 

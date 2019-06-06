@@ -5,7 +5,7 @@ from math import pi
 
 import cv2
 from DistortionCorrection import get_correction_func
-from ImageAnalysisFuncs.base import ImageAnalysisError, rss
+from ImageAnalysisFuncs.base import ImageAnalysisError
 
 # exceptions which are raised if image analysis functions fail
 

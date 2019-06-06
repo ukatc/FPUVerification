@@ -9,13 +9,14 @@ from vfr.auditlog import get_fpuLogger
 from fpu_commands import gen_wf
 from Gearbox.gear_correction import GearboxFitError, apply_gearbox_correction
 from GigE.GigECamera import BASLER_DEVICE_CLASS, DEVICE_CLASS, IP_ADDRESS
-from ImageAnalysisFuncs.base import get_min_quality, arg_max_dict
+from ImageAnalysisFuncs.base import get_min_quality
 from ImageAnalysisFuncs.analyze_positional_repeatability import (
     POSITIONAL_REPEATABILITY_ALGORITHM_VERSION,
     ImageAnalysisError,
     posrepCoordinates,
 )
 from vfr.evaluation.eval_positional_verification import evaluate_positional_verification
+from vfr.evaluation.measures import arg_max_dict
 from numpy import NaN
 from vfr.conf import POS_REP_CAMERA_IP_ADDRESS
 from vfr.db.base import TestResult

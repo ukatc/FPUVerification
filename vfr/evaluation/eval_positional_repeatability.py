@@ -3,6 +3,7 @@
 
 """
 from __future__ import division, print_function
+from vfr.evaluation.measures import rss
 
 import warnings
 

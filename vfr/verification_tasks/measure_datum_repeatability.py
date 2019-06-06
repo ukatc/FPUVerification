@@ -15,7 +15,7 @@ from ImageAnalysisFuncs.analyze_positional_repeatability import (
     ImageAnalysisError,
     posrepCoordinates,
 )
-from vfr.evaluation.eval_datum_repeatability import evaluate_datum_repeatability
+from vfr.evaluation.eval_datum_repeatability import evaluate_datum_repeatability, NO_RESULT
 from numpy import NaN, array
 import numpy as np
 from vfr.conf import MET_CAL_CAMERA_IP_ADDRESS
@@ -316,20 +316,13 @@ def eval_datum_repeatability(dbe, dat_rep_analysis_pars):
                         )
                         continue
 
-            (
-                datrep_dat_only_max,
-                datrep_dat_only_std,
-                datrep_move_dat_max,
-                datrep_move_dat_std,
-                datumed_errors,
-                moved_errors,
-            ) = evaluate_datum_repeatability(datumed_coords, moved_coords)
+            error_measures = evaluate_datum_repeatability(datumed_coords, moved_coords)
 
             datum_repeatability_has_passed = (
                 TestResult.OK
                 if (
-                    max(datrep_dat_only_max, datrep_move_dat_max)
-                    <= dat_rep_analysis_pars.DATUM_REP_PASS
+                    error_measures.combined.percentiles[dat_rep_analysis_pars.DATUM_REP_TESTED_PERCENTILE]
+                        <= dat_rep_analysis_pars.DATUM_REP_PASS
                 )
                 else TestResult.FAILED
             )
@@ -355,8 +348,7 @@ def eval_datum_repeatability(dbe, dat_rep_analysis_pars):
             max_residual_moved = NaN
             min_quality_datumed = NaN
             min_quality_moved = NaN
-            datumed_errors = None
-            moved_errors = None
+            error_measures = NO_RESULT
 
             logger.exception(
                 "image analysis for FPU %s failed with message %s" % (fpu_id, errmsg)
@@ -367,15 +359,12 @@ def eval_datum_repeatability(dbe, dat_rep_analysis_pars):
             coords=coords,
             datum_repeatability_max_residual_datumed=max_residual_datumed,
             datum_repeatability_max_residual_moved=max_residual_moved,
-            datum_repeatability_move_max_mm=datrep_move_dat_max,
-            datum_repeatability_move_std_mm=datrep_move_dat_std,
-            datum_repeatability_only_max_mm=datrep_dat_only_max,
-            datum_repeatability_only_std_mm=datrep_dat_only_std,
-            datumed_errors=datumed_errors,
+            datum_repeatability_datum_only=error_measures.datum_only,
+            datum_repeatability_moved=error_measures.moved,
+            datum_repeatability_combined=error_measures.combined,
             error_message=errmsg,
             min_quality_datumed=min_quality_datumed,
             min_quality_moved=min_quality_moved,
-            moved_errors=moved_errors,
             pass_threshold_mm=dat_rep_analysis_pars.DATUM_REP_PASS,
             result=datum_repeatability_has_passed,
         )

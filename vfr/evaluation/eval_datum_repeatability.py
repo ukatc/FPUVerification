@@ -5,10 +5,17 @@
 from __future__ import division, print_function
 
 import warnings
+import argparse
 
 import numpy as np
 import logging
+from vfr.evaluation.measures import get_errors, NO_MEASURES
 
+NO_RESULT = argparse.Namespace(
+    datum_only=NO_MEASURES,
+    moved=NO_MEASURES,
+    combined=NO_MEASURES,
+)
 
 def evaluate_datum_repeatability(datumed_coords, moved_coords, pars=None):
     """Takes two lists of (x,y) coordinates : coordinates
@@ -17,38 +24,18 @@ def evaluate_datum_repeatability(datumed_coords, moved_coords, pars=None):
 
     The units are in millimeter.
 
-    The returned value is the repeatability value in millimeter.
-
-    Any error should be signalled by throwing an Exception of class
-    ImageAnalysisError, with a string member which describes the problem.
+    The returned values corrspond to  repeatability value ins millimeter.
+    For each of datumed-only set of coordinates, moved
+    coordinates, and the combined list, the mean value, the
+    maximum value, and a dict of precentile values for
+    the set is returned.
 
     """
 
-    # get data, omitting quality factors
-    xy_datumed = np.array(datumed_coords)
-    xy_moved = np.array(moved_coords)
-
-    datumed_mean = np.mean(xy_datumed, axis=0)  # averages both small and big targets
-    moved_mean = np.mean(xy_moved, axis=0)
-
-    norm = np.linalg.norm
-    datumed_errors_small = map(norm, xy_datumed[:, :2] - datumed_mean[:2])
-    datumed_errors_big = map(norm, xy_datumed[:, 2:] - datumed_mean[2:])
-    moved_errors_small = map(norm, xy_moved[:, :2] - moved_mean[:2])
-    moved_errors_big = map(norm, xy_moved[:, 2:] - moved_mean[2:])
-
-    datumed_errors = np.hstack([datumed_errors_big, datumed_errors_small])
-    moved_errors = np.hstack([moved_errors_big, moved_errors_small])
-    datrep_dat_only_max = max(datumed_errors)
-    datrep_dat_only_std = np.std(datumed_errors)
-    datrep_move_dat_max = max(moved_errors)
-    datrep_move_dat_std = np.std(moved_errors)
-
-    return (
-        datrep_dat_only_max,
-        datrep_dat_only_std,
-        datrep_move_dat_max,
-        datrep_move_dat_std,
-        datumed_errors,
-        moved_errors,
+    all_coords = list(datumed_coords)
+    all_coords.extend(moved_coords)
+    return argparse.Namespace(
+        datum_only=get_errors(datumed_coords),
+        moved=get_errors(moved_coords),
+        combined=get_errors(all_coords),
     )

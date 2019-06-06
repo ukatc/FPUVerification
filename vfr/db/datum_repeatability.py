@@ -16,15 +16,12 @@ DatumRepeatabilityResult = namedtuple(
     " coords"
     " datum_repeatability_max_residual_datumed"
     " datum_repeatability_max_residual_moved"
-    " datum_repeatability_move_max_mm"
-    " datum_repeatability_move_std_mm"
-    " datum_repeatability_only_max_mm"
-    " datum_repeatability_only_std_mm"
-    " datumed_errors"
+    " datum_repeatability_datum_only"
+    " datum_repeatability_moved"
+    " datum_repeatability_combined"
     " error_message"
     " min_quality_datumed"
     " min_quality_moved"
-    " moved_errors"
     " pass_threshold_mm"
     " result",
 )

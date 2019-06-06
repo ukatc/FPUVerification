@@ -18,7 +18,7 @@ from numpy import NaN, array, hstack, mean, std
 from numpy.linalg import norm
 import logging
 
-from ImageAnalysisFuncs.base import ImageAnalysisError, rss
+from ImageAnalysisFuncs.base import ImageAnalysisError
 from ImageAnalysisFuncs import target_detection_contours, target_detection_otsu
 
 # version number for analysis algorithm

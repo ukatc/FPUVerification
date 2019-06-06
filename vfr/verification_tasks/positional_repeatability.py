@@ -8,7 +8,7 @@ from vfr.auditlog import get_fpuLogger
 
 from Gearbox.gear_correction import GearboxFitError, fit_gearbox_correction
 from GigE.GigECamera import BASLER_DEVICE_CLASS, DEVICE_CLASS, IP_ADDRESS
-from ImageAnalysisFuncs.base import get_min_quality, arg_max_dict
+from ImageAnalysisFuncs.base import get_min_quality
 from ImageAnalysisFuncs.analyze_positional_repeatability import (
     POSITIONAL_REPEATABILITY_ALGORITHM_VERSION,
     ImageAnalysisError,
@@ -17,6 +17,7 @@ from ImageAnalysisFuncs.analyze_positional_repeatability import (
 from vfr.evaluation.eval_positional_repeatability import (
     evaluate_positional_repeatability,
 )
+from vfr.evaluation.measures import arg_max_dict
 from numpy import NaN
 from vfr.conf import POS_REP_CAMERA_IP_ADDRESS
 from vfr.db.base import TestResult

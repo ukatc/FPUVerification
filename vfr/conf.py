@@ -53,6 +53,9 @@ MET_HEIGHT_CAMERA_IP_ADDRESS = "169.254.190.121"
 
 PUP_ALGN_CAMERA_IP_ADDRESS = "169.254.108.113"
 
+BLOB_WEIGHT_FACTOR = 0.75 # relative weight of large vs small metrology target position
+
+PERCENTILE_ARGS = [50, 90, 95, 97.5]
 
 REWIND_POS_ALPHA = -175.0  # alpha start position before initial datum search
 REWIND_POS_BETA = 1.0  # alpha start position before initial datum search
@@ -117,10 +120,11 @@ DATUM_REP_ANALYSIS_PARS = Namespace(
     display=False,
     verbosity=0,
     loglevel=0,
-    DATUM_REP_PASS=20.0,  # the maximum single
+    DATUM_REP_PASS=30.0,  # the maximum single
     # deviation in microns from the
     # baseline position which represents an
     # acceptable FPU
+    DATUM_REP_TESTED_PERCENTILE=95, # the tested percentile
 )
 
 LINPOSITIONS = [  # the linear stage positions
