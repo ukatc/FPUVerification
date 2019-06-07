@@ -17,7 +17,13 @@ def distance(p1, p2):
     return math.hypot(p1[0] - p2[0], p1[1] - p2[1])
 
 
-def find_bright_sharp_circles(path, minradius, maxradius, grouprange=None, quality=0.4, show=False):
+def find_bright_sharp_circles(path,
+                              minradius,
+                              maxradius,
+                              grouprange=None,
+                              quality=0.4,
+                              show=False,
+                              tolerence=7.0):
     """
     Finds circular dots in the given image within the radius range, displaying them on console and graphically if show is set to True
 
@@ -75,7 +81,7 @@ def find_bright_sharp_circles(path, minradius, maxradius, grouprange=None, quali
             if (
                 distance(blob.pt, binary_blob.pt)
                 + abs(blob.size / 2.0 - binary_blob.size / 2.0)
-                < 6.0
+                < tolerence
             ):
                 circles.append((blob.pt[0], blob.pt[1], blob.size / 2.0))
                 target_blob_list.append(blob)
@@ -146,7 +152,8 @@ def targetCoordinates(image_path, pars=None, correct=None):
                                       pars.MIN_RADIUS,
                                       pars.MAX_RADIUS,
                                       grouprange=pars.GROUP_RANGE,
-                                      quality=pars.QUALITY_METRIC)
+                                      quality=pars.QUALITY_METRIC,
+                                      tolerence=pars.TOLERENCE)
     if len(blobs) != 2:
         raise OtsuTargetFindingError("{} blobs found in image {}, there should be exactly two blobs".format(len(blobs),
                                                                                                       image_path))

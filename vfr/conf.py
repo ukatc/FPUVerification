@@ -93,6 +93,7 @@ DAT_REP_TARGET_DETECTION_OTSU_PARS = Namespace(
     MAX_RADIUS=187,  # in pixels
     GROUP_RANGE=680,  # in pixels
     QUALITY_METRIC=0.4,  # dimensionless
+    TOLERENCE=7.0  # pixels
 )
 DAT_REP_TARGET_DETECTION_CONTOUR_PARS = Namespace(
     CALIBRATION_PARS=DAT_REP_CALIBRATION_PARS,
@@ -163,6 +164,7 @@ POS_REP_TARGET_DETECTION_OTSU_PARS = Namespace(
     MAX_RADIUS=55,  # in pixels
     GROUP_RANGE=200,  # in pixels
     QUALITY_METRIC=0.4,  # dimensionless
+    TOLERENCE=7.0  # pixels
 )
 POS_REP_TARGET_DETECTION_CONTOUR_PARS = Namespace(
     CALIBRATION_PARS=POS_REP_CALIBRATION_PARS,
@@ -192,6 +194,7 @@ MET_CAL_TARGET_DETECTION_OTSU_PARS = Namespace(
     MAX_RADIUS=200,  # in pixels
     GROUP_RANGE=525,  # in pixels
     QUALITY_METRIC=0.4,  # dimensionless
+    TOLERENCE=7.0  # pixels
 )
 MET_CAL_TARGET_DETECTION_CONTOUR_PARS = Namespace(
     SMALL_DIAMETER=1.42,  # millimeter
