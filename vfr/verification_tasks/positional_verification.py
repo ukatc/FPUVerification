@@ -15,6 +15,7 @@ from ImageAnalysisFuncs.analyze_positional_repeatability import (
     ImageAnalysisError,
     posrepCoordinates,
 )
+from vfr.evaluation.measures import NO_MEASURES
 from vfr.evaluation.eval_positional_verification import evaluate_positional_verification
 from vfr.evaluation.measures import arg_max_dict
 from numpy import NaN
@@ -317,7 +318,6 @@ def eval_positional_verification(dbe, pos_ver_analysis_pars, pos_ver_evaluation_
 
         try:
             analysis_results = {}
-            analysis_results_short = {}
 
             for k, v in images.items():
                 count, alpha_steps, beta_steps, = k
@@ -333,34 +333,27 @@ def eval_positional_verification(dbe, pos_ver_analysis_pars, pos_ver_evaluation_
                     qual_big,
                 ) = analysis_results[k]
 
-                analysis_results_short[k] = (
-                    x_measured_small,
-                    y_measured_small,
-                    x_measured_big,
-                    y_measured_big,
-                )
-
-                (posver_error, posver_error_max_mm) = evaluate_positional_verification(
-                    analysis_results_short, pars=pos_ver_evaluation_pars
+                posver_error_by_angle, posver_error_measures = evaluate_positional_verification(
+                    analysis_results, pars=pos_ver_evaluation_pars
                 )
 
             positional_verification_has_passed = (
                 TestResult.OK
-                if (posver_error_max_mm <= pos_ver_evaluation_pars.POS_VER_PASS)
+                if (posver_error_measures.percentiles[95] <= pos_ver_evaluation_pars.POS_VER_PASS)
                 else TestResult.FAILED
             )
 
             coords = list(analysis_results.values())
             min_quality = get_min_quality(coords)
-            arg_max_error, _ = arg_max_dict(posver_error)
+            arg_max_error, _ = arg_max_dict(posver_error_by_angle)
 
             errmsg = ""
 
         except (ImageAnalysisError, GearboxFitError) as e:
             analysis_results = None
             errmsg = str(e)
-            posver_error = ([],)
-            posver_error_max_mm = (NaN,)
+            posver_error_by_angle = []
+            posver_error_measures = NO_RESULT
             positional_verification_has_passed = TestResult.NA
             min_quality = NaN
             arg_max_error = NaN
@@ -371,8 +364,8 @@ def eval_positional_verification(dbe, pos_ver_analysis_pars, pos_ver_evaluation_
         record = PositionalVerificationResult(
             calibration_pars=pos_ver_analysis_pars.POS_REP_CALIBRATION_PARS,
             analysis_results=analysis_results,
-            posver_error=posver_error,
-            posver_error_max_mm=posver_error_max_mm,
+            posver_error_measures=posver_error_measures,
+            posver_error_by_angle=posver_error_by_angle,
             result=positional_verification_has_passed,
             pass_threshold_mm=pos_ver_evaluation_pars.POS_VER_PASS,
             min_quality=min_quality,

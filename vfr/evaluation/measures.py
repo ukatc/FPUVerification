@@ -113,7 +113,7 @@ def get_errors(coordinate_sequence, centroid=None):
 
     return get_measures(error_magnitudes)
 
-def get_grouped_errors(coordinate_sequence_list):
+def get_grouped_errors(coordinate_sequence_list, list_of_centroids=None):
     """Takes a lists of lists, sets, or sequences of blob coordinates,
     and computes error measures from them.
 
@@ -130,7 +130,11 @@ def get_grouped_errors(coordinate_sequence_list):
     """
 
     error_magnitudes = []
-    for coordinate_sequence in coordinate_sequence_list:
-        error_magnitudes.extend(get_magnitudes(coordinate_sequence))
+    for idx, coordinate_sequence in enumerate(coordinate_sequence_list):
+        if list_of_centroids is None:
+            centroid = None
+        else:
+            centroid = list_of_centroids[idx]
+        error_magnitudes.extend(get_magnitudes(coordinate_sequence, centroid=centroid))
 
     return get_measures(error_magnitudes)

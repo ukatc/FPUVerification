@@ -302,7 +302,7 @@ POS_VER_MEASUREMENT_PARS = Namespace(
 
 
 POS_VER_EVALUATION_PARS = Namespace(
-    POS_VER_PASS=Inf,  # the maximum angular deviation, in
+    POS_VER_PASS=0.030,  # the maximum angular deviation, in
     # degrees, from an average position of
     # a grouping of measured points at a
     # given nominal position which

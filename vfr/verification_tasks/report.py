@@ -732,8 +732,8 @@ def format_report_long(
                 rfmt_pos_ver.POS_VER_CALPARS.format(**positional_verification_result)
             )
 
-            error_by_coords = positional_verification_result["posver_error"]
-            error_max = positional_verification_result["posver_error_max_mm"]
+            error_by_coords = positional_verification_result["posver_error_by_angle"]
+            error_max = positional_verification_result["posver_error_measures"].max
             for line in list_posver_err_by_coord(error_by_coords, error_max):
                 yield line
 
@@ -977,8 +977,8 @@ def format_report_extended(
                 rfmt_pos_ver.POS_VER_CALPARS.format(**positional_verification_result)
             )
 
-            error_by_coords = positional_verification_result["posver_error"]
-            error_max = positional_verification_result["posver_error_max_mm"]
+            error_by_coords = positional_verification_result["posver_error_by_angle"]
+            error_max = positional_verification_result["posver_error_measures"].max
             for line in list_posver_err_by_coord(error_by_coords, error_max):
                 yield line
 
@@ -1287,8 +1287,8 @@ def format_report_csv(
                 )
             )
 
-            error_by_coords = positional_verification_result["posver_error"]
-            error_max = positional_verification_result["posver_error_max_mm"]
+            error_by_coords = positional_verification_result["posver_error_by_angle"]
+            error_max = positional_verification_result["posver_error_measures"].max
             yield ""
             yield "posver errors"
             yield "i,alpha,beta,err"

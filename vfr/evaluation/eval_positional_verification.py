@@ -4,6 +4,8 @@
 """
 from __future__ import division, print_function
 
+from vfr.evaluation.measures import NO_MEASURES, get_errors, get_grouped_errors, group_by_subkeys
+
 import warnings
 import numpy as np
 import logging
@@ -35,27 +37,14 @@ def evaluate_positional_verification(dict_of_coords, pars=None):
 
     """
 
-    posver_error = {}
 
-    for k, va in dict_of_coords.items():
-        count, alpha, beta, = k
+    nominal_angles = [(alpha, beta) for (count, alpha, beta) in dict_of_coords.keys()]
+    measured_coords = [ [x] for x in dict_of_coords.values()]
+    error_by_angle = {}
+    for key, coords in dict_of_coords.items():
+        count, alpha, beta = key
+        angle = (alpha, beta)
+        error_by_angle[key] = get_errors([coords], centroid=angle).max
 
-        # FIXME: compute somehow nominal coordinates
-        warnings.warn("insert computation of nominal target coordinates here")
-        NaN = np.NaN
-        x_small, y_small = NaN * alpha, NaN * beta
-        x_big, y_big = NaN * alpha, NaN * beta
-
-        # compute difference
-        err_small = np.linalg.norm(
-            va[:2] - np.array([alpha, beta])
-        )  # pylint: disable=invalid-unary-operand-type
-        err_big = np.linalg.norm(
-            va[2:] - np.array([alpha, beta])
-        )  # pylint: disable=invalid-unary-operand-type
-
-        posver_error[k] = max(err_small, err_big)
-
-    posver_error_max = max(posver_error.values())
-
-    return (posver_error, posver_error_max)
+    error_measures = get_grouped_errors(measured_coords, list_of_centroids=nominal_angles)
+    return error_by_angle, error_measures
