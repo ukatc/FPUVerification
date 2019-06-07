@@ -280,7 +280,7 @@ POS_REP_MEASUREMENT_PARS = Namespace(
 
 
 POS_REP_EVALUATION_PARS = Namespace(
-    POS_REP_PASS=Inf,  # the maximum angular deviation, in
+    POS_REP_PASS=0.030,  # the maximum angular deviation, in
     # degrees, from an average position of
     # a grouping of measured points at a
     # given nominal position which

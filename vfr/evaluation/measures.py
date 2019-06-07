@@ -22,6 +22,23 @@ def rss(values):
     vals = np.asarray(values)
     return np.linalg.norm(vals)
 
+def group_by_subkeys(ungrouped_values, key_func):
+    """takes a dictionary, computes a subkey for
+    each key in it, and collects the items which match
+    the same subkey into sequences which are the
+    value for that key.
+    """
+    new_dict = {}
+
+    for key, val in ungrouped_values.items():
+        subkey = key_func(key)
+        if not new_dict.has_key(subkey):
+            new_dict[subkey] = []
+
+        new_dict[subkey].append(val)
+
+    return new_dict
+
 def arg_max_dict(d):
     maxval = -np.Inf
     maxkey = None
@@ -31,22 +48,7 @@ def arg_max_dict(d):
             maxkey = k
     return maxkey, maxval
 
-
-def get_errors(coordinate_sequence, centroid=None):
-    """
-    Takes a list, set, por sequence of blob
-    coordinates, and computes error measures from
-    them.
-    Each element of the list has the form
-
-    (x1, y1, q1, x2, x2, q2)
-    Where the (x1, y1) are coordnates of the small blobs,
-    and (x2, y2) coordinates of the large blobs.
-
-    centroid is a coordinate pair which serves
-    as the zero point. If centroid is none,
-    the arithmetic mean is used as the zero point.
-    """
+def get_magnitudes(coordinate_sequence, centroid=None):
     blob_coordinates = np.array(coordinate_sequence)
 
     assert blob_coordinates.shape[1] == 6, "wrong format for blob position list"
@@ -72,6 +74,10 @@ def get_errors(coordinate_sequence, centroid=None):
     # which results in a list of scalars
     error_magnitudes = map(np.linalg.norm, error_vectors)
 
+    return error_magnitudes
+
+
+def get_measures(error_magnitudes):
     # get the mean and maximum error
     max_error = max(error_magnitudes)
     mean_error = np.mean(error_magnitudes)
@@ -85,3 +91,46 @@ def get_errors(coordinate_sequence, centroid=None):
         mean=mean_error,
         percentiles=percentiles,
     )
+
+
+def get_errors(coordinate_sequence, centroid=None):
+    """
+    Takes a list, set, por sequence of blob
+    coordinates, and computes error measures from
+    them.
+    Each element of the list has the form
+
+    (x1, y1, q1, x2, x2, q2)
+    Where the (x1, y1) are coordnates of the small blobs,
+    and (x2, y2) coordinates of the large blobs.
+
+    centroid is a coordinate pair which serves
+    as the zero point. If centroid is none,
+    the arithmetic mean is used as the zero point.
+    """
+
+    error_magnitudes = get_magnitudes(coordinate_sequence, centroid)
+
+    return get_measures(error_magnitudes)
+
+def get_grouped_errors(coordinate_sequence_list):
+    """Takes a lists of lists, sets, or sequences of blob coordinates,
+    and computes error measures from them.
+
+    Each element of the list has the form
+
+    (x1, y1, q1, x2, x2, q2)
+    Where the (x1, y1) are coordnates of the small blobs,
+    and (x2, y2) coordinates of the large blobs.
+
+    The functions computes the magnitudes of the error vectors within
+    each group, taking the centroid of the group as center. It returns
+    the statistical error measures for all magnitudes compined.
+
+    """
+
+    error_magnitudes = []
+    for coordinate_sequence in coordinate_sequence_list:
+        error_magnitudes.extend(get_magnitudes(coordinate_sequence))
+
+    return get_measures(error_magnitudes)

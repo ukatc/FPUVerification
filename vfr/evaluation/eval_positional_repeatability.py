@@ -3,7 +3,7 @@
 
 """
 from __future__ import division, print_function
-from vfr.evaluation.measures import rss
+from vfr.evaluation.measures import NO_MEASURES, get_errors, get_grouped_errors, group_by_subkeys
 
 import warnings
 
@@ -12,37 +12,17 @@ import logging
 
 
 def get_angular_error(dict_of_coords, idx):
-    coords_per_angvec = {}
 
-    for k, v in dict_of_coords.items():
-        angvec = (k[0], k[1])
-        if not coords_per_angvec.has_key(angvec):
-            coords_per_angvec[angvec] = []
-
-        coords_per_angvec[angvec].append(v)
+    kfunc = lambda x: (x[0], x[1])
+    coords_per_angvec = group_by_subkeys(dict_of_coords, kfunc)
 
     max_err_at_angle = {}
-    for angvec, v in coords_per_angvec.items():
-        va = np.array(v)
-        avg = np.mean(
-            va, axis=0
-        )  # this is an average of big and small target coords separately
-        err_small = map(np.linalg.norm, va[:, :2] - avg[:2])
-        err_big = map(np.linalg.norm, va[:, 2:] - avg[2:])
+    for angvec, coords in coords_per_angvec.items():
+        max_err_at_angle[angvec[idx]] = get_errors(coords).max
 
-        # get maximum for both targets
-        ang = angvec[idx]
-        if ang not in max_err_at_angle:
-            max_err_at_angle[ang] = 0
+    poserr_measures = get_grouped_errors(coords_per_angvec.values())
 
-        max_err_at_angle[ang] = max(
-            max_err_at_angle[ang], max(np.hstack([err_small, err_big]))
-        )
-        # this is a maximum of all errors
-
-    poserr_max = max(max_err_at_angle.values())
-
-    return max_err_at_angle, poserr_max
+    return max_err_at_angle, poserr_measures
 
 
 def evaluate_positional_repeatability(
@@ -83,19 +63,16 @@ def evaluate_positional_repeatability(
 
     # transform to lists of measurements for the same coordinates
 
-    posrep_alpha_max_at_angle, posrep_alpha_max = get_angular_error(
+    posrep_alpha_max_at_angle, posrep_alpha_measures = get_angular_error(
         dict_of_coordinates_alpha, 0
     )
-    posrep_beta_max_at_angle, posrep_beta_max = get_angular_error(
+    posrep_beta_max_at_angle, posrep_beta_measures = get_angular_error(
         dict_of_coordinates_beta, 1
     )
-
-    posrep_rss_mm = rss([posrep_alpha_max, posrep_beta_max])
 
     return (
         posrep_alpha_max_at_angle,
         posrep_beta_max_at_angle,
-        posrep_alpha_max,
-        posrep_beta_max,
-        posrep_rss_mm,
+        posrep_alpha_measures,
+        posrep_beta_measures,
     )

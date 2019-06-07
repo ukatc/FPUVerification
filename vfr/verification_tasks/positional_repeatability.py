@@ -14,6 +14,7 @@ from ImageAnalysisFuncs.analyze_positional_repeatability import (
     ImageAnalysisError,
     posrepCoordinates,
 )
+from vfr.evaluation.measures import NO_MEASURES
 from vfr.evaluation.eval_positional_repeatability import (
     evaluate_positional_repeatability,
 )
@@ -438,18 +439,18 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
                 (
                     posrep_alpha_max_at_angle,
                     posrep_beta_max_at_angle,
-                    posrep_alpha_max_mm,
-                    posrep_beta_max_mm,
-                    posrep_rss_mm,
+                    posrep_alpha_measures,
+                    posrep_beta_measures,
                 ) = evaluate_positional_repeatability(
-                    analysis_results_alpha_short,
-                    analysis_results_beta_short,
+                    analysis_results_alpha,
+                    analysis_results_beta,
                     pars=pos_rep_evaluation_pars,
                 )
 
             positional_repeatability_has_passed = (
                 TestResult.OK
-                if posrep_rss_mm <= pos_rep_evaluation_pars.POS_REP_PASS
+                if ((posrep_alpha_measures.percentiles[95] <= pos_rep_evaluation_pars.POS_REP_PASS)
+                    and (posrep_beta_measures.percentiles[95] <= pos_rep_evaluation_pars.POS_REP_PASS))
                 else TestResult.FAILED
             )
 
@@ -471,17 +472,13 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
             errmsg = str(e)
             posrep_alpha_max_at_angle = (NaN,)
             posrep_beta_max_at_angle = (NaN,)
-            posrep_alpha_max_mm = (NaN,)
-            posrep_beta_max_mm = (NaN,)
-            posrep_rss_mm = (NaN,)
+            posrep_alpha_measures = NO_MEASURES
+            posrep_beta_measures = NO_MEASURES
             positional_repeatability_has_passed = TestResult.NA
             analysis_results_alpha = None
             analysis_results_beta = None
             posrep_alpha_max_at_angle = []
             posrep_beta_max_at_angle = []
-            posrep_alpha_max_mm = NaN
-            posrep_beta_max_mm = NaN
-            posrep_rss_mm = NaN
             gearbox_correction = None
             min_quality_alpha = NaN
             min_quality_beta = NaN
@@ -501,9 +498,8 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
             arg_max_beta_error=arg_max_beta_error,
             min_quality_alpha=min_quality_alpha,
             min_quality_beta=min_quality_beta,
-            posrep_alpha_max_mm=posrep_alpha_max_mm,
-            posrep_beta_max_mm=posrep_beta_max_mm,
-            posrep_rss_mm=posrep_rss_mm,
+            posrep_alpha_measures=posrep_alpha_measures,
+            posrep_beta_measures=posrep_beta_measures,
             result=positional_repeatability_has_passed,
             pass_threshold_mm=pos_rep_evaluation_pars.POS_REP_PASS,
             gearbox_correction=gearbox_correction,

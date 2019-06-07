@@ -543,7 +543,7 @@ def format_report_complete(
             yield rfmt_pup_aln.PUP_ALN_ERRMSG.format(**pupil_alignment_result)
 
 
-def list_posrep_angle_errors(name, error_by_angle, error_max, csv=False):
+def list_posrep_angle_errors(name, error_by_angle, error_arg_max, csv=False):
     if csv:
         hdr = """\npositional repeatability,max error by {}"""
         fmt = """Positional repeatability,{angle:7.2f},{val:8.4f},{tag}"""
@@ -555,7 +555,7 @@ def list_posrep_angle_errors(name, error_by_angle, error_max, csv=False):
 
     for angle in sorted(error_by_angle.keys()):
         val = error_by_angle[angle]
-        tag = " <<<" if val == error_max else ""
+        tag = " <<<" if angle == error_arg_max else ""
         yield (fmt.format(angle=angle, val=val, tag=tag))
 
 

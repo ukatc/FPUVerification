@@ -86,12 +86,14 @@ DAT_REP_RESULT_CSV = cleandoc(
     """
     datum repeatability,{result},
     datum repeatability,threshold,{pass_threshold_mm:8.4f}
-    datum repeatability,datum only max,{datum_repeatability_only_max_mm:7.3},mm
-    datum repeatability,datum only std,{datum_repeatability_only_std_mm:7.3},mm
-    datum repeatability,datum only max residual count,{datum_repeatability_max_residual_datumed}
-    datum repeatability,datum+move max,{datum_repeatability_move_max_mm:7.3},mm
-    datum repeatability,datum+move std,{datum_repeatability_move_std_mm:7.3},mm
-    datum repeatability,datum+move max residual count,{datum_repeatability_max_residual_moved}
+    datum repeatability,datum only mean error     ,{datum_repeatability_datum_only.mean:7.3}
+    datum repeatability,datum only 50 % percentile,{datum_repeatability_datum_only.percentiles[50]:7.3}
+    datum repeatability,datum only 90 % percentile,{datum_repeatability_datum_only.percentiles[90]:7.3}
+    datum repeatability,datum only 95 % percentile,{datum_repeatability_datum_only.percentiles[95]:7.3}
+    datum repeatability,datum+move mean error     ,{datum_repeatability_moved.mean:7.3}
+    datum repeatability,datum+move 50 % percentile,{datum_repeatability_moved.percentiles[50]:7.3}
+    datum repeatability,datum+move 90 % percentile,{datum_repeatability_moved.percentiles[90]:7.3}
+    datum repeatability,datum+move 95 % percentile,{datum_repeatability_moved.percentiles[95]:7.3}
     datum repeatability,datum only min quality,{min_quality_datumed:8.4f}
     datum repeatability,datum+move min quality,{min_quality_moved:8.4f}
     datum repeatability,time,{time:.16},record,{record-count}
