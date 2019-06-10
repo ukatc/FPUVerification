@@ -156,43 +156,6 @@ MET_CAL_MEASUREMENT_PARS = Namespace(
     METROLOGY_CAL_LINPOSITIONS=LINPOSITIONS,  # linear stage positions
 )
 
-POS_REP_PLATESCALE = 0.0235  # millimeter per pixel
-
-# This is the fallback configuration, which is linear scaling.
-#
-# If available, it is replaced by the distortion-correcting
-# calibration which the map file points to.
-
-POS_REP_CALIBRATION_PARS = {"algorithm": "scale", "scale_factor": POS_REP_PLATESCALE}
-
-POS_REP_TARGET_DETECTION_OTSU_PARS = Namespace(
-    CALIBRATION_PARS=POS_REP_CALIBRATION_PARS,
-    MIN_RADIUS=15,  # in pixels
-    MAX_RADIUS=55,  # in pixels
-    GROUP_RANGE=200,  # in pixels
-    QUALITY_METRIC=0.4,  # dimensionless
-    TOLERENCE=7.0  # pixels
-)
-POS_REP_TARGET_DETECTION_CONTOUR_PARS = Namespace(
-    CALIBRATION_PARS=POS_REP_CALIBRATION_PARS,
-    SMALL_DIAMETER=1.45,  # millimeter
-    LARGE_DIAMETER=2.45,  # millimeter
-    DIAMETER_TOLERANCE=0.15,  # millimeter
-    THRESHOLD=70,  # 0-255
-    QUALITY_METRIC=0.8,  # dimensionless
-)
-
-POS_REP_ANALYSIS_PARS = Namespace(
-    CALIBRATION_PARS=POS_REP_CALIBRATION_PARS,
-    TARGET_DETECTION_ALGORITHM="otsu",  # "otsu" or "contours"
-    TARGET_DETECTION_OTSU_PARS=POS_REP_TARGET_DETECTION_OTSU_PARS,
-    TARGET_DETECTION_CONTOURS_PARS=POS_REP_TARGET_DETECTION_CONTOUR_PARS,
-    PLATESCALE=POS_REP_PLATESCALE,  # millimeter per pixel
-    MAX_FAILURE_QUOTIENT=0.2,
-    display=False,
-    verbosity=0,
-    loglevel=0,
-)
 MET_CAL_PLATESCALE = 0.00668  # millimeter per pixel
 MET_CAL_CALIBRATION_PARS = {"algorithm": "scale", "scale_factor": MET_CAL_PLATESCALE}
 MET_CAL_TARGET_DETECTION_OTSU_PARS = Namespace(
@@ -296,6 +259,43 @@ POS_REP_EVALUATION_PARS = Namespace(
     # represents an acceptable FPU
 )
 
+POS_REP_PLATESCALE = 0.0235  # millimeter per pixel
+
+# This is the fallback configuration, which is linear scaling.
+#
+# If available, it is replaced by the distortion-correcting
+# calibration which the map file points to.
+
+POS_REP_CALIBRATION_PARS = {"algorithm": "scale", "scale_factor": POS_REP_PLATESCALE}
+
+POS_REP_TARGET_DETECTION_OTSU_PARS = Namespace(
+    CALIBRATION_PARS=POS_REP_CALIBRATION_PARS,
+    MIN_RADIUS=15,  # in pixels
+    MAX_RADIUS=55,  # in pixels
+    GROUP_RANGE=200,  # in pixels
+    QUALITY_METRIC=0.4,  # dimensionless
+    TOLERENCE=7.0  # pixels
+)
+POS_REP_TARGET_DETECTION_CONTOUR_PARS = Namespace(
+    CALIBRATION_PARS=POS_REP_CALIBRATION_PARS,
+    SMALL_DIAMETER=1.45,  # millimeter
+    LARGE_DIAMETER=2.45,  # millimeter
+    DIAMETER_TOLERANCE=0.15,  # millimeter
+    THRESHOLD=70,  # 0-255
+    QUALITY_METRIC=0.8,  # dimensionless
+)
+
+POS_REP_ANALYSIS_PARS = Namespace(
+    CALIBRATION_PARS=POS_REP_CALIBRATION_PARS,
+    TARGET_DETECTION_ALGORITHM="otsu",  # "otsu" or "contours"
+    TARGET_DETECTION_OTSU_PARS=POS_REP_TARGET_DETECTION_OTSU_PARS,
+    TARGET_DETECTION_CONTOURS_PARS=POS_REP_TARGET_DETECTION_CONTOUR_PARS,
+    PLATESCALE=POS_REP_PLATESCALE,  # millimeter per pixel
+    MAX_FAILURE_QUOTIENT=0.2,
+    display=False,
+    verbosity=0,
+    loglevel=0,
+)
 
 POS_VER_MEASUREMENT_PARS = Namespace(
     POS_REP_POSITIONS=POS_REP_POSITIONS,  # the rotary stage angle required to
