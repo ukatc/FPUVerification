@@ -319,11 +319,26 @@ def eval_positional_verification(dbe, pos_ver_analysis_pars, pos_ver_evaluation_
 
         try:
             analysis_results = {}
+            count_failures = 0
+            count_images = 0
 
             for k, v in images.items():
                 count, alpha_steps, beta_steps, = k
                 ipath = v
-                analysis_results[k] = analysis_func(ipath)
+                try:
+                    count_images += 1
+                    analysis_results[k] = analysis_func(ipath)
+
+                except ImageAnalysisError as err:
+                    count_failures += 1
+                    # ignore image analysis exceptions as long as they are not too frequent
+                    if count_failures > count_images * pos_ver_analysis_pars.MAX_FAILURE_QUOTIENT:
+                        raise
+                    else:
+                        logger.warning("image analysis failed for image %s, "
+                                       "message = %s (continuing)" % (ipath, str(err)))
+                        continue
+
 
                 (
                     x_measured_small,
@@ -337,6 +352,7 @@ def eval_positional_verification(dbe, pos_ver_analysis_pars, pos_ver_evaluation_
                 posver_error_by_angle, posver_error_measures = evaluate_positional_verification(
                     analysis_results, pars=pos_ver_evaluation_pars, **gearbox_correction
                 )
+
 
             positional_verification_has_passed = (
                 TestResult.OK
