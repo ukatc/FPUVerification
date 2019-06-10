@@ -80,7 +80,7 @@ def plot_data_circle(x,y, xc, yc, R, title):
     plt.ylabel('y')
     plt.show()
 
-def fit_gearbox_parameters(par, analysis_results):
+def fit_gearbox_parameters(par, analysis_results, return_intermediate_results=False):
     if analysis_results is None:
         return None
     # get list of points to which circle is fitted
@@ -151,32 +151,50 @@ def fit_gearbox_parameters(par, analysis_results):
     # combine first and second order fit, to get an ivertible function
     y_corr = np.array(phi_corr_2) + (a + np.array(phi_nom_2) * b)
 
-    return { 'algorithm' : 'linfit+piecewise_interpolation',
-             'midpoints' : midpoints,
-             'x' : x_s,
-             'y' : y_s,
-             'phi_nominal' : phi_nominal,
-             'R_real' : R_real,
-             'xc' : xc,
-             'yc' : yc,
-             'R' : R,
-             'a' : a,
-             'b' : b,
-             'xp' : phi_nom_2,
-             'yp' : phi_corr_2,
-             'num_support_points' : len(phi_nom_2),
-             'num_data_points' : len(x_s),
-             'y_corr' : y_corr,
-             'fits' : {
-                 0 : (phi_nominal, phi_real, 'real angle as function of nominal angle'),
-                 1 : (phi_nominal, phi_fitted, 'first-order fitted angle as function of nominal angle'),
-                 2 : (phi_nominal, phi_fitted_2, 'second-order fitted angle as function of nominal angle'),
-                 },
-             'residuals' : {
-                 1 : (phi_nominal, err_phi_1, 'first-order residual angle as function of nominal angle'),
-                 2 : (phi_nominal, err_phi_2, 'second-order residual angle as function of nominal angle')
-             }
-    }
+    if return_intermediate_results:
+
+        return {
+            'algorithm' : 'linfit+piecewise_interpolation',
+            'midpoints' : midpoints,
+            'x' : x_s,
+            'y' : y_s,
+            'phi_nominal' : phi_nominal,
+            'R_real' : R_real,
+            'xc' : xc,
+            'yc' : yc,
+            'R' : R,
+            'a' : a,
+            'b' : b,
+            'xp' : phi_nom_2,
+            'yp' : phi_corr_2,
+            'num_support_points' : len(phi_nom_2),
+            'num_data_points' : len(x_s),
+            'y_corr' : y_corr,
+            'fits' : {
+                0 : (phi_nominal, phi_real, 'real angle as function of nominal angle'),
+                1 : (phi_nominal, phi_fitted, 'first-order fitted angle as function of nominal angle'),
+                2 : (phi_nominal, phi_fitted_2, 'second-order fitted angle as function of nominal angle'),
+            },
+            'residuals' : {
+                1 : (phi_nominal, err_phi_1, 'first-order residual angle as function of nominal angle'),
+                2 : (phi_nominal, err_phi_2, 'second-order residual angle as function of nominal angle')
+            }
+        }
+    else:
+        return {
+            'algorithm' : 'linfit+piecewise_interpolation',
+            'xc' : xc,
+            'yc' : yc,
+            'R' : R,
+            'a' : a,
+            'b' : b,
+            'num_support_points' : len(phi_nom_2),
+            'num_data_points' : len(x_s),
+            'xp' : phi_nom_2,
+            'y_corr' : y_corr,
+        }
+
+
 
 def split_iterations(par, midpoints, xc=None, yc=None, a=None, b=None, xp=None, yp=None):
     d2r = np.deg2rad

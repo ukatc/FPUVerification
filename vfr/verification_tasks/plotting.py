@@ -114,7 +114,7 @@ def plot(dbe, opts):
             pos_rep_result = ddict["positional_repeatability_result"]
             result_alpha = pos_rep_result["analysis_results_alpha"]
             result_beta = pos_rep_result["analysis_results_beta"]
-            fit_alpha = fit_gearbox_parameters("alpha", result_alpha)
+            fit_alpha = fit_gearbox_parameters("alpha", result_alpha, return_intermediate_results=True)
             plot_circle = "D" in plot_selection
             if fit_alpha is None:
                 print("no parameters found for FPU %s, %s arm" % (fpu_id, "alpha"))
@@ -130,7 +130,7 @@ def plot(dbe, opts):
 
                 plot_correction(fpu_id, "alpha", **fit_alpha)
 
-            fit_beta = fit_gearbox_parameters("beta", result_beta)
+            fit_beta = fit_gearbox_parameters("beta", result_beta, return_intermediate_results=True)
             if fit_beta is None:
                 print("no parameters found for FPU %s, %s arm" % (fpu_id, "beta"))
             else:
