@@ -8,7 +8,7 @@ import sys
 from argparse import Namespace
 import logging
 from vfr.auditlog import configure_logs, get_fpuLogger, add_email_handler
-from vfr.verification_rig import Rig
+from vfr.rig import Rig
 
 from vfr.conf import (COLLDECT_MEASUREMENT_PARS,
                       DATUM_REP_ANALYSIS_PARS, DATUM_REP_MEASUREMENT_PARS,
