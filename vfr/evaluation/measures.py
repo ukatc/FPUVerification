@@ -48,7 +48,7 @@ def arg_max_dict(d):
             maxkey = k
     return maxkey, maxval
 
-def get_magnitudes(coordinate_sequence, centroid=None):
+def get_magnitudes(coordinate_sequence, centroid=None, weight_factor=BLOB_WEIGHT_FACTOR):
     blob_coordinates = np.array(coordinate_sequence)
 
     assert blob_coordinates.shape[1] == 6, "wrong format for blob position list"
@@ -60,8 +60,8 @@ def get_magnitudes(coordinate_sequence, centroid=None):
     # to be smaller.)
     #
     # The quality factors are ignored.
-    weighted_coordinates = ((BLOB_WEIGHT_FACTOR * blob_coordinates[:, 3:5]) +
-                      (1.0 - BLOB_WEIGHT_FACTOR ) * blob_coordinates[:,:2])
+    weighted_coordinates = ((weight_factor * blob_coordinates[:, 3:5]) +
+                      (1.0 - weight_factor ) * blob_coordinates[:,:2])
 
     # If the centroid (mean vector) is not defined, compute it.
     if centroid is None:
@@ -93,7 +93,7 @@ def get_measures(error_magnitudes):
     )
 
 
-def get_errors(coordinate_sequence, centroid=None):
+def get_errors(coordinate_sequence, centroid=None, weight_factor=BLOB_WEIGHT_FACTOR):
     """
     Takes a list, set, por sequence of blob
     coordinates, and computes error measures from
@@ -109,11 +109,11 @@ def get_errors(coordinate_sequence, centroid=None):
     the arithmetic mean is used as the zero point.
     """
 
-    error_magnitudes = get_magnitudes(coordinate_sequence, centroid)
+    error_magnitudes = get_magnitudes(coordinate_sequence, centroid, weight_factor=weight_factor)
 
     return get_measures(error_magnitudes)
 
-def get_grouped_errors(coordinate_sequence_list, list_of_centroids=None):
+def get_grouped_errors(coordinate_sequence_list, list_of_centroids=None, weight_factor=BLOB_WEIGHT_FACTOR):
     """Takes a lists of lists, sets, or sequences of blob coordinates,
     and computes error measures from them.
 
@@ -135,6 +135,10 @@ def get_grouped_errors(coordinate_sequence_list, list_of_centroids=None):
             centroid = None
         else:
             centroid = list_of_centroids[idx]
-        error_magnitudes.extend(get_magnitudes(coordinate_sequence, centroid=centroid))
+        error_magnitudes.extend(get_magnitudes(
+            coordinate_sequence,
+            centroid=centroid,
+            weight_factor=weight_factor
+        ))
 
     return get_measures(error_magnitudes)

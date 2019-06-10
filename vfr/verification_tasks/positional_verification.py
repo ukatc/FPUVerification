@@ -304,6 +304,7 @@ def eval_positional_verification(dbe, pos_ver_analysis_pars, pos_ver_evaluation_
         logger.info("evaluating positional verification for FPU %s" % fpu_id)
 
         images = measurement["images"]
+        gearbox_correction = measurement["gearbox_correction"]
         mapfile = measurement["calibration_mapfile"]
         if mapfile:
             # passing coefficients is a temporary solution because
@@ -334,7 +335,7 @@ def eval_positional_verification(dbe, pos_ver_analysis_pars, pos_ver_evaluation_
                 ) = analysis_results[k]
 
                 posver_error_by_angle, posver_error_measures = evaluate_positional_verification(
-                    analysis_results, pars=pos_ver_evaluation_pars
+                    analysis_results, pars=pos_ver_evaluation_pars, **gearbox_correction
                 )
 
             positional_verification_has_passed = (

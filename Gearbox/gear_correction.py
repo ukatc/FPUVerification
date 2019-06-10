@@ -14,6 +14,7 @@ from fpu_constants import (
     StepsPerDegreeAlpha,
     StepsPerDegreeBeta,
 )
+from vfr.conf import BLOB_WEIGHT_FACTOR
 
 # exceptions which are raised if image analysis functions fail
 
@@ -91,8 +92,11 @@ def fit_gearbox_parameters(par, analysis_results):
         alpha_nom, beta_nom, i, j, k = key
         x1, y1, x2, y2, = val
 
-        x = (x1 + x2) * 0.5
-        y = (y1 + y2) * 0.5
+        # compute weigthed midpoint between small and
+        # large metrology target
+        x = (1.0 - BLOB_WEIGHT_FACTOR) * x1 + BLOB_WEIGHT_FACTOR * x2
+        y = (1.0 - BLOB_WEIGHT_FACTOR) * y1 + BLOB_WEIGHT_FACTOR * y2
+
         circle_points.append((x, y))
         nominal_angles.append((alpha_nom, beta_nom))
         midpoints[key] = (x,y)
@@ -372,10 +376,28 @@ def fit_gearbox_correction(dict_of_coordinates_alpha, dict_of_coordinates_beta):
 
     coeffs_alpha = fit_gearbox_parameters("alpha", dict_of_coordinates_alpha)
     coeffs_beta = fit_gearbox_parameters("beta", dict_of_coordinates_beta)
+    # find centers of alpha circle
+    x_center = coeffs_alpha['xc']
+    y_center = coeffs_alpha['yc']
+    P0 = np.array([x_center, y_center])
+    # find center of beta circles
+    x_center_beta = coeffs_beta['xc']
+    y_center_beta = coeffs_beta['yc']
+    Pcb = np.array([x_center_beta, y_center_beta])
+    # radius of alpha arm is distance from P0 to Pcb
+    R_alpha = np.linalg.norm(Pcb - P0)
+    # radius from beta center to weighthed midpoint between metrology targets
+    R_beta_midpoint = coeffs_beta['R']
+
     return {
+        "version": GEARBOX_CORRECTION_VERSION,
         "coeffs_alpha": coeffs_alpha,
         "coeffs_beta": coeffs_beta,
-        "version": GEARBOX_CORRECTION_VERSION,
+        "x_center" : x_center,
+        "y_center" : y_center,
+        "R_alpha" : R_alpha,
+        "R_beta_midpoint" : R_beta_midpoint,
+        BLOB_WEIGHT_FACTOR : BLOB_WEIGHT_FACTOR,
     }
 
 def apply_gearbox_parameters(phi, a=None, b=None, xp=None, y_corr=None, algorithm=None, **rest_coeffs):

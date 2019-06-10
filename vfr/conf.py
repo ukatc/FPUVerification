@@ -55,6 +55,7 @@ PUP_ALGN_CAMERA_IP_ADDRESS = "169.254.108.113"
 
 BLOB_WEIGHT_FACTOR = 0.75 # relative weight of large vs small metrology target position
 
+
 PERCENTILE_ARGS = [50, 90, 95, 97.5]
 
 REWIND_POS_ALPHA = -175.0  # alpha start position before initial datum search
