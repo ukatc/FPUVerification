@@ -215,7 +215,7 @@ def eval_pupil_alignment(
         try:
             coords = dict((k, analysis_func(v)) for k, v in images.items())
 
-            pupalnChassisErr, pupalnAlphaErr, pupalnBetaErr, pupalnTotalErr, pupalnErrorBars = evaluate_pupil_alignment(
+            pupalnAlphaErr, pupalnBetaErr, pupalnTotalErr, pupalnErrorBars = evaluate_pupil_alignment(
                 coords, pars=PUP_ALGN_EVALUATION_PARS
             )
 
@@ -232,7 +232,6 @@ def eval_pupil_alignment(
         except ImageAnalysisError as e:
             errmsg = str(e)
             coords = {}
-            pupalnChassisErr = NaN
             pupalnAlphaErr = NaN
             pupalnBetaErr = NaN
             pupalnTotalErr = NaN
@@ -243,7 +242,6 @@ def eval_pupil_alignment(
             )
 
         pupil_alignment_measures = {
-            "chassis_error": pupalnChassisErr,
             "alpha_error": pupalnAlphaErr,
             "beta_error": pupalnBetaErr,
             "total_error": pupalnTotalErr,

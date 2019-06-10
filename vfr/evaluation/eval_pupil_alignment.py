@@ -10,8 +10,6 @@ from math import atan
 import numpy as np
 import logging
 
-from vfr.conf import INSTRUMENT_FOCAL_LENGTH
-
 
 def evaluate_pupil_alignment(dict_of_coordinates, pars=None):
     """
@@ -43,22 +41,11 @@ def evaluate_pupil_alignment(dict_of_coordinates, pars=None):
     alpha_center = np.mean(beta_centers, axis=0)
     pupalnAlphaErr = np.mean(map(np.linalg.norm, beta_centers - alpha_center))
 
-    all_coords = np.array(dict_of_coordinates.values())[:, :2]
-    xc = np.linalg.norm(
-        np.mean(all_coords, axis=0)
-        - np.array(
-            (pars.PUP_ALGN_CALIBRATED_CENTRE_X, pars.PUP_ALGN_CALIBRATED_CENTRE_Y)
-        )
-    )
-
-    pupalnChassisErr = atan(xc / INSTRUMENT_FOCAL_LENGTH)
-
-    pupalnTotalErr = sum([pupalnChassisErr, pupalnAlphaErr, pupalnBetaErr])
+    pupalnTotalErr = sum([pupalnAlphaErr, pupalnBetaErr])
 
     pupalnErrorBars = "TBD"
 
     return (
-        pupalnChassisErr,
         pupalnAlphaErr,
         pupalnBetaErr,
         pupalnTotalErr,

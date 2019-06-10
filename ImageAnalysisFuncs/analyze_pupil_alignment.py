@@ -9,7 +9,6 @@ from ImageAnalysisFuncs.base import ImageAnalysisError
 from numpy import array, mean
 from numpy.linalg import norm
 import numpy as np
-from vfr.conf import INSTRUMENT_FOCAL_LENGTH
 
 # exceptions which are raised if image analysis functions fail
 

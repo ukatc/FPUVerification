@@ -20,8 +20,6 @@ DEFAULT_TASKS_NONFIBRE = [
 # a few parameters are defined globally because they are
 # used in many different places
 
-INSTRUMENT_FOCAL_LENGTH = 4101.4  # millimeter (does not change)
-
 ALPHA_DATUM_OFFSET = -180
 ALPHA_RANGE_MAX = 155.0  # maximum range of alpha arm
 
@@ -349,8 +347,6 @@ PUP_ALGN_ANALYSIS_PARS = Namespace(
 
 
 PUP_ALGN_EVALUATION_PARS = Namespace(
-    PUP_ALGN_CALIBRATED_CENTRE_X=0.0,
-    PUP_ALGN_CALIBRATED_CENTRE_Y=-0.0,
     PUP_ALGN_PASS=Inf,  # the maximum total deviation in arcmin
     # from the calibrated centre point which
     # represents an acceptable FPU
