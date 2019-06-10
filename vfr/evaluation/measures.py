@@ -16,6 +16,7 @@ NO_MEASURES = argparse.Namespace(
     max=np.NaN,
     mean=np.NaN,
     percentiles={},
+    N=0,
 )
 
 
@@ -75,6 +76,11 @@ def get_magnitudes(coordinate_sequence, centroid=None, weight_factor=BLOB_WEIGHT
 
 
 def get_measures(error_magnitudes):
+    N = len(error_magnitudes)
+
+    if N == 0:
+        return NO_MEASURES
+
     # get the mean and maximum error
     max_error = max(error_magnitudes)
     mean_error = np.mean(error_magnitudes)
@@ -87,6 +93,7 @@ def get_measures(error_magnitudes):
         max=max_error,
         mean=mean_error,
         percentiles=percentiles,
+        N=N,
     )
 
 
