@@ -18,9 +18,6 @@ NO_MEASURES = argparse.Namespace(
     percentiles={},
 )
 
-def rss(values):
-    vals = np.asarray(values)
-    return np.linalg.norm(vals)
 
 def group_by_subkeys(ungrouped_values, key_func):
     """takes a dictionary, computes a subkey for

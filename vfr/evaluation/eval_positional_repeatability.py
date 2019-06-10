@@ -54,8 +54,6 @@ def evaluate_positional_repeatability(
 
     posrep_beta_max – maximum beta positional error at any angle
 
-    posrep_rss – RSS (Root sum of squares) of POS_REP_ALPHA_MAX and POS_REP_BETA_MAX
-
     Any error should be signalled by throwing an Exception of class
     ImageAnalysisError, with a string member which describes the problem.
 
