@@ -28,7 +28,7 @@ ALPHA_RANGE_MAX = 155.0  # maximum range of alpha arm
 PROTECTION_TOLERANCE = 0.15  # degrees of protection between measured
 # limit and soft protection range
 
-DB_TIME_FORMAT = "%Y-%m-%dT%H:%M:%S.~%Z"  # "~" means number of milliseconds
+DB_TIME_FORMAT = "%Y-%m-%dT%H.%M.%S.~%Z"  # "~" means number of milliseconds
 
 LAMP_WARMING_TIME_MILLISECONDS = 1000.0
 
