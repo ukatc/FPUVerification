@@ -13,7 +13,7 @@ class TestDatRepImageAnalysis(unittest.TestCase):
         
         cases = [
             (
-                "../TestImages/PT11e_datum-repeatability_2019-05-14T14:44:06.239BST_datumed-003.bmp",
+                "../TestImages/PT11e_datum-repeatability_2019-05-14T14-44-06.239BST_datumed-003.bmp",
                 15.12,
                 10.77,
                 0.4,
@@ -22,7 +22,7 @@ class TestDatRepImageAnalysis(unittest.TestCase):
                 0.4,
             ),
             (
-                "../TestImages/PT13e_datum-repeatability_2019-05-14T14:44:06.239BST_moved+datumed-006.bmp",
+                "../TestImages/PT13e_datum-repeatability_2019-05-14T14-44-06.239BST_moved+datumed-006.bmp",
                 16.19,
                 10.33,
                 0.4,
@@ -31,7 +31,7 @@ class TestDatRepImageAnalysis(unittest.TestCase):
                 0.4,
             ),
             (
-                "../TestImages/PT19e_datum-repeatability_2019-05-14T14:44:06.239BST_datumed-002.bmp",
+                "../TestImages/PT19e_datum-repeatability_2019-05-14T14-44-06.239BST_datumed-002.bmp",
                 15.44,
                 11.01,
                 0.4,
@@ -40,7 +40,7 @@ class TestDatRepImageAnalysis(unittest.TestCase):
                 0.4,
             ),
             (
-                "../TestImages/PT25e_datum-repeatability_2019-05-14T14:44:06.239BST_moved+datumed-005.bmp",
+                "../TestImages/PT25e_datum-repeatability_2019-05-14T14-44-06.239BST_moved+datumed-005.bmp",
                 14.67,
                 10.78,
                 0.4,
@@ -49,7 +49,7 @@ class TestDatRepImageAnalysis(unittest.TestCase):
                 0.4,
             ),
             (
-                "../TestImages/PT26e_datum-repeatability_2019-05-14T14:44:06.239BST_datumed-001.bmp",
+                "../TestImages/PT26e_datum-repeatability_2019-05-14T14-44-06.239BST_datumed-001.bmp",
                 15.47,
                 10.84,
                 0.4,
