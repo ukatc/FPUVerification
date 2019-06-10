@@ -477,7 +477,7 @@ def fit_gearbox_correction(dict_of_coordinates_alpha, dict_of_coordinates_beta):
         "y_center": y_center,
         "R_alpha": R_alpha,
         "R_beta_midpoint": R_beta_midpoint,
-        BLOB_WEIGHT_FACTOR: BLOB_WEIGHT_FACTOR,
+        "BLOB_WEIGHT_FACTOR": BLOB_WEIGHT_FACTOR,
     }
 
 
