@@ -23,7 +23,7 @@ POS_VER_ERRMSG_CSV = (
 POS_VER_RESULT_TERSE = cleandoc(
     """
     positional verification : passed           = {result},
-    positional verification : posver_error_max = {posver_error_max_mm:8.4f} mm,
+    positional verification : posver_error 95 % perc.      = {posver_error_measures.percentiles[95]:8.4f} mm
     positional verification : time/record      = {time:.16}/{record-count}, version = {algorithm_version}"""
 )
 
@@ -31,7 +31,8 @@ POS_VER_RESULT_COMPLETE = cleandoc(
     """
     positional verification : passed                       = {result}
     positional verification : pass_threshold               = {pass_threshold_mm}
-    positional verification : posver_error_max             = {posver_error_max_mm:8.4f} mm
+    positional verification : posver_error 95 % perc.      = {posver_error_measures.percentiles[95]:8.4f} mm
+    positional verification : posver_error max             = {posver_error_measures.max:8.4f} mm
     positional verification : arg_max_error (count, α, β)  = {arg_max_error}
     positional verification : min image quality            = {min_quality:8.4f}
     positional verification : time/record                  = {time:.16}/{record-count}
@@ -44,7 +45,9 @@ POS_VER_RESULT_LONG = cleandoc(
     """
     positional verification : passed                       = {result}
     positional verification : pass_threshold               = {pass_threshold_mm}
-    positional verification : posver_error_max             = {posver_error_max_mm:8.4f} mm
+    positional verification : posver_error mean            = {posver_error_measures.mean:8.4f} mm
+    positional verification : posver_error 95 % perc.      = {posver_error_measures.percentiles[95]:8.4f} mm
+    positional verification : posver_error max             = {posver_error_measures.max:8.4f} mm
     positional verification : arg_max_error (count, α, β)  = {arg_max_error}
     positional verification : min image quality            = {min_quality:8.4f}
     positional verification : time/record                  = {time:.16}/{record-count}
