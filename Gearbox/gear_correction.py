@@ -419,7 +419,7 @@ def fit_gearbox_correction(dict_of_coordinates_alpha, dict_of_coordinates_beta):
         "y_center" : y_center,
         "R_alpha" : R_alpha,
         "R_beta_midpoint" : R_beta_midpoint,
-        BLOB_WEIGHT_FACTOR : BLOB_WEIGHT_FACTOR,
+        "BLOB_WEIGHT_FACTOR" : BLOB_WEIGHT_FACTOR,
     }
 
 def apply_gearbox_parameters(phi, a=None, b=None, xp=None, y_corr=None, algorithm=None, **rest_coeffs):
@@ -438,7 +438,7 @@ def apply_gearbox_parameters(phi, a=None, b=None, xp=None, y_corr=None, algorith
 def apply_gearbox_correction(incoords, coeffs=None):
     alpha_angle, beta_angle = incoords
     coeffs_alpha = coeffs["coeffs_alpha"]
-    coeffs_beta = coeffs["coeffs_berta"]
+    coeffs_beta = coeffs["coeffs_beta"]
 
 
     # transform from desired / real angle to required nominal (uncalibrated) angle
