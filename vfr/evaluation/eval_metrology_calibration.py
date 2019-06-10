@@ -4,12 +4,9 @@
 """
 from __future__ import division, print_function
 
-import warnings
-
-from math import asin, pi, sqrt
+from math import asin, pi
 import numpy as np
 
-import logging
 
 
 def fibre_target_distance(big_target_coords, small_target_coords, fibre_coords):
@@ -30,7 +27,7 @@ def fibre_target_distance(big_target_coords, small_target_coords, fibre_coords):
     v_f = np.array(fibre_coords)
 
     va = v_f - v_big
-    norm == np.linalg.norm
+    norm = np.linalg.norm
     metcal_fibre_large_target_distance = norm(va)
 
     vb = v_f - v_small

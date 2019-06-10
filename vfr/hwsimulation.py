@@ -3,7 +3,6 @@ from __future__ import absolute_import, division, print_function
 import inspect
 import os
 import os.path
-import warnings
 import time
 from contextlib import contextmanager
 

@@ -4,11 +4,8 @@
 """
 from __future__ import division, print_function
 
-import warnings
 import argparse
 
-import numpy as np
-import logging
 from vfr.evaluation.measures import get_errors, NO_MEASURES
 
 NO_RESULT = argparse.Namespace(

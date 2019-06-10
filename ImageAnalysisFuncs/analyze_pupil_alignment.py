@@ -1,14 +1,10 @@
 from __future__ import division, print_function
 
 import logging
-from math import atan
 
 import cv2
 from DistortionCorrection import get_correction_func
 from ImageAnalysisFuncs.base import ImageAnalysisError
-from numpy import array, mean
-from numpy.linalg import norm
-import numpy as np
 
 # exceptions which are raised if image analysis functions fail
 
@@ -50,10 +46,8 @@ def pupalnCoordinates(
 
     image = cv2.imread(image_path)
 
+    assert image
     # image processing
-    # APPLY DISTORTION CORRECTION
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    # FIXME: "gray" is unused
 
     pupaln_spot_x = 0
     pupaln_spot_y = 0

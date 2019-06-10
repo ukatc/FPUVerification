@@ -1,6 +1,5 @@
 from __future__ import absolute_import, division, print_function
 
-import warnings
 import logging
 from os.path import abspath
 from vfr.auditlog import get_fpuLogger
@@ -344,9 +343,6 @@ def eval_datum_repeatability(dbe, dat_rep_analysis_pars):
         except ImageAnalysisError as e:
             errmsg = str(e)
             coords = {}
-            datrep_dat_only_max = (
-                datrep_dat_only_std
-            ) = datrep_move_dat_max = datrep_move_dat_std = NaN
 
             datum_repeatability_has_passed = TestResult.NA
             max_residual_datumed = NaN

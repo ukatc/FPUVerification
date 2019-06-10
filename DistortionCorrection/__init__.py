@@ -6,7 +6,6 @@ from functools import partial
 from ImageAnalysisFuncs.base import ImageAnalysisError
 import camera_calibration
 from numpy import array
-import logging
 
 
 class CorrectionError(ImageAnalysisError):

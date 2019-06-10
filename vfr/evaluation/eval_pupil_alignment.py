@@ -5,10 +5,7 @@
 
 from __future__ import division, print_function
 
-import warnings
-from math import atan
 import numpy as np
-import logging
 
 
 def evaluate_pupil_alignment(dict_of_coordinates, pars=None):

@@ -1,6 +1,5 @@
 from __future__ import absolute_import, division, print_function
 
-import logging
 from vfr.auditlog import get_fpuLogger
 from FpuGridDriver import CAN_PROTOCOL_VERSION, DASEL_ALPHA, DASEL_BETA, DASEL_BOTH
 from vfr.tests_common import timestamp

@@ -224,7 +224,6 @@ def cd_to_data_root(root_folder):
 
 
 def store_image(camera, format_string, **kwargs):
-    logger = logging.getLogger(__name__)
 
     # requires current work directory set to image root folder
     ipath = os.path.join("images", format_string.format(**kwargs))

@@ -1302,7 +1302,6 @@ def format_report_csv(
             )
 
             error_by_coords = positional_verification_result["posver_error_by_angle"]
-            error_max = positional_verification_result["posver_error_measures"].max
             yield ""
             yield "posver errors"
             yield "i,alpha,beta,err"

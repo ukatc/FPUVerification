@@ -2,15 +2,13 @@
 from __future__ import absolute_import, division, print_function
 from vfr.db.retrieval import get_data
 
-from math import pi
 import numpy as np
 import types
 
 # import matplotlib.pyplot as plt
 
 # import numpy as np
-from scipy import optimize
-from matplotlib import pyplot as plt, cm, colors
+from matplotlib import pyplot as plt
 
 from Gearbox.gear_correction import (
     fit_gearbox_parameters,

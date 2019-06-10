@@ -7,7 +7,7 @@ import numpy as np
 
 # import numpy as np
 from scipy import optimize
-from matplotlib import pyplot as plt, cm, colors
+from matplotlib import pyplot as plt
 
 from fpu_constants import (
     ALPHA_DATUM_OFFSET,
@@ -70,7 +70,7 @@ def leastsq_circle(x, y):
 
 
 def plot_data_circle(x, y, xc, yc, R, title):
-    f = plt.figure(facecolor="white")  # figsize=(7, 5.4), dpi=72,
+    plt.figure(facecolor="white")  # figsize=(7, 5.4), dpi=72,
     plt.axis("equal")
 
     theta_fit = np.linspace(-pi, pi, 10 * 360)
@@ -490,7 +490,7 @@ def apply_gearbox_parameters(
     ), "no matching algorithm -- repeat fitting"
 
     xp = np.array(xp, dtype=float)
-    ycorr = np.array(y_corr, dtype=float)
+    y_corr = np.array(y_corr, dtype=float)
 
     phi_corrected = np.interp(phi, y_corr, xp, period=2 * pi)
 

@@ -2,7 +2,6 @@ from __future__ import absolute_import, division, print_function
 
 from collections import namedtuple
 from numpy import isnan
-import logging
 from vfr.auditlog import get_fpuLogger
 
 from fpu_constants import (

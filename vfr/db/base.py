@@ -7,6 +7,9 @@ import os.path
 import subprocess
 
 from argparse import Namespace
+
+# "Namespace" is needed in eval()
+assert Namespace
 from numpy import array, Inf, NaN, inf, nan  # these values are used!!
 
 assert Inf or NaN or inf or nan or array or True

@@ -4,8 +4,6 @@
 """
 from __future__ import division, print_function
 
-import warnings
-
 
 def eval_met_height_inspec(
     metht_small_target_height, metht_large_target_height, pars=None

@@ -12,12 +12,6 @@ Created on 20/03/2019
 """
 from __future__ import division, print_function
 
-import warnings
-
-from numpy import NaN, array, hstack, mean, std
-from numpy.linalg import norm
-import logging
-
 from ImageAnalysisFuncs.base import ImageAnalysisError
 from ImageAnalysisFuncs import target_detection_contours, target_detection_otsu
 

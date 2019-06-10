@@ -1,10 +1,8 @@
 from __future__ import absolute_import, division, print_function
 
 import sys
-from warnings import warn
 import logging
 from os.path import abspath
-from vfr.auditlog import get_fpuLogger
 
 from GigE.GigECamera import BASLER_DEVICE_CLASS, DEVICE_CLASS, IP_ADDRESS
 from ImageAnalysisFuncs.base import ImageAnalysisError

@@ -4,10 +4,8 @@
 """
 from __future__ import division, print_function
 
-import warnings
 
 import numpy as np
-import logging
 import argparse
 
 from vfr.conf import BLOB_WEIGHT_FACTOR, PERCENTILE_ARGS

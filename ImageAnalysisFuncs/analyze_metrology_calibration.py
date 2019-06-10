@@ -1,14 +1,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import division, print_function
 
-from math import asin, pi, sqrt
-
 import cv2
 from ImageAnalysisFuncs.base import ImageAnalysisError
 from ImageAnalysisFuncs import target_detection_contours, target_detection_otsu
 from target_detection_otsu import OtsuTargetFindingError
-from numpy import array, cross
-from numpy.linalg import norm
 
 # version number for analysis algorithm
 # (each different result for the same data
