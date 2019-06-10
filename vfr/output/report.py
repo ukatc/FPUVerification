@@ -7,7 +7,7 @@ import termcolor
 from vfr.db.base import TestResult
 from vfr.db.retrieval import get_data
 
-from vfr.verification_tasks.report_formats import (
+from vfr.output.report_formats import (
     rfmt_datum,
     rfmt_dat_rep,
     rfmt_cdect,

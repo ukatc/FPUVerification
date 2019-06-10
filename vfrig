@@ -46,8 +46,8 @@ from vfr.verification_tasks.positional_verification import (eval_positional_veri
                                                              measure_positional_verification)
 from vfr.verification_tasks.pupil_alignment import (eval_pupil_alignment,
                                                     measure_pupil_alignment)
-from vfr.verification_tasks.report import dump_data, report
-from vfr.verification_tasks.plotting import plot
+from vfr.output.report import dump_data, report
+from vfr.output.plotting import plot
 from vfr.verification_tasks.rig_selftest import (selftest_fibre,
                                                  selftest_nonfibre)
 
