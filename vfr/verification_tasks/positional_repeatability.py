@@ -8,13 +8,17 @@ from vfr.auditlog import get_fpuLogger
 
 from Gearbox.gear_correction import GearboxFitError, fit_gearbox_correction
 from GigE.GigECamera import BASLER_DEVICE_CLASS, DEVICE_CLASS, IP_ADDRESS
-from ImageAnalysisFuncs.base import get_min_quality, arg_max_dict
+from ImageAnalysisFuncs.base import get_min_quality
 from ImageAnalysisFuncs.analyze_positional_repeatability import (
     POSITIONAL_REPEATABILITY_ALGORITHM_VERSION,
     ImageAnalysisError,
-    evaluate_positional_repeatability,
     posrepCoordinates,
 )
+from vfr.evaluation.measures import NO_MEASURES
+from vfr.evaluation.eval_positional_repeatability import (
+    evaluate_positional_repeatability,
+)
+from vfr.evaluation.measures import arg_max_dict
 from numpy import NaN
 from vfr.conf import POS_REP_CAMERA_IP_ADDRESS
 from vfr.db.base import TestResult
@@ -204,7 +208,9 @@ def capture_fpu_position(rig, fpu_id, midx, target_pos, capture_image, pars=None
 
     ipath = capture_image(midx, real_position)
     check_image_analyzability(ipath, posrepCoordinates, pars=POS_REP_ANALYSIS_PARS)
-    fpu_log.audit("saving image for position %r to %r" % (real_position, abspath(ipath)))
+    fpu_log.audit(
+        "saving image for position %r to %r" % (real_position, abspath(ipath))
+    )
     key = (
         real_position.alpha,
         real_position.beta,
@@ -227,7 +233,7 @@ def get_images_for_fpu(rig, fpu_id, range_limits, pars, capture_image):
         target_pos = get_target_position(range_limits, pars, measurement_index)
 
         key, val = capture_fpu_position(
-            rig, fpu_id, measurement_index, target_pos, capture_image, pars=pars,
+            rig, fpu_id, measurement_index, target_pos, capture_image, pars=pars
         )
 
         # the direction index tells whether the image
@@ -321,7 +327,9 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
         measurement = get_positional_repeatability_images(dbe, fpu_id)
 
         if measurement is None:
-            logger.info("FPU %s: no positional repeatability measurement data found" % fpu_id)
+            logger.info(
+                "FPU %s: no positional repeatability measurement data found" % fpu_id
+            )
             continue
 
         logger.info("evaluating positional repeatability for FPU %s" % fpu_id)
@@ -336,18 +344,21 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
         else:
             pars = pos_rep_analysis_pars.TARGET_DETECTION_CONTOUR_PARS
 
-        pars.PLATESCALE=pos_rep_analysis_pars.PLATESCALE
+        pars.PLATESCALE = pos_rep_analysis_pars.PLATESCALE
 
         if mapfile:
-            pars.CALIBRATION_PARS = get_config_from_mapfile(
-                mapfile
-            )
+            pars.CALIBRATION_PARS = get_config_from_mapfile(mapfile)
 
-        correct = get_correction_func(calibration_pars=pars.CALIBRATION_PARS,
-                                      platescale=pars.PLATESCALE,
-                                      loglevel=pos_rep_analysis_pars.loglevel)
+        correct = get_correction_func(
+            calibration_pars=pars.CALIBRATION_PARS,
+            platescale=pars.PLATESCALE,
+            loglevel=pos_rep_analysis_pars.loglevel,
+        )
+
         def analysis_func(ipath):
-            return posrepCoordinates(fixup_ipath(ipath), pars=pos_rep_analysis_pars, correct=correct)
+            return posrepCoordinates(
+                fixup_ipath(ipath), pars=pos_rep_analysis_pars, correct=correct
+            )
 
         try:
             analysis_results_alpha = {}
@@ -361,11 +372,16 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
                     analysis_results_alpha[k] = analysis_func(ipath)
                 except ImageAnalysisError as err:
                     count_failures += 1
-                    if count_failures > count_images * pos_rep_analysis_pars.MAX_FAILURE_QUOTIENT:
+                    if (
+                        count_failures
+                        > count_images * pos_rep_analysis_pars.MAX_FAILURE_QUOTIENT
+                    ):
                         raise
                     else:
-                        logger.warning("image analysis failed for image %s, "
-                                       "message = %s (continuing)" % (ipath, str(err)))
+                        logger.warning(
+                            "image analysis failed for image %s, "
+                            "message = %s (continuing)" % (ipath, str(err))
+                        )
                         continue
 
                 (
@@ -392,13 +408,17 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
                     analysis_results_beta[k] = analysis_func(ipath)
                 except ImageAnalysisError as err:
                     count_failures += 1
-                    if count_failures > count_images * pos_rep_analysis_pars.MAX_FAILURE_QUOTIENT:
+                    if (
+                        count_failures
+                        > count_images * pos_rep_analysis_pars.MAX_FAILURE_QUOTIENT
+                    ):
                         raise
                     else:
-                        logger.warning("image analysis failed for image %s, "
-                                       "message = %s (continuing)" % (ipath, str(err)))
+                        logger.warning(
+                            "image analysis failed for image %s, "
+                            "message = %s (continuing)" % (ipath, str(err))
+                        )
                         continue
-
 
                 (
                     x_measured_small,
@@ -419,18 +439,18 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
                 (
                     posrep_alpha_max_at_angle,
                     posrep_beta_max_at_angle,
-                    posrep_alpha_max_mm,
-                    posrep_beta_max_mm,
-                    posrep_rss_mm,
+                    posrep_alpha_measures,
+                    posrep_beta_measures,
                 ) = evaluate_positional_repeatability(
-                    analysis_results_alpha_short,
-                    analysis_results_beta_short,
+                    analysis_results_alpha,
+                    analysis_results_beta,
                     pars=pos_rep_evaluation_pars,
                 )
 
             positional_repeatability_has_passed = (
                 TestResult.OK
-                if posrep_rss_mm <= pos_rep_evaluation_pars.POS_REP_PASS
+                if ((posrep_alpha_measures.percentiles[95] <= pos_rep_evaluation_pars.POS_REP_PASS)
+                    and (posrep_beta_measures.percentiles[95] <= pos_rep_evaluation_pars.POS_REP_PASS))
                 else TestResult.FAILED
             )
 
@@ -452,23 +472,21 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
             errmsg = str(e)
             posrep_alpha_max_at_angle = (NaN,)
             posrep_beta_max_at_angle = (NaN,)
-            posrep_alpha_max_mm = (NaN,)
-            posrep_beta_max_mm = (NaN,)
-            posrep_rss_mm = (NaN,)
+            posrep_alpha_measures = NO_MEASURES
+            posrep_beta_measures = NO_MEASURES
             positional_repeatability_has_passed = TestResult.NA
             analysis_results_alpha = None
             analysis_results_beta = None
             posrep_alpha_max_at_angle = []
             posrep_beta_max_at_angle = []
-            posrep_alpha_max_mm = NaN
-            posrep_beta_max_mm = NaN
-            posrep_rss_mm = NaN
             gearbox_correction = None
             min_quality_alpha = NaN
             min_quality_beta = NaN
             arg_max_alpha_error = NaN
             arg_max_beta_error = NaN
-            logger.exception("image analysis for FPU %s failed with message %s" % (fpu_id, errmsg))
+            logger.exception(
+                "image analysis for FPU %s failed with message %s" % (fpu_id, errmsg)
+            )
 
         record = PositionalRepeatabilityResults(
             calibration_pars=pars.CALIBRATION_PARS,
@@ -480,9 +498,8 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
             arg_max_beta_error=arg_max_beta_error,
             min_quality_alpha=min_quality_alpha,
             min_quality_beta=min_quality_beta,
-            posrep_alpha_max_mm=posrep_alpha_max_mm,
-            posrep_beta_max_mm=posrep_beta_max_mm,
-            posrep_rss_mm=posrep_rss_mm,
+            posrep_alpha_measures=posrep_alpha_measures,
+            posrep_beta_measures=posrep_beta_measures,
             result=positional_repeatability_has_passed,
             pass_threshold_mm=pos_rep_evaluation_pars.POS_REP_PASS,
             gearbox_correction=gearbox_correction,

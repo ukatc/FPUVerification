@@ -543,7 +543,7 @@ def format_report_complete(
             yield rfmt_pup_aln.PUP_ALN_ERRMSG.format(**pupil_alignment_result)
 
 
-def list_posrep_angle_errors(name, error_by_angle, error_max, csv=False):
+def list_posrep_angle_errors(name, error_by_angle, error_arg_max, csv=False):
     if csv:
         hdr = """\npositional repeatability,max error by {}"""
         fmt = """Positional repeatability,{angle:7.2f},{val:8.4f},{tag}"""
@@ -555,12 +555,8 @@ def list_posrep_angle_errors(name, error_by_angle, error_max, csv=False):
 
     for angle in sorted(error_by_angle.keys()):
         val = error_by_angle[angle]
-        tag = " <<<" if val == error_max else ""
-        yield (
-            fmt.format(
-                angle=angle, val=val, tag=tag
-            )
-        )
+        tag = " <<<" if angle == error_arg_max else ""
+        yield (fmt.format(angle=angle, val=val, tag=tag))
 
 
 def list_posver_err_by_coord(error_by_coords, error_max, csv=False):
@@ -575,11 +571,7 @@ def list_posver_err_by_coord(error_by_coords, error_max, csv=False):
     for coord in sorted(error_by_coords.keys()):
         val = error_by_coords[coord]
         tag = " <<<" if val == error_max else ""
-        yield (
-            fmt.format(
-                coord=coord, val=val, tag=tag
-            )
-        )
+        yield (fmt.format(coord=coord, val=val, tag=tag))
 
 
 def format_report_long(
@@ -740,8 +732,8 @@ def format_report_long(
                 rfmt_pos_ver.POS_VER_CALPARS.format(**positional_verification_result)
             )
 
-            error_by_coords = positional_verification_result["posver_error"]
-            error_max = positional_verification_result["posver_error_max_mm"]
+            error_by_coords = positional_verification_result["posver_error_by_angle"]
+            error_max = positional_verification_result["posver_error_measures"].max
             for line in list_posver_err_by_coord(error_by_coords, error_max):
                 yield line
 
@@ -985,15 +977,14 @@ def format_report_extended(
                 rfmt_pos_ver.POS_VER_CALPARS.format(**positional_verification_result)
             )
 
-            error_by_coords = positional_verification_result["posver_error"]
-            error_max = positional_verification_result["posver_error_max_mm"]
+            error_by_coords = positional_verification_result["posver_error_by_angle"]
+            error_max = positional_verification_result["posver_error_measures"].max
             for line in list_posver_err_by_coord(error_by_coords, error_max):
                 yield line
 
             yield fill(
                 rfmt_pos_ver.POS_VER_ERRVALS.format(**positional_verification_result)
             )
-
 
         else:
             yield rfmt_pos_ver.POS_VER_ERRMSG.format(**positional_verification_result)
@@ -1101,9 +1092,7 @@ def format_report_csv(
     else:
         err_msg = datum_repeatability_result["error_message"]
         if not err_msg:
-            yield rfmt_dat_rep.DAT_REP_RESULT_CSV.format(
-                **datum_repeatability_result
-            )
+            yield rfmt_dat_rep.DAT_REP_RESULT_CSV.format(**datum_repeatability_result)
 
             yield rfmt_dat_rep.DAT_REP_COORDS_CSV.format(**datum_repeatability_result)
 
@@ -1112,7 +1101,9 @@ def format_report_csv(
 
     yield EMPTY_LINE
     if datum_repeatability_images is not None:
-        for k, ipath in enumerate(datum_repeatability_images["images"]["datumed_images"]):
+        for k, ipath in enumerate(
+            datum_repeatability_images["images"]["datumed_images"]
+        ):
             yield "datumed,%i,%s" % (k, ipath)
         yield EMPTY_LINE
         for k, ipath in enumerate(datum_repeatability_images["images"]["moved_images"]):
@@ -1124,9 +1115,7 @@ def format_report_csv(
     else:
         err_msg = metrology_calibration_result["error_message"]
         if not err_msg:
-            yield rfmt_met_cal.MET_CAL_RESULT_CSV.format(
-                **metrology_calibration_result
-            )
+            yield rfmt_met_cal.MET_CAL_RESULT_CSV.format(**metrology_calibration_result)
         else:
             yield rfmt_met_cal.MET_CAL_ERRMSG_CSV.format(**metrology_calibration_result)
 
@@ -1137,9 +1126,7 @@ def format_report_csv(
     else:
         err_msg = metrology_height_result["error_message"]
         if not err_msg:
-            yield rfmt_met_hgt.MET_HEIGHT_RESULT_CSV.format(
-                **metrology_height_result
-            )
+            yield rfmt_met_hgt.MET_HEIGHT_RESULT_CSV.format(**metrology_height_result)
 
         else:
             yield rfmt_met_hgt.MET_HEIGHT_ERRMSG.format(**metrology_height_result)
@@ -1162,7 +1149,7 @@ def format_report_csv(
             alpha_error_max = positional_repeatability_result["arg_max_alpha_error"]
 
             for line in list_posrep_angle_errors(
-                    "alpha angle", error_by_alpha, alpha_error_max,csv=True
+                "alpha angle", error_by_alpha, alpha_error_max, csv=True
             ):
                 yield line
 
@@ -1170,38 +1157,75 @@ def format_report_csv(
             beta_error_max = positional_repeatability_result["arg_max_beta_error"]
 
             for line in list_posrep_angle_errors(
-                    "beta angle", error_by_beta, beta_error_max,csv=True
+                "beta angle", error_by_beta, beta_error_max, csv=True
             ):
                 yield line
 
             yield "alpha max,angle"
-            for amax, alpha in  positional_repeatability_result["posrep_alpha_max_at_angle"].items():
+            for amax, alpha in positional_repeatability_result[
+                "posrep_alpha_max_at_angle"
+            ].items():
                 yield "%r,%r" % (amax, alpha)
             yield ""
             yield "beta max,angle"
-            for bmax, beta in  positional_repeatability_result["posrep_beta_max_at_angle"].items():
+            for bmax, beta in positional_repeatability_result[
+                "posrep_beta_max_at_angle"
+            ].items():
                 yield "%r,%r" % (amax, alpha)
 
             yield ""
             yield "analysis results alpha"
             yield "alpha,beta,i,j,k,xl,yl,ql,xs,ys,qs"
-            for (alpha, beta, i, j, k),(xl,yl,q1,xs,ys,q2) in positional_repeatability_result["analysis_results_alpha"].items():
-                yield "%f,%f,%i,%i,%i,%f,%f,%f,%f,%f,%f" % (alpha, beta, i, j, k, xl, yl, q1,xs, ys, q2)
+            for (
+                (alpha, beta, i, j, k),
+                (xl, yl, q1, xs, ys, q2),
+            ) in positional_repeatability_result["analysis_results_alpha"].items():
+                yield "%f,%f,%i,%i,%i,%f,%f,%f,%f,%f,%f" % (
+                    alpha,
+                    beta,
+                    i,
+                    j,
+                    k,
+                    xl,
+                    yl,
+                    q1,
+                    xs,
+                    ys,
+                    q2,
+                )
 
             yield "analysis results beta"
             yield "alpha,beta,i,j,k,xl,yl,ql,xs,ys,qs"
-            for (alpha, beta, i, j, k),(xl,yl,q1,xs,ys,q2) in positional_repeatability_result["analysis_results_beta"].items():
-                yield "%f,%f,%i,%i,%i,%f,%f,%f,%f,%f,%f" % (alpha, beta, i, j, k, xl, yl, q1,xs, ys, q2)
-
+            for (
+                (alpha, beta, i, j, k),
+                (xl, yl, q1, xs, ys, q2),
+            ) in positional_repeatability_result["analysis_results_beta"].items():
+                yield "%f,%f,%i,%i,%i,%f,%f,%f,%f,%f,%f" % (
+                    alpha,
+                    beta,
+                    i,
+                    j,
+                    k,
+                    xl,
+                    yl,
+                    q1,
+                    xs,
+                    ys,
+                    q2,
+                )
 
             yield (
-                rfmt_pos_rep.POS_REP_CALPARS_CSV.format(**positional_repeatability_result)
+                rfmt_pos_rep.POS_REP_CALPARS_CSV.format(
+                    **positional_repeatability_result
+                )
             )
 
             yield EMPTY_LINE
 
             yield (
-                rfmt_pos_rep.POS_REP_GEARCOR_CSV.format(**positional_repeatability_result)
+                rfmt_pos_rep.POS_REP_GEARCOR_CSV.format(
+                    **positional_repeatability_result
+                )
             )
 
             yield rfmt_pos_rep.POS_REP_GEARALGO_CSV.format(
@@ -1211,14 +1235,37 @@ def format_report_csv(
             if positional_repeatability_images:
                 yield "images_alpha"
                 yield "alpha,beta,i,j,k,asteps,bsteps,ipath"
-                for (alpha,beta, i, j, k), (asteps, bsteps, ipath) in positional_repeatability_images["images_alpha"].items():
-                    yield "%f,%f,%i,%i,%i,%i,%i,%s" % (alpha,beta,i,j,k, asteps, bsteps, ipath)
+                for (
+                    (alpha, beta, i, j, k),
+                    (asteps, bsteps, ipath),
+                ) in positional_repeatability_images["images_alpha"].items():
+                    yield "%f,%f,%i,%i,%i,%i,%i,%s" % (
+                        alpha,
+                        beta,
+                        i,
+                        j,
+                        k,
+                        asteps,
+                        bsteps,
+                        ipath,
+                    )
                 yield EMPTY_LINE
                 yield "images_beta"
                 yield "alpha,beta,i,j,k,asteps,bsteps,ipath"
-                for (alpha,beta, i, j, k), (asteps, bsteps, ipath) in positional_repeatability_images["images_beta"].items():
-                    yield "%f,%f,%i,%i,%i,%i,%i,%s" % (alpha,beta,i,j,k, asteps, bsteps, ipath)
-
+                for (
+                    (alpha, beta, i, j, k),
+                    (asteps, bsteps, ipath),
+                ) in positional_repeatability_images["images_beta"].items():
+                    yield "%f,%f,%i,%i,%i,%i,%i,%s" % (
+                        alpha,
+                        beta,
+                        i,
+                        j,
+                        k,
+                        asteps,
+                        bsteps,
+                        ipath,
+                    )
 
         else:
             yield rfmt_pos_rep.POS_REP_ERRMSG.format(**positional_repeatability_result)
@@ -1235,26 +1282,32 @@ def format_report_csv(
             )
 
             yield (
-                rfmt_pos_ver.POS_VER_CALPARS_CSV.format(**positional_verification_result)
+                rfmt_pos_ver.POS_VER_CALPARS_CSV.format(
+                    **positional_verification_result
+                )
             )
 
-            error_by_coords = positional_verification_result["posver_error"]
-            error_max = positional_verification_result["posver_error_max_mm"]
+            error_by_coords = positional_verification_result["posver_error_by_angle"]
+            error_max = positional_verification_result["posver_error_measures"].max
             yield ""
             yield "posver errors"
             yield "i,alpha,beta,err"
-            for (i,alpha,beta),err in error_by_coords.items():
-                yield "%i,%f,%f,%f" % (i,alpha,beta,err)
+            for (i, alpha, beta), err in error_by_coords.items():
+                yield "%i,%f,%f,%f" % (i, alpha, beta, err)
 
         else:
-            yield rfmt_pos_ver.POS_VER_ERRMSG_CSV.format(**positional_verification_result)
+            yield rfmt_pos_ver.POS_VER_ERRMSG_CSV.format(
+                **positional_verification_result
+            )
 
         if positional_verification_images:
-                yield EMPTY_LINE
-                yield "i,alpha,beta,ipath"
-                for (k,alpha,beta), ipath in positional_verification_images["images"].items():
-                    yield "%i,%f,%f,%s" % (k,alpha,beta,ipath)
-                yield EMPTY_LINE
+            yield EMPTY_LINE
+            yield "i,alpha,beta,ipath"
+            for (k, alpha, beta), ipath in positional_verification_images[
+                "images"
+            ].items():
+                yield "%i,%f,%f,%s" % (k, alpha, beta, ipath)
+            yield EMPTY_LINE
 
     if pupil_alignment_result is None:
         yield rfmt_pup_aln.PUP_ALN_NA_CSV
@@ -1273,10 +1326,10 @@ def format_report_csv(
             yield rfmt_pup_aln.PUP_ALN_ERRMSG.format(**pupil_alignment_result)
 
         if pupil_alignment_images:
-                yield "alpha,beta,ipath"
-                for (alpha,beta), ipath in pupil_alignment_images["images"].items():
-                    yield "%f,%f,%s" % (alpha,beta,ipath)
-                yield EMPTY_LINE
+            yield "alpha,beta,ipath"
+            for (alpha, beta), ipath in pupil_alignment_images["images"].items():
+                yield "%f,%f,%s" % (alpha, beta, ipath)
+            yield EMPTY_LINE
 
 
 def report(dbe, opts):

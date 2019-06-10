@@ -13,9 +13,9 @@ from ImageAnalysisFuncs.base import get_min_quality
 from ImageAnalysisFuncs.analyze_positional_repeatability import (
     DATUM_REPEATABILITY_ALGORITHM_VERSION,
     ImageAnalysisError,
-    evaluate_datum_repeatability,
     posrepCoordinates,
 )
+from vfr.evaluation.eval_datum_repeatability import evaluate_datum_repeatability, NO_RESULT
 from numpy import NaN, array
 import numpy as np
 from vfr.conf import MET_CAL_CAMERA_IP_ADDRESS
@@ -125,7 +125,9 @@ def grab_datumed_images(rig, fpu_id, capture_func, iterations):
 
         ipath = capture_func("datumed", count)
         fpu_log.audit("saving image %i to %r" % (count, abspath(ipath)))
-        check_image_analyzability(ipath, posrepCoordinates, pars=DATUM_REP_ANALYSIS_PARS)
+        check_image_analyzability(
+            ipath, posrepCoordinates, pars=DATUM_REP_ANALYSIS_PARS
+        )
         datumed_images.append(ipath)
 
         alpha_dev, beta_dev = get_counter_residuals(rig, fpu_id)
@@ -150,7 +152,9 @@ def grab_moved_images(rig, fpu_id, capture_func, iterations):
         fpu_log.info("capturing moved+datumed-%02i" % count)
         ipath = capture_func("moved+datumed", count)
         fpu_log.audit("saving image %i to %r" % (count, abspath(ipath)))
-        check_image_analyzability(ipath, posrepCoordinates, pars=DATUM_REP_ANALYSIS_PARS)
+        check_image_analyzability(
+            ipath, posrepCoordinates, pars=DATUM_REP_ANALYSIS_PARS
+        )
         moved_images.append(ipath)
 
         alpha_dev, beta_dev = get_counter_residuals(rig, fpu_id)
@@ -244,7 +248,9 @@ def eval_datum_repeatability(dbe, dat_rep_analysis_pars):
     for fpu_id in dbe.eval_fpuset:
         measurement = get_datum_repeatability_images(dbe, fpu_id)
         if measurement is None:
-            logger.info("FPU %s: no datum repeatability measurement data found" % fpu_id)
+            logger.info(
+                "FPU %s: no datum repeatability measurement data found" % fpu_id
+            )
             continue
 
         logger.info("evaluating datum repeatability for FPU %s" % fpu_id)
@@ -258,13 +264,18 @@ def eval_datum_repeatability(dbe, dat_rep_analysis_pars):
         else:
             pars = dat_rep_analysis_pars.TARGET_DETECTION_CONTOUR_PARS
 
-        pars.PLATESCALE=dat_rep_analysis_pars.PLATESCALE
+        pars.PLATESCALE = dat_rep_analysis_pars.PLATESCALE
 
-        correct = get_correction_func(calibration_pars=pars.CALIBRATION_PARS,
-                                      platescale=pars.PLATESCALE,
-                                      loglevel=dat_rep_analysis_pars.loglevel)
+        correct = get_correction_func(
+            calibration_pars=pars.CALIBRATION_PARS,
+            platescale=pars.PLATESCALE,
+            loglevel=dat_rep_analysis_pars.loglevel,
+        )
+
         def analysis_func(ipath):
-            return posrepCoordinates(fixup_ipath(ipath), pars=dat_rep_analysis_pars, correct=correct)
+            return posrepCoordinates(
+                fixup_ipath(ipath), pars=dat_rep_analysis_pars, correct=correct
+            )
 
         try:
             count_images = len(images["datumed_images"]) + len(images["moved_images"])
@@ -275,11 +286,16 @@ def eval_datum_repeatability(dbe, dat_rep_analysis_pars):
                     datumed_coords.append(analysis_func(ipath))
                 except ImageAnalysisError as err:
                     count_failures += 1
-                    if count_failures > count_images * dat_rep_analysis_pars.MAX_FAILURE_QUOTIENT:
+                    if (
+                        count_failures
+                        > count_images * dat_rep_analysis_pars.MAX_FAILURE_QUOTIENT
+                    ):
                         raise
                     else:
-                        logger.warning("image analysis failed for image %s, "
-                                       "message = %s (continuing)" % (ipath, str(err)))
+                        logger.warning(
+                            "image analysis failed for image %s, "
+                            "message = %s (continuing)" % (ipath, str(err))
+                        )
                         continue
 
             moved_coords = []
@@ -288,27 +304,25 @@ def eval_datum_repeatability(dbe, dat_rep_analysis_pars):
                     moved_coords.append(analysis_func(ipath))
                 except ImageAnalysisError as err:
                     count_failures += 1
-                    if count_failures > count_images * dat_rep_analysis_pars.MAX_FAILURE_QUOTIENT:
+                    if (
+                        count_failures
+                        > count_images * dat_rep_analysis_pars.MAX_FAILURE_QUOTIENT
+                    ):
                         raise
                     else:
-                        logger.warning("image analysis failed for image %s, "
-                                       "message = %s (continuing)" % (ipath, str(err)))
+                        logger.warning(
+                            "image analysis failed for image %s, "
+                            "message = %s (continuing)" % (ipath, str(err))
+                        )
                         continue
 
-            (
-                datrep_dat_only_max,
-                datrep_dat_only_std,
-                datrep_move_dat_max,
-                datrep_move_dat_std,
-                datumed_errors,
-                moved_errors,
-            ) = evaluate_datum_repeatability(datumed_coords, moved_coords)
+            error_measures = evaluate_datum_repeatability(datumed_coords, moved_coords)
 
             datum_repeatability_has_passed = (
                 TestResult.OK
                 if (
-                    max(datrep_dat_only_max, datrep_move_dat_max)
-                    <= dat_rep_analysis_pars.DATUM_REP_PASS
+                    error_measures.combined.percentiles[dat_rep_analysis_pars.DATUM_REP_TESTED_PERCENTILE]
+                        <= dat_rep_analysis_pars.DATUM_REP_PASS
                 )
                 else TestResult.FAILED
             )
@@ -334,25 +348,23 @@ def eval_datum_repeatability(dbe, dat_rep_analysis_pars):
             max_residual_moved = NaN
             min_quality_datumed = NaN
             min_quality_moved = NaN
-            datumed_errors = None
-            moved_errors = None
+            error_measures = NO_RESULT
 
-            logger.exception("image analysis for FPU %s failed with message %s" % (fpu_id, errmsg))
+            logger.exception(
+                "image analysis for FPU %s failed with message %s" % (fpu_id, errmsg)
+            )
 
         record = DatumRepeatabilityResult(
             algorithm_version=DATUM_REPEATABILITY_ALGORITHM_VERSION,
             coords=coords,
             datum_repeatability_max_residual_datumed=max_residual_datumed,
             datum_repeatability_max_residual_moved=max_residual_moved,
-            datum_repeatability_move_max_mm=datrep_move_dat_max,
-            datum_repeatability_move_std_mm=datrep_move_dat_std,
-            datum_repeatability_only_max_mm=datrep_dat_only_max,
-            datum_repeatability_only_std_mm=datrep_dat_only_std,
-            datumed_errors=datumed_errors,
+            datum_repeatability_datum_only=error_measures.datum_only,
+            datum_repeatability_moved=error_measures.moved,
+            datum_repeatability_combined=error_measures.combined,
             error_message=errmsg,
             min_quality_datumed=min_quality_datumed,
             min_quality_moved=min_quality_moved,
-            moved_errors=moved_errors,
             pass_threshold_mm=dat_rep_analysis_pars.DATUM_REP_PASS,
             result=datum_repeatability_has_passed,
         )

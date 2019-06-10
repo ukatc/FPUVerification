@@ -68,7 +68,9 @@ def selftest_pup_algn(rig, pars=None, PUP_ALGN_ANALYSIS_PARS=None, capture_image
             linear_stage_goto(rig, lin_position)
 
             ipath_selftest_pup_algn = capture_image(pup_aln_cam, "pupil-alignment")
-            logger.debug("saving pupil alignment image to %r" % abspath(ipath_selftest_pup_algn))
+            logger.debug(
+                "saving pupil alignment image to %r" % abspath(ipath_selftest_pup_algn)
+            )
 
             try:
                 result = pupalnCoordinates(
@@ -82,7 +84,10 @@ def selftest_pup_algn(rig, pars=None, PUP_ALGN_ANALYSIS_PARS=None, capture_image
                         " analysis (ignored), message = %s" % repr(err)
                     )
                 else:
-                    logger.error("image analysis for FPU %s failed with message %r" % (fpu_id, err))
+                    logger.error(
+                        "image analysis for FPU %s failed with message %r"
+                        % (fpu_id, err)
+                    )
                     raise
 
     finally:
@@ -135,7 +140,9 @@ def selftest_metrology_calibration(
         with rig.lctrl.use_ambientlight():
             ipath_selftest_met_cal_target = capture_image(met_cal_cam, "met-cal-target")
 
-        logger.debug("saving met cal target image to %r" % abspath(ipath_selftest_met_cal_target))
+        logger.debug(
+            "saving met cal target image to %r" % abspath(ipath_selftest_met_cal_target)
+        )
         met_cal_cam.SetExposureTime(pars.METROLOGY_CAL_FIBRE_EXPOSURE_MS)
         linear_stage_goto(rig, lin_position)
         rig.lctrl.switch_all_off()
@@ -143,7 +150,9 @@ def selftest_metrology_calibration(
         with rig.lctrl.use_backlight(pars.METROLOGY_CAL_BACKLIGHT_VOLTAGE):
             ipath_selftest_met_cal_fibre = capture_image(met_cal_cam, "met-cal-fibre")
 
-        logger.debug("saving met cal fibre image to %r" % abspath(ipath_selftest_met_cal_fibre))
+        logger.debug(
+            "saving met cal fibre image to %r" % abspath(ipath_selftest_met_cal_fibre)
+        )
         try:
             target_coordinates = metcalTargetCoordinates(
                 ipath_selftest_met_cal_target, pars=MET_CAL_TARGET_ANALYSIS_PARS
@@ -156,7 +165,9 @@ def selftest_metrology_calibration(
                     " analysis (ignored), message = %s" % repr(err)
                 )
             else:
-                logger.error("image analysis for FPU %s failed with message %r" % (fpu_id, err))
+                logger.error(
+                    "image analysis for FPU %s failed with message %r" % (fpu_id, err)
+                )
                 raise
 
         fibre_coordinates = metcalFibreCoordinates(
@@ -199,7 +210,9 @@ def selftest_metrology_height(
                 met_height_cam, "metrology-height"
             )
 
-        logger.debug("saving met height image to %r" % abspath(ipath_selftest_met_height))
+        logger.debug(
+            "saving met height image to %r" % abspath(ipath_selftest_met_height)
+        )
         try:
             metht_small_target_height_mm, metht_large_target_height_mm = methtHeight(
                 ipath_selftest_met_height, pars=MET_HEIGHT_ANALYSIS_PARS
@@ -214,7 +227,9 @@ def selftest_metrology_height(
                     " analysis (ignored), message = %r" % repr(err)
                 )
             else:
-                logger.error("image analysis for FPU %s failed with message %r" % (fpu_id, err))
+                logger.error(
+                    "image analysis for FPU %s failed with message %r" % (fpu_id, err)
+                )
                 raise
 
     finally:
@@ -265,7 +280,9 @@ def selftest_positional_repeatability(
                     " analysis (ignored), message = %r" % repr(err)
                 )
             else:
-                logger.error("image analysis for FPU %s failed with message %r" % (fpu_id, err))
+                logger.error(
+                    "image analysis for FPU %s failed with message %r" % (fpu_id, err)
+                )
                 raise
 
     finally:

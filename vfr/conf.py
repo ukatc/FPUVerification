@@ -28,7 +28,7 @@ ALPHA_RANGE_MAX = 155.0  # maximum range of alpha arm
 PROTECTION_TOLERANCE = 0.15  # degrees of protection between measured
 # limit and soft protection range
 
-DB_TIME_FORMAT = "%Y-%m-%dT%H:%M:%S.~%Z"  # "~" means number of milliseconds
+DB_TIME_FORMAT = "%Y-%m-%dT%H.%M.%S.~%Z"  # "~" means number of milliseconds
 
 LAMP_WARMING_TIME_MILLISECONDS = 1000.0
 
@@ -41,7 +41,9 @@ MTS50_SERIALNUMBER = 83822910
 # VERIFICATION_ROOT_FOLDER to the path which contains the images and
 # calibration data. Shorthands like ~/, ~user, or ${HOME} are expanded
 # before use.
-VERIFICATION_ROOT_FOLDER = os.environ.get("VERIFICATION_ROOT_FOLDER", "/moonsdata/verification/")
+VERIFICATION_ROOT_FOLDER = os.environ.get(
+    "VERIFICATION_ROOT_FOLDER", "/moonsdata/verification/"
+)
 
 POS_REP_CAMERA_IP_ADDRESS = "169.254.187.121"
 
@@ -51,6 +53,10 @@ MET_HEIGHT_CAMERA_IP_ADDRESS = "169.254.190.121"
 
 PUP_ALGN_CAMERA_IP_ADDRESS = "169.254.108.113"
 
+BLOB_WEIGHT_FACTOR = 0.75 # relative weight of large vs small metrology target position
+
+
+PERCENTILE_ARGS = [50, 90, 95, 97.5]
 
 REWIND_POS_ALPHA = -175.0  # alpha start position before initial datum search
 REWIND_POS_BETA = 1.0  # alpha start position before initial datum search
@@ -115,10 +121,11 @@ DATUM_REP_ANALYSIS_PARS = Namespace(
     display=False,
     verbosity=0,
     loglevel=0,
-    DATUM_REP_PASS=20.0,  # the maximum single
+    DATUM_REP_PASS=30.0,  # the maximum single
     # deviation in microns from the
     # baseline position which represents an
     # acceptable FPU
+    DATUM_REP_TESTED_PERCENTILE=95, # the tested percentile
 )
 
 LINPOSITIONS = [  # the linear stage positions
@@ -240,10 +247,10 @@ POS_REP_MEASUREMENT_PARS = Namespace(
     POS_REP_EXPOSURE_MS=200,  # the exposure time in
     # milliseconds for a correctly
     # exposed image
-    POS_REP_NUM_INCREMENTS=25,  # the number of movements made
+    POS_REP_NUM_INCREMENTS=15,  # the number of movements made
     # within each positive sweep from
     # the starting position
-    POS_REP_ITERATIONS=5,  # the number of times each FPU
+    POS_REP_ITERATIONS=3,  # the number of times each FPU
     # sweeps back and forth
     POS_REP_SAFETY_MARGIN=5.0,  # safety margin, in degree, for
     # distance to range limits when testing
@@ -268,13 +275,13 @@ POS_REP_MEASUREMENT_PARS = Namespace(
         "max_acceleration": 100,
         "max_deceleration": 100,
     },
-    POS_REP_WAVEFORM_RULESET=0, # '0' does switch off checking
+    POS_REP_WAVEFORM_RULESET=0,  # '0' does switch off checking
     POS_REP_CALIBRATION_MAPFILE="calibration/mapping/pos-rep-2019-04-10.cfg",
 )
 
 
 POS_REP_EVALUATION_PARS = Namespace(
-    POS_REP_PASS=Inf,  # the maximum angular deviation, in
+    POS_REP_PASS=0.030,  # the maximum angular deviation, in
     # degrees, from an average position of
     # a grouping of measured points at a
     # given nominal position which
@@ -289,14 +296,14 @@ POS_VER_MEASUREMENT_PARS = Namespace(
     POS_VER_EXPOSURE_MS=250,  # the exposure time in
     # milliseconds for a correctly
     # exposed image
-    POS_VER_ITERATIONS=100,  # the number of extra random sample points
+    POS_VER_ITERATIONS=10,  # the number of extra random sample points
     POS_VER_SAFETY_TOLERANCE=1.5,  # safety distance towards range limits
     POS_VER_CALIBRATION_MAPFILE="calibration/mapping/pos-rep-2019-04-10.cfg",
 )
 
 
 POS_VER_EVALUATION_PARS = Namespace(
-    POS_VER_PASS=Inf,  # the maximum angular deviation, in
+    POS_VER_PASS=0.030,  # the maximum angular deviation, in
     # degrees, from an average position of
     # a grouping of measured points at a
     # given nominal position which

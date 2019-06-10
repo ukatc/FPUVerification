@@ -7,10 +7,10 @@ from GigE.GigECamera import BASLER_DEVICE_CLASS, DEVICE_CLASS, IP_ADDRESS
 from ImageAnalysisFuncs.analyze_metrology_calibration import (
     METROLOGY_ANALYSIS_ALGORITHM_VERSION,
     ImageAnalysisError,
-    fibre_target_distance,
     metcalFibreCoordinates,
     metcalTargetCoordinates,
 )
+from vfr.evaluation.eval_metrology_calibration import fibre_target_distance
 from numpy import NaN
 from vfr.conf import MET_CAL_CAMERA_IP_ADDRESS
 from vfr.db.metrology_calibration import (
@@ -32,6 +32,7 @@ from vfr.tests_common import (
     check_image_analyzability,
 )
 from vfr.conf import MET_CAL_TARGET_ANALYSIS_PARS, MET_CAL_FIBRE_ANALYSIS_PARS
+
 
 def measure_metrology_calibration(rig, dbe, pars=None):
 
@@ -89,7 +90,9 @@ def measure_metrology_calibration(rig, dbe, pars=None):
             target_ipath = capture_image(met_cal_cam, "target")
 
         fpu_log.audit("saving target image to %r" % abspath(target_ipath))
-        check_image_analyzability(target_ipath, metcalTargetCoordinates, pars=MET_CAL_TARGET_ANALYSIS_PARS)
+        check_image_analyzability(
+            target_ipath, metcalTargetCoordinates, pars=MET_CAL_TARGET_ANALYSIS_PARS
+        )
         met_cal_cam.SetExposureTime(pars.METROLOGY_CAL_FIBRE_EXPOSURE_MS)
 
         linear_stage_goto(rig, pars.METROLOGY_CAL_LINPOSITIONS[fpu_id])
@@ -98,7 +101,9 @@ def measure_metrology_calibration(rig, dbe, pars=None):
             fibre_ipath = capture_image(met_cal_cam, "fibre")
 
         fpu_log.audit("saving fibre image to %r" % abspath(fibre_ipath))
-        check_image_analyzability(fibre_ipath, metcalFibreCoordinates, pars=MET_CAL_FIBRE_ANALYSIS_PARS)
+        check_image_analyzability(
+            fibre_ipath, metcalFibreCoordinates, pars=MET_CAL_FIBRE_ANALYSIS_PARS
+        )
         images = {"target": target_ipath, "fibre": fibre_ipath}
 
         record = MetrologyCalibrationImages(images=images)
@@ -118,7 +123,9 @@ def eval_metrology_calibration(
         measurement = get_metrology_calibration_images(dbe, fpu_id)
 
         if measurement is None:
-            logger.info("FPU %s: no metrology calibration measurement data found" % fpu_id)
+            logger.info(
+                "FPU %s: no metrology calibration measurement data found" % fpu_id
+            )
             continue
 
         logger.info("evaluating metrology calibration for FPU %s" % fpu_id)
@@ -155,7 +162,9 @@ def eval_metrology_calibration(
             metcal_fibre_large_target_distance_mm = NaN
             metcal_fibre_small_target_distance_mm = NaN
             metcal_target_vector_angle_deg = NaN
-            logger.exception("image analysis for FPU %s failed with message %s" % (fpu_id, errmsg))
+            logger.exception(
+                "image analysis for FPU %s failed with message %s" % (fpu_id, errmsg)
+            )
 
         record = MetrologyCalibrationResult(
             coords=coords,

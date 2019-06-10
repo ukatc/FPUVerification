@@ -2,10 +2,11 @@
 from __future__ import division, print_function
 
 from math import pi
+import numpy as np
 
 import cv2
 from DistortionCorrection import get_correction_func
-from ImageAnalysisFuncs.base import ImageAnalysisError, rss
+from ImageAnalysisFuncs.base import ImageAnalysisError
 
 # exceptions which are raised if image analysis functions fail
 
@@ -211,7 +212,7 @@ def targetCoordinates(
 
     # target separation check - the values here are not configurable, as
     # they represent real mechanical tolerances
-    targetSeparation = rss(
+    targetSeparation = np.linalg.norm(
         [
             posrep_small_target_x - posrep_large_target_x,
             posrep_small_target_y - posrep_large_target_y,

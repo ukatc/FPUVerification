@@ -38,9 +38,14 @@ from vfr.conf import (
 )
 from ImageAnalysisFuncs.base import ImageAnalysisError
 
-assert tuple(map(int, FpuGridDriver.__version__.split("."))) >= (1,5,5), "FPU driver version must be 1.5.5 at least"
+assert tuple(map(int, FpuGridDriver.__version__.split("."))) >= (
+    1,
+    5,
+    5,
+), "FPU driver version must be 1.5.5 at least"
 
-got_quit_request = False # global flag to initiate orderly termination
+got_quit_request = False  # global flag to initiate orderly termination
+
 
 def handle_quit(signum, stack):
     global got_quit_request
@@ -48,8 +53,10 @@ def handle_quit(signum, stack):
     logger = logging.getLogger(__name__)
     logger.warning("SIGQUIT received, setting flag to exit")
 
+
 def set_quit_handler():
     signal.signal(signal.SIGQUIT, handle_quit)
+
 
 def check_for_quit():
     global got_quit_request
@@ -98,7 +105,9 @@ def goto_position(
     current_alpha = array([x.as_scalar() for x, y in current_angles])
     current_beta = array([y.as_scalar() for x, y in current_angles])
     logger.debug("current positions:\n%r" % current_angles)
-    logger.log(loglevel, "moving FPUs %s to (%6.2f,%6.2f)" % (fpuset, abs_alpha, abs_beta))
+    logger.log(
+        loglevel, "moving FPUs %s to (%6.2f,%6.2f)" % (fpuset, abs_alpha, abs_beta)
+    )
 
     delta_alpha = abs_alpha - current_alpha
     delta_beta = abs_beta - current_beta
@@ -138,14 +147,14 @@ def find_datum(gd, grid_state, opts=None, uninitialized=False):
     logger.info("moving FPUs to datum position")
     gd.pingFPUs(grid_state)
 
-    logger.trace("pre datum: %r" % gd.trackedAngles(grid_state, display=False) )
+    logger.trace("pre datum: %r" % gd.trackedAngles(grid_state, display=False))
     logger.trace("states= %r" % list_states(grid_state))
 
     for fpu_id, fpu in enumerate(grid_state.FPU):
-      logger.trace(
-        "FPU %i (alpha_initalized, beta_initialized) = (%s, %s)"
-        % (fpu_id, fpu.alpha_was_zeroed, fpu.beta_was_zeroed)
-      )
+        logger.trace(
+            "FPU %i (alpha_initalized, beta_initialized) = (%s, %s)"
+            % (fpu_id, fpu.alpha_was_zeroed, fpu.beta_was_zeroed)
+        )
 
     unreferenced = []
     for fpu_id, fpu in enumerate(grid_state.FPU):
@@ -180,19 +189,19 @@ def find_datum(gd, grid_state, opts=None, uninitialized=False):
         else:
             timeout = DATUM_TIMEOUT_ENABLE
             logger.debug(
-                    "issuing findDatum (%i FPUs, timeout=%r):"
-                    % (len(unreferenced), timeout)
-                )
+                "issuing findDatum (%i FPUs, timeout=%r):"
+                % (len(unreferenced), timeout)
+            )
             gd.findDatum(grid_state, fpuset=unreferenced, timeout=timeout)
 
         logger.trace("findDatum finished, states=", list_states(grid_state))
     else:
-      logger.debug("find_datum(): all FPUs already at datum")
+        logger.debug("find_datum(): all FPUs already at datum")
 
     # We can use grid_state to display the starting position
     logger.trace(
-      "datum finished, the FPU positions (in degrees) are: %r" %
-      gd.trackedAngles(grid_state, display=False),
+        "datum finished, the FPU positions (in degrees) are: %r"
+        % gd.trackedAngles(grid_state, display=False)
     )
     logger.trace("FPU states = %r" % list_states(grid_state))
 
@@ -266,7 +275,9 @@ def get_config_from_mapfile(filename):
     config_file_name = map_config["calibration_config_file"]
     algorithm = map_config["algorithm"]
 
-    logger.audit("loading cal config from %s/%s" % (VERIFICATION_ROOT_FOLDER, config_file_name))
+    logger.audit(
+        "loading cal config from %s/%s" % (VERIFICATION_ROOT_FOLDER, config_file_name)
+    )
     config = camera_calibration.Config.load(config_file_name)
     # os.chdir(current_dir)
     config_dict = config.to_dict()
@@ -286,18 +297,19 @@ def safe_home_turntable(rig, grid_state, opts=None):
             # we filter out an annoying warning related to undocumented
             # controller behaviour
             with warnings.catch_warnings():
-              warnings.filterwarnings(#
-                "ignore",
-                "extra message received with"
-                " ID 128, param1=108, param2= 0, data = None",
-                UserWarning,
-                "pyAPT.controller",
-              )
-              con.home(clockwise=False)
+                warnings.filterwarnings(  #
+                    "ignore",
+                    "extra message received with"
+                    " ID 128, param1=108, param2= 0, data = None",
+                    UserWarning,
+                    "pyAPT.controller",
+                )
+                con.home(clockwise=False)
             logger.info("Homing stage... OK")
 
         logger.debug("\tHoming completed in %.2fs" % (time.time() - st))
     check_for_quit()
+
 
 def turntable_safe_goto(rig, grid_state, stage_position, wait=True):
     check_for_quit()
@@ -312,17 +324,17 @@ def turntable_safe_goto(rig, grid_state, stage_position, wait=True):
             # we filter out an annoying warning related to undocumented
             # controller behaviour
             with warnings.catch_warnings():
-              warnings.filterwarnings(
-                "ignore",
-                "extra message received with"
-                " ID 128, param1=108, param2= 0, data = None",
-                UserWarning,
-                "pyAPT.controller",
-              )
-              con.goto(stage_position, wait=wait)
+                warnings.filterwarnings(
+                    "ignore",
+                    "extra message received with"
+                    " ID 128, param1=108, param2= 0, data = None",
+                    UserWarning,
+                    "pyAPT.controller",
+                )
+                con.goto(stage_position, wait=wait)
             logger.debug("\tMove completed in %.2fs" % (time.time() - st))
             logger.debug("\tNew position: %.3f %s" % (con.position(), con.unit))
-            #logger.debug("\tStatus: %r" % con.status())
+            # logger.debug("\tStatus: %r" % con.status())
     check_for_quit()
 
 
@@ -351,7 +363,7 @@ def linear_stage_goto(rig, stage_position):
 
 
 def fixup_ipath(ipath):
-  """this fixes up a relocation in relative image database paths, so
+    """this fixes up a relocation in relative image database paths, so
   that older test images are still found.  (The reason is that early
   versions stored image pathnames without the "images/" subfolder,
   which required special handling for calibration data.)
@@ -359,53 +371,58 @@ def fixup_ipath(ipath):
   See function store_image above to compare current layout.
 
   """
-  if ipath.startswith("images/"):
-    return ipath
-  else:
-    return os.path.join("images/", ipath)
+    if ipath.startswith("images/"):
+        return ipath
+    else:
+        return os.path.join("images/", ipath)
 
 
 image_error_count = {}
 
-ECOUNT_QUEUE_LEN = 20 # length of error flag queue for image errors
-ECOUNT_LIMIT_WARN = 5 # limit for warnings
-ECOUNT_LIMIT_FATAL = 21 # limit to trigger a fatal error
+ECOUNT_QUEUE_LEN = 20  # length of error flag queue for image errors
+ECOUNT_LIMIT_WARN = 5  # limit for warnings
+ECOUNT_LIMIT_FATAL = 21  # limit to trigger a fatal error
+
 
 def check_image_analyzability(ipath, analysis_func, pars=None):
-  """Check whether a captured image can be analyzed successfully,
+    """Check whether a captured image can be analyzed successfully,
   and keeps some statistics.
   If this is not the case, it can be a rare failure.
   However if such errors happen frequently,
 
   """
-  fname = analysis_func.__name__
-  if not fname in image_error_count:
-    image_error_count[fname] = []
+    fname = analysis_func.__name__
+    if not fname in image_error_count:
+        image_error_count[fname] = []
 
-  ecount = image_error_count[fname]
-  try:
-    analysis_func(ipath, pars=pars)
-    ecount.append(0)
-    if len(ecount) > ECOUNT_QUEUE_LEN:
-      ecount.pop(0)
+    ecount = image_error_count[fname]
+    try:
+        analysis_func(ipath, pars=pars)
+        ecount.append(0)
+        if len(ecount) > ECOUNT_QUEUE_LEN:
+            ecount.pop(0)
 
-  except ImageAnalysisError, err:
-    ecount.append(1)
-    if len(ecount) > ECOUNT_QUEUE_LEN:
-      ecount.pop(0)
-    logger = logging.getLogger(__name__ + '.' + fname)
-    logger.error("image analysis function %s failed for image %s with message %s" % (
-      analysis_func.__name__,
-      ipath,
-      err))
-    logger.debug("error statistics for function %s: %r" % (fname, ecount))
+    except ImageAnalysisError, err:
+        ecount.append(1)
+        if len(ecount) > ECOUNT_QUEUE_LEN:
+            ecount.pop(0)
+        logger = logging.getLogger(__name__ + "." + fname)
+        logger.error(
+            "image analysis function %s failed for image %s with message %s"
+            % (analysis_func.__name__, ipath, err)
+        )
+        logger.debug("error statistics for function %s: %r" % (fname, ecount))
 
-    if sum(ecount) >= ECOUNT_LIMIT_WARN:
-      logger.warning("image analysis function %s failed at least %i times"
-                     " for the last %i images- system error possible?" % (
-                       fname, ECOUNT_LIMIT_WARN, ECOUNT_QUEUE_LEN))
-    if sum(ecount) >= ECOUNT_LIMIT_FATAL:
-      raise SystemError(dedent("""Fatal error:
+        if sum(ecount) >= ECOUNT_LIMIT_WARN:
+            logger.warning(
+                "image analysis function %s failed at least %i times"
+                " for the last %i images- system error possible?"
+                % (fname, ECOUNT_LIMIT_WARN, ECOUNT_QUEUE_LEN)
+            )
+        if sum(ecount) >= ECOUNT_LIMIT_FATAL:
+            raise SystemError(
+                dedent(
+                    """Fatal error:
       Image analysis function %s failed %i times in %i images, failure limit exceeded.
       Last failure was with
 
@@ -413,5 +430,7 @@ def check_image_analyzability(ipath, analysis_func, pars=None):
 
       message = %r.
 
-      Stopping verification system.""" % (
-        fname, ECOUNT_LIMIT_FATAL, ECOUNT_QUEUE_LEN, ipath, err)))
+      Stopping verification system."""
+                    % (fname, ECOUNT_LIMIT_FATAL, ECOUNT_QUEUE_LEN, ipath, err)
+                )
+            )

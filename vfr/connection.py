@@ -36,8 +36,7 @@ def init_driver(opts, N, env=None, protected=True):
         except ProtectionError as e:
             logger.critical(
                 "protectionError exception raised -- maybe the"
-                " postion database needs to be initialized with 'init' ?\n\n" %
-                str(e)
+                " postion database needs to be initialized with 'init' ?\n\n" % str(e)
             )
     else:
         rd = FpuGridDriver.UnprotectedGridDriver(N, logLevel=LOG_GRIDSTATE)
@@ -65,7 +64,6 @@ def check_can_connection(rd, grid_state, opts, fpu_id):
         logger.critical("CAN connection to FPU %i does not work! aborting." % fpu_id)
     else:
         logger.debug("checking CAN connection to FPU %i ... OK" % fpu_id)
-
 
     assert rv == FpuGridDriver.ethercanif.DE_OK
 

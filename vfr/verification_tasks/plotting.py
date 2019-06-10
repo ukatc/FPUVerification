@@ -5,25 +5,31 @@ from vfr.db.retrieval import get_data
 from math import pi
 import numpy as np
 import types
-#import matplotlib.pyplot as plt
 
-#import numpy as np
+# import matplotlib.pyplot as plt
+
+# import numpy as np
 from scipy import optimize
 from matplotlib import pyplot as plt, cm, colors
 
-from Gearbox.gear_correction import fit_gearbox_parameters, plot_gearbox_calibration, plot_correction
-
+from Gearbox.gear_correction import (
+    fit_gearbox_parameters,
+    plot_gearbox_calibration,
+    plot_correction,
+)
 
 
 def plot_pos_rep(fpu_id, analysis_results_alpha, analysis_results_beta, opts):
     if opts.blob_type == "large":
-        blob_idx = slice(3,5)
+        blob_idx = slice(3, 5)
     else:
-        blob_idx = slice(0,2)
+        blob_idx = slice(0, 2)
 
-    colorcode = ['blue', 'red', 'green', 'cyan']
-    for label, series, sweeps in [('alpha arm', analysis_results_alpha, [0,1]),
-                                  ('beta arm', analysis_results_beta, [2, 3])]:
+    colorcode = ["blue", "red", "green", "cyan"]
+    for label, series, sweeps in [
+        ("alpha arm", analysis_results_alpha, [0, 1]),
+        ("beta arm", analysis_results_beta, [2, 3]),
+    ]:
 
         if series is None:
             print("no data found for FPU %s, %s" % (fpu_id, label))
@@ -35,10 +41,16 @@ def plot_pos_rep(fpu_id, analysis_results_alpha, analysis_results_beta, opts):
             direction = "up" if sweep_idx in [0, 2] else "down"
 
             color = colorcode[sweep_idx]
-            sweep_series = [ v for k, v in series.items() if (k[3] == sweep_idx)]
+            sweep_series = [v for k, v in series.items() if (k[3] == sweep_idx)]
             x, y = np.array(sweep_series).T[blob_idx]
-            ax.scatter(x, y, c=color, label="%s %s" % (label, direction),
-                       alpha=0.7, edgecolors='none')
+            ax.scatter(
+                x,
+                y,
+                c=color,
+                label="%s %s" % (label, direction),
+                alpha=0.7,
+                edgecolors="none",
+            )
 
             ax.legend()
             ax.grid(True)
@@ -46,24 +58,27 @@ def plot_pos_rep(fpu_id, analysis_results_alpha, analysis_results_beta, opts):
 
         plt.show()
 
+
 def plot_dat_rep(fpu_id, datumed_coords, moved_coords, opts):
     if opts.blob_type == "large":
-        blob_idx = slice(3,5)
+        blob_idx = slice(3, 5)
     else:
-        blob_idx = slice(0,2)
+        blob_idx = slice(0, 2)
 
     fig, ax = plt.subplots()
-    for label, series, color in [('datum only', datumed_coords, 'red'),
-                                 ('moved + datumed', moved_coords, 'blue')]:
+    for label, series, color in [
+        ("datum only", datumed_coords, "red"),
+        ("moved + datumed", moved_coords, "blue"),
+    ]:
 
         if series is None:
             print("no data found for FPU %s, %s" % (fpu_id, label))
             continue
 
-
-        x, y = np.array(series).T[blob_idx]
-        ax.scatter(x, y, c=color, label=label,
-                   alpha=0.7, edgecolors='none')
+        coords = np.array(series).T
+        coords_zeroed = coords - np.mean(coords, axis=1)[:, np.newaxis]
+        x, y = coords_zeroed[blob_idx]
+        ax.scatter(x, y, c=color, label=label, alpha=0.7, edgecolors="none")
 
     ax.legend()
 
@@ -88,7 +103,6 @@ def plot(dbe, opts):
 
             plot_dat_rep(fpu_id, coords_datumed, coords_moved, opts)
 
-
         if "B" in plot_selection:
             pos_rep_result = ddict["positional_repeatability_result"]
             result_alpha = pos_rep_result["analysis_results_alpha"]
@@ -100,22 +114,32 @@ def plot(dbe, opts):
             pos_rep_result = ddict["positional_repeatability_result"]
             result_alpha = pos_rep_result["analysis_results_alpha"]
             result_beta = pos_rep_result["analysis_results_beta"]
-            fit_alpha = fit_gearbox_parameters("alpha", result_alpha)
+            fit_alpha = fit_gearbox_parameters("alpha", result_alpha, return_intermediate_results=True)
             plot_circle = "D" in plot_selection
             if fit_alpha is None:
                 print("no parameters found for FPU %s, %s arm" % (fpu_id, "alpha"))
             else:
                 plot_gearbox_calibration(
-                    fpu_id, "alpha", plot_circle=plot_circle, plot_fits=[0,1,2], plot_residuals=[1,2], **fit_alpha
+                    fpu_id,
+                    "alpha",
+                    plot_circle=plot_circle,
+                    plot_fits=[0, 1, 2],
+                    plot_residuals=[1, 2],
+                    **fit_alpha
                 )
 
                 plot_correction(fpu_id, "alpha", **fit_alpha)
 
-            fit_beta = fit_gearbox_parameters("beta", result_beta)
+            fit_beta = fit_gearbox_parameters("beta", result_beta, return_intermediate_results=True)
             if fit_beta is None:
                 print("no parameters found for FPU %s, %s arm" % (fpu_id, "beta"))
             else:
                 plot_gearbox_calibration(
-                    fpu_id, "beta", plot_circle=plot_circle, plot_fits=[0,1,2], plot_residuals=[1,2], **fit_beta
+                    fpu_id,
+                    "beta",
+                    plot_circle=plot_circle,
+                    plot_fits=[0, 1, 2],
+                    plot_residuals=[1, 2],
+                    **fit_beta
                 )
                 plot_correction(fpu_id, "beta", **fit_beta)

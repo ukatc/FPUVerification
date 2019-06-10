@@ -4,9 +4,9 @@ from GigE.GigECamera import BASLER_DEVICE_CLASS, DEVICE_CLASS, IP_ADDRESS
 from ImageAnalysisFuncs.analyze_metrology_height import (
     METROLOGY_HEIGHT_ANALYSIS_ALGORITHM_VERSION,
     ImageAnalysisError,
-    eval_met_height_inspec,
     methtHeight,
 )
+from vfr.evaluation.eval_metrology_height import eval_met_height_inspec
 from numpy import NaN
 import logging
 from os.path import abspath
@@ -31,6 +31,7 @@ from vfr.tests_common import (
 )
 from vfr.conf import MET_HEIGHT_ANALYSIS_PARS
 
+
 def measure_metrology_height(rig, dbe, pars=None):
 
     tstamp = timestamp()
@@ -40,7 +41,6 @@ def measure_metrology_height(rig, dbe, pars=None):
     # home turntable
     safe_home_turntable(rig, rig.grid_state)
     rig.lctrl.switch_all_off()
-
 
     MET_HEIGHT_CAMERA_CONF = {
         DEVICE_CLASS: BASLER_DEVICE_CLASS,
@@ -121,7 +121,9 @@ def eval_metrology_height(dbe, met_height_analysis_pars, met_height_evaluation_p
             metht_small_target_height_mm = NaN
             metht_large_target_height_mm = NaN
             test_result = TestResult.NA
-            logger.exception("image analysis for FPU %s failed with message %s" % (fpu_id, errmsg))
+            logger.exception(
+                "image analysis for FPU %s failed with message %s" % (fpu_id, errmsg)
+            )
 
         record = MetrologyHeightResult(
             small_target_height_mm=metht_small_target_height_mm,

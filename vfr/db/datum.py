@@ -28,7 +28,10 @@ def save_datum_result(rig, dbe, dasel, rigstate):
 
         serial_number = dbe.fpu_config[fpu_id]["serialnumber"]
         fpu_log = get_fpuLogger(fpu_id, dbe.fpu_config, __name__)
-        fpu_log.audit("FPU %s (%i) : (alpha datumed=%s, beta datumed = %s)" % (serial_number, fpu_id, a_ok, b_ok))
+        fpu_log.audit(
+            "FPU %s (%i) : (alpha datumed=%s, beta datumed = %s)"
+            % (serial_number, fpu_id, a_ok, b_ok)
+        )
 
         if (
             ((dasel == DASEL_ALPHA) and a_ok)

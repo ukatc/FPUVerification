@@ -14,6 +14,7 @@ from fpu_constants import (
     StepsPerDegreeAlpha,
     StepsPerDegreeBeta,
 )
+from vfr.conf import BLOB_WEIGHT_FACTOR
 
 # exceptions which are raised if image analysis functions fail
 
@@ -79,7 +80,7 @@ def plot_data_circle(x,y, xc, yc, R, title):
     plt.ylabel('y')
     plt.show()
 
-def fit_gearbox_parameters(par, analysis_results):
+def fit_gearbox_parameters(par, analysis_results, return_intermediate_results=False):
     if analysis_results is None:
         return None
     # get list of points to which circle is fitted
@@ -91,8 +92,11 @@ def fit_gearbox_parameters(par, analysis_results):
         alpha_nom, beta_nom, i, j, k = key
         x1, y1, q1, x2, y2, q2 = val
 
-        x = (x1 + x2) * 0.5
-        y = (y1 + y2) * 0.5
+        # compute weigthed midpoint between small and
+        # large metrology target
+        x = (1.0 - BLOB_WEIGHT_FACTOR) * x1 + BLOB_WEIGHT_FACTOR * x2
+        y = (1.0 - BLOB_WEIGHT_FACTOR) * y1 + BLOB_WEIGHT_FACTOR * y2
+
         circle_points.append((x, y))
         nominal_angles.append((alpha_nom, beta_nom))
         midpoints[key] = (x,y)
@@ -147,32 +151,50 @@ def fit_gearbox_parameters(par, analysis_results):
     # combine first and second order fit, to get an ivertible function
     y_corr = np.array(phi_corr_2) + (a + np.array(phi_nom_2) * b)
 
-    return { 'algorithm' : 'linfit+piecewise_interpolation',
-             'midpoints' : midpoints,
-             'x' : x_s,
-             'y' : y_s,
-             'phi_nominal' : phi_nominal,
-             'R_real' : R_real,
-             'xc' : xc,
-             'yc' : yc,
-             'R' : R,
-             'a' : a,
-             'b' : b,
-             'xp' : phi_nom_2,
-             'yp' : phi_corr_2,
-             'num_support_points' : len(phi_nom_2),
-             'num_data_points' : len(x_s),
-             'y_corr' : y_corr,
-             'fits' : {
-                 0 : (phi_nominal, phi_real, 'real angle as function of nominal angle'),
-                 1 : (phi_nominal, phi_fitted, 'first-order fitted angle as function of nominal angle'),
-                 2 : (phi_nominal, phi_fitted_2, 'second-order fitted angle as function of nominal angle'),
-                 },
-             'residuals' : {
-                 1 : (phi_nominal, err_phi_1, 'first-order residual angle as function of nominal angle'),
-                 2 : (phi_nominal, err_phi_2, 'second-order residual angle as function of nominal angle')
-             }
-    }
+    if return_intermediate_results:
+
+        return {
+            'algorithm' : 'linfit+piecewise_interpolation',
+            'midpoints' : midpoints,
+            'x' : x_s,
+            'y' : y_s,
+            'phi_nominal' : phi_nominal,
+            'R_real' : R_real,
+            'xc' : xc,
+            'yc' : yc,
+            'R' : R,
+            'a' : a,
+            'b' : b,
+            'xp' : phi_nom_2,
+            'yp' : phi_corr_2,
+            'num_support_points' : len(phi_nom_2),
+            'num_data_points' : len(x_s),
+            'y_corr' : y_corr,
+            'fits' : {
+                0 : (phi_nominal, phi_real, 'real angle as function of nominal angle'),
+                1 : (phi_nominal, phi_fitted, 'first-order fitted angle as function of nominal angle'),
+                2 : (phi_nominal, phi_fitted_2, 'second-order fitted angle as function of nominal angle'),
+            },
+            'residuals' : {
+                1 : (phi_nominal, err_phi_1, 'first-order residual angle as function of nominal angle'),
+                2 : (phi_nominal, err_phi_2, 'second-order residual angle as function of nominal angle')
+            }
+        }
+    else:
+        return {
+            'algorithm' : 'linfit+piecewise_interpolation',
+            'xc' : xc,
+            'yc' : yc,
+            'R' : R,
+            'a' : a,
+            'b' : b,
+            'num_support_points' : len(phi_nom_2),
+            'num_data_points' : len(x_s),
+            'xp' : phi_nom_2,
+            'y_corr' : y_corr,
+        }
+
+
 
 def split_iterations(par, midpoints, xc=None, yc=None, a=None, b=None, xp=None, yp=None):
     d2r = np.deg2rad
@@ -374,12 +396,30 @@ def fit_gearbox_correction(dict_of_coordinates_alpha, dict_of_coordinates_beta):
 
     coeffs_alpha = fit_gearbox_parameters("alpha", dict_of_coordinates_alpha)
     coeffs_beta = fit_gearbox_parameters("beta", dict_of_coordinates_beta)
+    # find centers of alpha circle
+    x_center = coeffs_alpha['xc']
+    y_center = coeffs_alpha['yc']
+    P0 = np.array([x_center, y_center])
+    # find center of beta circles
+    x_center_beta = coeffs_beta['xc']
+    y_center_beta = coeffs_beta['yc']
+    Pcb = np.array([x_center_beta, y_center_beta])
+    # radius of alpha arm is distance from P0 to Pcb
+    R_alpha = np.linalg.norm(Pcb - P0)
+    # radius from beta center to weighthed midpoint between metrology targets
+    R_beta_midpoint = coeffs_beta['R']
+
     return {
+        "version": GEARBOX_CORRECTION_VERSION,
         "coeffs" : {
             "coeffs_alpha": coeffs_alpha,
             "coeffs_beta": coeffs_beta,
         },
-        "version": GEARBOX_CORRECTION_VERSION,
+        "x_center" : x_center,
+        "y_center" : y_center,
+        "R_alpha" : R_alpha,
+        "R_beta_midpoint" : R_beta_midpoint,
+        BLOB_WEIGHT_FACTOR : BLOB_WEIGHT_FACTOR,
     }
 
 def apply_gearbox_parameters(phi, a=None, b=None, xp=None, y_corr=None, algorithm=None, **rest_coeffs):

@@ -21,8 +21,8 @@ PositionalVerificationResult = namedtuple(
     "PositionalVerificationResult",
     " calibration_pars"
     " analysis_results"
-    " posver_error"
-    " posver_error_max_mm"
+    " posver_error_by_angle"
+    " posver_error_measures"
     " result"
     " pass_threshold_mm"
     " min_quality"

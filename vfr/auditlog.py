@@ -8,6 +8,7 @@ import logging.handlers
 from vfr.conf import VERIFICATION_ROOT_FOLDER
 from vfr.tests_common import timestamp
 
+
 class Filter_FPU(logging.Filter):
     def __init__(self, name=""):
         self.name = name
@@ -15,12 +16,14 @@ class Filter_FPU(logging.Filter):
     def filter(self, record):
         return record.name.startswith(self.name)
 
+
 class Filter_Level(logging.Filter):
     def __init__(self, level=logging.INFO):
         self.levelno = level
 
     def filter(self, record):
         return record.levelno >= self.levelno
+
 
 def addLoggingLevel(levelName, levelNum, methodName=None):
     """
@@ -51,11 +54,11 @@ def addLoggingLevel(levelName, levelNum, methodName=None):
         methodName = levelName.lower()
 
     if hasattr(logging, levelName):
-       raise AttributeError('{} already defined in logging module'.format(levelName))
+        raise AttributeError("{} already defined in logging module".format(levelName))
     if hasattr(logging, methodName):
-       raise AttributeError('{} already defined in logging module'.format(methodName))
+        raise AttributeError("{} already defined in logging module".format(methodName))
     if hasattr(logging.getLoggerClass(), methodName):
-       raise AttributeError('{} already defined in logger class'.format(methodName))
+        raise AttributeError("{} already defined in logger class".format(methodName))
 
     # This method was inspired by the answers to Stack Overflow post
     # http://stackoverflow.com/q/2183233/2988730, especially
@@ -63,6 +66,7 @@ def addLoggingLevel(levelName, levelNum, methodName=None):
     def logForLevel(self, message, *args, **kwargs):
         if self.isEnabledFor(levelNum):
             self._log(levelNum, message, args, **kwargs)
+
     def logToRoot(message, *args, **kwargs):
         logging.log(levelNum, message, *args, **kwargs)
 
@@ -70,6 +74,7 @@ def addLoggingLevel(levelName, levelNum, methodName=None):
     setattr(logging, levelName, levelNum)
     setattr(logging.getLoggerClass(), methodName, logForLevel)
     setattr(logging, methodName, logToRoot)
+
 
 # create root logger
 # this needs to happen soon enough, otherwise a default
@@ -79,7 +84,7 @@ def addLoggingLevel(levelName, levelNum, methodName=None):
 
 logger = logging.getLogger("")
 logger.setLevel(logging.DEBUG)
-#logger.addHandler(logging.NullHandler())
+# logger.addHandler(logging.NullHandler())
 logging.captureWarnings(True)
 streamhandler = logging.StreamHandler()
 logger.addHandler(streamhandler)
@@ -98,24 +103,26 @@ def configure_logs(measure_fpuset, fpu_config, loglevel=logging.INFO):
     addLoggingLevel("AUDIT", logging.DEBUG + 5)
     addLoggingLevel("TRACE", logging.DEBUG - 5)
 
-
     logname = os.path.join(logpath, "verification-%s.log" % timestamp())
     filehandler = logging.FileHandler(logname)
     filehandler.setLevel(logging.DEBUG)
-    file_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(funcName)s - %(message)s')
+    file_formatter = logging.Formatter(
+        "%(asctime)s - %(name)s - %(levelname)s - %(funcName)s - %(message)s"
+    )
     filehandler.setFormatter(file_formatter)
     logger.addHandler(filehandler)
 
     streamhandler.setLevel(loglevel)
     logger.setLevel(min(logging.DEBUG, loglevel))
     # create formatter
-    console_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(funcName)s : %(message)s', "%H:%M:%S")
+    console_formatter = logging.Formatter(
+        "%(asctime)s - %(levelname)s - %(funcName)s : %(message)s", "%H:%M:%S"
+    )
 
     # add formatter to ch
     streamhandler.setFormatter(console_formatter)
-    #stream_filter = Filter_Level(level=loglevel)
-    #streamhandler.addFilter(stream_filter)
-
+    # stream_filter = Filter_Level(level=loglevel)
+    # streamhandler.addFilter(stream_filter)
 
     # add one audit logger for each FPU which is _measured_.
     # We don't create an audit log for all evaluated FPUs,
@@ -125,13 +132,13 @@ def configure_logs(measure_fpuset, fpu_config, loglevel=logging.INFO):
         ser_num = fpu_config[fpu_id]["serialnumber"]
         fpu_logfile = os.path.join(logpath, ser_num + "_audit.log")
 
-        #audit_filter = Filter_FPU("FPU01")
+        # audit_filter = Filter_FPU("FPU01")
         audit_handler = logging.FileHandler(fpu_logfile)
         audit_handler.setLevel(logging.AUDIT)
 
         # add formatter to ch
         audit_handler.setFormatter(file_formatter)
-        #f1_handler.addFilter(audit_filter)
+        # f1_handler.addFilter(audit_filter)
         print("adding logger for FPU %r" % ser_num)
         audit_log = logging.getLogger(ser_num)
         audit_log.setLevel(logging.DEBUG)
@@ -152,35 +159,30 @@ def get_fpuLogger(fpu_id, fpu_config, *args):
 
 
 def add_email_handler(
-        toaddrs,
-        subject="[MOONS verification rig] critical errors in verification rig",
-
+    toaddrs, subject="[MOONS verification rig] critical errors in verification rig"
 ):
     if not toaddrs:
         return
 
-    mailport=25
-    mailhost="smtp.roe.ac.uk"
-    fromaddress=os.environ.get("VERIFICATION_LOGMAIL_USER", "verificationrig@moons-pc01.roe.ac.uk")
+    mailport = 25
+    mailhost = "smtp.roe.ac.uk"
+    fromaddress = os.environ.get(
+        "VERIFICATION_LOGMAIL_USER", "verificationrig@moons-pc01.roe.ac.uk"
+    )
     password = os.environ.get("VERIFICATION_LOGMAIL_PASSWORD", "")
     if not fromaddress:
         return
 
     if password:
-        credentials=(fromaddress, password)
+        credentials = (fromaddress, password)
 
         mail_handler = logging.handlers.SMTPHandler(
-            (mailhost, mailport),
-            fromaddress,
-            toaddrs,
-            subject,
-            credentials=credentials)
+            (mailhost, mailport), fromaddress, toaddrs, subject, credentials=credentials
+        )
     else:
         mail_handler = logging.handlers.SMTPHandler(
-            (mailhost, mailport),
-            fromaddress,
-            toaddrs,
-            subject)
+            (mailhost, mailport), fromaddress, toaddrs, subject
+        )
 
     mail_handler.setLevel(logging.CRITICAL)
     logger.addHandler(mail_handler)

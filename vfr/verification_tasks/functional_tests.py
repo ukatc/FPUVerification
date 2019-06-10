@@ -151,11 +151,7 @@ def test_limit(rig, dbe, which_limit, pars=None):
     abs_alpha_def = -180.0
     abs_beta_def = 0.0
     goto_position(
-        rig.gd,
-        abs_alpha_def,
-        abs_beta_def,
-        rig.grid_state,
-        fpuset=rig.measure_fpuset,
+        rig.gd, abs_alpha_def, abs_beta_def, rig.grid_state, fpuset=rig.measure_fpuset
     )
 
     if which_limit == "alpha_min":
@@ -191,7 +187,9 @@ def test_limit(rig, dbe, which_limit, pars=None):
     ):
         sn = rig.fpu_config[fpu_id]["serialnumber"]
         fpu_logger = get_fpuLogger(fpu_id, rig.fpu_config, __name__)
-        fpu_logger.info("testing FPU %s for correct handling of limit %s" % (sn, which_limit))
+        fpu_logger.info(
+            "testing FPU %s for correct handling of limit %s" % (sn, which_limit)
+        )
 
         check_for_quit()
         if (
@@ -227,8 +225,10 @@ def test_limit(rig, dbe, which_limit, pars=None):
                 # move rotary stage to POS_REP_POSN_N
                 turntable_safe_goto(rig, rig.grid_state, stage_position)
 
-            msg_assurance = ("NOTE: FPU collision or limit breach error occuring"
-                             " next is intentional and part of test")
+            msg_assurance = (
+                "NOTE: FPU collision or limit breach error occuring"
+                " next is intentional and part of test"
+            )
             if which_limit == "beta_collision":
                 goto_position(
                     rig.gd,
@@ -274,8 +274,10 @@ def test_limit(rig, dbe, which_limit, pars=None):
             test_valid = False
             diagnostic = str(e)
             serial_number = rig.fpu_config[fpu_id]["serialnumber"]
-            fpu_logger.critical("FPU %s failed for limit test %r, diagnostic = %s" %
-                                (serial_number, which_limit, diagnostic))
+            fpu_logger.critical(
+                "FPU %s failed for limit test %r, diagnostic = %s"
+                % (serial_number, which_limit, diagnostic)
+            )
             failed_fpus.append((fpu_id, serial_number))
 
         fpu_logger.info(
@@ -324,10 +326,12 @@ def test_limit(rig, dbe, which_limit, pars=None):
                 n_steps = 10 * sign(int(dw))
                 n_moves = 10
                 for k in range(n_moves):
-                    fpu_logger.trace("alpha limit recovery: moving fpu %i back by %i steps [%i]"
-                          % (fpu_id, n_steps, k))
+                    fpu_logger.trace(
+                        "alpha limit recovery: moving fpu %i back by %i steps [%i]"
+                        % (fpu_id, n_steps, k)
+                    )
                     rig.gd.resetFPUs(rig.grid_state, [fpu_id], verbose=False)
-                    wf = gen_wf(n_steps * dirac(fpu_id, N), 0, units='steps')
+                    wf = gen_wf(n_steps * dirac(fpu_id, N), 0, units="steps")
                     rig.gd.configMotion(
                         wf,
                         rig.grid_state,
@@ -363,7 +367,9 @@ def test_limit(rig, dbe, which_limit, pars=None):
                     rig.gd.pingFPUs(rig.grid_state, [fpu_id])
                     angle = rig.gd.trackedAngles(rig.grid_state, retrieve=True)[fpu_id]
                     if (k % 10) == 0:
-                        fpu_logger.debug("recovering FPU, current angle = %s" % repr(angle))
+                        fpu_logger.debug(
+                            "recovering FPU, current angle = %s" % repr(angle)
+                        )
 
                 rig.gd.enableBetaCollisionProtection(rig.grid_state)
                 wf = gen_wf(0, dw * dirac(fpu_id, N))

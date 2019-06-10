@@ -548,7 +548,9 @@ def load_config(config_file_name):
                 {
                     "serialnumber": entry["serialnumber"],
                     "pos": entry["pos"],
-                    "fpu_id": entry["fpu_id"] if ("fpu_id" in entry) else (entry["can_id"] - 1),
+                    "fpu_id": entry["fpu_id"]
+                    if ("fpu_id" in entry)
+                    else (entry["can_id"] - 1),
                 },
             )
             for entry in cfg_list
