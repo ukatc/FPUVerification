@@ -8,6 +8,7 @@ import camera_calibration
 from numpy import array
 import logging
 
+
 class CorrectionError(ImageAnalysisError):
     pass
 
@@ -21,16 +22,15 @@ def get_correction_func(calibration_pars=None, platescale=1.0, loglevel=0):
     """
     # get default scaling function
     if calibration_pars is None:
-        calibration_pars = {
-            "algorithm": "scale",
-            "scale_factor": platescale,
-        }
+        calibration_pars = {"algorithm": "scale", "scale_factor": platescale}
 
     log = partial(logging.getLogger(__name__).log, loglevel)
 
     if calibration_pars["algorithm"] == "identity":
-        def f(x,y):
+
+        def f(x, y):
             return x, y
+
         return f
 
     elif calibration_pars["algorithm"] == "scale":
@@ -38,14 +38,14 @@ def get_correction_func(calibration_pars=None, platescale=1.0, loglevel=0):
 
         def f(x, y):
             if loglevel > 0:
-                log("Distortion correction: (%7.2f, %7.2f) --> (%6.3f, %6.3f), platescale = %f" % (
-                    x, y, x * platescale, y * platescale, platescale
-                ))
+                log(
+                    "Distortion correction: (%7.2f, %7.2f) --> (%6.3f, %6.3f), platescale = %f"
+                    % (x, y, x * platescale, y * platescale, platescale)
+                )
 
             return (x * platescale, y * platescale)
 
         return f
-
 
     elif calibration_pars["algorithm"] == "al/201904/multistage":
         # Use Alexander Lay's multi-stage distortion correction.
@@ -54,7 +54,9 @@ def get_correction_func(calibration_pars=None, platescale=1.0, loglevel=0):
         x_0, y_0 = camera_calibration.correct_point((0.0, 0.0), config, level)
 
         def f(x, y):
-            x_corr, y_corr = camera_calibration.correct_point(array([x, y],dtype=float), config, level)
+            x_corr, y_corr = camera_calibration.correct_point(
+                array([x, y], dtype=float), config, level
+            )
             if loglevel > 0:
                 try:
                     x_scale = (x_corr - x_0) / float(x)
@@ -69,7 +71,6 @@ def get_correction_func(calibration_pars=None, platescale=1.0, loglevel=0):
             return x_corr, y_corr
 
         return f
-
 
     elif calibration_pars["algorithm"] == "al/20190429/chessboard":
         # using single-stage correction with chessboard,

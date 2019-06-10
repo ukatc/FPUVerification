@@ -8,7 +8,6 @@ class ImageAnalysisError(Exception):
     pass
 
 
-
 def get_min_quality(list_of_coords):
     """compute minimum quality from a set of coordinate / quality triple
     pairs, as computed by posRepCoordinates()

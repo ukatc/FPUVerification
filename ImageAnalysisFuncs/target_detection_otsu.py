@@ -13,17 +13,14 @@ from ImageAnalysisFuncs.base import ImageAnalysisError
 class OtsuTargetFindingError(ImageAnalysisError):
     pass
 
+
 def distance(p1, p2):
     return math.hypot(p1[0] - p2[0], p1[1] - p2[1])
 
 
-def find_bright_sharp_circles(path,
-                              minradius,
-                              maxradius,
-                              grouprange=None,
-                              quality=0.4,
-                              show=False,
-                              tolerence=7.0):
+def find_bright_sharp_circles(
+    path, minradius, maxradius, grouprange=None, quality=0.4, show=False, tolerence=7.0
+):
     """
     Finds circular dots in the given image within the radius range, displaying them on console and graphically if show is set to True
 
@@ -38,7 +35,9 @@ def find_bright_sharp_circles(path,
     try:
         greyscale = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     except cv2.error as err:
-        raise OtsuTargetFindingError("OpenCV returned error %s for image %s" % (str(err), path))
+        raise OtsuTargetFindingError(
+            "OpenCV returned error %s for image %s" % (str(err), path)
+        )
     blur = cv2.GaussianBlur(greyscale, (5, 5), 0)
     retval, thresholded = cv2.threshold(
         blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU
@@ -50,7 +49,9 @@ def find_bright_sharp_circles(path,
     params.maxArea = math.pi * maxradius ** 2
     params.blobColor = 255  # white
     params.filterByColor = True
-    params.minCircularity = quality  # smooth sided (0 is very pointy) 0.4 was used by Alex
+    params.minCircularity = (
+        quality
+    )  # smooth sided (0 is very pointy) 0.4 was used by Alex
     params.filterByCircularity = True
     params.minInertiaRatio = 0.9  # non stretched
     params.filterByInertia = True
@@ -98,7 +99,10 @@ def find_bright_sharp_circles(path,
             for j in range(i + 1, len(target_blob_list)):
                 if show:
                     print(distance(target_blob_list[i].pt, target_blob_list[j].pt))
-                if distance(target_blob_list[i].pt, target_blob_list[j].pt) < grouprange:
+                if (
+                    distance(target_blob_list[i].pt, target_blob_list[j].pt)
+                    < grouprange
+                ):
                     accepted.append(target_blob_list[i])
                     accepted.append(target_blob_list[j])
                     break
@@ -111,13 +115,15 @@ def find_bright_sharp_circles(path,
         if target_blob_list is not None:
             # convert the (x, y) coordinates and radius of the circles to integers
             print("matching points:")
-            print([(blob.pt[0], blob.pt[1], blob.size / 2.0) for blob in target_blob_list])
+            print(
+                [(blob.pt[0], blob.pt[1], blob.size / 2.0) for blob in target_blob_list]
+            )
             # loop over the (x, y) coordinates and radius of the circles
             for circle in target_blob_list:
                 x, y = circle.pt
                 x = int(x)
                 y = int(y)
-                r = int(circle.size/2)
+                r = int(circle.size / 2)
                 # draw the circle in the output image, then draw a rectangle
                 # corresponding to the center of the circle
                 cv2.circle(output, (x, y), r, (0, 255, 0), 4)
@@ -134,6 +140,7 @@ def find_bright_sharp_circles(path,
 
     return target_blob_list
 
+
 def targetCoordinates(image_path, pars=None, correct=None):
     """Wrapper for find_bright_sharp_circles
 
@@ -144,19 +151,26 @@ def targetCoordinates(image_path, pars=None, correct=None):
     """
 
     if correct is None:
-        correct = get_correction_func(calibration_pars=pars.CALIBRATION_PARS,
-                                      platescale=pars.PLATESCALE,
-                                      loglevel=pars.loglevel)
+        correct = get_correction_func(
+            calibration_pars=pars.CALIBRATION_PARS,
+            platescale=pars.PLATESCALE,
+            loglevel=pars.loglevel,
+        )
 
-    blobs = find_bright_sharp_circles(image_path,
-                                      pars.MIN_RADIUS,
-                                      pars.MAX_RADIUS,
-                                      grouprange=pars.GROUP_RANGE,
-                                      quality=pars.QUALITY_METRIC,
-                                      tolerence=pars.TOLERENCE)
+    blobs = find_bright_sharp_circles(
+        image_path,
+        pars.MIN_RADIUS,
+        pars.MAX_RADIUS,
+        grouprange=pars.GROUP_RANGE,
+        quality=pars.QUALITY_METRIC,
+        tolerence=pars.TOLERENCE,
+    )
     if len(blobs) != 2:
-        raise OtsuTargetFindingError("{} blobs found in image {}, there should be exactly two blobs".format(len(blobs),
-                                                                                                      image_path))
+        raise OtsuTargetFindingError(
+            "{} blobs found in image {}, there should be exactly two blobs".format(
+                len(blobs), image_path
+            )
+        )
 
     # check blobs are in the correct order
     if blobs[0].size < blobs[1].size:
@@ -174,8 +188,14 @@ def targetCoordinates(image_path, pars=None, correct=None):
 
     # return (small_blob.centroid.x, small_blob.centroid.y, small_quality,
     #        large_blob.centroid.x, large_blob.centroid.y, large_quality)
-    return (small_blob_x, small_blob_y, pars.QUALITY_METRIC,
-            large_blob_x, large_blob_y, pars.QUALITY_METRIC)
+    return (
+        small_blob_x,
+        small_blob_y,
+        pars.QUALITY_METRIC,
+        large_blob_x,
+        large_blob_y,
+        pars.QUALITY_METRIC,
+    )
 
 
 if __name__ == "__main__":

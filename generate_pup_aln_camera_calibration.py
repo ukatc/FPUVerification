@@ -98,12 +98,12 @@ from_dict = calib.Config.from_dict(
 # passed as the camera calibration for each image to the image
 # analysis script.
 
-VERIFICATION_ROOT_FOLDER = os.environ.get("VERIFICATION_ROOT_FOLDER", "/moonsdata/verification")
+VERIFICATION_ROOT_FOLDER = os.environ.get(
+    "VERIFICATION_ROOT_FOLDER", "/moonsdata/verification"
+)
 
 cal_file_name = os.path.join(
-    VERIFICATION_ROOT_FOLDER,
-    "calibration",
-    "cal_al_20190429_chessboard.npz"
+    VERIFICATION_ROOT_FOLDER, "calibration", "cal_al_20190429_chessboard.npz"
 )
 
 print("saving coefficients in %s" % cal_file_name)
@@ -122,10 +122,7 @@ mapping = """# file: calibration/mapping/pup-aln-2019-04-10.cfg
 """
 
 map_file_name = os.path.join(
-    VERIFICATION_ROOT_FOLDER,
-    "calibration",
-    "mapping",
-    "pup-aln-2019-04-10.cfg"
+    VERIFICATION_ROOT_FOLDER, "calibration", "mapping", "pup-aln-2019-04-10.cfg"
 )
 
 print("saving mapping in %s" % map_file_name)

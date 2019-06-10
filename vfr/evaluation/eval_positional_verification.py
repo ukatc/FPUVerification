@@ -5,20 +5,27 @@
 from __future__ import division, print_function
 
 from Gearbox.gear_correction import polar2cartesian
-from vfr.evaluation.measures import NO_MEASURES, get_errors, get_grouped_errors, group_by_subkeys
+from vfr.evaluation.measures import (
+    NO_MEASURES,
+    get_errors,
+    get_grouped_errors,
+    group_by_subkeys,
+)
 
 import warnings
 import numpy as np
 import logging
 
 
-def evaluate_positional_verification(dict_of_coords, pars=None,
-                                     x_center=None,
-                                     y_center=None,
-                                     R_alpha=None,
-                                     R_beta_midpoint=None,
-                                     BLOB_WEIGHT_FACTOR=None,
-                                     **kwargs
+def evaluate_positional_verification(
+    dict_of_coords,
+    pars=None,
+    x_center=None,
+    y_center=None,
+    R_alpha=None,
+    R_beta_midpoint=None,
+    BLOB_WEIGHT_FACTOR=None,
+    **kwargs
 ):
     """Takes a dictionary. The keys of the dictionary
     are the i,j,k indices of the positional repeteability measurement.
@@ -45,9 +52,8 @@ def evaluate_positional_verification(dict_of_coords, pars=None,
 
     """
 
-
     nominal_angles = [(alpha, beta) for (count, alpha, beta) in dict_of_coords.keys()]
-    measured_coords = [ [x] for x in dict_of_coords.values()]
+    measured_coords = [[x] for x in dict_of_coords.values()]
     error_by_angle = {}
     # get measured circle center point from alpha arm
     # calibration
@@ -64,7 +70,9 @@ def evaluate_positional_verification(dict_of_coords, pars=None,
         pos_alpha = np.array(polar2cartesian(R_alpha, np.deg2rad(alpha)))
         pos_beta = np.array(polar2cartesian(R_beta_midpoint, np.deg2rad(beta)))
         expected_point = P0 + pos_alpha + pos_beta
-        error_by_angle[key] = get_errors([coords], centroid=expected_point, weight_factor=BLOB_WEIGHT_FACTOR).max
+        error_by_angle[key] = get_errors(
+            [coords], centroid=expected_point, weight_factor=BLOB_WEIGHT_FACTOR
+        ).max
 
     error_measures = get_grouped_errors(
         measured_coords,

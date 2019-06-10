@@ -3,7 +3,12 @@
 
 """
 from __future__ import division, print_function
-from vfr.evaluation.measures import NO_MEASURES, get_errors, get_grouped_errors, group_by_subkeys
+from vfr.evaluation.measures import (
+    NO_MEASURES,
+    get_errors,
+    get_grouped_errors,
+    group_by_subkeys,
+)
 
 import warnings
 

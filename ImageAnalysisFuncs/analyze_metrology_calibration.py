@@ -44,11 +44,15 @@ def metcalTargetCoordinates(image_path, pars=None):
     if pars.MET_CAL_TARGET_DETECTION_ALGORITHM == CONTOUR_ALGORITHM:
         analysis_func = target_detection_contours.targetCoordinates
         func_pars = pars.MET_CAL_TARGET_DETECTION_CONTOUR_PARS
-    elif pars.MET_CAL_TARGET_DETECTION_ALGORITHM  == OTSU_ALGORITHM:
+    elif pars.MET_CAL_TARGET_DETECTION_ALGORITHM == OTSU_ALGORITHM:
         analysis_func = target_detection_otsu.targetCoordinates
         func_pars = pars.MET_CAL_TARGET_DETECTION_OTSU_PARS
     else:
-        raise MetrologyAnalysisTargetError("MET_CAL_ALORITHM ({}) does not match an algorithm.".format(pars.POS_REP_AlGORITHM))
+        raise MetrologyAnalysisTargetError(
+            "MET_CAL_ALORITHM ({}) does not match an algorithm.".format(
+                pars.POS_REP_AlGORITHM
+            )
+        )
 
     func_pars.display = pars.display
     func_pars.verbosity = pars.verbosity
@@ -58,10 +62,11 @@ def metcalTargetCoordinates(image_path, pars=None):
     try:
         positions = analysis_func(image_path, func_pars)
     except OtsuTargetFindingError as err:
-        raise MetrologyAnalysisTargetError(err.message + " from Image {}".format(image_path))
+        raise MetrologyAnalysisTargetError(
+            err.message + " from Image {}".format(image_path)
+        )
 
     return positions
-
 
 
 def metcalFibreCoordinates(image_path, pars=None):  # configurable parameters

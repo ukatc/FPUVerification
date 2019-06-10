@@ -45,12 +45,7 @@ def evaluate_pupil_alignment(dict_of_coordinates, pars=None):
 
     pupalnErrorBars = "TBD"
 
-    return (
-        pupalnAlphaErr,
-        pupalnBetaErr,
-        pupalnTotalErr,
-        pupalnErrorBars,
-    )
+    return (pupalnAlphaErr, pupalnBetaErr, pupalnTotalErr, pupalnErrorBars)
 
 
 def get_min_quality_pupil(list_of_coords):

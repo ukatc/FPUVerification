@@ -12,12 +12,7 @@ import argparse
 
 from vfr.conf import BLOB_WEIGHT_FACTOR, PERCENTILE_ARGS
 
-NO_MEASURES = argparse.Namespace(
-    max=np.NaN,
-    mean=np.NaN,
-    percentiles={},
-    N=0,
-)
+NO_MEASURES = argparse.Namespace(max=np.NaN, mean=np.NaN, percentiles={}, N=0)
 
 
 def group_by_subkeys(ungrouped_values, key_func):
@@ -37,6 +32,7 @@ def group_by_subkeys(ungrouped_values, key_func):
 
     return new_dict
 
+
 def arg_max_dict(d):
     maxval = -np.Inf
     maxkey = None
@@ -46,7 +42,10 @@ def arg_max_dict(d):
             maxkey = k
     return maxkey, maxval
 
-def get_magnitudes(coordinate_sequence, centroid=None, weight_factor=BLOB_WEIGHT_FACTOR):
+
+def get_magnitudes(
+    coordinate_sequence, centroid=None, weight_factor=BLOB_WEIGHT_FACTOR
+):
     blob_coordinates = np.array(coordinate_sequence)
 
     assert blob_coordinates.shape[1] == 6, "wrong format for blob position list"
@@ -58,8 +57,9 @@ def get_magnitudes(coordinate_sequence, centroid=None, weight_factor=BLOB_WEIGHT
     # to be smaller.)
     #
     # The quality factors are ignored.
-    weighted_coordinates = ((weight_factor * blob_coordinates[:, 3:5]) +
-                      (1.0 - weight_factor ) * blob_coordinates[:,:2])
+    weighted_coordinates = (weight_factor * blob_coordinates[:, 3:5]) + (
+        1.0 - weight_factor
+    ) * blob_coordinates[:, :2]
 
     # If the centroid (mean vector) is not defined, compute it.
     if centroid is None:
@@ -87,13 +87,10 @@ def get_measures(error_magnitudes):
 
     percentile_vals = np.percentile(error_magnitudes, PERCENTILE_ARGS)
 
-    percentiles = { k: v for k, v in zip(PERCENTILE_ARGS, percentile_vals) }
+    percentiles = {k: v for k, v in zip(PERCENTILE_ARGS, percentile_vals)}
 
     return argparse.Namespace(
-        max=max_error,
-        mean=mean_error,
-        percentiles=percentiles,
-        N=N,
+        max=max_error, mean=mean_error, percentiles=percentiles, N=N
     )
 
 
@@ -113,11 +110,16 @@ def get_errors(coordinate_sequence, centroid=None, weight_factor=BLOB_WEIGHT_FAC
     the arithmetic mean is used as the zero point.
     """
 
-    error_magnitudes = get_magnitudes(coordinate_sequence, centroid, weight_factor=weight_factor)
+    error_magnitudes = get_magnitudes(
+        coordinate_sequence, centroid, weight_factor=weight_factor
+    )
 
     return get_measures(error_magnitudes)
 
-def get_grouped_errors(coordinate_sequence_list, list_of_centroids=None, weight_factor=BLOB_WEIGHT_FACTOR):
+
+def get_grouped_errors(
+    coordinate_sequence_list, list_of_centroids=None, weight_factor=BLOB_WEIGHT_FACTOR
+):
     """Takes a lists of lists, sets, or sequences of blob coordinates,
     and computes error measures from them.
 
@@ -142,10 +144,10 @@ def get_grouped_errors(coordinate_sequence_list, list_of_centroids=None, weight_
         # skip points which have less than five measurements
         if len(coordinate_sequence) < 5:
             continue
-        error_magnitudes.extend(get_magnitudes(
-            coordinate_sequence,
-            centroid=centroid,
-            weight_factor=weight_factor
-        ))
+        error_magnitudes.extend(
+            get_magnitudes(
+                coordinate_sequence, centroid=centroid, weight_factor=weight_factor
+            )
+        )
 
     return get_measures(error_magnitudes)

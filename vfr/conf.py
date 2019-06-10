@@ -51,7 +51,7 @@ MET_HEIGHT_CAMERA_IP_ADDRESS = "169.254.190.121"
 
 PUP_ALGN_CAMERA_IP_ADDRESS = "169.254.108.113"
 
-BLOB_WEIGHT_FACTOR = 0.75 # relative weight of large vs small metrology target position
+BLOB_WEIGHT_FACTOR = 0.75  # relative weight of large vs small metrology target position
 
 
 PERCENTILE_ARGS = [50, 90, 95, 97.5]
@@ -97,7 +97,7 @@ DAT_REP_TARGET_DETECTION_OTSU_PARS = Namespace(
     MAX_RADIUS=187,  # in pixels
     GROUP_RANGE=680,  # in pixels
     QUALITY_METRIC=0.4,  # dimensionless
-    TOLERENCE=7.0  # pixels
+    TOLERENCE=7.0,  # pixels
 )
 DAT_REP_TARGET_DETECTION_CONTOUR_PARS = Namespace(
     CALIBRATION_PARS=DAT_REP_CALIBRATION_PARS,
@@ -124,7 +124,7 @@ DATUM_REP_ANALYSIS_PARS = Namespace(
     # deviation in microns from the
     # baseline position which represents an
     # acceptable FPU
-    DATUM_REP_TESTED_PERCENTILE=95, # the tested percentile
+    DATUM_REP_TESTED_PERCENTILE=95,  # the tested percentile
 )
 
 LINPOSITIONS = [  # the linear stage positions
@@ -162,7 +162,7 @@ MET_CAL_TARGET_DETECTION_OTSU_PARS = Namespace(
     MAX_RADIUS=200,  # in pixels
     GROUP_RANGE=525,  # in pixels
     QUALITY_METRIC=0.4,  # dimensionless
-    TOLERENCE=7.0  # pixels
+    TOLERENCE=7.0,  # pixels
 )
 MET_CAL_TARGET_DETECTION_CONTOUR_PARS = Namespace(
     SMALL_DIAMETER=1.42,  # millimeter
@@ -212,15 +212,15 @@ POS_REP_MEASUREMENT_PARS = Namespace(
     # milliseconds for a correctly
     # exposed image
     POS_REP_NUM_INCREMENTS=15,  # the number of low-resolution
-                                # measurements made within each
-                                # positive sweep from the starting
-                                # position
+    # measurements made within each
+    # positive sweep from the starting
+    # position
     POS_REP_ITERATIONS=3,  # the number of times each FPU
     # sweeps back and forth
     POS_REP_NUM_HI_RES_INCREMENTS=360,  # the number of hi-resolution
-                                        # measurements made within an
-                                        # extra sweep from the
-                                        # starting position
+    # measurements made within an
+    # extra sweep from the
+    # starting position
     POS_REP_SAFETY_MARGIN=5.0,  # safety margin, in degree, for
     # distance to range limits when testing
     POS_REP_WAVEFORM_PARS={
@@ -272,7 +272,7 @@ POS_REP_TARGET_DETECTION_OTSU_PARS = Namespace(
     MAX_RADIUS=55,  # in pixels
     GROUP_RANGE=200,  # in pixels
     QUALITY_METRIC=0.4,  # dimensionless
-    TOLERENCE=7.0  # pixels
+    TOLERENCE=7.0,  # pixels
 )
 POS_REP_TARGET_DETECTION_CONTOUR_PARS = Namespace(
     CALIBRATION_PARS=POS_REP_CALIBRATION_PARS,

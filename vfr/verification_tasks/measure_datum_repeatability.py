@@ -15,7 +15,10 @@ from ImageAnalysisFuncs.analyze_positional_repeatability import (
     ImageAnalysisError,
     posrepCoordinates,
 )
-from vfr.evaluation.eval_datum_repeatability import evaluate_datum_repeatability, NO_RESULT
+from vfr.evaluation.eval_datum_repeatability import (
+    evaluate_datum_repeatability,
+    NO_RESULT,
+)
 from numpy import NaN, array
 import numpy as np
 from vfr.conf import MET_CAL_CAMERA_IP_ADDRESS
@@ -321,8 +324,10 @@ def eval_datum_repeatability(dbe, dat_rep_analysis_pars):
             datum_repeatability_has_passed = (
                 TestResult.OK
                 if (
-                    error_measures.combined.percentiles[dat_rep_analysis_pars.DATUM_REP_TESTED_PERCENTILE]
-                        <= dat_rep_analysis_pars.DATUM_REP_PASS
+                    error_measures.combined.percentiles[
+                        dat_rep_analysis_pars.DATUM_REP_TESTED_PERCENTILE
+                    ]
+                    <= dat_rep_analysis_pars.DATUM_REP_PASS
                 )
                 else TestResult.FAILED
             )

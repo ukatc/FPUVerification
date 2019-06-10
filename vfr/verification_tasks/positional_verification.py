@@ -332,13 +332,17 @@ def eval_positional_verification(dbe, pos_ver_analysis_pars, pos_ver_evaluation_
                 except ImageAnalysisError as err:
                     count_failures += 1
                     # ignore image analysis exceptions as long as they are not too frequent
-                    if count_failures > count_images * pos_ver_analysis_pars.MAX_FAILURE_QUOTIENT:
+                    if (
+                        count_failures
+                        > count_images * pos_ver_analysis_pars.MAX_FAILURE_QUOTIENT
+                    ):
                         raise
                     else:
-                        logger.warning("image analysis failed for image %s, "
-                                       "message = %s (continuing)" % (ipath, str(err)))
+                        logger.warning(
+                            "image analysis failed for image %s, "
+                            "message = %s (continuing)" % (ipath, str(err))
+                        )
                         continue
-
 
                 (
                     x_measured_small,
@@ -353,10 +357,12 @@ def eval_positional_verification(dbe, pos_ver_analysis_pars, pos_ver_evaluation_
                     analysis_results, pars=pos_ver_evaluation_pars, **gearbox_correction
                 )
 
-
             positional_verification_has_passed = (
                 TestResult.OK
-                if (posver_error_measures.percentiles[95] <= pos_ver_evaluation_pars.POS_VER_PASS)
+                if (
+                    posver_error_measures.percentiles[95]
+                    <= pos_ver_evaluation_pars.POS_VER_PASS
+                )
                 else TestResult.FAILED
             )
 

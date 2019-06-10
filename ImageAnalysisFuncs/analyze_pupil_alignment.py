@@ -25,10 +25,10 @@ PUPIL_ALIGNMENT_ALGORITHM_VERSION = 0.1
 
 
 def pupalnCoordinates(
-        image_path,
-        # configurable parameters
-        pars=None,
-        correct=None,
+    image_path,
+    # configurable parameters
+    pars=None,
+    correct=None,
 ):
 
     """reads an image from the pupil alignment camera and returns the
@@ -42,9 +42,11 @@ def pupalnCoordinates(
 
     # pylint: disable=no-member
     if correct is None:
-        correct = get_correction_func(calibration_pars=pars.PUP_ALGN_CALIBRATION_PARS,
-                                      platescale=pars.PUP_ALGN_PLATESCALE,
-                                      loglevel=pars.loglevel)
+        correct = get_correction_func(
+            calibration_pars=pars.PUP_ALGN_CALIBRATION_PARS,
+            platescale=pars.PUP_ALGN_PLATESCALE,
+            loglevel=pars.loglevel,
+        )
 
     image = cv2.imread(image_path)
 

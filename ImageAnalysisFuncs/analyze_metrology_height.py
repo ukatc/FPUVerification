@@ -123,7 +123,6 @@ def methtHeight(
             % (image_path, str(err))
         )
 
-
     # calculates normal distance from points on targets to beta arm surface
     # D = |a*x_n + b*y_n + c|/sqrt(a^2 + b^2) where line is defined as ax + by + c = 0
     a = armSurface[1]

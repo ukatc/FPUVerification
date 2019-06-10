@@ -471,8 +471,16 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
 
             positional_repeatability_has_passed = (
                 TestResult.OK
-                if ((posrep_alpha_measures.percentiles[95] <= pos_rep_evaluation_pars.POS_REP_PASS)
-                    and (posrep_beta_measures.percentiles[95] <= pos_rep_evaluation_pars.POS_REP_PASS))
+                if (
+                    (
+                        posrep_alpha_measures.percentiles[95]
+                        <= pos_rep_evaluation_pars.POS_REP_PASS
+                    )
+                    and (
+                        posrep_beta_measures.percentiles[95]
+                        <= pos_rep_evaluation_pars.POS_REP_PASS
+                    )
+                )
                 else TestResult.FAILED
             )
 

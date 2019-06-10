@@ -41,6 +41,7 @@ OutOfRangeError = controller.OutOfRangeError
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
+
 def add_PID(pid):
     """
     Adds a USB PID to the list of PIDs to look for when searching for APT

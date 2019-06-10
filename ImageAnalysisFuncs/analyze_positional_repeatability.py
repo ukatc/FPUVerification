@@ -35,7 +35,7 @@ CONTOUR_ALGORITHM = "contour"
 OTSU_ALGORITHM = "otsu"
 
 
-def posrepCoordinates(image_path,pars=None, correct=None):
+def posrepCoordinates(image_path, pars=None, correct=None):
     """ Reads the image and analyse the location and quality of the targets
      using the chosen algorithm
 
@@ -52,7 +52,11 @@ def posrepCoordinates(image_path,pars=None, correct=None):
         analysis_func = target_detection_otsu.targetCoordinates
         func_pars = pars.TARGET_DETECTION_OTSU_PARS
     else:
-        raise ImageAnalysisError("TARGET_DETECTION_ALGORITHM ({}) does not match an algorithm.".format(pars.TARGET_DETECTION_ALGORITHM))
+        raise ImageAnalysisError(
+            "TARGET_DETECTION_ALGORITHM ({}) does not match an algorithm.".format(
+                pars.TARGET_DETECTION_ALGORITHM
+            )
+        )
 
     func_pars.display = pars.display
     func_pars.verbosity = pars.verbosity

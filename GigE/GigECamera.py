@@ -167,7 +167,9 @@ class GigECamera(object):
                 imsave(filename, np.asarray(img))
                 logger.debug("File saved as : {}".format(filename))
             else:
-                logger.error("Error: %r %s" % (grabResult.ErrorCode, grabResult.ErrorDescription))
+                logger.error(
+                    "Error: %r %s" % (grabResult.ErrorCode, grabResult.ErrorDescription)
+                )
         grabResult.Release()
 
     def close(self):

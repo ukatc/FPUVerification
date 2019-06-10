@@ -16,10 +16,10 @@ class TargetDetectionContoursError(ImageAnalysisError):
 
 
 def targetCoordinates(
-        image_path,
-        # configurable parameters
-        pars=None,
-        correct=None,
+    image_path,
+    # configurable parameters
+    pars=None,
+    correct=None,
 ):  # will display image with contours annotated
 
     """reads an image from the positional repeatability camera and returns
@@ -36,29 +36,23 @@ def targetCoordinates(
     # number and an angle, not a pixel number and a distance.)
 
     if correct is None:
-        correct = get_correction_func(calibration_pars=pars.CALIBRATION_PARS,
-                                      platescale=pars.PLATESCALE,
-                                      loglevel=pars.loglevel)
+        correct = get_correction_func(
+            calibration_pars=pars.CALIBRATION_PARS,
+            platescale=pars.PLATESCALE,
+            loglevel=pars.loglevel,
+        )
 
     smallPerimeterLo = (
-        (pars.SMALL_DIAMETER - pars.DIAMETER_TOLERANCE)
-        * pi
-        / pars.PLATESCALE
+        (pars.SMALL_DIAMETER - pars.DIAMETER_TOLERANCE) * pi / pars.PLATESCALE
     )
     smallPerimeterHi = (
-        (pars.SMALL_DIAMETER + pars.DIAMETER_TOLERANCE)
-        * pi
-        / pars.PLATESCALE
+        (pars.SMALL_DIAMETER + pars.DIAMETER_TOLERANCE) * pi / pars.PLATESCALE
     )
     largePerimeterLo = (
-        (pars.LARGE_DIAMETER - pars.DIAMETER_TOLERANCE)
-        * pi
-        / pars.PLATESCALE
+        (pars.LARGE_DIAMETER - pars.DIAMETER_TOLERANCE) * pi / pars.PLATESCALE
     )
     largePerimeterHi = (
-        (pars.LARGE_DIAMETER + pars.DIAMETER_TOLERANCE)
-        * pi
-        / pars.PLATESCALE
+        (pars.LARGE_DIAMETER + pars.DIAMETER_TOLERANCE) * pi / pars.PLATESCALE
     )
 
     if pars.verbosity > 5:
@@ -128,8 +122,10 @@ def targetCoordinates(
             # which can be used to derive centre of mass
             M = cv2.moments(c)
             if M["m00"] == 0:
-                raise TargetDetectionContoursError("image %s: Moment m00 is zero, would cause"
-                                                   " division by zero in analysis" % image_path)
+                raise TargetDetectionContoursError(
+                    "image %s: Moment m00 is zero, would cause"
+                    " division by zero in analysis" % image_path
+                )
             cX = M["m10"] / M["m00"]
             cY = M["m01"] / M["m00"]
             centres[circle] = (cX, cY, circularity, i)
@@ -201,13 +197,11 @@ def targetCoordinates(
     # from the distortion correction module
 
     posrep_small_target_x, posrep_small_target_y = correct(
-        pixels_posrep_small_target_x,
-        pixels_posrep_small_target_y,
+        pixels_posrep_small_target_x, pixels_posrep_small_target_y
     )
 
     posrep_large_target_x, posrep_large_target_y = correct(
-        pixels_posrep_large_target_x,
-        pixels_posrep_large_target_y,
+        pixels_posrep_large_target_x, pixels_posrep_large_target_y
     )
 
     # target separation check - the values here are not configurable, as
@@ -231,8 +225,8 @@ def targetCoordinates(
     if targetSeparation > 30 or targetSeparation < 2.2:
         raise TargetDetectionContoursError(
             "Image %s: Target separation has a value of %.3f which is out of spec - "
-            "use display option to check for target-like reflections" % (
-                image_path, targetSeparation)
+            "use display option to check for target-like reflections"
+            % (image_path, targetSeparation)
         )
 
     return (

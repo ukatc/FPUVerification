@@ -12,10 +12,9 @@ import logging
 from vfr.evaluation.measures import get_errors, NO_MEASURES
 
 NO_RESULT = argparse.Namespace(
-    datum_only=NO_MEASURES,
-    moved=NO_MEASURES,
-    combined=NO_MEASURES,
+    datum_only=NO_MEASURES, moved=NO_MEASURES, combined=NO_MEASURES
 )
+
 
 def evaluate_datum_repeatability(datumed_coords, moved_coords, pars=None):
     """Takes two lists of (x,y) coordinates : coordinates

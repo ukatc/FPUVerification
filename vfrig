@@ -10,18 +10,32 @@ import logging
 from vfr.auditlog import configure_logs, get_fpuLogger, add_email_handler
 from vfr.rig import Rig
 
-from vfr.conf import (COLLDECT_MEASUREMENT_PARS,
-                      DATUM_REP_ANALYSIS_PARS, DATUM_REP_MEASUREMENT_PARS,
-                      VERIFICATION_ROOT_FOLDER, MET_CAL_CAMERA_IP_ADDRESS,
-                      MET_CAL_FIBRE_ANALYSIS_PARS, MET_CAL_MEASUREMENT_PARS,
-                      MET_CAL_TARGET_ANALYSIS_PARS, MET_HEIGHT_ANALYSIS_PARS,
-                      MET_HEIGHT_CAMERA_IP_ADDRESS, MET_HEIGHT_EVALUATION_PARS,
-                      MET_HEIGHT_MEASUREMENT_PARS, POS_REP_ANALYSIS_PARS,
-                      POS_REP_CAMERA_IP_ADDRESS, POS_REP_EVALUATION_PARS,
-                      POS_REP_MEASUREMENT_PARS, POS_VER_EVALUATION_PARS,
-                      POS_VER_MEASUREMENT_PARS, PUP_ALGN_ANALYSIS_PARS,
-                      PUP_ALGN_CAMERA_IP_ADDRESS, PUP_ALGN_EVALUATION_PARS,
-                      PUP_ALGN_MEASUREMENT_PARS, REWIND_POS_ALPHA, REWIND_POS_BETA)
+from vfr.conf import (
+    COLLDECT_MEASUREMENT_PARS,
+    DATUM_REP_ANALYSIS_PARS,
+    DATUM_REP_MEASUREMENT_PARS,
+    VERIFICATION_ROOT_FOLDER,
+    MET_CAL_CAMERA_IP_ADDRESS,
+    MET_CAL_FIBRE_ANALYSIS_PARS,
+    MET_CAL_MEASUREMENT_PARS,
+    MET_CAL_TARGET_ANALYSIS_PARS,
+    MET_HEIGHT_ANALYSIS_PARS,
+    MET_HEIGHT_CAMERA_IP_ADDRESS,
+    MET_HEIGHT_EVALUATION_PARS,
+    MET_HEIGHT_MEASUREMENT_PARS,
+    POS_REP_ANALYSIS_PARS,
+    POS_REP_CAMERA_IP_ADDRESS,
+    POS_REP_EVALUATION_PARS,
+    POS_REP_MEASUREMENT_PARS,
+    POS_VER_EVALUATION_PARS,
+    POS_VER_MEASUREMENT_PARS,
+    PUP_ALGN_ANALYSIS_PARS,
+    PUP_ALGN_CAMERA_IP_ADDRESS,
+    PUP_ALGN_EVALUATION_PARS,
+    PUP_ALGN_MEASUREMENT_PARS,
+    REWIND_POS_ALPHA,
+    REWIND_POS_BETA,
+)
 
 from vfr.connection import check_can_connection, check_connection
 from vfr.db.snset import add_sns_to_set
@@ -30,33 +44,57 @@ from vfr.options import parse_args, check_sns_unique
 from vfr.posdb import init_position
 from vfr.TaskLogic import T, resolve
 from vfr.task_config import MEASUREMENT_TASKS
-from vfr.tests_common import find_datum, flush, cd_to_data_root, set_quit_handler, safe_home_turntable
-from vfr.verification_tasks.functional_tests import (DASEL_ALPHA, DASEL_BETA,
-                                                     DASEL_BOTH, rewind_fpus, test_datum,
-                                                     test_limit)
-from vfr.verification_tasks.measure_datum_repeatability import (eval_datum_repeatability,
-                                                                measure_datum_repeatability)
-from vfr.verification_tasks.metrology_calibration import (eval_metrology_calibration,
-                                                          measure_metrology_calibration)
-from vfr.verification_tasks.metrology_height import (eval_metrology_height,
-                                                     measure_metrology_height)
-from vfr.verification_tasks.positional_repeatability import (eval_positional_repeatability,
-                                                             measure_positional_repeatability)
-from vfr.verification_tasks.positional_verification import (eval_positional_verification,
-                                                             measure_positional_verification)
-from vfr.verification_tasks.pupil_alignment import (eval_pupil_alignment,
-                                                    measure_pupil_alignment)
+from vfr.tests_common import (
+    find_datum,
+    flush,
+    cd_to_data_root,
+    set_quit_handler,
+    safe_home_turntable,
+)
+from vfr.verification_tasks.functional_tests import (
+    DASEL_ALPHA,
+    DASEL_BETA,
+    DASEL_BOTH,
+    rewind_fpus,
+    test_datum,
+    test_limit,
+)
+from vfr.verification_tasks.measure_datum_repeatability import (
+    eval_datum_repeatability,
+    measure_datum_repeatability,
+)
+from vfr.verification_tasks.metrology_calibration import (
+    eval_metrology_calibration,
+    measure_metrology_calibration,
+)
+from vfr.verification_tasks.metrology_height import (
+    eval_metrology_height,
+    measure_metrology_height,
+)
+from vfr.verification_tasks.positional_repeatability import (
+    eval_positional_repeatability,
+    measure_positional_repeatability,
+)
+from vfr.verification_tasks.positional_verification import (
+    eval_positional_verification,
+    measure_positional_verification,
+)
+from vfr.verification_tasks.pupil_alignment import (
+    eval_pupil_alignment,
+    measure_pupil_alignment,
+)
 from vfr.output.report import dump_data, report
 from vfr.output.plotting import plot
-from vfr.verification_tasks.rig_selftest import (selftest_fibre,
-                                                 selftest_nonfibre)
+from vfr.verification_tasks.rig_selftest import selftest_fibre, selftest_nonfibre
 
 if __name__ == "__main__":
     opts, db_opts, rig_opts = parse_args()
 
     dbe = Database(opts=db_opts)
 
-    fpu_config, measure_fpuset, eval_fpuset = dbe.load_fpu_config_and_sets(opts.setup_file, opts)
+    fpu_config, measure_fpuset, eval_fpuset = dbe.load_fpu_config_and_sets(
+        opts.setup_file, opts
+    )
 
     configure_logs(measure_fpuset, fpu_config, opts.loglevel)
     logger = logging.getLogger("")
@@ -68,28 +106,23 @@ if __name__ == "__main__":
     try:
         try:
 
-            rig_params = Namespace(
-                measure_fpuset=measure_fpuset,
-                opts=rig_opts,
-            )
+            rig_params = Namespace(measure_fpuset=measure_fpuset, opts=rig_opts)
 
             # change current directory to image root folder, so that
             # we can use relative image paths in both measurement
             # and evaluation tasks
             cd_to_data_root(VERIFICATION_ROOT_FOLDER)
 
-
             # resolve high-level tasks and dependent checks and measurements into
             # low-level actions
             tasks = resolve(opts.tasks, rig_params, dbe)
 
-
-            if not rig_params.measure_fpuset: # pylint: disable=no-member
+            if not rig_params.measure_fpuset:  # pylint: disable=no-member
                 # no measurements, we remove all related tasks
                 info("No FPUs in measurement set, removing all measurement tasks")
                 tasks -= MEASUREMENT_TASKS
 
-            if (tasks &  MEASUREMENT_TASKS):
+            if tasks & MEASUREMENT_TASKS:
                 # we are going to need the rig hardware
                 rig = Rig(rig_params, fpu_config=fpu_config)
 
@@ -108,7 +141,9 @@ if __name__ == "__main__":
                     info("skipping test...")
                 else:
                     check_connection(
-                        opts, "positional repeatability camera", POS_REP_CAMERA_IP_ADDRESS
+                        opts,
+                        "positional repeatability camera",
+                        POS_REP_CAMERA_IP_ADDRESS,
                     )
 
             if T.TST_MET_CAL_CAM_CONNECTION in tasks:
@@ -148,10 +183,15 @@ if __name__ == "__main__":
                 for fpu_id in range(opts.N):
                     fpu_audit = get_fpuLogger(fpu_id, fpu_config, __name__).audit
 
-                    fpu_audit("checking CAN connection for FPU at CAN ID %i... " % fpu_id)
+                    fpu_audit(
+                        "checking CAN connection for FPU at CAN ID %i... " % fpu_id
+                    )
 
                     rv = check_can_connection(rig.rd, rig.grid_state, rig.opts, fpu_id)
-                    fpu_audit("checking CAN connection for FPU at CAN ID %i... %r" % (fpu_id, rv))
+                    fpu_audit(
+                        "checking CAN connection for FPU at CAN ID %i... %r"
+                        % (fpu_id, rv)
+                    )
 
             if T.TST_FLASH in tasks:
                 info("[flash_snum] ###")
@@ -161,20 +201,21 @@ if __name__ == "__main__":
                     fpu_info = get_fpuLogger(fpu_id, fpu_config, __name__).info
                     serial_number = fpu_config[fpu_id]["serialnumber"]
                     fpu_info(
-                        "flashing FPU #%i with serial number %r ... " % (fpu_id, serial_number),
+                        "flashing FPU #%i with serial number %r ... "
+                        % (fpu_id, serial_number)
                     )
-                    rval = rig.rd.writeSerialNumber(fpu_id, serial_number, rig.grid_state)
+                    rval = rig.rd.writeSerialNumber(
+                        fpu_id, serial_number, rig.grid_state
+                    )
                     flashed_numbers.append(serial_number)
                     fpu_info(
-                        "flashing FPU #%i with serial number %r ... %r" % (fpu_id, serial_number, rval),
+                        "flashing FPU #%i with serial number %r ... %r"
+                        % (fpu_id, serial_number, rval)
                     )
                     rig.rd.readSerialNumbers(rig.grid_state)
                 # we update the set of FPUs which are in the database,
                 # so that we can iterate over existing data when generating reports.
                 add_sns_to_set(dbe, flashed_numbers)
-
-
-
 
             if T.TST_INITPOS in tasks:
                 info("[init_positions] ###")
@@ -183,13 +224,7 @@ if __name__ == "__main__":
                     alpha_start, beta_start = fpu_config[fpu_id]["pos"]
                     serialnumber = fpu_config[fpu_id]["serialnumber"]
 
-                    init_position(
-                        dbe,
-                        fpu_id,
-                        serialnumber,
-                        alpha_start,
-                        beta_start,
-                    )
+                    init_position(dbe, fpu_id, serialnumber, alpha_start, beta_start)
 
             # switch to protected driver instance, if needed
 
@@ -218,7 +253,7 @@ if __name__ == "__main__":
             if T.TASK_REWIND_FPUS in tasks:
                 info("[%s] ###" % T.TASK_REWIND_FPUS)
 
-                info("rewinding FPUs near datum position..." )
+                info("rewinding FPUs near datum position...")
 
                 rewind_fpus(rig, REWIND_POS_ALPHA, REWIND_POS_BETA)
 
@@ -227,36 +262,30 @@ if __name__ == "__main__":
 
                 # We can use grid_state to display the starting position
                 info(
-                    "the starting position (in degrees) is: %r" %
-                    rig.gd.trackedAngles(rig.grid_state, retrieve=True),
+                    "the starting position (in degrees) is: %r"
+                    % rig.gd.trackedAngles(rig.grid_state, retrieve=True)
                 )
-                test_datum(
-                    rig, dbe, DASEL_ALPHA
-                )
+                test_datum(rig, dbe, DASEL_ALPHA)
 
             if T.TST_DATUM_BETA in tasks:
                 info("[%s] ###" % T.TST_DATUM_BETA)
 
                 # We can use grid_state to display the starting position
                 info(
-                    "the starting position (in degrees) is: %r" %
-                    rig.gd.trackedAngles(rig.grid_state, retrieve=True),
+                    "the starting position (in degrees) is: %r"
+                    % rig.gd.trackedAngles(rig.grid_state, retrieve=True)
                 )
-                test_datum(
-                    rig, dbe, DASEL_BETA
-                )
+                test_datum(rig, dbe, DASEL_BETA)
 
             if T.TST_DATUM_BOTH in tasks:
                 info("[%s] ###" % T.TST_DATUM_BOTH)
 
                 # We can use grid_state to display the starting position
                 info(
-                    "the starting position (in degrees) is: %r" %
-                    rig.gd.trackedAngles(rig.grid_state, retrieve=True),
+                    "the starting position (in degrees) is: %r"
+                    % rig.gd.trackedAngles(rig.grid_state, retrieve=True)
                 )
-                test_datum(
-                    rig, dbe, DASEL_BOTH
-                )
+                test_datum(rig, dbe, DASEL_BOTH)
 
             if T.TASK_REFERENCE in tasks:
                 info("[%s] ###" % T.TASK_REFERENCE)
@@ -267,7 +296,8 @@ if __name__ == "__main__":
 
             if T.TASK_SELFTEST_NONFIBRE in tasks:
                 info("[%s] ###" % T.TASK_SELFTEST_NONFIBRE)
-                selftest_nonfibre(rig,
+                selftest_nonfibre(
+                    rig,
                     POS_REP_MEASUREMENT_PARS=POS_REP_MEASUREMENT_PARS,
                     MET_HEIGHT_MEASUREMENT_PARS=MET_HEIGHT_MEASUREMENT_PARS,
                     MET_HEIGHT_ANALYSIS_PARS=MET_HEIGHT_ANALYSIS_PARS,
@@ -287,72 +317,58 @@ if __name__ == "__main__":
 
             if T.TST_COLLDETECT in tasks:
                 info("[test_collision_detection] ###")
-                test_limit(
-                    rig, dbe,
-                    "beta_collision",
-                    pars=COLLDECT_MEASUREMENT_PARS
-                )
+                test_limit(rig, dbe, "beta_collision", pars=COLLDECT_MEASUREMENT_PARS)
 
             if T.TST_ALPHA_MIN in tasks:
                 info("[test_limit_alpha_min] ###")
-                test_limit(
-                    rig, dbe,
-                    "alpha_min",
-                    pars=COLLDECT_MEASUREMENT_PARS
-                )
+                test_limit(rig, dbe, "alpha_min", pars=COLLDECT_MEASUREMENT_PARS)
 
             if T.TST_ALPHA_MAX in tasks:
                 info("[test_limit_alpha_max] ###")
-                test_limit(
-                    rig, dbe,
-                    "alpha_max",
-                    pars=COLLDECT_MEASUREMENT_PARS
-                )
+                test_limit(rig, dbe, "alpha_max", pars=COLLDECT_MEASUREMENT_PARS)
 
             if T.TST_BETA_MAX in tasks:
                 info("[test_limit_beta_max] ###")
-                test_limit(
-                    rig, dbe,
-                    "beta_max",
-                    pars=COLLDECT_MEASUREMENT_PARS
-                )
+                test_limit(rig, dbe, "beta_max", pars=COLLDECT_MEASUREMENT_PARS)
 
             if T.TST_BETA_MIN in tasks:
                 info("[test_limit_beta_min] ###")
-                test_limit(
-                    rig, dbe,
-                    "beta_min",
-                    pars=COLLDECT_MEASUREMENT_PARS
-                )
+                test_limit(rig, dbe, "beta_min", pars=COLLDECT_MEASUREMENT_PARS)
 
-            if measure_fpuset and (tasks - set([
-                    T.TASK_REPORT,
-                    T.TASK_PLOT,
-                    T.TASK_DUMP,
-                    T.TST_BETA_MIN,
-                    T.TST_BETA_MAX,
-                    T.TST_ALPHA_MIN,
-                    T.TST_ALPHA_MAX,
-                    T.TASK_SELFTEST_FIBRE,
-                    T.TASK_SELFTEST_NONFIBRE,
-                    T.TASK_REFERENCE,
-                    T.TST_DATUM_BETA,
-                    T.TST_DATUM_ALPHA,
-                    T.TASK_REWIND_FPUS,
-                    T.TASK_INIT_GD,
-                    T.TST_INITPOS,
-                    T.TST_FLASH,
-                    T.TST_CAN_CONNECTION,
-                    T.TASK_INIT_RD,
-                    T.TST_PUP_ALGN_CAM_CONNECTION,
-                    T.TST_MET_HEIGHT_CAM_CONNECTION,
-                    T.TST_MET_CAL_CAM_CONNECTION,
-                    T.TST_POS_REP_CAM_CONNECTION,
-                    T.TST_GATEWAY_CONNECTION,
-            ])) :
+            if measure_fpuset and (
+                tasks
+                - set(
+                    [
+                        T.TASK_REPORT,
+                        T.TASK_PLOT,
+                        T.TASK_DUMP,
+                        T.TST_BETA_MIN,
+                        T.TST_BETA_MAX,
+                        T.TST_ALPHA_MIN,
+                        T.TST_ALPHA_MAX,
+                        T.TASK_SELFTEST_FIBRE,
+                        T.TASK_SELFTEST_NONFIBRE,
+                        T.TASK_REFERENCE,
+                        T.TST_DATUM_BETA,
+                        T.TST_DATUM_ALPHA,
+                        T.TASK_REWIND_FPUS,
+                        T.TASK_INIT_GD,
+                        T.TST_INITPOS,
+                        T.TST_FLASH,
+                        T.TST_CAN_CONNECTION,
+                        T.TASK_INIT_RD,
+                        T.TST_PUP_ALGN_CAM_CONNECTION,
+                        T.TST_MET_HEIGHT_CAM_CONNECTION,
+                        T.TST_MET_CAL_CAM_CONNECTION,
+                        T.TST_POS_REP_CAM_CONNECTION,
+                        T.TST_GATEWAY_CONNECTION,
+                    ]
+                )
+            ):
                 info("*" * 60)
                 info("functional tests passed, all OK!")
-                print(r"""
+                print(
+                    r"""
 
              _
            _| |                functional tests passed, all OK!
@@ -369,7 +385,8 @@ if __name__ == "__main__":
           |    |               functional tests passed, all OK!
                                functional tests passed, all OK!
 
-    """)
+    """
+                )
                 if opts.mail_on_error:
                     # add email logger for any critical errors
                     # (but not normal exit or manual termination)
@@ -398,82 +415,57 @@ if __name__ == "__main__":
 
             if T.MEASURE_MET_CAL in tasks:
                 info("[%s] ###" % T.MEASURE_MET_CAL)
-                measure_metrology_calibration(
-                    rig, dbe,
-                    pars=MET_CAL_MEASUREMENT_PARS
-                )
+                measure_metrology_calibration(rig, dbe, pars=MET_CAL_MEASUREMENT_PARS)
             if T.EVAL_MET_CAL in tasks:
                 info("[%s] ###" % T.EVAL_MET_CAL)
                 eval_metrology_calibration(
-                    dbe,
-                    MET_CAL_TARGET_ANALYSIS_PARS,
-                    MET_CAL_FIBRE_ANALYSIS_PARS,
+                    dbe, MET_CAL_TARGET_ANALYSIS_PARS, MET_CAL_FIBRE_ANALYSIS_PARS
                 )
 
             if T.MEASURE_MET_HEIGHT in tasks:
                 info("[%s] ###" % T.MEASURE_MET_HEIGHT)
-                measure_metrology_height(
-                    rig, dbe,
-                    pars=MET_HEIGHT_MEASUREMENT_PARS
-                )
+                measure_metrology_height(rig, dbe, pars=MET_HEIGHT_MEASUREMENT_PARS)
 
             if T.EVAL_MET_HEIGHT in tasks:
                 info("[%s] ###" % T.EVAL_MET_HEIGHT)
                 eval_metrology_height(
-                    dbe,
-                    MET_HEIGHT_ANALYSIS_PARS,
-                    MET_HEIGHT_EVALUATION_PARS,
+                    dbe, MET_HEIGHT_ANALYSIS_PARS, MET_HEIGHT_EVALUATION_PARS
                 )
 
             if T.MEASURE_DATUM_REP in tasks:
                 info("[%s] ###" % T.MEASURE_DATUM_REP)
-                measure_datum_repeatability(
-                    rig, dbe,
-                    pars=DATUM_REP_MEASUREMENT_PARS
-                )
+                measure_datum_repeatability(rig, dbe, pars=DATUM_REP_MEASUREMENT_PARS)
 
             if T.EVAL_DATUM_REP in tasks:
                 info("[%s] ###" % T.EVAL_DATUM_REP)
-                eval_datum_repeatability(
-                    dbe,
-                    DATUM_REP_ANALYSIS_PARS,
-                )
+                eval_datum_repeatability(dbe, DATUM_REP_ANALYSIS_PARS)
 
             if T.MEASURE_PUP_ALGN in tasks:
                 info("[%s] ###" % T.MEASURE_PUP_ALGN)
-                measure_pupil_alignment(
-                    rig, dbe,
-                    pars=PUP_ALGN_MEASUREMENT_PARS
-                )
+                measure_pupil_alignment(rig, dbe, pars=PUP_ALGN_MEASUREMENT_PARS)
             if T.EVAL_PUP_ALGN in tasks:
                 info("[%s] ###" % T.EVAL_PUP_ALGN)
                 eval_pupil_alignment(
                     dbe,
                     PUP_ALGN_ANALYSIS_PARS=PUP_ALGN_ANALYSIS_PARS,
-                    PUP_ALGN_EVALUATION_PARS=PUP_ALGN_EVALUATION_PARS
+                    PUP_ALGN_EVALUATION_PARS=PUP_ALGN_EVALUATION_PARS,
                 )
 
             if T.MEASURE_POS_REP in tasks:
                 info("[%s] ###" % T.MEASURE_POS_REP)
                 measure_positional_repeatability(
-                    rig, dbe,
-                    pars=POS_REP_MEASUREMENT_PARS
+                    rig, dbe, pars=POS_REP_MEASUREMENT_PARS
                 )
 
             if T.EVAL_POS_REP in tasks:
                 info("[%s] ###" % T.EVAL_POS_REP)
                 eval_positional_repeatability(
-                    dbe,
-                    POS_REP_ANALYSIS_PARS,
-                    POS_REP_EVALUATION_PARS,
+                    dbe, POS_REP_ANALYSIS_PARS, POS_REP_EVALUATION_PARS
                 )
 
             if T.MEASURE_POS_VER in tasks:
                 info("[%s] ###" % T.MEASURE_POS_VER)
-                measure_positional_verification(
-                    rig, dbe,
-                    pars=POS_VER_MEASUREMENT_PARS
-                )
+                measure_positional_verification(rig, dbe, pars=POS_VER_MEASUREMENT_PARS)
 
             if T.TASK_PARK_FPUS in tasks:
                 info("[%s] ###" % T.TASK_PARK_FPUS)
@@ -487,9 +479,7 @@ if __name__ == "__main__":
             if T.EVAL_POS_VER in tasks:
                 info("[%s] ###" % T.EVAL_POS_VER)
                 eval_positional_verification(
-                    dbe,
-                    POS_REP_ANALYSIS_PARS,
-                    POS_VER_EVALUATION_PARS,
+                    dbe, POS_REP_ANALYSIS_PARS, POS_VER_EVALUATION_PARS
                 )
 
             if T.TASK_PLOT in tasks:
@@ -512,11 +502,14 @@ if __name__ == "__main__":
 
     except Exception as exc:
         logger.exception("Exception triggered with message %r" % exc)
-        logger.critical("""fatal: exception hit with message:
+        logger.critical(
+            """fatal: exception hit with message:
 
  %s
 
-Verification process aborted.""" % exc)
+Verification process aborted."""
+            % exc
+        )
         raise
 
     info("verification finished")

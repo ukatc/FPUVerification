@@ -32,14 +32,15 @@ fill = tw.fill
 FPU_SEPERATOR_LINE = "*" * 60
 EMPTY_LINE = ""
 
+
 def color_result(val):
     colored = termcolor.colored
     if val == TestResult.OK:
-        return colored(val, 'blue')
+        return colored(val, "blue")
     elif val == val == TestResult.FAILED:
-        return colored(val, 'red')
+        return colored(val, "red")
     else:
-        return colored(val, 'cyan')
+        return colored(val, "cyan")
 
 
 def get_rlist(
@@ -212,7 +213,10 @@ def format_report_status(
     if sum_status == TestResult.OK:
         yield "FPU %s : %s" % (serial_number, color_result(sum_status))
     else:
-        yield ("FPU %s : %s (failed in %s)" % (serial_number, color_result(sum_status), failed_name))
+        yield (
+            "FPU %s : %s (failed in %s)"
+            % (serial_number, color_result(sum_status), failed_name)
+        )
 
 
 def format_report_brief(
@@ -1341,23 +1345,25 @@ def format_report_csv(
                 yield "%f,%f,%s" % (alpha, beta, ipath)
             yield EMPTY_LINE
 
+
 def colorize(ddict):
-    for record in ['datum_result',
-                   'alpha_min_result',
-                   'alpha_max_result',
-                   'beta_min_result',
-                   'beta_max_result',
-                   'beta_collision_result',
-                   'datum_repeatability_result',
-                   'metrology_calibration_result',
-                   'metrology_height_result',
-                   'positional_repeatability_result',
-                   'positional_verification_result',
-                   'pupil_alignment_result',
+    for record in [
+        "datum_result",
+        "alpha_min_result",
+        "alpha_max_result",
+        "beta_min_result",
+        "beta_max_result",
+        "beta_collision_result",
+        "datum_repeatability_result",
+        "metrology_calibration_result",
+        "metrology_height_result",
+        "positional_repeatability_result",
+        "positional_verification_result",
+        "pupil_alignment_result",
     ]:
         if (ddict is not None) and (record in ddict):
-            if (ddict[record] is not None) and ('result' in ddict[record]):
-                ddict[record]['result'] = color_result(ddict[record]['result'])
+            if (ddict[record] is not None) and ("result" in ddict[record]):
+                ddict[record]["result"] = color_result(ddict[record]["result"])
 
     return ddict
 

@@ -82,12 +82,12 @@ class TestMetCalImageAnalysis(unittest.TestCase):
 
     # def test_notFound(self):
     #     cases = ["../TestImages/PT25_metcal_1_002.bmp"]
-    # 
+    #
     #     with self.assertRaises(MetrologyAnalysisTargetError):
     #         for test_image in cases:
-    # 
+    #
     #             print("Testing metcalTargetCoordinates with image %s.." % test_image)
-    # 
+    #
     #             (sx, sy, sq, lx, ly, lq) = metcalTargetCoordinates(
     #                 test_image, pars=MET_CAL_TARGET_ANALYSIS_PARS
     #             )
