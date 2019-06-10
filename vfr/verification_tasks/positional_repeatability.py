@@ -130,6 +130,28 @@ def index_positions(pars):
                     i_iteration, j_direction, k_increment, idx_alpha, idx_beta
                 )
 
+    # add a single iteration of a high-resolution measurement
+    i_iteration = 0
+    for j_direction in range(4):
+        MAX_INCREMENT = pars.POS_REP_NUM_HI_RES_INCREMENTS
+        for k_increment in range(MAX_INCREMENT):
+            if j_direction == 0:
+                idx_alpha = k_increment
+                idx_beta = 0
+            elif j_direction == 1:
+                idx_alpha = MAX_INCREMENT - k_increment - 1
+                idx_beta = 0
+            elif j_direction == 2:
+                idx_alpha = 0
+                idx_beta = k_increment
+            elif j_direction == 3:
+                idx_alpha = 0
+                idx_beta = MAX_INCREMENT - k_increment - 1
+
+            yield MeasurementIndex(
+                i_iteration, j_direction, k_increment, idx_alpha, idx_beta
+            )
+
 
 def get_target_position(limits, pars, measurement_index):
     alpha_min = limits.alpha_min

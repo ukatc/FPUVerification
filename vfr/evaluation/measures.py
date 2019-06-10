@@ -132,6 +132,9 @@ def get_grouped_errors(coordinate_sequence_list, list_of_centroids=None, weight_
             centroid = None
         else:
             centroid = list_of_centroids[idx]
+        # skip points which have less than five measurements
+        if len(coordinate_sequence) < 5:
+            continue
         error_magnitudes.extend(get_magnitudes(
             coordinate_sequence,
             centroid=centroid,
