@@ -335,6 +335,14 @@ def parse_args():
         "(can also be set by environment variable VFR_LOGLEVEL, default: %(default)s)",
     )
 
+    parser.add_argument(
+        "-clr",
+        "--colorize",
+        default=True,
+        action="store_true",
+        help="show success/failure report fields in colors",
+    )
+
     args = parser.parse_args()
 
     if args.list_tasks:
@@ -377,6 +385,7 @@ def parse_args():
                 "display_beta_max",
                 "display_beta_min",
                 "record_count",
+                "colorize",
             ]
         }
     )

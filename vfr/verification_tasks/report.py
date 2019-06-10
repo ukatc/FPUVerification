@@ -2,6 +2,7 @@
 from __future__ import absolute_import, division, print_function
 
 from textwrap import TextWrapper
+import termcolor
 
 from vfr.db.base import TestResult
 from vfr.db.retrieval import get_data
@@ -30,6 +31,15 @@ fill = tw.fill
 
 FPU_SEPERATOR_LINE = "*" * 60
 EMPTY_LINE = ""
+
+def color_result(val):
+    colored = termcolor.colored
+    if val == TestResult.OK:
+        return colored(val, 'blue')
+    elif val == val == TestResult.FAILED:
+        return colored(val, 'red')
+    else:
+        return colored(val, 'cyan')
 
 
 def get_rlist(
@@ -200,9 +210,9 @@ def format_report_status(
                 failed_name = name
 
     if sum_status == TestResult.OK:
-        yield "FPU %s : %s" % (serial_number, sum_status)
+        yield "FPU %s : %s" % (serial_number, color_result(sum_status))
     else:
-        yield ("FPU %s : %s (failed in %s)" % (serial_number, sum_status, failed_name))
+        yield ("FPU %s : %s (failed in %s)" % (serial_number, color_result(sum_status), failed_name))
 
 
 def format_report_brief(
@@ -231,7 +241,7 @@ def format_report_brief(
 
     rlist = get_rlist(**locals())
     for val, name in rlist:
-        yield "{}    {:25.25s}: {}".format(serial_number, name, val)
+        yield "{}    {:25.25s}: {}".format(serial_number, name, color_result(val))
 
 
 def format_report_terse(
@@ -1331,12 +1341,35 @@ def format_report_csv(
                 yield "%f,%f,%s" % (alpha, beta, ipath)
             yield EMPTY_LINE
 
+def colorize(ddict):
+    for record in ['datum_result',
+                   'alpha_min_result',
+                   'alpha_max_result',
+                   'beta_min_result',
+                   'beta_max_result',
+                   'beta_collision_result',
+                   'datum_repeatability_result',
+                   'metrology_calibration_result',
+                   'metrology_height_result',
+                   'positional_repeatability_result',
+                   'positional_verification_result',
+                   'pupil_alignment_result',
+    ]:
+        if (ddict is not None) and (record in ddict):
+            if (ddict[record] is not None) and ('result' in ddict[record]):
+                ddict[record]['result'] = color_result(ddict[record]['result'])
+
+    return ddict
+
 
 def report(dbe, opts):
 
     report_format = dbe.opts.report_format
     for count, fpu_id in enumerate(dbe.eval_fpuset):
         ddict = vars(get_data(dbe, fpu_id))
+
+        if opts.colorize and report_format not in ["status", "brief", "csv"]:
+            ddict = colorize(ddict)
 
         if (count > 0) and report_format != "status":
             dbe.opts.output_file.write("\n")
