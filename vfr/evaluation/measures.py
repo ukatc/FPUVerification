@@ -10,7 +10,12 @@ import argparse
 
 from vfr.conf import BLOB_WEIGHT_FACTOR, PERCENTILE_ARGS
 
-NO_MEASURES = argparse.Namespace(max=np.NaN, mean=np.NaN, percentiles={}, N=0)
+NO_MEASURES = argparse.Namespace(
+    max=np.NaN,
+    mean=np.NaN,
+    percentiles={ p : np.NaN for p in PERCENTILE_ARGS},
+    N=0
+)
 
 
 def group_by_subkeys(ungrouped_values, key_func):

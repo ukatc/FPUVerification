@@ -4,6 +4,7 @@ import random
 import warnings
 import logging
 from os.path import abspath
+import numpy as np
 from vfr.auditlog import get_fpuLogger
 
 from fpu_commands import gen_wf
@@ -357,15 +358,18 @@ def eval_positional_verification(dbe, pos_ver_analysis_pars, pos_ver_evaluation_
                     analysis_results, pars=pos_ver_evaluation_pars, **gearbox_correction
                 )
 
-            positional_verification_has_passed = (
-                TestResult.OK
+            if ((95 not in posver_error_measures.percentiles)
+                or np.isnan(posver_error_measures.percentiles[95])):
+                positional_verification_has_passed = TestResult.NA
+            else:
                 if (
                     posver_error_measures.percentiles[95]
                     <= pos_ver_evaluation_pars.POS_VER_PASS
-                )
-                else TestResult.FAILED
-            )
-
+                ):
+                    positional_verification_has_passed = TestResult.OK
+                else:
+                    positional_verification_has_passed = TestResult.FAILED
+                    
             coords = list(analysis_results.values())
             min_quality = get_min_quality(coords)
             arg_max_error, _ = arg_max_dict(posver_error_by_angle)
