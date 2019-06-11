@@ -121,7 +121,10 @@ def get_errors(coordinate_sequence, centroid=None, weight_factor=BLOB_WEIGHT_FAC
 
 
 def get_grouped_errors(
-    coordinate_sequence_list, list_of_centroids=None, weight_factor=BLOB_WEIGHT_FACTOR
+    coordinate_sequence_list,
+        list_of_centroids=None,
+        weight_factor=BLOB_WEIGHT_FACTOR,
+        min_number_points=0,
 ):
     """Takes a lists of lists, sets, or sequences of blob coordinates,
     and computes error measures from them.
@@ -144,8 +147,9 @@ def get_grouped_errors(
             centroid = None
         else:
             centroid = list_of_centroids[idx]
-        # skip points which have less than five measurements
-        if len(coordinate_sequence) < 5:
+        # skip points which have less than required number of measurements
+        # (this is relevant for the posiitonal repeatability)
+        if len(coordinate_sequence) < min_number_points:
             continue
         error_magnitudes.extend(
             get_magnitudes(

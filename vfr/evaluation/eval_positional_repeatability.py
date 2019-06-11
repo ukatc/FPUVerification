@@ -10,7 +10,7 @@ from vfr.evaluation.measures import (
 )
 
 
-def get_angular_error(dict_of_coords, idx):
+def get_angular_error(dict_of_coords, idx, min_number_points=None):
 
     kfunc = lambda x: (x[0], x[1])
     coords_per_angvec = group_by_subkeys(dict_of_coords, kfunc)
@@ -19,7 +19,10 @@ def get_angular_error(dict_of_coords, idx):
     for angvec, coords in coords_per_angvec.items():
         max_err_at_angle[angvec[idx]] = get_errors(coords).max
 
-    poserr_measures = get_grouped_errors(coords_per_angvec.values())
+    poserr_measures = get_grouped_errors(
+        coords_per_angvec.values(),
+        min_number_points=min_number_points
+    )
 
     return max_err_at_angle, poserr_measures
 
@@ -61,10 +64,10 @@ def evaluate_positional_repeatability(
     # transform to lists of measurements for the same coordinates
 
     posrep_alpha_max_at_angle, posrep_alpha_measures = get_angular_error(
-        dict_of_coordinates_alpha, 0
+        dict_of_coordinates_alpha, 0, min_number_points=pars.MIN_NUMBER_POINTS
     )
     posrep_beta_max_at_angle, posrep_beta_measures = get_angular_error(
-        dict_of_coordinates_beta, 1
+        dict_of_coordinates_beta, 1, min_number_points=pars.MIN_NUMBER_POINTS
     )
 
     return (
