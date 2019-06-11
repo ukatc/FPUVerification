@@ -159,8 +159,11 @@ def parse_args():
         "-sn",
         "--snset",
         default=None,
-        help="""apply tasks only to passed set of serial numbers, passed as "['MP001', 'MP002', ...]",
-        or just as single serial number, as 'MP001' """,
+        help="""apply tasks only to passed set of serial numbers, passed alternatively as a
+        python literal like this: "['MP001', 'MP002', ...]",
+        a list, as in "PT01,PT02", or just as single serial number, as 'MP001'. A leading "~"
+        indicates that the following string is a regular expression. For example,
+        "~PT0[123][0-9]" matches the serial numbers PT010 to PT019, PT020 to PT029, and so on. """,
     )
 
     parser.add_argument(
@@ -416,6 +419,45 @@ def parse_args():
 
 sn_pat = re.compile("[a-zA-Z0-9]{1,5}$")
 
+def expand_set(eval_snset, fpu_config, all_serial_numbers):
+
+    if eval_snset == "all":
+        # get the serial numbers of all FPUs which have been measured so far
+        eval_snset = all_serial_numbers
+        # this is a workaround against dirty data
+        eval_snset = set(filter(lambda x: type(x) == types.StringType, eval_snset))
+        fpu_config = {}
+    else:
+        if eval_snset is not None:
+            # in this case, it needs to be a literal list of serial numbers,
+            # a string with a quoted string literal, or a string
+            try:
+                vals = literal_eval(eval_snset)
+            except (ValueError,SyntaxError):
+                vals = eval_snset.split(",")
+
+            if type(vals) != types.ListType:
+                vals = [vals]
+
+            expanded_vals = []
+            for v in vals:
+                if len(v) > 0:
+                    if v[0] != '~':
+                        expanded_vals.append(v)
+                    else:
+                        pat = re.compile(v[1:])
+                        for sn in all_serial_numbers:
+                            if pat.match(sn):
+                                expanded_vals.append(sn)
+
+            eval_snset = set(expanded_vals)
+
+            # check passed serial numbers for validity
+            for sn in eval_snset:
+                if not sn_pat.match(sn):
+                    raise ValueError("serial number %r is not valid!" % sn)
+
+    return eval_snset, fpu_config
 
 def get_sets(all_serial_numbers, fpu_config, opts):
     """Under normal operation, we want to measure and evaluate the FPUs
@@ -431,32 +473,7 @@ def get_sets(all_serial_numbers, fpu_config, opts):
     repeated.
 
     """
-    eval_snset = opts.snset
-
-    if eval_snset == "all":
-        # get the serial numbers of all FPUs which have been measured so far
-        eval_snset = all_serial_numbers
-        # this is a workaround against dirty data
-        eval_snset = set(filter(lambda x: type(x) == types.StringType, eval_snset))
-        fpu_config = {}
-    else:
-        if eval_snset is not None:
-            # in this case, it needs to be a literal list of serial numbers,
-            # a string with a quoted string literal, or a string
-            try:
-                val = literal_eval(eval_snset)
-            except ValueError:
-                val = eval_snset
-
-            if type(val) == types.ListType:
-                eval_snset = set(val)
-            else:
-                eval_snset = set([val])
-
-            # check passed serial numbers for validity
-            for sn in eval_snset:
-                if not sn_pat.match(sn):
-                    raise ValueError("serial number %r is not valid!" % sn)
+    eval_snset, fpu_config = expand_set(opts.snset, fpu_config, all_serial_numbers)
 
     if eval_snset is None:
         # both mesured and evaluated sets are exclusively defined by

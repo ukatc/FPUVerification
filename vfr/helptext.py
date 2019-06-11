@@ -274,12 +274,20 @@ examples = cleandoc(
 
     This command:
 
-    ./vfrig -f fpus_batch1.cfg   -S"['MP010']" {TST_DATUM_REP}
+    ./vfrig -f fpus_batch1.cfg   -sn "['MP010']" {TST_DATUM_REP}
 
 
     will perform the datum repeatability test for the FPU with serial number 'MP010',
     and any tests which are required to do it.
 
+
+    FPU groups can also be selected by a regular expression, with
+    "~" indicating the regular expression. The command:
+
+    ./vfrig -sn '~PT((10)|(19))' -fmt status {TASK_REPORT}
+
+    will select all FPUs whoise serial number start with "PT10" or "PT19",
+    and produce a status report for each of them.
 
     STOPPING THE HARDWARE
     ---------------------
