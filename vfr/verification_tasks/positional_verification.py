@@ -354,7 +354,7 @@ def eval_positional_verification(dbe, pos_ver_analysis_pars, pos_ver_evaluation_
             analysis_results = None
             errmsg = str(e)
             posver_error_by_angle = []
-            posver_error_measures = NO_RESULT
+            posver_error_measures = NO_MEASURES
             positional_verification_has_passed = TestResult.NA
             min_quality = NaN
             arg_max_error = NaN
