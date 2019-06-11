@@ -1,3 +1,4 @@
+
 # -*- coding: utf-8 -*-
 
 from __future__ import absolute_import, division, print_function
@@ -230,19 +231,19 @@ POS_REP_MEASUREMENT_PARS = Namespace(
         "max_steps": STEPS_UPPER_LIMIT,
         "min_stop_steps": None,
         "max_change_alpha": None,
-        "max_acceleration_alpha": 300,
-        "max_deceleration_alpha": None,
+        "max_acceleration_alpha": 100,
+        "max_deceleration_alpha": 100,
         "min_steps_alpha": None,
         "min_stop_steps_alpha": None,
         "max_steps_alpha": None,
         "max_change_beta": None,
-        "max_acceleration_beta": 300,
-        "max_deceleration_beta": None,
+        "max_acceleration_beta": 100,
+        "max_deceleration_beta": 100,
         "min_steps_beta": None,
         "min_stop_steps_beta": None,
         "max_steps_beta": None,
-        "max_acceleration": 100,
-        "max_deceleration": 100,
+        "max_acceleration": 25,
+        "max_deceleration": 25,
     },
     POS_REP_WAVEFORM_RULESET=0,  # '0' does switch off checking
     POS_REP_CALIBRATION_MAPFILE="calibration/mapping/pos-rep-2019-04-10.cfg",
