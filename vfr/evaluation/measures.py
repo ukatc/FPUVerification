@@ -11,10 +11,7 @@ import argparse
 from vfr.conf import BLOB_WEIGHT_FACTOR, PERCENTILE_ARGS
 
 NO_MEASURES = argparse.Namespace(
-    max=np.NaN,
-    mean=np.NaN,
-    percentiles={ p : np.NaN for p in PERCENTILE_ARGS},
-    N=0
+    max=np.NaN, mean=np.NaN, percentiles={p: np.NaN for p in PERCENTILE_ARGS}, N=0
 )
 
 
@@ -122,9 +119,9 @@ def get_errors(coordinate_sequence, centroid=None, weight_factor=BLOB_WEIGHT_FAC
 
 def get_grouped_errors(
     coordinate_sequence_list,
-        list_of_centroids=None,
-        weight_factor=BLOB_WEIGHT_FACTOR,
-        min_number_points=0,
+    list_of_centroids=None,
+    weight_factor=BLOB_WEIGHT_FACTOR,
+    min_number_points=0,
 ):
     """Takes a lists of lists, sets, or sequences of blob coordinates,
     and computes error measures from them.

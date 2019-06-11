@@ -472,15 +472,12 @@ def fit_gearbox_correction(dict_of_coordinates_alpha, dict_of_coordinates_beta):
 
     return {
         "version": GEARBOX_CORRECTION_VERSION,
-        "coeffs" : {
-            "coeffs_alpha": coeffs_alpha,
-            "coeffs_beta": coeffs_beta,
-        },
-        "x_center" : x_center,
-        "y_center" : y_center,
-        "R_alpha" : R_alpha,
-        "R_beta_midpoint" : R_beta_midpoint,
-        "BLOB_WEIGHT_FACTOR" : BLOB_WEIGHT_FACTOR,
+        "coeffs": {"coeffs_alpha": coeffs_alpha, "coeffs_beta": coeffs_beta},
+        "x_center": x_center,
+        "y_center": y_center,
+        "R_alpha": R_alpha,
+        "R_beta_midpoint": R_beta_midpoint,
+        "BLOB_WEIGHT_FACTOR": BLOB_WEIGHT_FACTOR,
     }
 
 

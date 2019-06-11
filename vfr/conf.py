@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 
 from __future__ import absolute_import, division, print_function
@@ -256,7 +255,7 @@ POS_REP_EVALUATION_PARS = Namespace(
     # a grouping of measured points at a
     # given nominal position which
     # represents an acceptable FPU
-    MIN_NUMBER_POINTS=5, # number of measurements which are requied
+    MIN_NUMBER_POINTS=5,  # number of measurements which are requied
     # before a position is added to the overall statistical measure
 )
 

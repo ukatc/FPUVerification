@@ -8,7 +8,6 @@ from math import asin, pi
 import numpy as np
 
 
-
 def fibre_target_distance(big_target_coords, small_target_coords, fibre_coords):
     """
     takes coordinates of the big metrology target, the small metrology target,

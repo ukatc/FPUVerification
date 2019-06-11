@@ -358,8 +358,9 @@ def eval_positional_verification(dbe, pos_ver_analysis_pars, pos_ver_evaluation_
                     analysis_results, pars=pos_ver_evaluation_pars, **gearbox_correction
                 )
 
-            if ((95 not in posver_error_measures.percentiles)
-                or np.isnan(posver_error_measures.percentiles[95])):
+            if (95 not in posver_error_measures.percentiles) or np.isnan(
+                posver_error_measures.percentiles[95]
+            ):
                 positional_verification_has_passed = TestResult.NA
             else:
                 if (
@@ -369,7 +370,7 @@ def eval_positional_verification(dbe, pos_ver_analysis_pars, pos_ver_evaluation_
                     positional_verification_has_passed = TestResult.OK
                 else:
                     positional_verification_has_passed = TestResult.FAILED
-                    
+
             coords = list(analysis_results.values())
             min_quality = get_min_quality(coords)
             arg_max_error, _ = arg_max_dict(posver_error_by_angle)

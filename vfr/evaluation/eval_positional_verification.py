@@ -5,10 +5,7 @@
 from __future__ import division, print_function
 
 from Gearbox.gear_correction import polar2cartesian
-from vfr.evaluation.measures import (
-    get_errors,
-    get_grouped_errors,
-)
+from vfr.evaluation.measures import get_errors, get_grouped_errors
 
 import numpy as np
 

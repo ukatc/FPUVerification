@@ -3,11 +3,7 @@
 
 """
 from __future__ import division, print_function
-from vfr.evaluation.measures import (
-    get_errors,
-    get_grouped_errors,
-    group_by_subkeys,
-)
+from vfr.evaluation.measures import get_errors, get_grouped_errors, group_by_subkeys
 
 
 def get_angular_error(dict_of_coords, idx, min_number_points=None):
@@ -20,8 +16,7 @@ def get_angular_error(dict_of_coords, idx, min_number_points=None):
         max_err_at_angle[angvec[idx]] = get_errors(coords).max
 
     poserr_measures = get_grouped_errors(
-        coords_per_angvec.values(),
-        min_number_points=min_number_points
+        coords_per_angvec.values(), min_number_points=min_number_points
     )
 
     return max_err_at_angle, poserr_measures
