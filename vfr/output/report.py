@@ -574,7 +574,7 @@ def list_posrep_angle_errors(name, error_by_angle, error_arg_max, csv=False):
         yield (fmt.format(angle=angle, val=val, tag=tag))
 
 
-def list_posver_err_by_coord(error_by_coords, error_max, csv=False):
+def list_posver_err_by_coord(error_by_coords, error_argmax, csv=False):
     if csv:
         hdr = """positional verification,max error by coordinate"""
         fmt = """Positional verification,{coord[0]:03d},{coord[1]:+8.2f},{coord[2]:+8.2f},{val:8.4f},{tag}"""
@@ -586,7 +586,7 @@ def list_posver_err_by_coord(error_by_coords, error_max, csv=False):
     yield hdr
     for coord in sorted(error_by_coords.keys()):
         val = error_by_coords[coord]
-        tag = " <<<" if val == error_max else ""
+        tag = " <<<" if coord == error_argmax else ""
         yield (fmt.format(coord=coord, val=val, tag=tag))
 
 
@@ -749,8 +749,8 @@ def format_report_long(
             )
 
             error_by_coords = positional_verification_result["posver_error_by_angle"]
-            error_max = positional_verification_result["posver_error_measures"].max
-            for line in list_posver_err_by_coord(error_by_coords, error_max):
+            error_argmax = positional_verification_result["arg_max_error"]
+            for line in list_posver_err_by_coord(error_by_coords, error_argmax):
                 yield line
 
         else:
@@ -994,8 +994,8 @@ def format_report_extended(
             )
 
             error_by_coords = positional_verification_result["posver_error_by_angle"]
-            error_max = positional_verification_result["posver_error_measures"].max
-            for line in list_posver_err_by_coord(error_by_coords, error_max):
+            error_argmax = positional_verification_result["arg_max_error"]
+            for line in list_posver_err_by_coord(error_by_coords, error_argmax):
                 yield line
 
             yield fill(
