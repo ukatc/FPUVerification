@@ -28,7 +28,7 @@ PUP_ALN_RESULT_TERSE = cleandoc(
 PUP_ALN_RESULT_COMPLETE = cleandoc(
     """
     pupil alignment         : passed            = {result}
-    pupil alignment         : pass_threshold    = {pass_threshold_mm:8.4f}
+    pupil alignment         : pass_threshold    = {pass_threshold_mm:8.4f} mm
     pupil alignment         : chassis error     = {measures[chassis_error]:8.4f} mm
     pupil alignment         : alpha error       = {measures[alpha_error]:8.4f} mm
     pupil alignment         : beta error        = {measures[beta_error]:8.4f} mm
@@ -42,7 +42,7 @@ PUP_ALN_RESULT_COMPLETE = cleandoc(
 PUP_ALN_RESULT_LONG = cleandoc(
     """
     pupil alignment         : passed            = {result}
-    pupil alignment         : pass_threshold    = {pass_threshold_mm:8.4f}
+    pupil alignment         : pass_threshold    = {pass_threshold_mm:8.4f} mm
     pupil alignment         : chassis error     = {measures[chassis_error]:8.4f} mm
     pupil alignment         : alpha error       = {measures[alpha_error]:8.4f} mm
     pupil alignment         : beta error        = {measures[beta_error]:8.4f} mm
@@ -56,7 +56,7 @@ PUP_ALN_RESULT_LONG = cleandoc(
 PUP_ALN_RESULT_EXTENDED = cleandoc(
     """
     pupil alignment         : passed            = {result}
-    pupil alignment         : pass_threshold    = {pass_threshold_mm:8.4f}
+    pupil alignment         : pass_threshold    = {pass_threshold_mm:8.4f} mm
     pupil alignment         : chassis error     = {measures[chassis_error]:8.4f} mm
     pupil alignment         : alpha error       = {measures[alpha_error]:8.4f} mm
     pupil alignment         : beta error        = {measures[beta_error]:8.4f} mm
@@ -70,10 +70,10 @@ PUP_ALN_RESULT_CSV = cleandoc(
     """
     pupil alignment,passed,{result}
     pupil alignment,pass_threshold,{pass_threshold_mm:f}
-    pupil alignment,chassis error,{measures[chassis_error]:f},mm
-    pupil alignment,alpha error,{measures[alpha_error]:f},mm
-    pupil alignment,beta error,{measures[beta_error]:f},mm
-    pupil alignment,total error,{measures[total_error]:f},mm
+    pupil alignment,chassis error,{measures[chassis_error]:f}
+    pupil alignment,alpha error,{measures[alpha_error]:f}
+    pupil alignment,beta error,{measures[beta_error]:f}
+    pupil alignment,total error,{measures[total_error]:f}
     pupil alignment,time,{time:.16},record,{record-count}
     pupil alignment,algorithm version,{algorithm_version}
     pupil alignment,git version,{git_version}"""

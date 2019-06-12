@@ -14,11 +14,11 @@ POS_REP_GEARCOR = cleandoc(
     """positional repeatability: gearbox correction alpha algorithm                 = {gearbox_correction[coeffs][coeffs_alpha][algorithm]}
        positional repeatability: gearbox correction alpha num support / data points = {gearbox_correction[coeffs][coeffs_alpha][num_support_points]} / {gearbox_correction[coeffs][coeffs_alpha][num_data_points]}
        positional repeatability: gearbox correction alpha coefs                     a = {gearbox_correction[coeffs][coeffs_alpha][a]:7.5}, b={gearbox_correction[coeffs][coeffs_alpha][b]:7.5}
-       positional repeatability: gearbox correction alpha R                         = {gearbox_correction[coeffs][coeffs_alpha][R]:6.5}
+       positional repeatability: gearbox correction alpha R                         = {gearbox_correction[coeffs][coeffs_alpha][R]:6.5} mm
        positional repeatability: gearbox correction beta algorithm                  = {gearbox_correction[coeffs][coeffs_beta][algorithm]}
        positional repeatability: gearbox correction beta num support / data points  = {gearbox_correction[coeffs][coeffs_beta][num_support_points]} / {gearbox_correction[coeffs][coeffs_beta][num_data_points]}
        positional repeatability: gearbox correction beta coefs                      a = {gearbox_correction[coeffs][coeffs_beta][a]:7.5}, b={gearbox_correction[coeffs][coeffs_beta][b]:7.5}
-       positional repeatability: gearbox correction beta R                          = {gearbox_correction[coeffs][coeffs_beta][R]:6.5}
+       positional repeatability: gearbox correction beta R                          = {gearbox_correction[coeffs][coeffs_beta][R]:6.5} mm
 
 """
 )
@@ -43,25 +43,25 @@ POS_REP_GEARALGO_CSV = cleandoc(
 POS_REP_RESULT_TERSE = cleandoc(
     """
     positional repeatability: passed        = {result},
-    positional repeatability: alpha 95% perc. = {posrep_alpha_measures.percentiles[95]:8.4f} mm
-    positional repeatability: beta 95% perc.  = {posrep_beta_measures.percentiles[95]:8.4f} mm
+    positional repeatability: alpha 95% perc. = {posrep_alpha_measures.percentiles[95]:6.4f} mm
+    positional repeatability: beta 95% perc.  = {posrep_beta_measures.percentiles[95]:6.4f} mm
     positional repeatability: time/record   = {time:.16}/{record-count}, version = {algorithm_version}"""
 )
 
 POS_REP_RESULT_COMPLETE = cleandoc(
     """
     positional repeatability: passed          = {result}
-    positional repeatability: pass_threshold  = {pass_threshold_mm:8.4f} mm
-    positional repeatability: alpha_mean      = {posrep_alpha_measures.mean:8.4f} mm
-    positional repeatability: alpha 95% perc. = {posrep_alpha_measures.percentiles[95]:8.4f} mm
-    positional repeatability: alpha_max       = {posrep_alpha_measures.max:8.4f} mm
-    positional repeatability: beta_mean       = {posrep_beta_measures.mean:8.4f} mm
-    positional repeatability: beta 95% perc.  = {posrep_beta_measures.percentiles[95]:8.4f} mm
-    positional repeatability: beta_max        = {posrep_beta_measures.max:8.4f} mm
+    positional repeatability: pass_threshold  = {pass_threshold_mm:6.4f} mm
+    positional repeatability: alpha_mean      = {posrep_alpha_measures.mean:6.4f} mm
+    positional repeatability: alpha 95% perc. = {posrep_alpha_measures.percentiles[95]:6.4f} mm
+    positional repeatability: alpha_max       = {posrep_alpha_measures.max:6.4f} mm
+    positional repeatability: beta_mean       = {posrep_beta_measures.mean:6.4f} mm
+    positional repeatability: beta 95% perc.  = {posrep_beta_measures.percentiles[95]:6.4f} mm
+    positional repeatability: beta_max        = {posrep_beta_measures.max:6.4f} mm
     positional repeatability: arg_max_alpha   = {arg_max_alpha_error:+9.4f} degrees
     positional repeatability: arg_max_beta    = {arg_max_beta_error:+9.4f} degrees
-    positional repeatability: alpha quality   = {min_quality_alpha:8.4f}
-    positional repeatability: beta quality    = {min_quality_beta:8.4f}
+    positional repeatability: alpha quality   = {min_quality_alpha:5.3f}
+    positional repeatability: beta quality    = {min_quality_beta:5.3f}
     positional repeatability: time/record     = {time:.16}/{record-count}
     positional repeatability: anlysis version = {algorithm_version}
     positional repeatability: git version     = {git_version}"""
@@ -71,21 +71,21 @@ POS_REP_RESULT_COMPLETE = cleandoc(
 POS_REP_RESULT_LONG = cleandoc(
     """
     positional repeatability: passed          = {result}
-    positional repeatability: pass_threshold  = {pass_threshold_mm:8.4f} mm
-    positional repeatability: alpha_mean      = {posrep_alpha_measures.mean:8.4f} mm
-    positional repeatability: alpha 50% perc. = {posrep_alpha_measures.percentiles[50]:8.4f} mm
-    positional repeatability: alpha 90% perc. = {posrep_alpha_measures.percentiles[90]:8.4f} mm
-    positional repeatability: alpha 95% perc. = {posrep_alpha_measures.percentiles[95]:8.4f} mm
-    positional repeatability: alpha_max       = {posrep_alpha_measures.max:8.4f} mm
-    positional repeatability: beta_mean       = {posrep_beta_measures.mean:8.4f} mm
-    positional repeatability: beta 50% perc.  = {posrep_beta_measures.percentiles[50]:8.4f} mm
-    positional repeatability: beta 90% perc.  = {posrep_beta_measures.percentiles[90]:8.4f} mm
-    positional repeatability: beta 95% perc.  = {posrep_beta_measures.percentiles[95]:8.4f} mm
-    positional repeatability: beta_max        = {posrep_beta_measures.max:8.4f} mm
+    positional repeatability: pass_threshold  = {pass_threshold_mm:6.4f} mm
+    positional repeatability: alpha_mean      = {posrep_alpha_measures.mean:6.4f} mm
+    positional repeatability: alpha 50% perc. = {posrep_alpha_measures.percentiles[50]:6.4f} mm
+    positional repeatability: alpha 90% perc. = {posrep_alpha_measures.percentiles[90]:6.4f} mm
+    positional repeatability: alpha 95% perc. = {posrep_alpha_measures.percentiles[95]:6.4f} mm
+    positional repeatability: alpha_max       = {posrep_alpha_measures.max:6.4f} mm
+    positional repeatability: beta_mean       = {posrep_beta_measures.mean:6.4f} mm
+    positional repeatability: beta 50% perc.  = {posrep_beta_measures.percentiles[50]:6.4f} mm
+    positional repeatability: beta 90% perc.  = {posrep_beta_measures.percentiles[90]:6.4f} mm
+    positional repeatability: beta 95% perc.  = {posrep_beta_measures.percentiles[95]:6.4f} mm
+    positional repeatability: beta_max        = {posrep_beta_measures.max:6.4f} mm
     positional repeatability: arg_max_alpha   = {arg_max_alpha_error:+9.4f} degrees
     positional repeatability: arg_max_beta    = {arg_max_beta_error:+9.4f} degrees
-    positional repeatability: alpha quality   = {min_quality_alpha:8.4f}
-    positional repeatability: beta quality    = {min_quality_beta:8.4f}
+    positional repeatability: alpha quality   = {min_quality_alpha:5.3f}
+    positional repeatability: beta quality    = {min_quality_beta:5.3f}
     positional repeatability: time/record     = {time:.16}/{record-count}
     positional repeatability: anlysis version = {algorithm_version}
     positional repeatability: git version     = {git_version}"""
@@ -94,21 +94,21 @@ POS_REP_RESULT_LONG = cleandoc(
 POS_REP_RESULT_EXTENDED = cleandoc(
     """
     positional repeatability: passed          = {result}
-    positional repeatability: pass_threshold  = {pass_threshold_mm:8.4f} mm
-    positional repeatability: alpha_mean      = {posrep_alpha_measures.mean:8.4f} mm
-    positional repeatability: alpha 50% perc. = {posrep_alpha_measures.percentiles[50]:8.4f} mm
-    positional repeatability: alpha 90% perc. = {posrep_alpha_measures.percentiles[90]:8.4f} mm
-    positional repeatability: alpha 95% perc. = {posrep_alpha_measures.percentiles[95]:8.4f} mm
-    positional repeatability: alpha_max       = {posrep_alpha_measures.max:8.4f} mm
-    positional repeatability: beta_mean       = {posrep_beta_measures.mean:8.4f} mm
-    positional repeatability: beta 50% perc.  = {posrep_beta_measures.percentiles[50]:8.4f} mm
-    positional repeatability: beta 90% perc.  = {posrep_beta_measures.percentiles[90]:8.4f} mm
-    positional repeatability: beta 95% perc.  = {posrep_beta_measures.percentiles[95]:8.4f} mm
-    positional repeatability: beta_max        = {posrep_beta_measures.max:8.4f} mm
+    positional repeatability: pass_threshold  = {pass_threshold_mm:6.4f} mm
+    positional repeatability: alpha_mean      = {posrep_alpha_measures.mean:6.4f} mm
+    positional repeatability: alpha 50% perc. = {posrep_alpha_measures.percentiles[50]:6.4f} mm
+    positional repeatability: alpha 90% perc. = {posrep_alpha_measures.percentiles[90]:6.4f} mm
+    positional repeatability: alpha 95% perc. = {posrep_alpha_measures.percentiles[95]:6.4f} mm
+    positional repeatability: alpha_max       = {posrep_alpha_measures.max:6.4f} mm
+    positional repeatability: beta_mean       = {posrep_beta_measures.mean:6.4f} mm
+    positional repeatability: beta 50% perc.  = {posrep_beta_measures.percentiles[50]:6.4f} mm
+    positional repeatability: beta 90% perc.  = {posrep_beta_measures.percentiles[90]:6.4f} mm
+    positional repeatability: beta 95% perc.  = {posrep_beta_measures.percentiles[95]:6.4f} mm
+    positional repeatability: beta_max        = {posrep_beta_measures.max:6.4f} mm
     positional repeatability: arg_max_alpha   = {arg_max_alpha_error:+9.4f} degrees
     positional repeatability: arg_max_beta    = {arg_max_beta_error:+9.4f} degrees
-    positional repeatability: alpha quality   = {min_quality_alpha:8.4f}
-    positional repeatability: beta quality    = {min_quality_beta:8.4f}
+    positional repeatability: alpha quality   = {min_quality_alpha:5.3f}
+    positional repeatability: beta quality    = {min_quality_beta:5.3f}
     positional repeatability: time/record     = {time:.16}/{record-count}
     positional repeatability: anlysis version = {algorithm_version}
     positional repeatability: git version     = {git_version}"""
@@ -117,19 +117,19 @@ POS_REP_RESULT_EXTENDED = cleandoc(
 POS_REP_RESULT_CSV = cleandoc(
     """
     positional repeatability,passed,{result}
-    positional repeatability,pass_threshold,{pass_threshold_mm:8.4f},mm
-    positional repeatability,alpha_mean     ,{posrep_alpha_measures.mean:8.4f}
-    positional repeatability,alpha 50% perc.,{posrep_alpha_measures.percentiles[50]:8.4f}
-    positional repeatability,alpha 90% perc.,{posrep_alpha_measures.percentiles[90]:8.4f}
-    positional repeatability,alpha 95% perc.,{posrep_alpha_measures.percentiles[95]:8.4f}
-    positional repeatability,alpha_max      ,{posrep_alpha_measures.max:8.4f}
-    positional repeatability,beta_mean      ,{posrep_beta_measures.mean:8.4f}
-    positional repeatability,beta 50% perc.,{posrep_beta_measures.percentiles[50]:8.4f}
-    positional repeatability,beta 90% perc.,{posrep_beta_measures.percentiles[90]:8.4f}
-    positional repeatability,beta 95% perc.,{posrep_beta_measures.percentiles[95]:8.4f}
-    positional repeatability,beta_max       ,{posrep_beta_measures.max:8.4f} mm
-    positional repeatability,alpha quality,{min_quality_alpha:8.4f}
-    positional repeatability,beta quality,{min_quality_beta:8.4f}
+    positional repeatability,pass_threshold,{pass_threshold_mm:6.4f}
+    positional repeatability,alpha_mean     ,{posrep_alpha_measures.mean:6.4f}
+    positional repeatability,alpha 50% perc.,{posrep_alpha_measures.percentiles[50]:6.4f}
+    positional repeatability,alpha 90% perc.,{posrep_alpha_measures.percentiles[90]:6.4f}
+    positional repeatability,alpha 95% perc.,{posrep_alpha_measures.percentiles[95]:6.4f}
+    positional repeatability,alpha_max      ,{posrep_alpha_measures.max:6.4f}
+    positional repeatability,beta_mean      ,{posrep_beta_measures.mean:6.4f}
+    positional repeatability,beta 50% perc.,{posrep_beta_measures.percentiles[50]:6.4f}
+    positional repeatability,beta 90% perc.,{posrep_beta_measures.percentiles[90]:6.4f}
+    positional repeatability,beta 95% perc.,{posrep_beta_measures.percentiles[95]:6.4f}
+    positional repeatability,beta_max       ,{posrep_beta_measures.max:6.4f}
+    positional repeatability,alpha quality,{min_quality_alpha:5.3f}
+    positional repeatability,beta quality,{min_quality_beta:5.3f}
     positional repeatability,time,{time:.16},record,{record-count}
     positional repeatability,anlysis version,{algorithm_version}
     positional repeatability,git version,{git_version}"""

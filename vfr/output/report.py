@@ -562,7 +562,8 @@ def list_posrep_angle_errors(name, error_by_angle, error_arg_max, csv=False):
         hdr = """\npositional repeatability,max error by {}"""
         fmt = """Positional repeatability,{angle:7.2f},{val:8.4f},{tag}"""
     else:
-        hdr = """\npositional repeatability: max error by {}"""
+        hdr = ("""\npositional repeatability: max error by {}"""
+               """\npositional repeatability:     [degrees]   [mm]""" )
         fmt = """Positional repeatability:     {angle:7.2f} = {val:8.4f} {tag}"""
 
     yield hdr.format(name)
@@ -578,7 +579,8 @@ def list_posver_err_by_coord(error_by_coords, error_max, csv=False):
         hdr = """positional verification,max error by coordinate"""
         fmt = """Positional verification,{coord[0]:03d},{coord[1]:+8.2f},{coord[2]:+8.2f},{val:8.4f},{tag}"""
     else:
-        hdr = """positional verification : max error by coordinate"""
+        hdr = ("""positional verification : max error by coordinate\n"""
+               """positional verification :     ([1], degrees, degrees)       [mm]""")
         fmt = """Positional verification :     # {coord[0]:03d} ({coord[1]:+8.2f}, {coord[2]:+8.2f}) = {val:8.4f} {tag}"""
 
     yield hdr
