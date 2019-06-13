@@ -2,7 +2,7 @@ from __future__ import division, print_function
 
 from math import pi
 import numpy as np
-
+import warnings
 # import matplotlib.pyplot as plt
 
 # import numpy as np
@@ -571,8 +571,9 @@ def angle_to_point(
     print("offset beta = ", np.rad2deg(a_beta))
     print("R_alpha=", R_alpha)
     print("R_beta_midpoint=", R_beta_midpoint)
-    if alpha0 is None:
+    if alpha0:
         # alpha reference point for deriving gamma
+        warnings.warn("setting default alpha reference")
         alpha0 = -180.3 + 5.0 # alpha_min + pos_rep_safety_margin
 
     P0 = np.array([x_center, y_center])
