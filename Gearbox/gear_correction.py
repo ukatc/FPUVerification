@@ -435,7 +435,7 @@ def plot_correction(fpu_id, axis, fits=None, **coefs):
     plt.show()
 
 
-def fit_gearbox_correction(dict_of_coordinates_alpha, dict_of_coordinates_beta):
+def fit_gearbox_correction(dict_of_coordinates_alpha, dict_of_coordinates_beta, return_intermediate_results=False):
     """Computes gearbox correction and returns correction coefficients
     as a dictionary.
 
@@ -460,8 +460,25 @@ def fit_gearbox_correction(dict_of_coordinates_alpha, dict_of_coordinates_beta):
 
     """
 
-    coeffs_alpha = fit_gearbox_parameters("alpha", dict_of_coordinates_alpha)
-    coeffs_beta = fit_gearbox_parameters("beta", dict_of_coordinates_beta)
+    coeffs_alpha = fit_gearbox_parameters(
+        "alpha",
+        dict_of_coordinates_alpha,
+        return_intermediate_results=return_intermediate_results,
+    )
+
+    coeffs_beta = fit_gearbox_parameters(
+        "beta",
+        dict_of_coordinates_beta,
+        return_intermediate_results=return_intermediate_results,
+    )
+
+    if (coeffs_alpha is None) or (coeffs_beta is None):
+        return {
+            "version": GEARBOX_CORRECTION_VERSION,
+            "coeffs": {"coeffs_alpha": coeffs_alpha, "coeffs_beta": coeffs_beta},
+        }
+
+
     # find centers of alpha circle
     x_center = coeffs_alpha["xc"]
     y_center = coeffs_alpha["yc"]
