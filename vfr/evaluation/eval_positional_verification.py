@@ -75,6 +75,7 @@ def evaluate_positional_verification(
             R_alpha=R_alpha,
             R_beta_midpoint=R_beta_midpoint,
             alpha0=alpha0,
+            already_corrected=True,
             )
 
         expected_coords.append(expected_point)
