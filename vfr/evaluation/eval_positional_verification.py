@@ -5,8 +5,9 @@
 from __future__ import division, print_function
 
 from Gearbox.gear_correction import polar2cartesian
-from vfr.evaluation.measures import get_errors, get_grouped_errors
+from vfr.evaluation.measures import get_errors, get_grouped_errors, group_by_subkeys
 
+from math import sin, cos
 import numpy as np
 
 
@@ -17,6 +18,8 @@ def evaluate_positional_verification(
     y_center=None,
     R_alpha=None,
     R_beta_midpoint=None,
+    alpha0=None,
+    coeffs=None,
     BLOB_WEIGHT_FACTOR=None,
     **kwargs
 ):
@@ -45,8 +48,7 @@ def evaluate_positional_verification(
 
     """
 
-    nominal_angles = [(alpha, beta) for (count, alpha, beta) in dict_of_coords.keys()]
-    measured_coords = [[x] for x in dict_of_coords.values()]
+
     error_by_angle = {}
     # get measured circle center point from alpha arm
     # calibration
@@ -56,20 +58,58 @@ def evaluate_positional_verification(
     # camera, so no changes to the camera or verification rig are
     # allowed!
     P0 = np.array([x_center, y_center])
+    expected_coords = []
+    point_list = []
 
-    for key, coords in dict_of_coords.items():
-        count, alpha, beta = key
-        # compute expected coordinate of observation
-        pos_alpha = np.array(polar2cartesian(R_alpha, np.deg2rad(alpha)))
-        pos_beta = np.array(polar2cartesian(R_beta_midpoint, np.deg2rad(beta)))
+    print(">>>>>>>>>>>> computing point error values")
+    # these offsets make up for the rotation of
+    # the camera *and* for the +180 degree offset
+    # for beta in respect for the Cartesian system
+    a_alpha = coeffs['coeffs_alpha']['a']
+    a_beta = coeffs['coeffs_beta']['a']
+    print("offset alpha = ", np.rad2deg(a_alpha))
+    print("offset beta = ", np.rad2deg(a_beta))
+    print("R_alpha=", R_alpha)
+    print("R_beta_midpoint=", R_beta_midpoint)
+    if alpha0 is None:
+        # alpha reference point for deriving gamma
+        alpha0 = -180.3 + 5.0 # alpha_min + pos_rep_safety_margin
+    for coords, point_pair in dict_of_coords.items():
+        print("-------------")
+        # get nominal coordinates
+        (idx, alpha_nom, beta_nom) = coords
+        # add offset from fitting
+        alpha = alpha_nom + np.rad2deg(a_alpha)
+        beta = beta_nom + np.rad2deg(a_beta)
+        # add difference to alpha when the beta
+        # correction was measured (these angles add up
+        # because when the alpha arm is turned (clockwise),
+        # this turns the beta arm (clockwise) as well).
+        gamma = beta + (alpha - alpha0)
+        # compute expected Cartesian coordinate of observation
+        pos_alpha = np.array(polar2cartesian(np.deg2rad(alpha), R_alpha))
+        pos_beta = np.array(polar2cartesian(np.deg2rad(gamma), R_beta_midpoint))
+
         expected_point = P0 + pos_alpha + pos_beta
-        error_by_angle[key] = get_errors(
-            [coords], centroid=expected_point, weight_factor=BLOB_WEIGHT_FACTOR
+        print("alpha_nom=%f, beta_nom=%f" % (alpha_nom, beta_nom))
+        print("alpha=%f, beta=%f, gamma=%f" % (alpha, beta, gamma))
+        print("p0=", P0)
+        print("p_expected=",expected_point)
+        print("p_a=", pos_alpha)
+        print("p_b=", pos_beta)
+        expected_coords.append(expected_point)
+        point_list.append([point_pair])
+        error_by_angle[coords] = get_errors(
+            [point_pair], centroid=expected_point, weight_factor=BLOB_WEIGHT_FACTOR
         ).max
+        print("error_by_angle[%r]=%r" % (coords, error_by_angle[coords]))
 
+    print("############ computing summary statistics")
+    keyfun = lambda x: (x[1], x[2])
     error_measures = get_grouped_errors(
-        measured_coords,
-        list_of_centroids=nominal_angles,
+        point_list,
+        list_of_centroids=expected_coords,
         weight_factor=BLOB_WEIGHT_FACTOR,
     )
+    print("pos ver error_measures=%r" % error_measures)
     return error_by_angle, error_measures
