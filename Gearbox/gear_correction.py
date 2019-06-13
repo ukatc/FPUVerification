@@ -37,7 +37,7 @@ def cartesian2polar(x, y):
     return (phi, rho)
 
 
-def polar2cartesian(rho, phi):
+def polar2cartesian(phi, rho):
     x = rho * np.cos(phi)
     y = rho * np.sin(phi)
     return (x, y)
