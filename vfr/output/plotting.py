@@ -11,10 +11,11 @@ import types
 from matplotlib import pyplot as plt
 
 from Gearbox.gear_correction import (
-    fit_gearbox_parameters,
+    fit_gearbox_correction,
     plot_gearbox_calibration,
     plot_correction,
     angle_to_point,
+    plot_measured_vs_expected_points,
 )
 
 
@@ -109,7 +110,7 @@ def plot(dbe, opts):
 
             plot_pos_rep(fpu_id, result_alpha, result_beta, opts)
 
-        if "C" in plot_selection:
+        if set("CDE") & set(plot_selection):
             pos_rep_result = ddict["positional_repeatability_result"]
             result_alpha = pos_rep_result["analysis_results_alpha"]
             result_beta = pos_rep_result["analysis_results_beta"]
@@ -121,30 +122,36 @@ def plot(dbe, opts):
             )
             fit_alpha = gear_correction["coeffs"]["coeffs_alpha"]
             plot_circle = "D" in plot_selection
-            if fit_alpha is None:
-                print("no parameters found for FPU %s, %s arm" % (fpu_id, "alpha"))
-            else:
-                plot_gearbox_calibration(
-                    fpu_id,
-                    "alpha",
-                    plot_circle=plot_circle,
-                    plot_fits=[0, 1, 2],
-                    plot_residuals=[1, 2],
-                    **fit_alpha
-                )
+            if set("CD") & set(plot_selection):
+                if fit_alpha is None:
+                    print("no parameters found for FPU %s, %s arm" % (fpu_id, "alpha"))
+                else:
+                    plot_gearbox_calibration(
+                        fpu_id,
+                        "alpha",
+                        plot_circle=plot_circle,
+                        plot_fits=[0, 1, 2],
+                        plot_residuals=[1, 2],
+                        **fit_alpha
+                    )
 
-                plot_correction(fpu_id, "alpha", **fit_alpha)
+                    plot_correction(fpu_id, "alpha", **fit_alpha)
 
-            fit_alpha = gear_correction["coeffs"]["coeffs_alpha"]
-            if fit_beta is None:
-                print("no parameters found for FPU %s, %s arm" % (fpu_id, "beta"))
-            else:
-                plot_gearbox_calibration(
-                    fpu_id,
-                    "beta",
-                    plot_circle=plot_circle,
-                    plot_fits=[0, 1, 2],
-                    plot_residuals=[1, 2],
-                    **fit_beta
-                )
-                plot_correction(fpu_id, "beta", **fit_beta)
+            fit_beta = gear_correction["coeffs"]["coeffs_beta"]
+            if set("CD") & set(plot_selection):
+                if fit_beta is None:
+                    print("no parameters found for FPU %s, %s arm" % (fpu_id, "beta"))
+                else:
+                    plot_gearbox_calibration(
+                        fpu_id,
+                        "beta",
+                        plot_circle=plot_circle,
+                        plot_fits=[0, 1, 2],
+                        plot_residuals=[1, 2],
+                        **fit_beta
+                    )
+                    plot_correction(fpu_id, "beta", **fit_beta)
+
+
+            if "E" in plot_selection:
+                plot_measured_vs_expected_points(**gear_correction)

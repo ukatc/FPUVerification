@@ -125,9 +125,11 @@ def fit_gearbox_parameters(axis, analysis_results, return_intermediate_results=F
     if axis == "alpha":
         phi_nominal = np.deg2rad(alpha)
         alpha_ref = np.NaN
+        beta_ref = np.mean(beta)
     else:
         phi_nominal = np.deg2rad(beta)
         alpha_ref = np.mean(alpha)
+        beta_ref=np.NaN
 
     # fit data to a linear curve
     a0 = np.mean(phi_real - phi_nominal)
@@ -178,6 +180,7 @@ def fit_gearbox_parameters(axis, analysis_results, return_intermediate_results=F
             "a": a,
             "b": b,
             "alpha0" : alpha_ref,
+            "beta0" : beta_ref,
             "xp": phi_nom_2,
             "yp": phi_corr_2,
             "num_support_points": len(phi_nom_2),
@@ -218,6 +221,7 @@ def fit_gearbox_parameters(axis, analysis_results, return_intermediate_results=F
             "a": a,
             "b": b,
             "alpha0" : alpha_ref,
+            "beta0" : beta_ref,
             "num_support_points": len(phi_nom_2),
             "num_data_points": len(x_s),
             "xp": phi_nom_2,
@@ -285,8 +289,11 @@ def plot_gearbox_calibration(
     a=None,
     b=None,
     alpha0=None,
+    beta0=None,
     R_real=None,
     phi_nominal=None,
+    alpha_nominal=None,
+    beta_nominal=None,
     xp=None,
     yp=None,
     y_corr=None,
@@ -491,7 +498,8 @@ def fit_gearbox_correction(dict_of_coordinates_alpha, dict_of_coordinates_beta, 
     R_alpha = np.linalg.norm(Pcb - P0)
     # radius from beta center to weighted midpoint between metrology targets
     R_beta_midpoint = coeffs_beta["R"]
-    alpha0 = coeffs_alpha["alpha0"]
+    alpha0 = coeffs_beta["alpha0"]
+    beta0 = coeffs_alpha["beta0"]
 
     return {
         "version": GEARBOX_CORRECTION_VERSION,
@@ -499,6 +507,7 @@ def fit_gearbox_correction(dict_of_coordinates_alpha, dict_of_coordinates_beta, 
         "x_center": x_center,
         "y_center": y_center,
         "alpha0" : alpha0,
+        "beta0" : beta0,
         "R_alpha": R_alpha,
         "R_beta_midpoint": R_beta_midpoint,
         "BLOB_WEIGHT_FACTOR": BLOB_WEIGHT_FACTOR,
@@ -548,13 +557,16 @@ def angle_to_point(
         R_alpha=None,
         R_beta_midpoint=None,
         alpha0=None,
+        beta0=None,
 ):
 
     # these offsets make up for the rotation of
     # the camera *and* for the +180 degree offset
     # for beta in respect for the Cartesian system
-    a_alpha = coeffs['coeffs_alpha']['a']
-    a_beta = coeffs['coeffs_beta']['a']
+    a_alpha = np.rad2deg(coeffs['coeffs_alpha']['a'])
+    b_alpha = coeffs['coeffs_alpha']['b']
+    a_beta = np.rad2deg(coeffs['coeffs_beta']['a'])
+    b_beta = coeffs['coeffs_beta']['b']
     print("offset alpha = ", np.rad2deg(a_alpha))
     print("offset beta = ", np.rad2deg(a_beta))
     print("R_alpha=", R_alpha)
@@ -566,13 +578,13 @@ def angle_to_point(
     P0 = np.array([x_center, y_center])
 
     # add offset from fitting
-    alpha = alpha_nom + np.rad2deg(a_alpha)
-    beta = beta_nom + np.rad2deg(a_beta)
+    alpha = b_alpha * alpha_nom + a_alpha
+    beta = b_beta * beta_nom + a_beta
     # add difference to alpha when the beta
     # correction was measured (these angles add up
     # because when the alpha arm is turned (clockwise),
     # this turns the beta arm (clockwise) as well).
-    gamma = beta + (alpha - alpha0)
+    gamma = beta + (alpha_nom - alpha0)
     # compute expected Cartesian coordinate of observation
     pos_alpha = np.array(polar2cartesian(np.deg2rad(alpha), R_alpha))
     pos_beta = np.array(polar2cartesian(np.deg2rad(gamma), R_beta_midpoint))
@@ -586,3 +598,75 @@ def angle_to_point(
     print("p_b=", pos_beta)
 
     return expected_point
+
+
+
+def plot_measured_vs_expected_points(version=None,
+                                     coeffs=None,
+                                     x_center=None,
+                                     y_center=None,
+                                     alpha0=None,
+                                     beta0=None,
+                                     R_alpha=None,
+                                     R_beta_midpoint=None,
+                                     BLOB_WEIGHT_FACTOR=None,
+):
+
+
+    plt.figure(facecolor="white")  # figsize=(7, 5.4), dpi=72,
+    plt.axis("equal")
+
+    theta_fit = np.linspace(-pi, pi, 10 * 360)
+
+    for lcoeffs, axis, color in [
+            (coeffs["coeffs_alpha"], "alpha", "r"),
+            (coeffs["coeffs_beta"], "beta", "b"),
+    ]:
+        xc = lcoeffs["xc"]
+        yc = lcoeffs["yc"]
+        x = lcoeffs["x"]
+        y = lcoeffs["y"]
+        R = lcoeffs["R"]
+        phi_nominal = lcoeffs["phi_nominal"]
+        alpha_ref = lcoeffs["alpha0"]
+        beta_ref = lcoeffs["beta0"]
+
+
+        if axis == "alpha":
+            alpha = np.rad2deg(phi_nominal)
+            beta = beta_ref * np.ones_like(alpha)
+        else:
+            beta = np.rad2deg(phi_nominal)
+            alpha = alpha_ref * np.ones_like(beta)
+
+        x_fit = xc + R * np.cos(theta_fit)
+        y_fit = yc + R * np.sin(theta_fit)
+        plt.plot(x_fit, y_fit, "c-", label="fitted circle " + axis, lw=2)
+        plt.plot([xc], [yc], color + "D", mec="y", mew=1)
+        # plot data
+        plt.plot(x, y, color + ".", label="{} measured point ".format(axis), mew=1)
+
+        expected_points = []
+        for alpha_nom, beta_nom in zip(alpha, beta):
+            ep =  angle_to_point(
+                alpha_nom,
+                beta_nom,
+                coeffs=coeffs,
+                x_center=x_center,
+                y_center=y_center,
+                R_alpha=R_alpha,
+                R_beta_midpoint=R_beta_midpoint,
+                alpha0=alpha0,
+                beta0=beta0,
+            )
+            expected_points.append(ep)
+        xe, ye = np.array(expected_points).T
+        plt.plot(xe, ye, color + "+", label="{} expected from nominal angle".format(axis), mew=1)
+
+        plt.legend(loc="best", labelspacing=0.1)
+
+    plt.grid()
+    plt.title("measured vs expected points")
+    plt.xlabel("x")
+    plt.ylabel("y")
+    plt.show()
