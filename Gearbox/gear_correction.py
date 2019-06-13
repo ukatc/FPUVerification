@@ -90,7 +90,7 @@ def plot_data_circle(x, y, xc, yc, R, title):
     plt.show()
 
 
-def fit_gearbox_parameters(par, analysis_results, return_intermediate_results=False):
+def fit_gearbox_parameters(axis, analysis_results, return_intermediate_results=False):
     if analysis_results is None:
         return None
     # get list of points to which circle is fitted
@@ -122,7 +122,7 @@ def fit_gearbox_parameters(par, analysis_results, return_intermediate_results=Fa
     phi_real = np.where(phi_real > pi / 4, phi_real - 2 * pi, phi_real)
     # phi_real = np.unwrap(phi_real)
 
-    if par == "alpha":
+    if axis == "alpha":
         phi_nominal = np.deg2rad(alpha)
         alpha_ref = np.NaN
     else:
@@ -226,13 +226,13 @@ def fit_gearbox_parameters(par, analysis_results, return_intermediate_results=Fa
 
 
 def split_iterations(
-    par, midpoints, xc=None, yc=None, a=None, b=None, xp=None, yp=None
+    axis, midpoints, xc=None, yc=None, a=None, b=None, xp=None, yp=None
 ):
     d2r = np.deg2rad
     # get set of iteration indices
     # loop and select measurements for each iteration
 
-    if par == "alpha":
+    if axis == "alpha":
         directionlist = [0, 1]
     else:
         directionlist = [2, 3]
@@ -247,7 +247,7 @@ def split_iterations(
 
             for key in filter(match_sweep, midpoints.keys()):
 
-                if par == "alpha":
+                if axis == "alpha":
                     phi_nominal = d2r(key[0])
                 else:
                     phi_nominal = d2r(key[1])
@@ -272,7 +272,7 @@ def split_iterations(
 
 def plot_gearbox_calibration(
     fpu_id,
-    par,
+    axis,
     algorithm=None,
     midpoints=None,
     num_support_points=None,
@@ -301,11 +301,11 @@ def plot_gearbox_calibration(
     r2d = np.rad2deg
     # get list of points to which circle is fitted
     if plot_circle:
-        plot_data_circle(x - xc, y - yc, 0, 0, R, title=par)
+        plot_data_circle(x - xc, y - yc, 0, 0, R, title=axis)
 
     if plot_func:
         plt.plot(r2d(fits[0][0]), r2d(fits[0][1]), "g.", label=fits[0][2])
-        plt.title("FPU {}: real vs nominal angle for {}".format(fpu_id, par))
+        plt.title("FPU {}: real vs nominal angle for {}".format(fpu_id, axis))
         plt.legend(loc="best", labelspacing=0.1)
         plt.xlabel("nominal angle [degrees]")
         plt.ylabel("real angle [degrees]")
@@ -321,7 +321,7 @@ def plot_gearbox_calibration(
         plt.plot(r2d(fits[2][0]), r2d(fits[2][1]), "r.", label=fits[2][2])
 
     if plot_fits:
-        plt.title("FPU {}: fitted real vs nominal angle for {}".format(fpu_id, par))
+        plt.title("FPU {}: fitted real vs nominal angle for {}".format(fpu_id, axis))
         plt.legend(loc="best", labelspacing=0.1)
         plt.xlabel("nominal angle [degrees]")
         plt.ylabel("real angle [degrees]")
@@ -330,7 +330,7 @@ def plot_gearbox_calibration(
     if 1 in plot_residuals:
         plt.plot(r2d(phi_nominal), R_real - R, "r.", label="radial delta")
 
-        plt.title("FPU {}: first-order residual radius  for {}".format(fpu_id, par))
+        plt.title("FPU {}: first-order residual radius  for {}".format(fpu_id, axis))
         plt.legend(loc="best", labelspacing=0.1)
         plt.xlabel("nominal angle [degrees]")
         plt.ylabel("residual radius [millimeter]")
@@ -343,7 +343,7 @@ def plot_gearbox_calibration(
 
         plt.title(
             "FPU {}: first-order residual real vs nominal angle for {}".format(
-                fpu_id, par
+                fpu_id, axis
             )
         )
         plt.legend(loc="best", labelspacing=0.1)
@@ -358,7 +358,7 @@ def plot_gearbox_calibration(
 
         plt.title(
             "FPU {}: second-order residual real vs nominal angle for {}".format(
-                fpu_id, par
+                fpu_id, axis
             )
         )
         plt.legend(loc="best", labelspacing=0.1)
@@ -368,14 +368,14 @@ def plot_gearbox_calibration(
 
         plt.title(
             "FPU {}: second-order residual vs nominal angle by iteration for {}".format(
-                fpu_id, par
+                fpu_id, axis
             )
         )
         plt.xlabel("nominal angle [degrees]")
         plt.ylabel("real angle deltas [degrees]")
 
         for iteration, direction, nom_angles, residual_angles in split_iterations(
-            par, midpoints, xc=xc, yc=yc, a=a, b=b, xp=xp, yp=yp
+            axis, midpoints, xc=xc, yc=yc, a=a, b=b, xp=xp, yp=yp
         ):
 
             markers = [
@@ -405,14 +405,14 @@ def plot_gearbox_calibration(
                 color,
                 marker=marker,
                 linestyle="",
-                label="%s arm, direction=%s, iteration=%i" % (par, dirlabel, iteration),
+                label="%s arm, direction=%s, iteration=%i" % (axis, dirlabel, iteration),
             )
 
         plt.legend(loc="best", labelspacing=0.1)
         plt.show()
 
 
-def plot_correction(fpu_id, par, fits=None, **coefs):
+def plot_correction(fpu_id, axis, fits=None, **coefs):
 
     """
     This applies the correction to the real (measured) angles, and
@@ -428,7 +428,7 @@ def plot_correction(fpu_id, par, fits=None, **coefs):
 
     plt.plot(r2d(nominal_angle), r2d(nominal_angle), "b-", label="nominal/nominal")
     plt.plot(r2d(nominal_angle), r2d(corrected_angle), "g.", label="nominal/corrected")
-    plt.title("FPU {}: nominal vs. corrected real angle for {}".format(fpu_id, par))
+    plt.title("FPU {}: nominal vs. corrected real angle for {}".format(fpu_id, axis))
     plt.legend(loc="best", labelspacing=0.1)
     plt.xlabel("nominal angle [degrees]")
     plt.ylabel("corrected angle [degrees]")
