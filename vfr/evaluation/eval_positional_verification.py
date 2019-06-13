@@ -4,60 +4,12 @@
 """
 from __future__ import division, print_function
 
-from Gearbox.gear_correction import polar2cartesian
+from Gearbox.gear_correction import polar2cartesian, angle_to_point
 from vfr.evaluation.measures import get_errors, get_grouped_errors, group_by_subkeys
 
 from math import sin, cos
 import numpy as np
 
-
-def angle_to_point(
-        alpha_nom,
-        beta_nom,
-        coeffs=None,
-        x_center=None,
-        y_center=None,
-        R_alpha=None,
-        R_beta_midpoint=None,
-        alpha0=None,
-):
-
-    # these offsets make up for the rotation of
-    # the camera *and* for the +180 degree offset
-    # for beta in respect for the Cartesian system
-    a_alpha = coeffs['coeffs_alpha']['a']
-    a_beta = coeffs['coeffs_beta']['a']
-    print("offset alpha = ", np.rad2deg(a_alpha))
-    print("offset beta = ", np.rad2deg(a_beta))
-    print("R_alpha=", R_alpha)
-    print("R_beta_midpoint=", R_beta_midpoint)
-    if alpha0 is None:
-        # alpha reference point for deriving gamma
-        alpha0 = -180.3 + 5.0 # alpha_min + pos_rep_safety_margin
-
-    P0 = np.array([x_center, y_center])
-
-    # add offset from fitting
-    alpha = alpha_nom + np.rad2deg(a_alpha)
-    beta = beta_nom + np.rad2deg(a_beta)
-    # add difference to alpha when the beta
-    # correction was measured (these angles add up
-    # because when the alpha arm is turned (clockwise),
-    # this turns the beta arm (clockwise) as well).
-    gamma = beta + (alpha - alpha0)
-    # compute expected Cartesian coordinate of observation
-    pos_alpha = np.array(polar2cartesian(np.deg2rad(alpha), R_alpha))
-    pos_beta = np.array(polar2cartesian(np.deg2rad(gamma), R_beta_midpoint))
-
-    expected_point = P0 + pos_alpha + pos_beta
-    print("alpha_nom=%f, beta_nom=%f" % (alpha_nom, beta_nom))
-    print("alpha=%f, beta=%f, gamma=%f" % (alpha, beta, gamma))
-    print("p0=", P0)
-    print("p_expected=",expected_point)
-    print("p_a=", pos_alpha)
-    print("p_b=", pos_beta)
-
-    return expected_point
 
 
 def evaluate_positional_verification(
