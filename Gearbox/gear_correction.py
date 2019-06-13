@@ -560,6 +560,12 @@ def angle_to_point(
         R_beta_midpoint=None,
         alpha0=None,
 ):
+    """convert nominal angle to expected coordinate in the image plane.
+    This function is needed to derive the positional
+    verification error, by performing a transformation
+    from the nominal arm angles to the (x,y) image
+    plane position where the image is expected.
+    """
 
     # these offsets make up for the rotation of
     # the camera *and* for the +180 degree offset
