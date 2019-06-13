@@ -57,9 +57,8 @@ def get_magnitudes(
     # to be smaller.)
     #
     # The quality factors are ignored.
-    weighted_coordinates = (weight_factor * blob_coordinates[:, 3:5]) + (
-        1.0 - weight_factor
-    ) * blob_coordinates[:, :2]
+    weighted_coordinates = ((weight_factor * blob_coordinates[:, 3:5])
+                            + (1.0 - weight_factor) * blob_coordinates[:, :2])
 
     # If the centroid (mean vector) is not defined, compute it.
     if centroid is None:
