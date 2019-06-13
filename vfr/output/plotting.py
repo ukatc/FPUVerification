@@ -154,4 +154,4 @@ def plot(dbe, opts):
 
 
             if "E" in plot_selection:
-                plot_measured_vs_expected_points(**gear_correction)
+                plot_measured_vs_expected_points(fpu_id, **gear_correction)

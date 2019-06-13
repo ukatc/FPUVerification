@@ -602,7 +602,8 @@ def angle_to_point(
 
 
 
-def plot_measured_vs_expected_points(version=None,
+def plot_measured_vs_expected_points(serial_number,
+                                     version=None,
                                      coeffs=None,
                                      x_center=None,
                                      y_center=None,
@@ -671,7 +672,7 @@ def plot_measured_vs_expected_points(version=None,
         plt.legend(loc="best", labelspacing=0.1)
 
     plt.grid()
-    plt.title("measured vs expected points")
+    plt.title("FPU {}: measured vs expected points".format(serial_number))
     plt.xlabel("x")
     plt.ylabel("y")
     plt.show()
