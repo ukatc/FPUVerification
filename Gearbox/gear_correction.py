@@ -124,8 +124,10 @@ def fit_gearbox_parameters(par, analysis_results, return_intermediate_results=Fa
 
     if par == "alpha":
         phi_nominal = np.deg2rad(alpha)
+        alpha_ref = np.NaN
     else:
         phi_nominal = np.deg2rad(beta)
+        alpha_ref = np.mean(alpha)
 
     # fit data to a linear curve
     a0 = np.mean(phi_real - phi_nominal)
@@ -175,6 +177,7 @@ def fit_gearbox_parameters(par, analysis_results, return_intermediate_results=Fa
             "R": R,
             "a": a,
             "b": b,
+            "alpha0" : alpha_ref,
             "xp": phi_nom_2,
             "yp": phi_corr_2,
             "num_support_points": len(phi_nom_2),
@@ -214,6 +217,7 @@ def fit_gearbox_parameters(par, analysis_results, return_intermediate_results=Fa
             "R": R,
             "a": a,
             "b": b,
+            "alpha0" : alpha_ref,
             "num_support_points": len(phi_nom_2),
             "num_data_points": len(x_s),
             "xp": phi_nom_2,
@@ -280,6 +284,7 @@ def plot_gearbox_calibration(
     R=None,
     a=None,
     b=None,
+    alpha0=None,
     R_real=None,
     phi_nominal=None,
     xp=None,
@@ -467,14 +472,16 @@ def fit_gearbox_correction(dict_of_coordinates_alpha, dict_of_coordinates_beta):
     Pcb = np.array([x_center_beta, y_center_beta])
     # radius of alpha arm is distance from P0 to Pcb
     R_alpha = np.linalg.norm(Pcb - P0)
-    # radius from beta center to weighthed midpoint between metrology targets
+    # radius from beta center to weighted midpoint between metrology targets
     R_beta_midpoint = coeffs_beta["R"]
+    alpha0 = coeffs_alpha["alpha0"]
 
     return {
         "version": GEARBOX_CORRECTION_VERSION,
         "coeffs": {"coeffs_alpha": coeffs_alpha, "coeffs_beta": coeffs_beta},
         "x_center": x_center,
         "y_center": y_center,
+        "alpha0" : alpha0,
         "R_alpha": R_alpha,
         "R_beta_midpoint": R_beta_midpoint,
         "BLOB_WEIGHT_FACTOR": BLOB_WEIGHT_FACTOR,
