@@ -111,7 +111,7 @@ def fit_gearbox_parameters(axis, analysis_results, return_intermediate_results=F
         nominal_angles.append((alpha_nom, beta_nom))
         midpoints[key] = (x, y)
     x_s, y_s = np.array(circle_points).T
-    alpha, beta = np.array(nominal_angles).T
+    alpha_nominal, beta_nominal = np.array(nominal_angles).T
 
     xc, yc, R, residual = leastsq_circle(x_s, y_s)
 
@@ -123,12 +123,12 @@ def fit_gearbox_parameters(axis, analysis_results, return_intermediate_results=F
     # phi_real = np.unwrap(phi_real)
 
     if axis == "alpha":
-        phi_nominal = np.deg2rad(alpha)
+        phi_nominal = np.deg2rad(alpha_nominal)
         alpha_ref = np.NaN
-        beta_ref = np.mean(beta)
+        beta_ref = np.mean(beta_nominal)
     else:
-        phi_nominal = np.deg2rad(beta)
-        alpha_ref = np.mean(alpha)
+        phi_nominal = np.deg2rad(beta_nominal)
+        alpha_ref = np.mean(alpha_nominal)
         beta_ref=np.NaN
 
     # fit data to a linear curve
@@ -173,6 +173,8 @@ def fit_gearbox_parameters(axis, analysis_results, return_intermediate_results=F
             "x": x_s,
             "y": y_s,
             "phi_nominal": phi_nominal,
+            "alpha_nominal" : alpha_nominal,
+            "beta_nominal" : beta_nominal,
             "R_real": R_real,
             "xc": xc,
             "yc": yc,
@@ -557,7 +559,6 @@ def angle_to_point(
         R_alpha=None,
         R_beta_midpoint=None,
         alpha0=None,
-        beta0=None,
 ):
 
     # these offsets make up for the rotation of
@@ -621,7 +622,7 @@ def plot_measured_vs_expected_points(serial_number,
     plt.figure(facecolor="white")  # figsize=(7, 5.4), dpi=72,
     plt.axis("equal")
 
-    theta_fit = np.linspace(-pi, pi, 10 * 360)
+    theta_fit = np.linspace(-pi, pi, 2 * 360)
 
     for lcoeffs, axis, color in [
             (coeffs["coeffs_alpha"], "alpha", "r"),
@@ -632,28 +633,25 @@ def plot_measured_vs_expected_points(serial_number,
         x = lcoeffs["x"]
         y = lcoeffs["y"]
         R = lcoeffs["R"]
-        phi_nominal = lcoeffs["phi_nominal"]
-        alpha_ref = lcoeffs["alpha0"]
-        beta_ref = lcoeffs["beta0"]
+        alpha_nominal = lcoeffs["alpha_nominal"]
+        beta_nominal = lcoeffs["beta_nominal"]
 
-
-        if axis == "alpha":
-            alpha = np.rad2deg(phi_nominal)
-            beta = beta_ref * np.ones_like(alpha)
-        else:
-            beta = np.rad2deg(phi_nominal)
-            alpha = alpha_ref * np.ones_like(beta)
 
         x_fit = xc + R * np.cos(theta_fit)
         y_fit = yc + R * np.sin(theta_fit)
 
-        plt.plot(x_fit, y_fit, "c-", label="fitted circle " + axis, lw=2)
-        plt.plot([xc], [yc], color + "D", mec="y", mew=1)
+        if axis == "alpha":
+            fc = "c-"
+        else:
+            fc= "g-"
+
+        plt.plot(x_fit, y_fit, fc, label="{} fitted circle ".format(axis), lw=2)
+        plt.plot([xc], [yc], color + "D", mec="y", mew=1, label="{} fitted center".format(axis))
         # plot data
         plt.plot(x, y, color + ".", label="{} measured point ".format(axis), mew=1)
 
         expected_points = []
-        for alpha_nom, beta_nom in zip(alpha, beta):
+        for alpha_nom, beta_nom in zip(alpha_nominal, beta_nominal):
             ep =  angle_to_point(
                 alpha_nom,
                 beta_nom,
@@ -663,7 +661,6 @@ def plot_measured_vs_expected_points(serial_number,
                 R_alpha=R_alpha,
                 R_beta_midpoint=R_beta_midpoint,
                 alpha0=alpha0,
-                beta0=beta0,
             )
             expected_points.append(ep)
         xe, ye = np.array(expected_points).T
