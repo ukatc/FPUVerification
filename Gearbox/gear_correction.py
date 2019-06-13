@@ -571,7 +571,7 @@ def angle_to_point(
     print("offset beta = ", np.rad2deg(a_beta))
     print("R_alpha=", R_alpha)
     print("R_beta_midpoint=", R_beta_midpoint)
-    if alpha0:
+    if alpha0 is None:
         # alpha reference point for deriving gamma
         warnings.warn("setting default alpha reference")
         alpha0 = -180.3 + 5.0 # alpha_min + pos_rep_safety_margin
@@ -585,7 +585,7 @@ def angle_to_point(
     # correction was measured (these angles add up
     # because when the alpha arm is turned (clockwise),
     # this turns the beta arm (clockwise) as well).
-    gamma = beta + (alpha_nom - alpha0)
+    gamma = beta + b_alpha * (alpha_nom - alpha0)
     # compute expected Cartesian coordinate of observation
     pos_alpha = np.array(polar2cartesian(np.deg2rad(alpha), R_alpha))
     pos_beta = np.array(polar2cartesian(np.deg2rad(gamma), R_beta_midpoint))
@@ -613,6 +613,9 @@ def plot_measured_vs_expected_points(version=None,
                                      BLOB_WEIGHT_FACTOR=None,
 ):
 
+    if (coeffs["coeffs_alpha"] is None) or (
+            coeffs["coeffs_beta"] is None):
+        return
 
     plt.figure(facecolor="white")  # figsize=(7, 5.4), dpi=72,
     plt.axis("equal")
@@ -642,6 +645,7 @@ def plot_measured_vs_expected_points(version=None,
 
         x_fit = xc + R * np.cos(theta_fit)
         y_fit = yc + R * np.sin(theta_fit)
+
         plt.plot(x_fit, y_fit, "c-", label="fitted circle " + axis, lw=2)
         plt.plot([xc], [yc], color + "D", mec="y", mew=1)
         # plot data
