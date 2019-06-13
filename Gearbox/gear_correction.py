@@ -517,7 +517,7 @@ def fit_gearbox_correction(dict_of_coordinates_alpha, dict_of_coordinates_beta, 
 
 
 def apply_gearbox_parameters(
-    phi, a=None, b=None, xp=None, y_corr=None, algorithm=None, **rest_coeffs
+    angle_deg, a=None, b=None, xp=None, y_corr=None, algorithm=None, **rest_coeffs
 ):
 
     assert (
@@ -527,9 +527,14 @@ def apply_gearbox_parameters(
     xp = np.array(xp, dtype=float)
     y_corr = np.array(y_corr, dtype=float)
 
-    phi_corrected = np.interp(phi, y_corr, xp, period=2 * pi)
+    period = 360.0
+    wrapped_angle = np.fmod(angle_deg + period * 1.5, period) - period * 0.5
 
-    return phi_corrected
+    phi_rad = np.deg2rad(wrapped_angle)
+
+    phi_corrected = np.interp(phi_rad, y_corr, xp, period=2 * pi)
+
+    return np.rad2deg(phi_corrected)
 
 
 def apply_gearbox_correction(incoords, coeffs=None):
@@ -559,6 +564,7 @@ def angle_to_point(
         R_alpha=None,
         R_beta_midpoint=None,
         alpha0=None,
+        already_corrected=True,
 ):
     """convert nominal angle to expected coordinate in the image plane.
     This function is needed to derive the positional
@@ -567,15 +573,20 @@ def angle_to_point(
     plane position where the image is expected.
     """
 
+    r2d = np.rad2deg
+    d2r = np.deg2rad
+
     # these offsets make up for the rotation of
     # the camera *and* for the +180 degree offset
     # for beta in respect for the Cartesian system
-    a_alpha = np.rad2deg(coeffs['coeffs_alpha']['a'])
-    b_alpha = coeffs['coeffs_alpha']['b']
-    a_beta = np.rad2deg(coeffs['coeffs_beta']['a'])
+    coeffs_alpha = coeffs['coeffs_alpha']
+    coeffs_beta = coeffs['coeffs_beta']
+    a_alpha = coeffs_alpha['a']
+    b_alpha = coeffs_alpha['b']
+    a_beta = coeffs_beta['a']
     b_beta = coeffs['coeffs_beta']['b']
-    print("offset alpha = ", np.rad2deg(a_alpha))
-    print("offset beta = ", np.rad2deg(a_beta))
+    print("offset alpha = ", r2d(a_alpha))
+    print("offset beta = ", r2d(a_beta))
     print("R_alpha=", R_alpha)
     print("R_beta_midpoint=", R_beta_midpoint)
     if alpha0 is None:
@@ -585,17 +596,28 @@ def angle_to_point(
 
     P0 = np.array([x_center, y_center])
 
-    # add offset from fitting
-    alpha = b_alpha * alpha_nom + a_alpha
-    beta = b_beta * beta_nom + a_beta
-    # add difference to alpha when the beta
-    # correction was measured (these angles add up
-    # because when the alpha arm is turned (clockwise),
-    # this turns the beta arm (clockwise) as well).
-    gamma = beta + b_alpha * (alpha_nom - alpha0)
+    if already_corrected:
+        # use only linear fit here (because nominal coordinates were
+        # corrected during measurement)
+        alpha = r2d(b_alpha * d2r(alpha_nom) + a_alpha)
+        beta = r2d(b_beta * d2r(beta_nom) + a_beta)
+
+        # add difference to alpha when the beta
+        # correction was measured (these angles add up
+        # because when the alpha arm is turned (clockwise),
+        # this turns the beta arm (clockwise) as well).
+        gamma = r2d(d2r(beta) + b_alpha * d2r(alpha_nom - alpha0))
+
+    else:
+        # use full gearbox correction
+        alpha = apply_gearbox_parameters(alpha_nom, **coeffs_alpha)
+        beta = apply_gearbox_parameters(beta_nom, **coeffs_beta)
+        alpha_ref = apply_gearbox_parameters(alpha0, **coeffs_alpha)
+        gamma = beta + (alpha - alpha_ref)
+
     # compute expected Cartesian coordinate of observation
-    pos_alpha = np.array(polar2cartesian(np.deg2rad(alpha), R_alpha))
-    pos_beta = np.array(polar2cartesian(np.deg2rad(gamma), R_beta_midpoint))
+    pos_alpha = np.array(polar2cartesian(d2r(alpha), R_alpha))
+    pos_beta = np.array(polar2cartesian(d2r(gamma), R_beta_midpoint))
 
     expected_point = P0 + pos_alpha + pos_beta
     print("alpha_nom=%f, beta_nom=%f" % (alpha_nom, beta_nom))
@@ -667,6 +689,7 @@ def plot_measured_vs_expected_points(serial_number,
                 R_alpha=R_alpha,
                 R_beta_midpoint=R_beta_midpoint,
                 alpha0=alpha0,
+                already_corrected=False,
             )
             expected_points.append(ep)
         xe, ye = np.array(expected_points).T
