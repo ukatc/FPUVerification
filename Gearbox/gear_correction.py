@@ -517,7 +517,15 @@ def fit_gearbox_correction(dict_of_coordinates_alpha, dict_of_coordinates_beta, 
 
 
 def apply_gearbox_parameters(
-    angle_deg, a=None, b=None, xp=None, y_corr=None, algorithm=None, **rest_coeffs
+        angle_deg,
+        a=None,
+        b=None,
+        xp=None,
+        y_corr=None,
+        algorithm=None,
+        inverse_transform=False,
+        wrap=False,
+        **rest_coeffs
 ):
 
     assert (
@@ -527,12 +535,20 @@ def apply_gearbox_parameters(
     xp = np.array(xp, dtype=float)
     y_corr = np.array(y_corr, dtype=float)
 
-    period = 360.0
-    wrapped_angle = np.fmod(angle_deg + period * 1.5, period) - period * 0.5
+    if inverse_transform:
+        x_points = xp
+        y_points = y_corr
+    else:
+        x_points = y_corr
+        y_points = xp
 
-    phi_rad = np.deg2rad(wrapped_angle)
+    if wrap:
+        period = 360.0
+        angle_deg = np.fmod(angle_deg + period * 1.5, period) - period * 0.5
 
-    phi_corrected = np.interp(phi_rad, y_corr, xp, period=2 * pi)
+    angle_rad = np.deg2rad(angle_deg)
+
+    phi_corrected = np.interp(angle_rad, x_points, y_points, period=2 * pi)
 
     return np.rad2deg(phi_corrected)
 
@@ -610,9 +626,9 @@ def angle_to_point(
 
     else:
         # use full gearbox correction
-        alpha = apply_gearbox_parameters(alpha_nom, **coeffs_alpha)
-        beta = apply_gearbox_parameters(beta_nom, **coeffs_beta)
-        alpha_ref = apply_gearbox_parameters(alpha0, **coeffs_alpha)
+        alpha = apply_gearbox_parameters(alpha_nom, inverse_transform=True, **coeffs_alpha)
+        beta = apply_gearbox_parameters(beta_nom, inverse_transform=True, **coeffs_beta)
+        alpha_ref = apply_gearbox_parameters(alpha0, inverse_transform=True, **coeffs_alpha)
         gamma = beta + (alpha - alpha_ref)
 
     # compute expected Cartesian coordinate of observation
