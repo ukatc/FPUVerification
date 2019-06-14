@@ -606,6 +606,7 @@ def angle_to_point(
     print("R_alpha=", R_alpha)
     print("R_beta_midpoint=", R_beta_midpoint)
     if alpha0 is None:
+        assert False
         # alpha reference point for deriving gamma
         warnings.warn("setting default alpha reference")
         alpha0 = -180.3 + 5.0 # alpha_min + pos_rep_safety_margin
@@ -705,7 +706,7 @@ def plot_measured_vs_expected_points(serial_number,
                 R_alpha=R_alpha,
                 R_beta_midpoint=R_beta_midpoint,
                 alpha0=alpha0,
-                already_corrected=True,
+                already_corrected=False,
             )
             expected_points.append(ep)
         xe, ye = np.array(expected_points).T
