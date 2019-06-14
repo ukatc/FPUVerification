@@ -115,7 +115,7 @@ def fit_gearbox_parameters(axis, analysis_results, return_intermediate_results=F
 
     xc, yc, R, residual = leastsq_circle(x_s, y_s)
 
-    phi_real_rad, R_real = cartesian2polar(y_s - yc, x_s - xc)
+    phi_real_rad, R_real = cartesian2polar(x_s - xc, y_s - yc)
 
     # change wrapping point to match it to nominal angle
     # (reaching a piecewise linear function)
@@ -260,7 +260,7 @@ def split_iterations(
 
                 x, y = midpoints[key]
 
-                phi_real, rho = cartesian2polar(y - yc, x - xc)
+                phi_real, rho = cartesian2polar(x - xc, y - yc)
 
                 phi_real = np.where(phi_real > pi / 4, phi_real - 2 * pi, phi_real)
 
@@ -705,7 +705,7 @@ def plot_measured_vs_expected_points(serial_number,
                 R_alpha=R_alpha,
                 R_beta_midpoint=R_beta_midpoint,
                 alpha0=alpha0,
-                already_corrected=False,
+                already_corrected=True,
             )
             expected_points.append(ep)
         xe, ye = np.array(expected_points).T
