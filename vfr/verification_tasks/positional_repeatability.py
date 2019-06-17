@@ -101,7 +101,7 @@ def prepare_cam(rig, exposure_time):
 
 MeasurementIndex = namedtuple(
     "MeasurementIndex",
-    " i_iteration" " j_direction" " k_increment" " idx_alpha" " idx_beta",
+    " i_iteration" " j_direction" " k_increment" " idx_alpha" " idx_beta" " hires",
 )
 
 FPU_Position = namedtuple("FPU_Position", "alpha beta")
@@ -126,11 +126,11 @@ def index_positions(pars):
                     idx_beta = MAX_INCREMENT - k_increment - 1
 
                 yield MeasurementIndex(
-                    i_iteration, j_direction, k_increment, idx_alpha, idx_beta
+                    i_iteration, j_direction, k_increment, idx_alpha, idx_beta, False
                 )
 
     # add a single iteration of a high-resolution measurement
-    i_iteration = 0
+    i_iteration = pars.POS_REP_ITERATIONS
     for j_direction in range(4):
         MAX_INCREMENT = pars.POS_REP_NUM_HI_RES_INCREMENTS
         for k_increment in range(MAX_INCREMENT):
@@ -148,7 +148,7 @@ def index_positions(pars):
                 idx_beta = MAX_INCREMENT - k_increment - 1
 
             yield MeasurementIndex(
-                i_iteration, j_direction, k_increment, idx_alpha, idx_beta
+                i_iteration, j_direction, k_increment, idx_alpha, idx_beta, True
             )
 
 
@@ -158,12 +158,17 @@ def get_target_position(limits, pars, measurement_index):
     beta_min = limits.beta_min
     beta_max = limits.beta_max
 
+    if measurement_index.hires:
+        n_increments = pars.POS_REP_NUM_HI_RES_INCREMENTS
+    else:
+        n_increments = pars.POS_REP_NUM_INCREMENTS
+        
     step_a = (
         alpha_max - alpha_min - 2 * pars.POS_REP_SAFETY_MARGIN
-    ) / pars.POS_REP_NUM_INCREMENTS
+    ) / float(n_increments)
     step_b = (
         beta_max - beta_min - 2 * pars.POS_REP_SAFETY_MARGIN
-    ) / pars.POS_REP_NUM_INCREMENTS
+    ) / float(n_increments)
 
     alpha0 = alpha_min + pars.POS_REP_SAFETY_MARGIN
     beta0 = beta_min + pars.POS_REP_SAFETY_MARGIN
@@ -315,16 +320,17 @@ def measure_positional_repeatability(rig, dbe, pars=None):
                 continue
 
             def capture_image(measurement_index, real_pos):
-
+                res = 'H' if measurement_index.hires else 'L'
                 ipath = store_image(
                     pos_rep_cam,
-                    "{sn}/{tn}/{ts}/i{itr:03d}-j{dir:03d}-k{inc:03d}_({alpha:+08.3f},_{beta:+08.3f}).bmp",
+                    "{sn}/{tn}/{ts}/i{itr:03d}-j{dir:03d}-k{inc:03d}-{res}_({alpha:+08.3f},_{beta:+08.3f}).bmp",
                     sn=sn,
                     tn="positional-repeatability",
                     ts=tstamp,
                     itr=measurement_index.i_iteration,
                     dir=measurement_index.j_direction,
                     inc=measurement_index.k_increment,
+                    res=res,
                     alpha=real_pos.alpha,
                     beta=real_pos.beta,
                 )
