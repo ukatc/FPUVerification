@@ -556,6 +556,11 @@ def check_config_item(fpu_id, val):
             "serial number %r for FPU %i is not valid!" % (serialnumber, key)
         )
 
+def get_id(entry):
+    if "fpu_id" in entry:
+        return entry["fpu_id"]
+    else:
+        return (entry["can_id"] - 1)
 
 def load_config(config_file_name):
     logger = logging.getLogger(__name__)
@@ -570,13 +575,11 @@ def load_config(config_file_name):
     fconfig = dict(
         [
             (
-                entry["fpu_id"],
+                get_id(entry),
                 {
                     "serialnumber": entry["serialnumber"],
                     "pos": entry["pos"],
-                    "fpu_id": entry["fpu_id"]
-                    if ("fpu_id" in entry)
-                    else (entry["can_id"] - 1),
+                    "fpu_id": get_id(entry),
                 },
             )
             for entry in cfg_list
