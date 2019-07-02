@@ -148,7 +148,7 @@ def test_limit(rig, dbe, which_limit, pars=None):
 
     failed_fpus = []
 
-    abs_alpha_def = -180.0
+    abs_alpha_def = -179.0
     abs_beta_def = 0.0
     goto_position(
         rig.gd, abs_alpha_def, abs_beta_def, rig.grid_state, fpuset=rig.measure_fpuset
