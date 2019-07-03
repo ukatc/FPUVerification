@@ -337,7 +337,7 @@ examples = cleandoc(
                                    /moonsdata/verification.
 
 
-   - VFR_LOGLEVEL                - This variable contains the numerical log level for
+    - VFR_LOGLEVEL               - This variable contains the numerical log level for
                                    messages which are logged to the console. The levels
                                    are as documented for the python logging module, in
                                    https://docs.python.org/2/library/logging.html?highlight=logging#levels .
@@ -345,6 +345,14 @@ examples = cleandoc(
                                    level "INFO" or higher. The capability to change the level
                                    is primarily intended for development and debugging purposes,
                                    not for normal use.
+
+   - FPU_DATABASE                - Path to the LMDB database which keeps both the
+                                   hardware protection and position data, and all
+                                   the image paths and evaluation results which
+                                   are returned by the 'report' command.
+
+                                   This can be pointed to a copy of the original
+                                   database for test and debugging purposes.
 
 
     """
