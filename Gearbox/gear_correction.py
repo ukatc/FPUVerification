@@ -324,7 +324,7 @@ def plot_gearbox_calibration(
         plt.plot(r2d(fits[0][0]), r2d(fits[0][1]), "g.", label=fits[0][2])
 
     if 1 in plot_fits:
-        plt.plot(r2d(fits[1][0]), r2d(fits[1][1]), "b+", label=fits[1][2])
+        plt.plot(r2d(fits[1][0]), r2d(fits[1][1]), "b+", label="{}, y = a + b * x, a = {:+1.4f}, b = {:+1.4f}".format(fits[1][2], r2d(a), b))
 
     if 2 in plot_fits:
         plt.plot(r2d(fits[2][0]), r2d(fits[2][1]), "r.", label=fits[2][2])
