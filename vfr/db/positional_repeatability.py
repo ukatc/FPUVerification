@@ -28,7 +28,8 @@ PositionalRepeatabilityResults = namedtuple(
     " pass_threshold_mm"
     " gearbox_correction"
     " error_message"
-    " algorithm_version",
+    " algorithm_version"
+    " gearbox_correction_version",
 )
 
 
@@ -42,7 +43,20 @@ save_positional_repeatability_result = partial(
     save_named_record, (RECORD_TYPE, "result")
 )
 
-get_positional_repeatability_result = partial(get_named_record, (RECORD_TYPE, "result"))
+_get_positional_repeatability_result = partial(get_named_record, (RECORD_TYPE, "result"))
+
+def get_positional_repeatability_result(dbe, fpu_id, count=None):
+
+    val = _get_positional_repeatability_result(dbe, fpu_id, count=count)
+
+    if val is None:
+        return None
+
+    # if version value is missing, set it to first version
+    if "gearbox_correction_version" not in val:
+        val["gearbox_correction_version"] = 0.1
+
+    return val
 
 
 def get_positional_repeatability_passed_p(dbe, fpu_id, count=None):

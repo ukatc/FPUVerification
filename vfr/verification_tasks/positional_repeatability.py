@@ -6,7 +6,7 @@ import logging
 from os.path import abspath
 from vfr.auditlog import get_fpuLogger
 
-from Gearbox.gear_correction import GearboxFitError, fit_gearbox_correction
+from Gearbox.gear_correction import GearboxFitError, fit_gearbox_correction, GEARBOX_CORRECTION_VERSION
 from GigE.GigECamera import BASLER_DEVICE_CLASS, DEVICE_CLASS, IP_ADDRESS
 from ImageAnalysisFuncs.base import get_min_quality
 from ImageAnalysisFuncs.analyze_positional_repeatability import (
@@ -162,7 +162,7 @@ def get_target_position(limits, pars, measurement_index):
         n_increments = pars.POS_REP_NUM_HI_RES_INCREMENTS
     else:
         n_increments = pars.POS_REP_NUM_INCREMENTS
-        
+
     step_a = (
         alpha_max - alpha_min - 2 * pars.POS_REP_SAFETY_MARGIN
     ) / float(n_increments)
@@ -540,6 +540,7 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
             gearbox_correction=gearbox_correction,
             error_message=errmsg,
             algorithm_version=POSITIONAL_REPEATABILITY_ALGORITHM_VERSION,
+            gearbox_correction_version=GEARBOX_CORRECTION_VERSION,
         )
 
         logger.debug("FPU %r: saving result record = %r" % (fpu_id, record))
