@@ -90,7 +90,7 @@ def plot_data_circle(x, y, xc, yc, R, title):
     plt.show()
 
 
-def fit_gearbox_parameters(axis, analysis_results, return_intermediate_results=False):
+def fit_gearbox_parameters(motor_axis, analysis_results, return_intermediate_results=False):
     if analysis_results is None:
         return None
     # get list of points to which circle is fitted
@@ -122,7 +122,7 @@ def fit_gearbox_parameters(axis, analysis_results, return_intermediate_results=F
     phi_real_rad = np.where(phi_real_rad > pi / 4, phi_real_rad - 2 * pi, phi_real_rad)
     # phi_real = np.unwrap(phi_real)
 
-    if axis == "alpha":
+    if motor_axis == "alpha":
         phi_nominal_rad = np.deg2rad(alpha_nominal_deg)
         alpha_ref_deg = np.NaN
         beta_ref_deg = np.mean(beta_nominal_deg)
@@ -232,13 +232,13 @@ def fit_gearbox_parameters(axis, analysis_results, return_intermediate_results=F
 
 
 def split_iterations(
-    axis, midpoints, xc=None, yc=None, a=None, b=None, xp=None, yp=None
+    motor_axis, midpoints, xc=None, yc=None, a=None, b=None, xp=None, yp=None
 ):
     d2r = np.deg2rad
     # get set of iteration indices
     # loop and select measurements for each iteration
 
-    if axis == "alpha":
+    if motor_axis == "alpha":
         directionlist = [0, 1]
     else:
         directionlist = [2, 3]
@@ -253,7 +253,7 @@ def split_iterations(
 
             for key in filter(match_sweep, midpoints.keys()):
 
-                if axis == "alpha":
+                if motor_axis == "alpha":
                     phi_nominal = d2r(key[0])
                 else:
                     phi_nominal = d2r(key[1])
@@ -278,7 +278,7 @@ def split_iterations(
 
 def plot_gearbox_calibration(
     fpu_id,
-    axis,
+    motor_axis,
     algorithm=None,
     midpoints=None,
     num_support_points=None,
@@ -310,11 +310,11 @@ def plot_gearbox_calibration(
     r2d = np.rad2deg
     # get list of points to which circle is fitted
     if plot_circle:
-        plot_data_circle(x - xc, y - yc, 0, 0, R, title=axis)
+        plot_data_circle(x - xc, y - yc, 0, 0, R, title=motor_axis)
 
     if plot_func:
         plt.plot(r2d(fits[0][0]), r2d(fits[0][1]), "g.", label=fits[0][2])
-        plt.title("FPU {}: real vs nominal angle for {}".format(fpu_id, axis))
+        plt.title("FPU {}: real vs nominal angle for {}".format(fpu_id, motor_axis))
         plt.legend(loc="best", labelspacing=0.1)
         plt.xlabel("nominal angle [degrees]")
         plt.ylabel("real angle [degrees]")
@@ -330,7 +330,7 @@ def plot_gearbox_calibration(
         plt.plot(r2d(fits[2][0]), r2d(fits[2][1]), "r.", label=fits[2][2])
 
     if plot_fits:
-        plt.title("FPU {}: fitted real vs nominal angle for {}".format(fpu_id, axis))
+        plt.title("FPU {}: fitted real vs nominal angle for {}".format(fpu_id, motor_axis))
         plt.legend(loc="best", labelspacing=0.1)
         plt.xlabel("nominal angle [degrees]")
         plt.ylabel("real angle [degrees]")
@@ -339,7 +339,7 @@ def plot_gearbox_calibration(
     if 1 in plot_residuals:
         plt.plot(r2d(phi_nominal), R_real - R, "r.", label="radial delta")
 
-        plt.title("FPU {}: first-order residual radius  for {}".format(fpu_id, axis))
+        plt.title("FPU {}: first-order residual radius  for {}".format(fpu_id, motor_axis))
         plt.legend(loc="best", labelspacing=0.1)
         plt.xlabel("nominal angle [degrees]")
         plt.ylabel("residual radius [millimeter]")
@@ -352,7 +352,7 @@ def plot_gearbox_calibration(
 
         plt.title(
             "FPU {}: first-order residual real vs nominal angle for {}".format(
-                fpu_id, axis
+                fpu_id, motor_axis
             )
         )
         plt.legend(loc="best", labelspacing=0.1)
@@ -367,7 +367,7 @@ def plot_gearbox_calibration(
 
         plt.title(
             "FPU {}: second-order residual real vs nominal angle for {}".format(
-                fpu_id, axis
+                fpu_id, motor_axis
             )
         )
         plt.legend(loc="best", labelspacing=0.1)
@@ -377,14 +377,14 @@ def plot_gearbox_calibration(
 
         plt.title(
             "FPU {}: second-order residual vs nominal angle by iteration for {}".format(
-                fpu_id, axis
+                fpu_id, motor_axis
             )
         )
         plt.xlabel("nominal angle [degrees]")
         plt.ylabel("real angle deltas [degrees]")
 
         for iteration, direction, nom_angles, residual_angles in split_iterations(
-            axis, midpoints, xc=xc, yc=yc, a=a, b=b, xp=xp, yp=yp
+            motor_axis, midpoints, xc=xc, yc=yc, a=a, b=b, xp=xp, yp=yp
         ):
 
             markers = [
@@ -414,14 +414,14 @@ def plot_gearbox_calibration(
                 color,
                 marker=marker,
                 linestyle="",
-                label="%s arm, direction=%s, iteration=%i" % (axis, dirlabel, iteration),
+                label="%s arm, direction=%s, iteration=%i" % (motor_axis, dirlabel, iteration),
             )
 
         plt.legend(loc="best", labelspacing=0.1)
         plt.show()
 
 
-def plot_correction(fpu_id, axis, fits=None, **coefs):
+def plot_correction(fpu_id, motor_axis, fits=None, **coefs):
 
     """
     This applies the correction to the real (measured) angles, and
@@ -437,7 +437,7 @@ def plot_correction(fpu_id, axis, fits=None, **coefs):
 
     plt.plot(r2d(nominal_angle_rad), r2d(nominal_angle_rad), "b-", label="nominal/nominal")
     plt.plot(r2d(nominal_angle_rad), corrected_angle_deg, "g.", label="nominal/corrected")
-    plt.title("FPU {}: nominal vs. corrected real angle for {}".format(fpu_id, axis))
+    plt.title("FPU {}: nominal vs. corrected real angle for {}".format(fpu_id, motor_axis))
     plt.legend(loc="best", labelspacing=0.1)
     plt.xlabel("nominal angle [degrees]")
     plt.ylabel("corrected angle [degrees]")
@@ -669,7 +669,7 @@ def plot_measured_vs_expected_points(serial_number,
 
     theta_fit = np.linspace(-pi, pi, 2 * 360)
 
-    for lcoeffs, axis, color in [
+    for lcoeffs, motor_axis, color in [
             (coeffs["coeffs_alpha"], "alpha", "r"),
             (coeffs["coeffs_beta"], "beta", "b"),
     ]:
@@ -685,15 +685,15 @@ def plot_measured_vs_expected_points(serial_number,
         x_fit = xc + R * np.cos(theta_fit)
         y_fit = yc + R * np.sin(theta_fit)
 
-        if axis == "alpha":
+        if motor_axis == "alpha":
             fc = "c-"
         else:
             fc= "g-"
 
-        plt.plot(x_fit, y_fit, fc, label="{} fitted circle ".format(axis), lw=2)
-        plt.plot([xc], [yc], color + "D", mec="y", mew=1, label="{} fitted center".format(axis))
+        plt.plot(x_fit, y_fit, fc, label="{} fitted circle ".format(motor_axis), lw=2)
+        plt.plot([xc], [yc], color + "D", mec="y", mew=1, label="{} fitted center".format(motor_axis))
         # plot data
-        plt.plot(x, y, color + ".", label="{} measured point ".format(axis), mew=1)
+        plt.plot(x, y, color + ".", label="{} measured point ".format(motor_axis), mew=1)
 
         expected_points = []
         for alpha_nom, beta_nom in zip(alpha_nominal, beta_nominal):
@@ -710,7 +710,7 @@ def plot_measured_vs_expected_points(serial_number,
             )
             expected_points.append(ep)
         xe, ye = np.array(expected_points).T
-        plt.plot(xe, ye, color + "+", label="{} expected from nominal angle".format(axis), mew=1)
+        plt.plot(xe, ye, color + "+", label="{} expected from nominal angle".format(motor_axis), mew=1)
 
         plt.legend(loc="best", labelspacing=0.1)
 
