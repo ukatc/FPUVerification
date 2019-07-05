@@ -740,7 +740,7 @@ def plot_measured_vs_expected_points(serial_number,
             )
             expected_points.append(ep)
         xe, ye = np.array(expected_points).T
-        plt.plot(xe, ye, color + "+", label="{} expected from nominal angle".format(motor_axis), mew=1)
+        plt.plot(xe, ye, color + "+", label="{} points expected from nominal angle".format(motor_axis), mew=1)
 
         plt.legend(loc="best", labelspacing=0.1)
 
