@@ -28,11 +28,11 @@ class GearboxFitError(Exception):
 # (each different result for the same data
 # should yield a version number increase)
 
-GEARBOX_CORRECTION_VERSION = 1.0
+GEARBOX_CORRECTION_VERSION = 2.0
 
 # minimum version for which this code works
 # and yields a tolerable result
-GEARBOX_CORRECTION_MINIMUM_VERSION = 1.0
+GEARBOX_CORRECTION_MINIMUM_VERSION = 2.0
 
 def cartesian2polar(x, y):
     rho = np.sqrt(x ** 2 + y ** 2)
@@ -93,6 +93,24 @@ def plot_data_circle(x, y, xc, yc, R, title):
     plt.show()
 
 
+def cartesian_blob_position(val):
+    x1, y1, q1, x2, y2, q2 = val
+
+    # compute weigthed midpoint between small (x, y1) and
+    # large metrology target (x2, y2)
+    image_x = (1.0 - BLOB_WEIGHT_FACTOR) * x1 + BLOB_WEIGHT_FACTOR * x2
+    image_y = (1.0 - BLOB_WEIGHT_FACTOR) * y1 + BLOB_WEIGHT_FACTOR * y2
+    # the resulting coordinates are image coordinates, which
+    # are always positive, with (x0,y0) the upper left edge.
+
+    # convert image coordinates to Cartesian coordinates,
+    # so that correct orientation conventions are used.
+
+    x = image_x
+    y = - image_y
+
+    return x, y
+
 def fit_gearbox_parameters(motor_axis, analysis_results, return_intermediate_results=False):
     if analysis_results is None:
         return None
@@ -103,12 +121,8 @@ def fit_gearbox_parameters(motor_axis, analysis_results, return_intermediate_res
 
     for key, val in analysis_results.items():
         alpha_nom_deg, beta_nom_deg, i, j, k = key
-        x1, y1, q1, x2, y2, q2 = val
 
-        # compute weigthed midpoint between small and
-        # large metrology target
-        x = (1.0 - BLOB_WEIGHT_FACTOR) * x1 + BLOB_WEIGHT_FACTOR * x2
-        y = (1.0 - BLOB_WEIGHT_FACTOR) * y1 + BLOB_WEIGHT_FACTOR * y2
+        x, y = cartesian_blob_position(val)
 
         circle_points.append((x, y))
         nominal_angles_deg.append((alpha_nom_deg, beta_nom_deg))
