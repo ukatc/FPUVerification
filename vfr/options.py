@@ -88,12 +88,14 @@ def parse_args():
     parser.add_argument(
         "-sel",
         "--plot-selection",
-        default="ABC",
+        default="ABCDE",
         type=str,
         help="""Selection of plots
         A) dat_rep scatter plot in (x,y) image plane,
         B) pos_rep scatter plot,
-        C) circle fitted to pos_rep data
+        C) plot fitted pos_rep data (raw data and fits)
+        D) plot raw data, fits, and fitted circle
+        E) plot measured points vs. expected points from inverse calibration
         """,
     )
 
