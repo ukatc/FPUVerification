@@ -630,22 +630,21 @@ def angle_to_point(
     a_alpha = coeffs_alpha['a']
     b_alpha = coeffs_alpha['b']
     a_beta = coeffs_beta['a']
-    b_beta = coeffs['coeffs_beta']['b']
+    b_beta = coeffs_beta['b']
     print("offset alpha = ", r2d(a_alpha))
     print("offset beta = ", r2d(a_beta))
     print("R_alpha=", R_alpha)
     print("R_beta_midpoint=", R_beta_midpoint)
-    if alpha0 is None:
-        assert False
-        # alpha reference point for deriving gamma
-        warnings.warn("setting default alpha reference")
-        alpha0 = -180.3 + 5.0 # alpha_min + pos_rep_safety_margin
+    assert (alpha0 is not None)
 
     P0 = np.array([x_center, y_center])
 
     if already_corrected:
-        # use only linear fit here (because nominal coordinates were
-        # corrected during measurement)
+        # This is for checking the positional verification data.
+        #
+        # Use only linear fit here (because nominal coordinates were
+        # already corrected for non-linearity during the pos_ver
+        # measurement)
         alpha_deg = r2d(b_alpha * d2r(alpha_nom_deg) + a_alpha)
         beta_deg = r2d(b_beta * d2r(beta_nom_deg) + a_beta)
 
