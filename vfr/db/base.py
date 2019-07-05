@@ -91,14 +91,19 @@ def get_test_result(dbe, fpu_id, keyfunc, count=None):
 
         if val is not None:
             try:
-                val = ast.literal_eval(val)
+                try:
+                    val = ast.literal_eval(val)
 
-            except ValueError:
-                # Resolve Namespace constructors.
-                # We also need to work around the disappointing fact that
-                # literal_eval() does not recognize IEEE754 NaN
-                # symbols.
-                val = eval(val)
+                except ValueError:
+                    # Resolve Namespace constructors.
+                    # We also need to work around the disappointing fact that
+                    # literal_eval() does not recognize IEEE754 NaN
+                    # symbols.
+                    val = eval(val)
+            except SyntaxError:
+                logging.getLogger(__name__).error("trying to retrieve %r: broken record / record too long, returning None" % key2)
+                return None
+
             val["record-count"] = count
 
         trace = logging.getLogger(__name__).trace
