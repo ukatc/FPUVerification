@@ -180,11 +180,9 @@ def fit_gearbox_parameters(motor_axis, analysis_results, return_intermediate_res
             support_points[xp] = []
         support_points[xp].append(yp)
 
-    for k, v in support_points.items():
-        support_points[k] = np.mean(np.array(support_points[k]))
-
     phi_nom_2_rad = sorted(support_points.keys())
-    phi_corr_2_rad = [support_points[k] for k in phi_nom_2_rad]
+
+    phi_corr_2_rad = [np.mean(np.array(support_points[k])) for k in phi_nom_2_rad]
 
     err_phi_2_rad = normalize_difference_radian(err_phi_1_rad - np.interp(phi_nominal_rad, phi_nom_2_rad, phi_corr_2_rad, period=2 * pi))
 
