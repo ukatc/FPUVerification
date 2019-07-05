@@ -111,6 +111,14 @@ def cartesian_blob_position(val):
 
     return x, y
 
+def normalize_difference_radian(x):
+    x = np.where(x < - pi, x + 2 * pi, x)
+
+    x = np.where(x > + pi, x - 2 * pi, x)
+
+    return x
+
+
 def fit_gearbox_parameters(motor_axis, analysis_results, return_intermediate_results=False):
     if analysis_results is None:
         return None
@@ -136,8 +144,8 @@ def fit_gearbox_parameters(motor_axis, analysis_results, return_intermediate_res
 
     # change wrapping point to match it to nominal angle
     # (reaching a piecewise linear function)
-    phi_real_rad = np.where(phi_real_rad > pi / 4, phi_real_rad - 2 * pi, phi_real_rad)
-    # phi_real = np.unwrap(phi_real)
+    # (we can't use np.unwrap because the samples are not ordered)
+    phi_real_rad = np.where(phi_real_rad < - pi / 4, phi_real_rad + 2 * pi, phi_real_rad)
 
     if motor_axis == "alpha":
         phi_nominal_rad = np.deg2rad(alpha_nominal_deg)
@@ -147,6 +155,11 @@ def fit_gearbox_parameters(motor_axis, analysis_results, return_intermediate_res
         phi_nominal_rad = np.deg2rad(beta_nominal_deg)
         alpha_ref_deg = np.mean(alpha_nominal_deg)
         beta_ref_deg=np.NaN
+
+    r2d = np.rad2deg
+    for pn, pr in sorted(zip(phi_nominal_rad, phi_real_rad)):
+        print("vals nominal = {}, real = {}".format(r2d(pn), r2d(pr)))
+
 
     # fit data to a linear curve
     a0 = np.mean(phi_real_rad - phi_nominal_rad)
@@ -173,7 +186,7 @@ def fit_gearbox_parameters(motor_axis, analysis_results, return_intermediate_res
     phi_nom_2_rad = sorted(support_points.keys())
     phi_corr_2_rad = [support_points[k] for k in phi_nom_2_rad]
 
-    err_phi_2_rad = err_phi_1_rad - np.interp(phi_nominal_rad, phi_nom_2_rad, phi_corr_2_rad, period=2 * pi)
+    err_phi_2_rad = normalize_difference_radian(err_phi_1_rad - np.interp(phi_nominal_rad, phi_nom_2_rad, phi_corr_2_rad, period=2 * pi))
 
     phi_fitted_2_rad = phi_fitted_rad + np.interp(
         phi_nominal_rad, phi_nom_2_rad, phi_corr_2_rad, period=2 * pi
@@ -285,7 +298,7 @@ def split_iterations(
 
                 err_phi_1 = phi_real - phi_fitted
 
-                err_phi_2 = err_phi_1 - np.interp(phi_nominal, xp, yp, period=2 * pi)
+                err_phi_2 = normalize_difference_radian(err_phi_1 - np.interp(phi_nominal, xp, yp, period=2 * pi))
 
                 nom_ang.append(phi_nominal)
                 residual_ang.append(err_phi_2)
