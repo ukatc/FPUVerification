@@ -28,11 +28,11 @@ class GearboxFitError(Exception):
 # (each different result for the same data
 # should yield a version number increase)
 
-GEARBOX_CORRECTION_VERSION = 2.0
+GEARBOX_CORRECTION_VERSION = (2, 0, 0)
 
 # minimum version for which this code works
 # and yields a tolerable result
-GEARBOX_CORRECTION_MINIMUM_VERSION = 2.0
+GEARBOX_CORRECTION_MINIMUM_VERSION = (2, 0, 0)
 
 def cartesian2polar(x, y):
     rho = np.sqrt(x ** 2 + y ** 2)
