@@ -629,10 +629,10 @@ def angle_to_point(
     b_alpha = coeffs_alpha['b']
     a_beta = coeffs_beta['a']
     b_beta = coeffs_beta['b']
-    print("offset alpha = ", r2d(a_alpha))
-    print("offset beta = ", r2d(a_beta))
-    print("R_alpha=", R_alpha)
-    print("R_beta_midpoint=", R_beta_midpoint)
+    #print("offset alpha = ", r2d(a_alpha))
+    #print("offset beta = ", r2d(a_beta))
+    #print("R_alpha=", R_alpha)
+    #print("R_beta_midpoint=", R_beta_midpoint)
     assert (alpha0 is not None)
 
     P0 = np.array([x_center, y_center])
@@ -660,16 +660,16 @@ def angle_to_point(
         gamma_deg = beta_deg + (alpha_deg - alpha_ref_deg)
 
     # compute expected Cartesian coordinate of observation
-    pos_alpha = np.array(polar2cartesian(d2r(alpha_deg), R_alpha))
+    pos_alpha = np.array(polar2cartesian(d2r(alpha_deg - 4.4), R_alpha))
     pos_beta = np.array(polar2cartesian(d2r(gamma_deg), R_beta_midpoint))
 
     expected_point = P0 + pos_alpha + pos_beta
-    print("alpha_nom=%f, beta_nom=%f" % (alpha_nom_deg, beta_nom_deg))
-    print("alpha=%f, beta=%f, gamma=%f" % (alpha_deg, beta_deg, gamma_deg))
-    print("p0=", P0)
-    print("p_expected=",expected_point)
-    print("p_a=", pos_alpha)
-    print("p_b=", pos_beta)
+    #print("alpha_nom=%f, beta_nom=%f" % (alpha_nom_deg, beta_nom_deg))
+    #print("alpha=%f, beta=%f, gamma=%f" % (alpha_deg, beta_deg, gamma_deg))
+    #print("p0=", P0)
+    #print("p_expected=",expected_point)
+    #print("p_a=", pos_alpha)
+    #print("p_b=", pos_beta)
 
     return expected_point
 
@@ -736,6 +736,8 @@ def plot_measured_vs_expected_points(serial_number,
                 already_corrected=False,
             )
             expected_points.append(ep)
+            #if len(expected_points) > 5:
+            #    break
         xe, ye = np.array(expected_points).T
         plt.plot(xe, ye, color + "+", label="{} points expected from nominal angle".format(motor_axis), mew=1)
 
