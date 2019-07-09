@@ -329,11 +329,11 @@ def eval_positional_verification(dbe, pos_ver_analysis_pars, pos_ver_evaluation_
         logger.info("evaluating positional verification for FPU %s" % fpu_id)
 
         gearbox_algorithm_version = measurement["gearbox_algorithm_version"]
-        if gearbox_algorithm_version < GEARBOX_MINIMUM_ALGORITHM_VERSION:
+        if gearbox_algorithm_version < GEARBOX_CORRECTION_MINIMUM_VERSION:
             logger.info(
                 "FPU %s: positional verification data uses algorithm version %s, "
                 "required minimum version is %s. Evaluation skipped." % (
-                    fpu_id, gearbox_algorithm_version, GEARBOX_MINIMUM_ALGORITHM_VERSION)
+                    fpu_id, gearbox_algorithm_version, GEARBOX_CORRECTION_MINIMUM_VERSION)
             )
             continue
 
