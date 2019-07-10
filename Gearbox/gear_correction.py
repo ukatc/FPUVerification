@@ -152,8 +152,9 @@ def fit_gearbox_parameters(motor_axis, analysis_results, return_intermediate_res
         alpha_ref_deg = np.NaN
         beta_ref_deg = np.mean(beta_nominal_deg)
     else:
-        phi_nominal_rad = np.deg2rad(beta_nominal_deg)
         alpha_ref_deg = np.mean(alpha_nominal_deg)
+        assert all(alpha_nominal_deg == alpha_ref_deg)
+        phi_nominal_rad = np.deg2rad(beta_nominal_deg)
         beta_ref_deg=np.NaN
 
     r2d = np.rad2deg
