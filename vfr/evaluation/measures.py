@@ -60,15 +60,12 @@ def get_magnitudes(
     weighted_coordinates = ((weight_factor * blob_coordinates[:, 3:5])
                             + (1.0 - weight_factor) * blob_coordinates[:, :2])
 
-    print("weighted coordinates = ", weighted_coordinates)
     # If the centroid (mean vector) is not defined, compute it.
     if centroid is None:
         centroid = np.mean(weighted_coordinates, axis=0)
-    print("centroid coordinates = ", centroid)
 
     # compute error vectors, as difference between samples and centroid
     error_vectors = weighted_coordinates - centroid
-    print("error_vectors = ", error_vectors)
 
     # compute individual magnitudes of error vectors,
     # which results in a list of scalars

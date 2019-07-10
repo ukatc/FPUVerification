@@ -248,18 +248,20 @@ def measure_positional_verification(rig, dbe, pars=None):
             find_datum(gd, grid_state, opts)
 
             image_dict = {}
-            for k, (alpha, beta) in enumerate(tested_positions):
+            deg2rad = np.deg2rad
+
+            for k, (alpha_deg, beta_deg) in enumerate(tested_positions):
                 # get current step count
                 alpha_cursteps, beta_cursteps = get_stepcounts(gd, grid_state, fpu_id)
 
                 # get absolute corrected step count from desired absolute angle
                 asteps_target, bsteps_target = apply_gearbox_correction(
-                    (alpha, beta), coeffs=fpu_coeffs
+                    (deg2rad(alpha_deg), deg2rad(beta_deg)), coeffs=fpu_coeffs
                 )
 
                 fpu_log.info(
                     "FPU %s: measurement #%i - moving to (%7.2f, %7.2f) degrees = (%i, %i) steps"
-                    % (sn, k, alpha, beta, asteps_target, bsteps_target)
+                    % (sn, k, alpha_deg, beta_deg, asteps_target, bsteps_target)
                 )
 
                 # compute deltas of step counts
@@ -286,16 +288,16 @@ def measure_positional_verification(rig, dbe, pars=None):
 
                 fpu_log.debug("FPU %s: saving image # %i..." % (sn, k))
 
-                ipath = capture_image(k, alpha, beta)
+                ipath = capture_image(k, alpha_deg, beta_deg)
                 fpu_log.audit(
                     "saving image for position (%7.3f, %7.3f) to %r"
-                    % (alpha, beta, abspath(ipath))
+                    % (alpha_deg, beta_deg, abspath(ipath))
                 )
                 check_image_analyzability(
                     ipath, posrepCoordinates, pars=POS_REP_ANALYSIS_PARS
                 )
 
-                image_dict[(k, alpha, beta)] = ipath
+                image_dict[(k, alpha_deg, beta_deg)] = ipath
 
             # store dict of image paths, together with all data and algorithms
             # which are relevant to assess result later

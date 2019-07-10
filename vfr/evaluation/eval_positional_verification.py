@@ -19,7 +19,7 @@ def evaluate_positional_verification(
     y_center=None,
     R_alpha=None,
     R_beta_midpoint=None,
-    alpha0=None,
+    alpha0_rad=None,
     coeffs=None,
     BLOB_WEIGHT_FACTOR=None,
     **kwargs
@@ -61,20 +61,22 @@ def evaluate_positional_verification(
     expected_coords = []
     point_list = []
 
+    deg2rad = np.deg2rad
     print(">>>>>>>>>>>> computing point error values")
     for coords, point_pair in dict_of_coords.items():
         print("-------------")
         # get nominal coordinates
-        (idx, alpha_nom, beta_nom) = coords
+        (idx, alpha_nom_deg, beta_nom_deg) = coords
+        alpha_nom_rad, beta_nom_rad = deg2rad(alpha_nom_deg), deg2rad(beta_nom_deg)
         expected_point = angle_to_point(
-            alpha_nom,
-            beta_nom,
+            alpha_nom_rad,
+            beta_nom_rad,
             coeffs=coeffs,
             x_center=x_center,
             y_center=y_center,
             R_alpha=R_alpha,
             R_beta_midpoint=R_beta_midpoint,
-            alpha0=alpha0,
+            alpha0_rad=alpha0_rad,
             already_corrected=True,
             )
 
