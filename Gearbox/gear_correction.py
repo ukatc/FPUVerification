@@ -152,9 +152,9 @@ def fit_gearbox_parameters(motor_axis, analysis_results, return_intermediate_res
         alpha_ref_deg = np.NaN
         beta_ref_deg = np.mean(beta_nominal_deg)
     else:
+        phi_nominal_rad = np.deg2rad(beta_nominal_deg)
         alpha_ref_deg = np.mean(alpha_nominal_deg)
         assert all(alpha_nominal_deg == alpha_ref_deg)
-        phi_nominal_rad = np.deg2rad(beta_nominal_deg)
         beta_ref_deg=np.NaN
 
     r2d = np.rad2deg
@@ -529,8 +529,19 @@ def fit_gearbox_correction(dict_of_coordinates_alpha, dict_of_coordinates_beta, 
     R_alpha = np.linalg.norm(Pcb - P0)
     # radius from beta center to weighted midpoint between metrology targets
     R_beta_midpoint = coeffs_beta["R"]
-    alpha0 = coeffs_beta["alpha0"]
+
+    # DEBUG
+    # replace estimated alpha offset with angle of beta arm
+    # center (Pcb) in respect to alpha arm center (P0)
+    alpha0 = coeffs_beta["alpha0"] + 0.0
+    Vocb = Pcb - P0
+    delta_alpha_rad, __delta_r = cartesian2polar(Vocb[0], Vocb[1])
+    delta_alpha_deg = np.rad2deg(delta_alpha_rad)
+
     beta0 = coeffs_alpha["beta0"]
+    print("delta_alpha_deg=", delta_alpha_deg)
+    print("alpha0=", alpha0)
+    print("beta0=", beta0)
 
     return {
         "version": GEARBOX_CORRECTION_VERSION,
@@ -661,7 +672,8 @@ def angle_to_point(
         gamma_deg = beta_deg + (alpha_deg - alpha_ref_deg)
 
     # compute expected Cartesian coordinate of observation
-    pos_alpha = np.array(polar2cartesian(d2r(alpha_deg - 4.4), R_alpha))
+    # the value of 4.145 minimizes the error for FPU P13A2
+    pos_alpha = np.array(polar2cartesian(d2r(alpha_deg - 4.145), R_alpha))
     pos_beta = np.array(polar2cartesian(d2r(gamma_deg), R_beta_midpoint))
 
     expected_point = P0 + pos_alpha + pos_beta
@@ -721,10 +733,11 @@ def plot_measured_vs_expected_points(serial_number,
         plt.plot(x_fit, y_fit, fc, label="{} fitted circle ".format(motor_axis), lw=2)
         plt.plot([xc], [yc], color + "D", mec="y", mew=1, label="{} fitted center".format(motor_axis))
         # plot data
-        plt.plot(x, y, color + ".", label="{} measured point ".format(motor_axis), mew=1)
+        s = slice(0,None)
+        plt.plot(x[s], y[s], color + ".", label="{} measured point ".format(motor_axis), mew=1)
 
         expected_points = []
-        for alpha_nom, beta_nom in zip(alpha_nominal, beta_nominal):
+        for alpha_nom, beta_nom in zip(alpha_nominal[s], beta_nominal[s]):
             ep =  angle_to_point(
                 alpha_nom,
                 beta_nom,
