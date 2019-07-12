@@ -193,7 +193,17 @@ def fit_gearbox_parameters(motor_axis, circle_data, c0=None,
 
 
 
+    # add offset to nominal angle
     phi_fitted_rad =  phi_nominal_rad + c0
+
+    # remove mean difference between fitted and real value
+    # this needs explanation, adding c0 should bring
+    # the difference to zero (because c0 was computed
+    # by minimizing the point difference).
+    fit_difference = np.mean((phi_real_rad - phi_fitted_rad))
+    phi_real_rad -= fit_difference
+    print("{} angle offset from nominal to real = {} degrees".format(motor_axis, np.rad2deg(c0)))
+    print("{} angle correction for real angles = {} degrees".format(motor_axis, np.rad2deg(fit_difference)))
 
     err_phi_1_rad = phi_real_rad - phi_fitted_rad
 
@@ -213,8 +223,10 @@ def fit_gearbox_parameters(motor_axis, circle_data, c0=None,
         phi_nominal_rad, phi_nom_2_rad, phi_corr_2_rad, period=2 * pi
     )
 
-    # combine first and second order fit, to get an ivertible function
-    corrected_angle_rad = np.array(phi_corr_2_rad) + (c0 + phi_nom_2_rad)
+    ## combine first and second order fit, to get an ivertible function
+    ##corrected_angle_rad = np.array(phi_corr_2_rad) + (c0 + phi_nom_2_rad)
+    # add correction to linear function, to get an invertible function
+    corrected_angle_rad = np.array(phi_corr_2_rad) + phi_nom_2_rad
 
     results = {
             "algorithm": "linfit+piecewise_interpolation",
@@ -779,7 +791,11 @@ def plot_measured_vs_expected_points(serial_number,
         plt.plot(x[s], y[s], color + ".", label="{} measured point ".format(motor_axis), mew=1)
 
         expected_points = []
+        correct=True
         for alpha_nom_rad, beta_nom_rad in zip(alpha_nominal_rad[s], beta_nominal_rad[s]):
+            if correct:
+                alpha_nom_rad = apply_gearbox_parameters(alpha_nom_rad, inverse_transform=True, **coeffs["coeffs_alpha"])
+                beta_nom_rad = apply_gearbox_parameters(beta_nom_rad, inverse_transform=True, **coeffs["coeffs_beta"])
             ep = angle_to_point(
                 alpha_nom_rad,
                 beta_nom_rad,
