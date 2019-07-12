@@ -45,7 +45,7 @@ def plot_pos_rep(fpu_id, analysis_results_alpha, analysis_results_beta, opts):
             x, y = np.array(sweep_series).T[blob_idx]
             ax.scatter(
                 x,
-                y,
+                -y,
                 c=color,
                 label="%s %s" % (label, direction),
                 alpha=0.7,
