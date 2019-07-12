@@ -333,6 +333,15 @@ def fit_offsets(
         alpha0_start=None,
         beta0_start=None
 ):
+    """ The goal of this function is to find the best matching global
+    offset between nominal coordinates and camera coordinates
+    for both alpha and beta arm. This offset is assumed
+    to be caused by the camera orientation.
+
+    This is done by computing the image points from the nominal
+    coordinates with a variable offset, and minimizing for the
+    distance to the actual measured points.
+    """
     all_coords = dict(coordinates_alpha)
     all_coords.update(coordinates_beta)
 
