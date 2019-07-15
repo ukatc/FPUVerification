@@ -250,17 +250,17 @@ def fit_gearbox_parameters(motor_axis, circle_data,
     phi_fitted_rad = phi_nominal_rad
 
     results = {
-            "algorithm": "linfit+piecewise_interpolation",
-            "xc": xc,
-            "yc": yc,
-            "R": circle_data["R"],
-            "c0": c0,
+        "algorithm": "linfit+piecewise_interpolation",
+        "xc": xc,
+        "yc": yc,
+        "R": circle_data["R"],
+        "c0": c0,
         "alpha0_rad" : alpha0_rad,
         "beta0_rad" : beta0_rad,
-            "num_support_points": len(phi_nom_2_rad),
-            "num_data_points": len(x_s),
-            "nominal_angle_rad": phi_nom_2_rad,
-            "corrected_angle_rad": corrected_angle_rad,
+        "num_support_points": len(phi_nom_2_rad),
+        "num_data_points": len(x_s),
+        "nominal_angle_rad": phi_nom_2_rad,
+        "corrected_angle_rad": corrected_angle_rad,
     }
 
     if return_intermediate_results:
@@ -755,12 +755,11 @@ def apply_gearbox_parameters(
         x_points = corrected_angle_rad
         y_points = nominal_angle_rad
 
-    if wrap:
-        period = 2 * np.pi
-        angle_rad = np.fmod(angle_rad + period * 1.5, period) - period * 0.5
+    # wrap in the same way as we did with the fit
+    angle_rad = wrap_complex_vals(np.log(np.exp(1j * angle_rad)).imag)
 
-
-    phi_corrected = np.interp(angle_rad, x_points, y_points, period=2 * pi)
+    #phi_corrected = np.interp(angle_rad, x_points, y_points, period=2 * pi)
+    phi_corrected = np.interp(angle_rad, x_points, y_points)
 
     return phi_corrected
 
