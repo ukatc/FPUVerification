@@ -170,7 +170,15 @@ def fit_circle(analysis_results, motor_axis):
     }
     return result
 
-def fit_gearbox_parameters(motor_axis, circle_data, c0=None,
+def wrap_complex_vals(angle) :
+    return np.where(angle < - pi / 4, angle + 2 * pi, angle)
+
+def fit_gearbox_parameters(motor_axis, circle_data,
+                           P0=None,
+                           R_alpha=None,
+                           R_beta_midpoint=None,
+                           alpha0_rad=None,
+                           beta0_rad=None,
                            return_intermediate_results=False):
 
 
@@ -179,33 +187,43 @@ def fit_gearbox_parameters(motor_axis, circle_data, c0=None,
     xc = circle_data["xc"]
     yc = circle_data["yc"]
 
-    phi_real_rad, R_real = cartesian2polar(x_s - xc, y_s - yc)
+    x_real = x_s - xc
+    y_real = y_s - yc
 
-    # change wrapping point to match it to nominal angle
-    # (reaching a piecewise linear function)
-    # (we can't use np.unwrap because the samples are not ordered)
-    phi_real_rad = np.where(phi_real_rad < - pi / 4, phi_real_rad + 2 * pi, phi_real_rad)
+    _, R_real = cartesian2polar(x_real, y_real)
 
-    if motor_axis == "alpha":
-        phi_nominal_rad = circle_data["alpha_nominal_rad"]
-    else:
-        phi_nominal_rad = circle_data["beta_nominal_rad"]
+    # compute expected points from common fit parameters
+    alpha_nominal_rad = circle_data["alpha_nominal_rad"]
+    beta_nominal_rad = circle_data["beta_nominal_rad"]
+
+    x_n, y_n = angle_to_point(alpha_nominal_rad,
+                              beta_nominal_rad,
+                              P0=P0,
+                              R_alpha=R_alpha,
+                              R_beta_midpoint=R_beta_midpoint,
+                              alpha0_rad=alpha0_rad,
+                              beta0_rad=beta0_rad,
+                              broadcast=True)
+
+    x_nominal = x_n - xc
+    y_nominal = y_n - yc
 
 
+    # compute remaining difference in the complex plane
 
-    # add offset to nominal angle
-    phi_fitted_rad =  phi_nominal_rad + c0
+    points_real = x_real + 1j * y_real
+    points_nominal = x_nominal + 1j * y_nominal
 
-    # remove mean difference between fitted and real value
-    # this needs explanation, adding c0 should bring
-    # the difference to zero (because c0 was computed
-    # by minimizing the point difference).
-    fit_difference = np.mean((phi_real_rad - phi_fitted_rad))
-    phi_real_rad -= fit_difference
-    print("{} angle offset from nominal to real = {} degrees".format(motor_axis, np.rad2deg(c0)))
-    print("{} angle correction for real angles = {} degrees".format(motor_axis, np.rad2deg(fit_difference)))
+    # compute _residual_ offset of nominal - real
+    # (no unwrapping needed because we use the complex domain)
+    # note, the alpha0 / beta0 values are not included
+    angular_difference = np.log(points_real / points_nominal).imag
 
-    err_phi_1_rad = phi_real_rad - phi_fitted_rad
+    phi_nominal_rad = wrap_complex_vals(np.log(points_nominal).imag)
+    phi_real_rad = wrap_complex_vals(np.log(points_real).imag)
+
+
+    err_phi_1_rad = angular_difference
 
     support_points = {}
     for (nominal_angle, yp) in zip(phi_nominal_rad, err_phi_1_rad):
@@ -219,7 +237,7 @@ def fit_gearbox_parameters(motor_axis, circle_data, c0=None,
 
     err_phi_2_rad = normalize_difference_radian(err_phi_1_rad - np.interp(phi_nominal_rad, phi_nom_2_rad, phi_corr_2_rad, period=2 * pi))
 
-    phi_fitted_2_rad = phi_fitted_rad + np.interp(
+    phi_fitted_2_rad = phi_nominal_rad + np.interp(
         phi_nominal_rad, phi_nom_2_rad, phi_corr_2_rad, period=2 * pi
     )
 
@@ -227,6 +245,9 @@ def fit_gearbox_parameters(motor_axis, circle_data, c0=None,
     ##corrected_angle_rad = np.array(phi_corr_2_rad) + (c0 + phi_nom_2_rad)
     # add correction to linear function, to get an invertible function
     corrected_angle_rad = np.array(phi_corr_2_rad) + phi_nom_2_rad
+
+    c0 = 0.0
+    phi_fitted_rad = phi_nominal_rad
 
     results = {
             "algorithm": "linfit+piecewise_interpolation",
@@ -444,14 +465,22 @@ def fit_gearbox_correction(dict_of_coordinates_alpha, dict_of_coordinates_beta, 
     coeffs_alpha = fit_gearbox_parameters(
         "alpha",
         circle_alpha,
-        c0=alpha0_rad,
+        P0=P0,
+        R_alpha=R_alpha,
+        R_beta_midpoint=R_beta_midpoint,
+        alpha0_rad=alpha0_rad,
+        beta0_rad=beta0_rad,
         return_intermediate_results=return_intermediate_results,
     )
 
     coeffs_beta = fit_gearbox_parameters(
         "beta",
         circle_beta,
-        c0=beta0_rad,
+        P0=P0,
+        R_alpha=R_alpha,
+        R_beta_midpoint=R_beta_midpoint,
+        alpha0_rad=alpha0_rad,
+        beta0_rad=beta0_rad,
         return_intermediate_results=return_intermediate_results,
     )
 
