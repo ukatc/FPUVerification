@@ -255,6 +255,8 @@ def fit_gearbox_parameters(motor_axis, circle_data,
             "yc": yc,
             "R": circle_data["R"],
             "c0": c0,
+        "alpha0_rad" : alpha0_rad,
+        "beta0_rad" : beta0_rad,
             "num_support_points": len(phi_nom_2_rad),
             "num_data_points": len(x_s),
             "nominal_angle_rad": phi_nom_2_rad,
@@ -661,6 +663,11 @@ def plot_gearbox_calibration(
         )
         plt.xlabel("nominal angle [degrees]")
         plt.ylabel("real angle deltas [degrees]")
+
+        if motor_axis == "alpha":
+            c0 = alpha0_rad
+        else:
+            c0 = beta0_rad
 
         for iteration, direction, nom_angles, residual_angles in split_iterations(
             motor_axis, midpoints, xc=xc, yc=yc, c0=c0, nominal_angle_rad=nominal_angle_rad, yp=yp
