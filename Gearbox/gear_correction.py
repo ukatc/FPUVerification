@@ -28,7 +28,7 @@ class GearboxFitError(Exception):
 # (each different result for the same data
 # should yield a version number increase)
 
-GEARBOX_CORRECTION_VERSION = (3, 0, 0)
+GEARBOX_CORRECTION_VERSION = (4, 0, 0)
 
 # minimum version for which this code works
 # and yields a tolerable result
@@ -127,7 +127,7 @@ def extract_points(analysis_results):
     """
     nominal_coordinates_rad = []
     circle_points = []
-    midpoints = {}
+    pos_keys = []
 
     for key, val in analysis_results.items():
         alpha_nom_rad, beta_nom_rad = nominal_angle_radian(key)
@@ -135,14 +135,14 @@ def extract_points(analysis_results):
 
         circle_points.append((x, y))
         nominal_coordinates_rad.append((alpha_nom_rad, beta_nom_rad))
-        midpoints[key] = (x,y)
+        pos_keys.append(key)
 
-    return circle_points, nominal_coordinates_rad, midpoints
+    return circle_points, nominal_coordinates_rad, pos_keys
 
 def fit_circle(analysis_results, motor_axis):
     # get list of points to which circle is fitted
 
-    circle_points, nominal_coordinates_rad, midpoints = extract_points(analysis_results)
+    circle_points, nominal_coordinates_rad, pos_keys = extract_points(analysis_results)
 
     x_s, y_s = np.array(circle_points).T
     alpha_nominal_rad, beta_nominal_rad = np.array(nominal_coordinates_rad).T
@@ -155,7 +155,7 @@ def fit_circle(analysis_results, motor_axis):
     else:
         phi_nominal_rad = beta_nominal_rad
 
-    c0_estimate = np.mean(phi_real_rad - phi_nominal_rad)
+    offset_estimate = np.mean(phi_real_rad - phi_nominal_rad)
 
     result = {
         "xc": xc,
@@ -163,15 +163,66 @@ def fit_circle(analysis_results, motor_axis):
         "R": R,
         "x_s" : x_s,
         "y_s" : y_s,
-        "midpoints" : midpoints,
+        "pos_keys" : pos_keys,
         "alpha_nominal_rad" : alpha_nominal_rad,
         "beta_nominal_rad" : beta_nominal_rad,
-        "c0_estimate" : c0_estimate,
+        "offset_estimate" : offset_estimate,
     }
     return result
 
 def wrap_complex_vals(angle) :
     return np.where(angle < - pi / 4, angle + 2 * pi, angle)
+
+
+def get_angle_error(x_s, y_s,
+                    xc, yc,
+                    alpha_nominal_rad,
+                    beta_nominal_rad,
+                    P0=None,
+                    R_alpha=None,
+                    R_beta_midpoint=None,
+                    alpha0_rad=None,
+                    beta0_rad=None
+):
+
+    x_real = x_s - xc
+    y_real = y_s - yc
+
+
+    # compute expected points from common fit parameters
+
+    x_n, y_n = angle_to_point(alpha_nominal_rad,
+                              beta_nominal_rad,
+                              P0=P0,
+                              R_alpha=R_alpha,
+                              R_beta_midpoint=R_beta_midpoint,
+                              alpha0_rad=alpha0_rad,
+                              beta0_rad=beta0_rad,
+                              broadcast=True)
+
+
+    x_nominal = x_n - xc
+    y_nominal = y_n - yc
+
+
+    # compute remaining difference in the complex plane
+
+    points_real = x_real + 1j * y_real
+    points_nominal = x_nominal + 1j * y_nominal
+
+    # compute _residual_ offset of nominal - real
+    # (no unwrapping needed because we use the complex domain)
+    #
+    # note, the alpha0 / beta0 values are not included
+    # (they are considered to be specific to the camera)
+    angular_difference = np.log(points_real / points_nominal).imag
+
+    phi_nominal_rad = wrap_complex_vals(np.log(points_nominal).imag)
+    phi_real_rad = wrap_complex_vals(np.log(points_real).imag)
+
+
+    return phi_real_rad, phi_nominal_rad, angular_difference
+
 
 def fit_gearbox_parameters(motor_axis, circle_data,
                            P0=None,
@@ -187,43 +238,22 @@ def fit_gearbox_parameters(motor_axis, circle_data,
     xc = circle_data["xc"]
     yc = circle_data["yc"]
 
-    x_real = x_s - xc
-    y_real = y_s - yc
-
-    _, R_real = cartesian2polar(x_real, y_real)
-
-    # compute expected points from common fit parameters
     alpha_nominal_rad = circle_data["alpha_nominal_rad"]
     beta_nominal_rad = circle_data["beta_nominal_rad"]
 
-    x_n, y_n = angle_to_point(alpha_nominal_rad,
-                              beta_nominal_rad,
-                              P0=P0,
-                              R_alpha=R_alpha,
-                              R_beta_midpoint=R_beta_midpoint,
-                              alpha0_rad=alpha0_rad,
-                              beta0_rad=beta0_rad,
-                              broadcast=True)
+    _, R_real = cartesian2polar(x_s - xc, y_s - yc)
 
-    x_nominal = x_n - xc
-    y_nominal = y_n - yc
-
-
-    # compute remaining difference in the complex plane
-
-    points_real = x_real + 1j * y_real
-    points_nominal = x_nominal + 1j * y_nominal
-
-    # compute _residual_ offset of nominal - real
-    # (no unwrapping needed because we use the complex domain)
-    # note, the alpha0 / beta0 values are not included
-    angular_difference = np.log(points_real / points_nominal).imag
-
-    phi_nominal_rad = wrap_complex_vals(np.log(points_nominal).imag)
-    phi_real_rad = wrap_complex_vals(np.log(points_real).imag)
+    phi_real_rad, phi_nominal_rad, err_phi_1_rad = get_angle_error(x_s, y_s,
+                                                                   xc, yc,
+                                                                   alpha_nominal_rad,
+                                                                   beta_nominal_rad,
+                                                                   P0=P0,
+                                                                   R_alpha=R_alpha,
+                                                                   R_beta_midpoint=R_beta_midpoint,
+                                                                   alpha0_rad=alpha0_rad,
+                                                                   beta0_rad=beta0_rad)
 
 
-    err_phi_1_rad = angular_difference
 
     support_points = {}
     for (nominal_angle, yp) in zip(phi_nominal_rad, err_phi_1_rad):
@@ -237,24 +267,25 @@ def fit_gearbox_parameters(motor_axis, circle_data,
 
     err_phi_2_rad = normalize_difference_radian(err_phi_1_rad - np.interp(phi_nominal_rad, phi_nom_2_rad, phi_corr_2_rad, period=2 * pi))
 
+    phi_fitted_rad = phi_nominal_rad
+
     phi_fitted_2_rad = phi_nominal_rad + np.interp(
         phi_nominal_rad, phi_nom_2_rad, phi_corr_2_rad, period=2 * pi
     )
 
-    ## combine first and second order fit, to get an ivertible function
-    ##corrected_angle_rad = np.array(phi_corr_2_rad) + (c0 + phi_nom_2_rad)
-    # add correction to linear function, to get an invertible function
+    ## combine first and second order fit, to get an invertible function
+
     corrected_angle_rad = np.array(phi_corr_2_rad) + phi_nom_2_rad
 
-    c0 = 0.0
-    phi_fitted_rad = phi_nominal_rad
 
     results = {
         "algorithm": "linfit+piecewise_interpolation",
         "xc": xc,
         "yc": yc,
         "R": circle_data["R"],
-        "c0": c0,
+        "P0" : P0,
+        "R_alpha" : R_alpha,
+        "R_beta_midpoint" : R_beta_midpoint,
         "alpha0_rad" : alpha0_rad,
         "beta0_rad" : beta0_rad,
         "num_support_points": len(phi_nom_2_rad),
@@ -273,7 +304,8 @@ def fit_gearbox_parameters(motor_axis, circle_data,
             "beta_nominal_rad" : circle_data["beta_nominal_rad"],
             "R_real": R_real,
             "yp": phi_corr_2_rad,
-            "midpoints" : circle_data["midpoints"],
+            "pos_keys" : circle_data["pos_keys"],
+            "err_phi_2_rad" : err_phi_2_rad,
 
             "fits": {
                 0: (phi_nominal_rad, phi_real_rad, "real angle as function of nominal angle"),
@@ -449,8 +481,8 @@ def fit_gearbox_correction(dict_of_coordinates_alpha, dict_of_coordinates_beta, 
     # radius from beta center to weighted midpoint between metrology targets
     R_beta_midpoint = circle_beta["R"]
 
-    alpha0_start = circle_alpha["c0_estimate"]
-    beta0_start = circle_beta["c0_estimate"] + alpha0_start
+    alpha0_start = circle_alpha["offset_estimate"]
+    beta0_start = circle_beta["offset_estimate"] + alpha0_start
 
     r2d = np.rad2deg
     print("alpha0_start =", alpha0_start, "= {} degree".format(r2d(alpha0_start)))
@@ -514,8 +546,11 @@ def fit_gearbox_correction(dict_of_coordinates_alpha, dict_of_coordinates_beta, 
 
 
 def split_iterations(
-    motor_axis, midpoints, xc=None, yc=None, c0=None, nominal_angle_rad=None, yp=None
+        motor_axis,
+        pos_keys,
+        err_phi_2_rad
 ):
+
     d2r = np.deg2rad
     # get set of iteration indices
     # loop and select measurements for each iteration
@@ -525,7 +560,11 @@ def split_iterations(
     else:
         directionlist = [2, 3]
 
-    for selected_iteration in set([k_[2] for k_ in midpoints.keys()]):
+    err_phi_2_map = {}
+    for key, err_phi_2 in zip(pos_keys, err_phi_2_rad):
+        err_phi_2_map[key] = err_phi_2
+
+    for selected_iteration in set([k_[2] for k_ in pos_keys]):
         for direction in directionlist:
             residual_ang_rad = []
             nom_ang_rad = []
@@ -533,27 +572,17 @@ def split_iterations(
                 key[3] == direction
             )
 
-            for key in filter(match_sweep, midpoints.keys()):
+            for key in filter(match_sweep, pos_keys):
 
-                if motor_axis == "alpha":
-                    phi_nominal_rad = d2r(key[0])
+                alpha_nominal_rad, beta_nominal_rad = d2r(key[0]), d2r(key[1])
+                if motor_axis =="alpha":
+                    phi_nominal_rad = alpha_nominal_rad
                 else:
-                    phi_nominal_rad = d2r(key[1])
+                    phi_nominal_rad = beta_nominal_rad
 
-                x, y = midpoints[key]
-
-                phi_real_rad, rho = cartesian2polar(x - xc, y - yc)
-
-                phi_real_rad = np.where(phi_real_rad > pi / 4, phi_real_rad - 2 * pi, phi_real_rad)
-
-                phi_fitted_rad = c0 + phi_nominal_rad
-
-                err_phi_1 = phi_real_rad - phi_fitted_rad
-
-                err_phi_2 = normalize_difference_radian(err_phi_1 - np.interp(phi_nominal_rad, nominal_angle_rad, yp, period=2 * pi))
 
                 nom_ang_rad.append(phi_nominal_rad)
-                residual_ang_rad.append(err_phi_2)
+                residual_ang_rad.append(err_phi_2_map[key])
 
             yield selected_iteration, direction, nom_ang_rad, residual_ang_rad
 
@@ -562,7 +591,7 @@ def plot_gearbox_calibration(
     fpu_id,
     motor_axis,
     algorithm=None,
-    midpoints=None,
+    pos_keys=None,
     num_support_points=None,
     num_data_points=None,
     x=None,
@@ -570,9 +599,11 @@ def plot_gearbox_calibration(
     xc=None,
     yc=None,
     R=None,
-    c0=None,
     alpha0_rad=None,
     beta0_rad=None,
+    P0=None,
+    R_alpha=None,
+    R_beta_midpoint=None,
     R_real=None,
     phi_nominal_rad=None,
     alpha_nominal_rad=None,
@@ -580,6 +611,7 @@ def plot_gearbox_calibration(
     nominal_angle_rad=None,
     yp=None,
     corrected_angle_rad=None,
+    err_phi_2_rad=None,
     fits=None,
     residuals=None,
     plot_circle=False,
@@ -605,7 +637,7 @@ def plot_gearbox_calibration(
         plt.plot(r2d(fits[0][0]), r2d(fits[0][1]), "g.", label=fits[0][2])
 
     if 1 in plot_fits:
-        plt.plot(r2d(fits[1][0]), r2d(fits[1][1]), "b+", label="{}, y = c0 + x, c0 = {:+1.4f}".format(fits[1][2], r2d(c0)))
+        plt.plot(r2d(fits[1][0]), r2d(fits[1][1]), "b+", label="{}".format(fits[1][2]))
 
     if 2 in plot_fits:
         plt.plot(r2d(fits[2][0]), r2d(fits[2][1]), "r.", label=fits[2][2])
@@ -664,13 +696,10 @@ def plot_gearbox_calibration(
         plt.xlabel("nominal angle [degrees]")
         plt.ylabel("real angle deltas [degrees]")
 
-        if motor_axis == "alpha":
-            c0 = alpha0_rad
-        else:
-            c0 = beta0_rad
-
         for iteration, direction, nom_angles, residual_angles in split_iterations(
-            motor_axis, midpoints, xc=xc, yc=yc, c0=c0, nominal_angle_rad=nominal_angle_rad, yp=yp
+                motor_axis,
+                pos_keys,
+                err_phi_2_rad,
         ):
 
             markers = [
