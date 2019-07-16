@@ -275,6 +275,9 @@ def fit_gearbox_parameters(motor_axis, circle_data,
 
     ## combine first and second order fit, to get an invertible function
 
+    #corrected_angle_rad = phi_nom_2_rad + np.interp(
+    #    phi_nom_2_rad, phi_nom_2_rad, phi_corr_2_rad, period=2 * pi
+    #)
     corrected_angle_rad = np.array(phi_corr_2_rad) + phi_nom_2_rad
 
 
@@ -348,6 +351,8 @@ def angle_to_point(
         R_beta_midpoint=None,
         alpha0_rad=None,
         beta0_rad=None,
+        inverse=False,
+        coeffs=None,
         broadcast=True,
 ):
     """convert nominal angles with a given pair of offsets to expected
@@ -357,8 +362,14 @@ def angle_to_point(
 
     """
 
+
+    if coeffs is not None:
+        alpha_nom_rad = apply_gearbox_parameters(alpha_nom_rad, wrap=True, inverse_transform=inverse, **coeffs["coeffs_alpha"])
+        beta_nom_rad = apply_gearbox_parameters(beta_nom_rad, wrap=True, inverse_transform=inverse, **coeffs["coeffs_beta"])
+
     alpha_rad = alpha_nom_rad + alpha0_rad
     beta_rad = beta_nom_rad + beta0_rad
+
 
     # add difference to alpha when the beta
     # correction was measured (these angles add up
@@ -616,7 +627,7 @@ def plot_gearbox_calibration(
     residuals=None,
     plot_circle=False,
     plot_func=True,
-    plot_fits=[0, 1, 2],
+    plot_fits=[0, 1, 2, 3],
     plot_residuals=[0, 1, 2],
 ):
 
@@ -642,8 +653,18 @@ def plot_gearbox_calibration(
     if 2 in plot_fits:
         plt.plot(r2d(fits[2][0]), r2d(fits[2][1]), "r.", label=fits[2][2])
 
+
     if plot_fits:
         plt.title("FPU {}: fitted real vs nominal angle for {}".format(fpu_id, motor_axis))
+        plt.legend(loc="best", labelspacing=0.1)
+        plt.xlabel("nominal angle [degrees]")
+        plt.ylabel("real angle [degrees]")
+        plt.show()
+
+    if plot_fits:
+        plt.plot(r2d(nominal_angle_rad), r2d(corrected_angle_rad), "r.", label="correction table {}".format(motor_axis))
+
+        plt.title("FPU {}: fitted nominal to corrected (real) angle for {}".format(fpu_id, motor_axis))
         plt.legend(loc="best", labelspacing=0.1)
         plt.xlabel("nominal angle [degrees]")
         plt.ylabel("real angle [degrees]")
@@ -785,7 +806,8 @@ def apply_gearbox_parameters(
         y_points = nominal_angle_rad
 
     # wrap in the same way as we did with the fit
-    angle_rad = wrap_complex_vals(np.log(np.exp(1j * angle_rad)).imag)
+    if wrap:
+        angle_rad = wrap_complex_vals(np.log(np.exp(1j * angle_rad)).imag)
 
     #phi_corrected = np.interp(angle_rad, x_points, y_points, period=2 * pi)
     phi_corrected = np.interp(angle_rad, x_points, y_points)
@@ -836,9 +858,9 @@ def plot_measured_vs_expected_points(serial_number,
 
     theta_fit = np.linspace(-pi, pi, 2 * 360)
 
-    for lcoeffs, motor_axis, color in [
-            (coeffs["coeffs_alpha"], "alpha", "r"),
-            (coeffs["coeffs_beta"], "beta", "b"),
+    for lcoeffs, motor_axis, color, color2 in [
+            (coeffs["coeffs_alpha"], "alpha", "r", "m"),
+            (coeffs["coeffs_beta"], "beta", "b", "c"),
     ]:
         xc = lcoeffs["xc"]
         yc = lcoeffs["yc"]
@@ -864,11 +886,7 @@ def plot_measured_vs_expected_points(serial_number,
         plt.plot(x[s], y[s], color + ".", label="{} measured point ".format(motor_axis), mew=1)
 
         expected_points = []
-        correct=True
         for alpha_nom_rad, beta_nom_rad in zip(alpha_nominal_rad[s], beta_nominal_rad[s]):
-            if correct:
-                alpha_nom_rad = apply_gearbox_parameters(alpha_nom_rad, inverse_transform=True, **coeffs["coeffs_alpha"])
-                beta_nom_rad = apply_gearbox_parameters(beta_nom_rad, inverse_transform=True, **coeffs["coeffs_beta"])
             ep = angle_to_point(
                 alpha_nom_rad,
                 beta_nom_rad,
@@ -877,6 +895,9 @@ def plot_measured_vs_expected_points(serial_number,
                 R_beta_midpoint=R_beta_midpoint,
                 alpha0_rad=alpha0_rad,
                 beta0_rad=beta0_rad,
+                inverse=True,
+                #coeffs=coeffs,
+                coeffs=None,
                 broadcast=False
             )
 
@@ -884,7 +905,7 @@ def plot_measured_vs_expected_points(serial_number,
             #if len(expected_points) > 5:
             #    break
         xe, ye = np.array(expected_points).T
-        plt.plot(xe, ye, color + "+", label="{} points expected from nominal angle".format(motor_axis), mew=1)
+        plt.plot(xe, ye, color2 + "+", label="{} points expected from nominal angle".format(motor_axis), mew=1)
 
         plt.legend(loc="best", labelspacing=0.1)
 
