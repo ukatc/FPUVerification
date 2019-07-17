@@ -181,7 +181,7 @@ def get_angle_error(x_s, y_s,
                     P0=None,
                     R_alpha=None,
                     R_beta_midpoint=None,
-                    alpha0_rad=None,
+                    camera_offset_rad=None,
                     beta0_rad=None
 ):
 
@@ -196,7 +196,7 @@ def get_angle_error(x_s, y_s,
                               P0=P0,
                               R_alpha=R_alpha,
                               R_beta_midpoint=R_beta_midpoint,
-                              alpha0_rad=alpha0_rad,
+                              camera_offset_rad=camera_offset_rad,
                               beta0_rad=beta0_rad,
                               broadcast=True)
 
@@ -228,7 +228,7 @@ def fit_gearbox_parameters(motor_axis, circle_data,
                            P0=None,
                            R_alpha=None,
                            R_beta_midpoint=None,
-                           alpha0_rad=None,
+                           camera_offset_rad=None,
                            beta0_rad=None,
                            return_intermediate_results=False):
 
@@ -250,7 +250,7 @@ def fit_gearbox_parameters(motor_axis, circle_data,
                                                                    P0=P0,
                                                                    R_alpha=R_alpha,
                                                                    R_beta_midpoint=R_beta_midpoint,
-                                                                   alpha0_rad=alpha0_rad,
+                                                                   camera_offset_rad=camera_offset_rad,
                                                                    beta0_rad=beta0_rad)
 
 
@@ -289,7 +289,7 @@ def fit_gearbox_parameters(motor_axis, circle_data,
         "P0" : P0,
         "R_alpha" : R_alpha,
         "R_beta_midpoint" : R_beta_midpoint,
-        "alpha0_rad" : alpha0_rad,
+        "camera_offset_rad" : camera_offset_rad,
         "beta0_rad" : beta0_rad,
         "num_support_points": len(phi_nom_2_rad),
         "num_data_points": len(x_s),
@@ -349,7 +349,7 @@ def angle_to_point(
         P0=None,
         R_alpha=None,
         R_beta_midpoint=None,
-        alpha0_rad=None,
+        camera_offset_rad=None,
         beta0_rad=None,
         inverse=False,
         coeffs=None,
@@ -367,7 +367,7 @@ def angle_to_point(
         alpha_nom_rad = apply_gearbox_parameters(alpha_nom_rad, wrap=True, inverse_transform=inverse, **coeffs["coeffs_alpha"])
         beta_nom_rad = apply_gearbox_parameters(beta_nom_rad, wrap=True, inverse_transform=inverse, **coeffs["coeffs_beta"])
 
-    alpha_rad = alpha_nom_rad + alpha0_rad
+    alpha_rad = alpha_nom_rad + camera_offset_rad
     beta_rad = beta_nom_rad + beta0_rad
 
 
@@ -396,7 +396,7 @@ def fit_offsets(
         P0=None,
         R_alpha=None,
         R_beta_midpoint=None,
-        alpha0_start=None,
+        camera_offset_start=None,
         beta0_start=None
 ):
     """ The goal of this function is to find the best matching global
@@ -417,14 +417,14 @@ def fit_offsets(
     alpha_nom_rad, beta_nom_rad = np.array(nominal_coordinates_rad).T
 
     def g(offsets):
-        alpha0, beta0 = offsets
+        camera_offset, beta0 = offsets
         points = angle_to_point(
             alpha_nom_rad,
             beta_nom_rad,
             P0=P0,
             R_alpha=R_alpha,
             R_beta_midpoint=R_beta_midpoint,
-            alpha0_rad=alpha0,
+            camera_offset_rad=camera_offset,
             beta0_rad=beta0
         )
 
@@ -432,16 +432,16 @@ def fit_offsets(
 
 
     # coordinates of the barycenter
-    offsets_estimate = np.array([alpha0_start,  beta0_start])
+    offsets_estimate = np.array([camera_offset_start,  beta0_start])
     offsets, ier = optimize.leastsq(
         g, offsets_estimate,
         ftol=1.5e-10, xtol=1.5e-10
     )
-    alpha0,beta0 = offsets
+    camera_offset,beta0 = offsets
 
     print("mean norm from offset fitting = ", np.mean(g(offsets)))
 
-    return alpha0, beta0
+    return camera_offset, beta0
 
 
 def fit_gearbox_correction(dict_of_coordinates_alpha, dict_of_coordinates_beta, return_intermediate_results=False):
@@ -492,18 +492,18 @@ def fit_gearbox_correction(dict_of_coordinates_alpha, dict_of_coordinates_beta, 
     # radius from beta center to weighted midpoint between metrology targets
     R_beta_midpoint = circle_beta["R"]
 
-    alpha0_start = circle_alpha["offset_estimate"]
-    beta0_start = circle_beta["offset_estimate"] + alpha0_start
+    camera_offset_start = circle_alpha["offset_estimate"]
+    beta0_start = circle_beta["offset_estimate"] + camera_offset_start
 
     r2d = np.rad2deg
-    print("alpha0_start =", alpha0_start, "= {} degree".format(r2d(alpha0_start)))
+    print("camera_offset_start =", camera_offset_start, "= {} degree".format(r2d(camera_offset_start)))
     print("beta0_start =", beta0_start, "= {} degree".format(r2d(beta0_start)))
 
-    alpha0_rad, beta0_rad = fit_offsets(dict_of_coordinates_alpha, dict_of_coordinates_beta,
+    camera_offset_rad, beta0_rad = fit_offsets(dict_of_coordinates_alpha, dict_of_coordinates_beta,
                                         P0=P0,
                                         R_alpha=R_alpha,
                                         R_beta_midpoint=R_beta_midpoint,
-                                        alpha0_start=alpha0_start,
+                                        camera_offset_start=camera_offset_start,
                                         beta0_start=beta0_start,
     )
 
@@ -513,7 +513,7 @@ def fit_gearbox_correction(dict_of_coordinates_alpha, dict_of_coordinates_beta, 
         P0=P0,
         R_alpha=R_alpha,
         R_beta_midpoint=R_beta_midpoint,
-        alpha0_rad=alpha0_rad,
+        camera_offset_rad=camera_offset_rad,
         beta0_rad=beta0_rad,
         return_intermediate_results=return_intermediate_results,
     )
@@ -524,7 +524,7 @@ def fit_gearbox_correction(dict_of_coordinates_alpha, dict_of_coordinates_beta, 
         P0=P0,
         R_alpha=R_alpha,
         R_beta_midpoint=R_beta_midpoint,
-        alpha0_rad=alpha0_rad,
+        camera_offset_rad=camera_offset_rad,
         beta0_rad=beta0_rad,
         return_intermediate_results=return_intermediate_results,
     )
@@ -537,7 +537,7 @@ def fit_gearbox_correction(dict_of_coordinates_alpha, dict_of_coordinates_beta, 
 
 
 
-    print("alpha0_rad =", alpha0_rad, "= {} degree".format(r2d(alpha0_rad)))
+    print("camera_offset_rad =", camera_offset_rad, "= {} degree".format(r2d(camera_offset_rad)))
     print("beta0_rad =", beta0_rad, "= {} degree".format(r2d(beta0_rad)))
 
 
@@ -547,7 +547,7 @@ def fit_gearbox_correction(dict_of_coordinates_alpha, dict_of_coordinates_beta, 
         "coeffs": {"coeffs_alpha": coeffs_alpha, "coeffs_beta": coeffs_beta},
         "x_center": x_center,
         "y_center": y_center,
-        "alpha0_rad" : alpha0_rad,
+        "camera_offset_rad" : camera_offset_rad,
         "beta0_rad" : beta0_rad,
         "R_alpha": R_alpha,
         "R_beta_midpoint": R_beta_midpoint,
@@ -610,7 +610,7 @@ def plot_gearbox_calibration(
     xc=None,
     yc=None,
     R=None,
-    alpha0_rad=None,
+    camera_offset_rad=None,
     beta0_rad=None,
     P0=None,
     R_alpha=None,
@@ -842,7 +842,7 @@ def plot_measured_vs_expected_points(serial_number,
                                      coeffs=None,
                                      x_center=None,
                                      y_center=None,
-                                     alpha0_rad=None,
+                                     camera_offset_rad=None,
                                      beta0_rad=None,
                                      R_alpha=None,
                                      R_beta_midpoint=None,
@@ -893,7 +893,7 @@ def plot_measured_vs_expected_points(serial_number,
                 P0=np.array([x_center, y_center]),
                 R_alpha=R_alpha,
                 R_beta_midpoint=R_beta_midpoint,
-                alpha0_rad=alpha0_rad,
+                camera_offset_rad=camera_offset_rad,
                 beta0_rad=beta0_rad,
                 inverse=True,
                 #coeffs=coeffs,
