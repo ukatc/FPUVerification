@@ -201,27 +201,27 @@ def get_angle_error(x_s, y_s,
                               broadcast=True)
 
 
-    x_nominal = x_n - xc
-    y_nominal = y_n - yc
+    x_fitted = x_n - xc
+    y_fitted = y_n - yc
 
 
     # compute remaining difference in the complex plane
 
     points_real = x_real + 1j * y_real
-    points_nominal = x_nominal + 1j * y_nominal
+    points_fitted = x_fitted + 1j * y_fitted
 
-    # compute _residual_ offset of nominal - real
+    # compute _residual_ offset of fitted - real
     # (no unwrapping needed because we use the complex domain)
     #
     # note, the alpha0 / beta0 values are not included
     # (they are considered to be specific to the camera)
-    angular_difference = np.log(points_real / points_nominal).imag
+    angular_difference = np.log(points_real / points_fitted).imag
 
-    phi_nominal_rad = wrap_complex_vals(np.log(points_nominal).imag)
+    phi_fitted_rad = wrap_complex_vals(np.log(points_fitted).imag)
     phi_real_rad = wrap_complex_vals(np.log(points_real).imag)
 
 
-    return phi_real_rad, phi_nominal_rad, angular_difference
+    return phi_real_rad, phi_fitted_rad, angular_difference
 
 
 def fit_gearbox_parameters(motor_axis, circle_data,
@@ -243,7 +243,7 @@ def fit_gearbox_parameters(motor_axis, circle_data,
 
     _, R_real = cartesian2polar(x_s - xc, y_s - yc)
 
-    phi_real_rad, phi_nominal_rad, err_phi_1_rad = get_angle_error(x_s, y_s,
+    phi_real_rad, phi_fitted_rad, err_phi_1_rad = get_angle_error(x_s, y_s,
                                                                    xc, yc,
                                                                    alpha_nominal_rad,
                                                                    beta_nominal_rad,
@@ -256,7 +256,7 @@ def fit_gearbox_parameters(motor_axis, circle_data,
 
 
     support_points = {}
-    for (nominal_angle, yp) in zip(phi_nominal_rad, err_phi_1_rad):
+    for (nominal_angle, yp) in zip(phi_fitted_rad, err_phi_1_rad):
         if nominal_angle not in support_points:
             support_points[nominal_angle] = []
         support_points[nominal_angle].append(yp)
@@ -265,12 +265,12 @@ def fit_gearbox_parameters(motor_axis, circle_data,
 
     phi_corr_2_rad = [np.mean(np.array(support_points[k])) for k in phi_nom_2_rad]
 
-    err_phi_2_rad = normalize_difference_radian(err_phi_1_rad - np.interp(phi_nominal_rad, phi_nom_2_rad, phi_corr_2_rad, period=2 * pi))
+    err_phi_2_rad = normalize_difference_radian(err_phi_1_rad - np.interp(phi_fitted_rad, phi_nom_2_rad, phi_corr_2_rad, period=2 * pi))
 
-    phi_fitted_rad = phi_nominal_rad
+    phi_fitted_rad = phi_fitted_rad
 
-    phi_fitted_2_rad = phi_nominal_rad + np.interp(
-        phi_nominal_rad, phi_nom_2_rad, phi_corr_2_rad, period=2 * pi
+    phi_fitted_2_rad = phi_fitted_rad + np.interp(
+        phi_fitted_rad, phi_nom_2_rad, phi_corr_2_rad, period=2 * pi
     )
 
     ## combine first and second order fit, to get an invertible function
@@ -302,7 +302,7 @@ def fit_gearbox_parameters(motor_axis, circle_data,
         extra_results =  {
             "x": x_s,
             "y": y_s,
-            "phi_nominal_rad": phi_nominal_rad,
+            "phi_fitted_rad": phi_fitted_rad,
             "alpha_nominal_rad" : circle_data["alpha_nominal_rad"],
             "beta_nominal_rad" : circle_data["beta_nominal_rad"],
             "R_real": R_real,
@@ -311,26 +311,26 @@ def fit_gearbox_parameters(motor_axis, circle_data,
             "err_phi_2_rad" : err_phi_2_rad,
 
             "fits": {
-                0: (phi_nominal_rad, phi_real_rad, "real angle as function of nominal angle"),
+                0: (phi_fitted_rad, phi_real_rad, "real angle as function of nominal angle"),
                 1: (
-                    phi_nominal_rad,
+                    phi_fitted_rad,
                     phi_fitted_rad,
                     "first-order fitted angle as function of nominal angle",
                 ),
                 2: (
-                    phi_nominal_rad,
+                    phi_fitted_rad,
                     phi_fitted_2_rad,
                     "second-order fitted angle as function of nominal angle",
                 ),
             },
             "residuals": {
                 1: (
-                    phi_nominal_rad,
+                    phi_fitted_rad,
                     err_phi_1_rad,
                     "first-order residual angle as function of nominal angle",
                 ),
                 2: (
-                    phi_nominal_rad,
+                    phi_fitted_rad,
                     err_phi_2_rad,
                     "second-order residual angle as function of nominal angle",
                 ),
@@ -616,7 +616,7 @@ def plot_gearbox_calibration(
     R_alpha=None,
     R_beta_midpoint=None,
     R_real=None,
-    phi_nominal_rad=None,
+    phi_fitted_rad=None,
     alpha_nominal_rad=None,
     beta_nominal_rad=None,
     nominal_angle_rad=None,
@@ -671,7 +671,7 @@ def plot_gearbox_calibration(
         plt.show()
 
     if 1 in plot_residuals:
-        plt.plot(r2d(phi_nominal_rad), R_real - R, "r.", label="radial delta")
+        plt.plot(r2d(phi_fitted_rad), R_real - R, "r.", label="radial delta")
 
         plt.title("FPU {}: first-order residual radius  for {}".format(fpu_id, motor_axis))
         plt.legend(loc="best", labelspacing=0.1)
