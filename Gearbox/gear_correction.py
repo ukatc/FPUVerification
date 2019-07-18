@@ -261,23 +261,23 @@ def fit_gearbox_parameters(motor_axis, circle_data,
             support_points[nominal_angle] = []
         support_points[nominal_angle].append(yp)
 
-    phi_nom_support_rad = np.array(sorted(support_points.keys()))
+    phi_fit_support_rad = np.array(sorted(support_points.keys()))
 
-    phi_corr_support_rad = [np.mean(np.array(support_points[k])) for k in phi_nom_support_rad]
+    phi_corr_support_rad = [np.mean(np.array(support_points[k])) for k in phi_fit_support_rad]
 
-    err_phi_support_rad = normalize_difference_radian(err_phi_1_rad - np.interp(phi_fitted_rad, phi_nom_support_rad, phi_corr_support_rad, period=2 * pi))
+    err_phi_support_rad = normalize_difference_radian(err_phi_1_rad - np.interp(phi_fitted_rad, phi_fit_support_rad, phi_corr_support_rad, period=2 * pi))
 
 
     phi_fitted_support_rad = phi_fitted_rad + np.interp(
-        phi_fitted_rad, phi_nom_support_rad, phi_corr_support_rad, period=2 * pi
+        phi_fitted_rad, phi_fit_support_rad, phi_corr_support_rad, period=2 * pi
     )
 
     ## combine first and second order fit, to get an invertible function
 
-    #corrected_angle_rad = phi_nom_support_rad + np.interp(
-    #    phi_nom_support_rad, phi_nom_support_rad, phi_corr_support_rad, period=2 * pi
+    #corrected_angle_rad = phi_fit_support_rad + np.interp(
+    #    phi_fit_support_rad, phi_fit_support_rad, phi_corr_support_rad, period=2 * pi
     #)
-    corrected_angle_rad = np.array(phi_corr_support_rad) + phi_nom_support_rad
+    corrected_angle_rad = np.array(phi_corr_support_rad) + phi_fit_support_rad
 
 
     results = {
@@ -290,9 +290,9 @@ def fit_gearbox_parameters(motor_axis, circle_data,
         "R_beta_midpoint" : R_beta_midpoint,
         "camera_offset_rad" : camera_offset_rad,
         "beta0_rad" : beta0_rad,
-        "num_support_points": len(phi_nom_support_rad),
+        "num_support_points": len(phi_fit_support_rad),
         "num_data_points": len(x_s),
-        "nominal_angle_rad": phi_nom_support_rad,
+        "nominal_angle_rad": phi_fit_support_rad,
         "corrected_angle_rad": corrected_angle_rad,
     }
 
