@@ -267,7 +267,6 @@ def fit_gearbox_parameters(motor_axis, circle_data,
 
     err_phi_2_rad = normalize_difference_radian(err_phi_1_rad - np.interp(phi_fitted_rad, phi_nom_2_rad, phi_corr_2_rad, period=2 * pi))
 
-    phi_fitted_rad = phi_fitted_rad
 
     phi_fitted_2_rad = phi_fitted_rad + np.interp(
         phi_fitted_rad, phi_nom_2_rad, phi_corr_2_rad, period=2 * pi
