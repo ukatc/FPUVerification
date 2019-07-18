@@ -292,7 +292,7 @@ def fit_gearbox_parameters(motor_axis, circle_data,
         "beta0_rad" : beta0_rad,
         "num_support_points": len(phi_fit_support_rad),
         "num_data_points": len(x_s),
-        "nominal_angle_rad": phi_fit_support_rad,
+        "phi_fit_support_rad": phi_fit_support_rad,
         "corrected_angle_rad": corrected_angle_rad,
     }
 
@@ -618,7 +618,7 @@ def plot_gearbox_calibration(
     phi_fitted_rad=None,
     alpha_nominal_rad=None,
     beta_nominal_rad=None,
-    nominal_angle_rad=None,
+    phi_fit_support_rad=None,
     yp=None,
     corrected_angle_rad=None,
     err_phi_support_rad=None,
@@ -661,7 +661,7 @@ def plot_gearbox_calibration(
         plt.show()
 
     if plot_fits:
-        plt.plot(r2d(nominal_angle_rad), r2d(corrected_angle_rad), "r.", label="correction table {}".format(motor_axis))
+        plt.plot(r2d(phi_fit_support_rad), r2d(corrected_angle_rad), "r.", label="correction table {}".format(motor_axis))
 
         plt.title("FPU {}: fitted nominal to corrected (real) angle for {}".format(fpu_id, motor_axis))
         plt.legend(loc="best", labelspacing=0.1)
@@ -767,11 +767,11 @@ def plot_correction(fpu_id, motor_axis, fits=None, **coefs):
     r2d = np.rad2deg
 
     real_angle_rad = fits[0][1]
-    nominal_angle_rad = fits[0][0]
+    phi_fit_support_rad = fits[0][0]
     corrected_angle_rad = [apply_gearbox_parameters(phi, **coefs) for phi in real_angle_rad]
 
-    plt.plot(r2d(nominal_angle_rad), r2d(nominal_angle_rad), "b-", label="nominal/nominal")
-    plt.plot(r2d(nominal_angle_rad), r2d(corrected_angle_rad), "g.", label="nominal/corrected")
+    plt.plot(r2d(phi_fit_support_rad), r2d(phi_fit_support_rad), "b-", label="nominal/nominal")
+    plt.plot(r2d(phi_fit_support_rad), r2d(corrected_angle_rad), "g.", label="nominal/corrected")
     plt.title("FPU {}: nominal vs. corrected real angle for {}".format(fpu_id, motor_axis))
     plt.legend(loc="best", labelspacing=0.1)
     plt.xlabel("nominal angle [degrees]")
@@ -782,7 +782,7 @@ def plot_correction(fpu_id, motor_axis, fits=None, **coefs):
 
 def apply_gearbox_parameters(
         angle_rad,
-        nominal_angle_rad=None,
+        phi_fit_support_rad=None,
         corrected_angle_rad=None,
         algorithm=None,
         inverse_transform=False,
@@ -794,15 +794,15 @@ def apply_gearbox_parameters(
         algorithm == "linfit+piecewise_interpolation"
     ), "no matching algorithm -- repeat fitting"
 
-    nominal_angle_rad = np.array(nominal_angle_rad, dtype=float)
+    phi_fit_support_rad = np.array(phi_fit_support_rad, dtype=float)
     corrected_angle_rad = np.array(corrected_angle_rad, dtype=float)
 
     if inverse_transform:
-        x_points = nominal_angle_rad
+        x_points = phi_fit_support_rad
         y_points = corrected_angle_rad
     else:
         x_points = corrected_angle_rad
-        y_points = nominal_angle_rad
+        y_points = phi_fit_support_rad
 
     # wrap in the same way as we did with the fit
     if wrap:
