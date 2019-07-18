@@ -256,10 +256,10 @@ def fit_gearbox_parameters(motor_axis, circle_data,
 
 
     support_points = {}
-    for (nominal_angle, yp) in zip(phi_fitted_rad, err_phi_1_rad):
-        if nominal_angle not in support_points:
-            support_points[nominal_angle] = []
-        support_points[nominal_angle].append(yp)
+    for (fitted_angle, yp) in zip(phi_fitted_rad, err_phi_1_rad):
+        if fitted_angle not in support_points:
+            support_points[fitted_angle] = []
+        support_points[fitted_angle].append(yp)
 
     phi_fit_support_rad = np.array(sorted(support_points.keys()))
 
