@@ -282,8 +282,8 @@ def fit_gearbox_parameters(motor_axis, circle_data,
         nominal_angle_rad = phi_fit_support_rad - camera_offset_rad
         corrected_angle_rad = corrected_shifted_angle_rad - camera_offset_rad
     else:
-        nominal_angle_rad = phi_fit_support_rad - beta0_rad
-        corrected_angle_rad = corrected_shifted_angle_rad - beta0_rad
+        nominal_angle_rad = phi_fit_support_rad - beta0_rad - camera_offset_rad - pi
+        corrected_angle_rad = corrected_shifted_angle_rad - beta0_rad - camera_offset_rad - pi
 
 
 
@@ -323,24 +323,24 @@ def fit_gearbox_parameters(motor_axis, circle_data,
                 1: (
                     phi_fitted_rad,
                     phi_fitted_rad,
-                    "first-order fitted angle as function of fitted angle",
+                    "first-order fitted, c-rotated angle as function of fitted, c-rotated angle",
                 ),
                 2: (
                     phi_fitted_rad,
                     phi_fitted_support_rad,
-                    "second-order fitted angle as function of fitted angle",
+                    "second-order fitted, c-rotated angle as function of fitted, c-rotated angle",
                 ),
             },
             "residuals": {
                 1: (
                     phi_fitted_rad,
                     err_phi_1_rad,
-                    "first-order residual angle as function of fitted angle",
+                    "first-order residual angle as function of fitted, c-rotated angle",
                 ),
                 2: (
                     phi_fitted_rad,
                     err_phi_support_rad,
-                    "second-order residual angle as function of fitted angle",
+                    "second-order residual angle as function of fitted, c-rotated angle",
                 ),
             },
         }
@@ -371,21 +371,31 @@ def angle_to_point(
     """
 
 
+    alpha0_rad = alpha_nom_rad
     if coeffs is not None:
         alpha_nom_rad = apply_gearbox_parameters(alpha_nom_rad, wrap=True, inverse_transform=inverse, **coeffs["coeffs_alpha"])
-        beta_nom_rad = apply_gearbox_parameters(beta_nom_rad, wrap=True, inverse_transform=inverse, **coeffs["coeffs_beta"])
+        #beta_nom_rad = apply_gearbox_parameters(beta_nom_rad, wrap=True, inverse_transform=inverse, **coeffs["coeffs_beta"])
+        pass
 
     # rotate (possibly corrected) angles to camera orientation,
     # and apply beta arm offset
     alpha_rad = alpha_nom_rad + camera_offset_rad
     beta_rad = beta_nom_rad + beta0_rad
 
-
+#    if coeffs is not None:
+#        alpha_rad = apply_gearbox_parameters_fitted(alpha_rad, wrap=True, inverse_transform=inverse, **coeffs["coeffs_alpha"])
+#        beta_rad = apply_gearbox_parameters_fitted(beta_rad, wrap=True, inverse_transform=inverse, **coeffs["coeffs_beta"])
+#
     # add difference to alpha when the beta
     # correction was measured (these angles add up
     # because when the alpha arm is turned (clockwise),
     # this turns the beta arm (clockwise) as well).
+    #gamma_rad = beta_rad + (alpha0_rad + camera_offset_rad)
     gamma_rad = beta_rad + alpha_rad
+
+#    if coeffs is not None:
+#        alpha_rad = apply_gearbox_parameters_fitted(alpha_rad, wrap=True, inverse_transform=inverse, **coeffs["coeffs_alpha"])
+#        gamma_rad = apply_gearbox_parameters_fitted(gamma_rad, wrap=True, inverse_transform=inverse, **coeffs["coeffs_beta"])
 
     # compute expected Cartesian coordinate of observation
     # the value of 0.07234 rad (4.15 degrees) minimizes the error for FPU P13A2
@@ -650,9 +660,9 @@ def plot_gearbox_calibration(
 
     if plot_func:
         plt.plot(r2d(fits[0][0]), r2d(fits[0][1]), "g.", label=fits[0][2])
-        plt.title("FPU {}: real vs shifted angle for {}".format(fpu_id, motor_axis))
+        plt.title("FPU {}: real vs c-rotated angle for {}".format(fpu_id, motor_axis))
         plt.legend(loc="best", labelspacing=0.1)
-        plt.xlabel("shifted angle [degrees]")
+        plt.xlabel("c-rotated angle [degrees]")
         plt.ylabel("real angle [degrees]")
         plt.show()
 
@@ -669,16 +679,16 @@ def plot_gearbox_calibration(
     if plot_fits:
         plt.title("FPU {}: fitted (c-rotated) vs real angle for {}".format(fpu_id, motor_axis))
         plt.legend(loc="best", labelspacing=0.1)
-        plt.xlabel("fitted angle [degrees]")
+        plt.xlabel("fitted, c-rotated angle [degrees]")
         plt.ylabel("real angle [degrees]")
         plt.show()
 
     if plot_fits:
-        plt.plot(r2d(phi_fit_support_rad), r2d(corrected_shifted_angle_rad), "r.", label="correction table {} (fitted)".format(motor_axis))
+        plt.plot(r2d(phi_fit_support_rad), r2d(corrected_shifted_angle_rad), "r.", label="correction table {} (fitted, c-rotated)".format(motor_axis))
 
-        plt.title("FPU {}: fitted fitted (shifted) to corrected (real) angle for {}".format(fpu_id, motor_axis))
+        plt.title("FPU {}: fitted, c-rotated fitted (c-rotated) to corrected (real) angle for {}".format(fpu_id, motor_axis))
         plt.legend(loc="best", labelspacing=0.1)
-        plt.xlabel("fitted angle [degrees]")
+        plt.xlabel("fitted, c-rotated angle [degrees]")
         plt.ylabel("real angle [degrees]")
         plt.show()
 
@@ -686,7 +696,7 @@ def plot_gearbox_calibration(
         plt.plot(r2d(nominal_angle_rad), r2d(nominal_angle_rad), "k-", label="nominal / nominal".format(motor_axis))
         plt.plot(r2d(nominal_angle_rad), r2d(corrected_angle_rad), "r.", label="correction table {} (nominal)".format(motor_axis))
 
-        plt.title("FPU {}: fitted nominal to corrected (real) angle for {}".format(fpu_id, motor_axis))
+        plt.title("FPU {}: fitted, c-rotated nominal to corrected (real) angle for {}".format(fpu_id, motor_axis))
         plt.legend(loc="best", labelspacing=0.1)
         plt.xlabel("nominal angle [degrees]")
         plt.ylabel("real angle [degrees]")
@@ -707,12 +717,12 @@ def plot_gearbox_calibration(
         )
 
         plt.title(
-            "FPU {}: first-order residual real vs shifted angle for {}".format(
+            "FPU {}: first-order residual real vs c-rotated angle for {}".format(
                 fpu_id, motor_axis
             )
         )
         plt.legend(loc="best", labelspacing=0.1)
-        plt.xlabel("shifted angle [degrees]")
+        plt.xlabel("c-rotated angle [degrees]")
         plt.ylabel("real angle deltas [degrees]")
         plt.show()
 
@@ -722,12 +732,12 @@ def plot_gearbox_calibration(
         )
 
         plt.title(
-            "FPU {}: second-order residual real vs shifted angle for {}".format(
+            "FPU {}: second-order residual real vs c-rotated angle for {}".format(
                 fpu_id, motor_axis
             )
         )
         plt.legend(loc="best", labelspacing=0.1)
-        plt.xlabel("shifted angle [degrees]")
+        plt.xlabel("c-rotated angle [degrees]")
         plt.ylabel("real angle deltas [degrees]")
         plt.show()
 
@@ -795,9 +805,9 @@ def plot_correction(fpu_id, motor_axis, fits=None, **coefs):
 
     plt.plot(r2d(phi_fit_support_rad), r2d(phi_fit_support_rad), "b-", label="nominal/nominal")
     plt.plot(r2d(phi_fit_support_rad), r2d(corrected_shifted_angle_rad), "g.", label="nominal/corrected")
-    plt.title("FPU {}: shifted vs. corrected real angle for {}".format(fpu_id, motor_axis))
+    plt.title("FPU {}: c-rotated vs. corrected real angle for {}".format(fpu_id, motor_axis))
     plt.legend(loc="best", labelspacing=0.1)
-    plt.xlabel("shifted angle [degrees]")
+    plt.xlabel("c-rotated angle [degrees]")
     plt.ylabel("corrected angle [degrees]")
     plt.show()
 
@@ -812,7 +822,7 @@ def apply_gearbox_parameters_fitted(
         wrap=False,
         **rest_coeffs
 ):
-    """applies gearbox parameters to the fitted (rotated) angle
+    """applies gearbox parameters to the fitted, c-rotated (rotated) angle
     (instead of the FPU coordinates).
     """
 
