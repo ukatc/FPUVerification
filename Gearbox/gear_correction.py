@@ -261,23 +261,23 @@ def fit_gearbox_parameters(motor_axis, circle_data,
             support_points[nominal_angle] = []
         support_points[nominal_angle].append(yp)
 
-    phi_nom_2_rad = np.array(sorted(support_points.keys()))
+    phi_nom_support_rad = np.array(sorted(support_points.keys()))
 
-    phi_corr_2_rad = [np.mean(np.array(support_points[k])) for k in phi_nom_2_rad]
+    phi_corr_support_rad = [np.mean(np.array(support_points[k])) for k in phi_nom_support_rad]
 
-    err_phi_2_rad = normalize_difference_radian(err_phi_1_rad - np.interp(phi_fitted_rad, phi_nom_2_rad, phi_corr_2_rad, period=2 * pi))
+    err_phi_support_rad = normalize_difference_radian(err_phi_1_rad - np.interp(phi_fitted_rad, phi_nom_support_rad, phi_corr_support_rad, period=2 * pi))
 
 
-    phi_fitted_2_rad = phi_fitted_rad + np.interp(
-        phi_fitted_rad, phi_nom_2_rad, phi_corr_2_rad, period=2 * pi
+    phi_fitted_support_rad = phi_fitted_rad + np.interp(
+        phi_fitted_rad, phi_nom_support_rad, phi_corr_support_rad, period=2 * pi
     )
 
     ## combine first and second order fit, to get an invertible function
 
-    #corrected_angle_rad = phi_nom_2_rad + np.interp(
-    #    phi_nom_2_rad, phi_nom_2_rad, phi_corr_2_rad, period=2 * pi
+    #corrected_angle_rad = phi_nom_support_rad + np.interp(
+    #    phi_nom_support_rad, phi_nom_support_rad, phi_corr_support_rad, period=2 * pi
     #)
-    corrected_angle_rad = np.array(phi_corr_2_rad) + phi_nom_2_rad
+    corrected_angle_rad = np.array(phi_corr_support_rad) + phi_nom_support_rad
 
 
     results = {
@@ -290,9 +290,9 @@ def fit_gearbox_parameters(motor_axis, circle_data,
         "R_beta_midpoint" : R_beta_midpoint,
         "camera_offset_rad" : camera_offset_rad,
         "beta0_rad" : beta0_rad,
-        "num_support_points": len(phi_nom_2_rad),
+        "num_support_points": len(phi_nom_support_rad),
         "num_data_points": len(x_s),
-        "nominal_angle_rad": phi_nom_2_rad,
+        "nominal_angle_rad": phi_nom_support_rad,
         "corrected_angle_rad": corrected_angle_rad,
     }
 
@@ -305,9 +305,9 @@ def fit_gearbox_parameters(motor_axis, circle_data,
             "alpha_nominal_rad" : circle_data["alpha_nominal_rad"],
             "beta_nominal_rad" : circle_data["beta_nominal_rad"],
             "R_real": R_real,
-            "yp": phi_corr_2_rad,
+            "yp": phi_corr_support_rad,
             "pos_keys" : circle_data["pos_keys"],
-            "err_phi_2_rad" : err_phi_2_rad,
+            "err_phi_support_rad" : err_phi_support_rad,
 
             "fits": {
                 0: (phi_fitted_rad, phi_real_rad, "real angle as function of nominal angle"),
@@ -318,7 +318,7 @@ def fit_gearbox_parameters(motor_axis, circle_data,
                 ),
                 2: (
                     phi_fitted_rad,
-                    phi_fitted_2_rad,
+                    phi_fitted_support_rad,
                     "second-order fitted angle as function of nominal angle",
                 ),
             },
@@ -330,7 +330,7 @@ def fit_gearbox_parameters(motor_axis, circle_data,
                 ),
                 2: (
                     phi_fitted_rad,
-                    err_phi_2_rad,
+                    err_phi_support_rad,
                     "second-order residual angle as function of nominal angle",
                 ),
             },
@@ -558,7 +558,7 @@ def fit_gearbox_correction(dict_of_coordinates_alpha, dict_of_coordinates_beta, 
 def split_iterations(
         motor_axis,
         pos_keys,
-        err_phi_2_rad
+        err_phi_support_rad
 ):
 
     d2r = np.deg2rad
@@ -570,9 +570,9 @@ def split_iterations(
     else:
         directionlist = [2, 3]
 
-    err_phi_2_map = {}
-    for key, err_phi_2 in zip(pos_keys, err_phi_2_rad):
-        err_phi_2_map[key] = err_phi_2
+    err_phi_support_map = {}
+    for key, err_phi_2 in zip(pos_keys, err_phi_support_rad):
+        err_phi_support_map[key] = err_phi_2
 
     for selected_iteration in set([k_[2] for k_ in pos_keys]):
         for direction in directionlist:
@@ -592,7 +592,7 @@ def split_iterations(
 
 
                 nom_ang_rad.append(phi_nominal_rad)
-                residual_ang_rad.append(err_phi_2_map[key])
+                residual_ang_rad.append(err_phi_support_map[key])
 
             yield selected_iteration, direction, nom_ang_rad, residual_ang_rad
 
@@ -621,7 +621,7 @@ def plot_gearbox_calibration(
     nominal_angle_rad=None,
     yp=None,
     corrected_angle_rad=None,
-    err_phi_2_rad=None,
+    err_phi_support_rad=None,
     fits=None,
     residuals=None,
     plot_circle=False,
@@ -719,7 +719,7 @@ def plot_gearbox_calibration(
         for iteration, direction, nom_angles, residual_angles in split_iterations(
                 motor_axis,
                 pos_keys,
-                err_phi_2_rad,
+                err_phi_support_rad,
         ):
 
             markers = [
