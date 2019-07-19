@@ -54,6 +54,8 @@ def plot_pos_rep(fpu_id, analysis_results_alpha, analysis_results_beta, opts):
 
             ax.legend()
             ax.grid(True)
+            plt.xlabel("x [millimeter], Cartesian camera coordinates")
+            plt.ylabel("y [millimeter], Cartesian camera coordinates")
             plt.title("%s : positional repeatability" % fpu_id)
 
         plt.show()
@@ -83,6 +85,8 @@ def plot_dat_rep(fpu_id, datumed_coords, moved_coords, opts):
     ax.legend()
 
     ax.grid(True)
+    plt.xlabel("x [millimeter], Cartesian camera coordinates")
+    plt.ylabel("y [millimeter], Cartesian camera coordinates")
     plt.title("%s : datum repeatability" % fpu_id)
 
     plt.show()

@@ -88,8 +88,8 @@ def plot_data_circle(x, y, xc, yc, R, title):
     plt.legend(loc="best", labelspacing=0.1)
     plt.grid()
     plt.title("Least Squares Circle " + title)
-    plt.xlabel("x")
-    plt.ylabel("y")
+    plt.xlabel("x [millimeter], Cartesian camera coordinates")
+    plt.ylabel("y [millimeter], Cartesian camera coordinates")
     plt.show()
 
 
@@ -319,28 +319,28 @@ def fit_gearbox_parameters(motor_axis, circle_data,
             "err_phi_support_rad" : err_phi_support_rad,
 
             "fits": {
-                0: (phi_fitted_rad, phi_real_rad, "real angle as function of fitted angle"),
+                0: (phi_fitted_rad, phi_real_rad, "real angle as function of c-rotated nominal angle"),
                 1: (
                     phi_fitted_rad,
                     phi_fitted_rad,
-                    "first-order fitted, c-rotated angle as function of fitted, c-rotated angle",
+                    "first-order fitted, c-rotated angle as function of fitted, c-rotated nominal angle",
                 ),
                 2: (
                     phi_fitted_rad,
                     phi_fitted_support_rad,
-                    "second-order fitted, c-rotated angle as function of fitted, c-rotated angle",
+                    "second-order fitted, c-rotated angle as function of fitted, c-rotated nominal angle",
                 ),
             },
             "residuals": {
                 1: (
                     phi_fitted_rad,
                     err_phi_1_rad,
-                    "first-order residual angle as function of fitted, c-rotated angle",
+                    "first-order residual angle as function of fitted, c-rotated nominal angle",
                 ),
                 2: (
                     phi_fitted_rad,
                     err_phi_support_rad,
-                    "second-order residual angle as function of fitted, c-rotated angle",
+                    "second-order residual angle as function of fitted, c-rotated nominal angle",
                 ),
             },
         }
@@ -656,8 +656,8 @@ def plot_gearbox_calibration(
         plt.plot(r2d(fits[0][0]), r2d(fits[0][1]), "g.", label=fits[0][2])
         plt.title("FPU {}: real vs c-rotated angle for {}".format(fpu_id, motor_axis))
         plt.legend(loc="best", labelspacing=0.1)
-        plt.xlabel("c-rotated angle [degrees]")
-        plt.ylabel("real angle [degrees]")
+        plt.xlabel("c-rotated angle [degrees], polar camera coordinates")
+        plt.ylabel("real angle [degrees], polar camera coordinates")
         plt.show()
 
     if 0 in plot_fits:
@@ -671,37 +671,37 @@ def plot_gearbox_calibration(
 
 
     if plot_fits:
-        plt.title("FPU {}: fitted (c-rotated) vs real angle for {}".format(fpu_id, motor_axis))
+        plt.title("FPU {}: fitted, c-rotated nominal angle vs real angle for {}".format(fpu_id, motor_axis))
         plt.legend(loc="best", labelspacing=0.1)
-        plt.xlabel("fitted, c-rotated angle [degrees]")
-        plt.ylabel("real angle [degrees]")
+        plt.xlabel("c-rotated angle [degrees], polar camera coordinates")
+        plt.ylabel("real angle [degrees], polar camera coordinates")
         plt.show()
 
     if plot_fits:
         plt.plot(r2d(phi_fit_support_rad), r2d(corrected_shifted_angle_rad), "r.", label="correction table {} (fitted, c-rotated)".format(motor_axis))
 
-        plt.title("FPU {}: fitted, c-rotated fitted (c-rotated) to corrected (real) angle for {}".format(fpu_id, motor_axis))
+        plt.title("FPU {}: fitted, c-rotated angle to corrected (real) angle for {}".format(fpu_id, motor_axis))
         plt.legend(loc="best", labelspacing=0.1)
-        plt.xlabel("fitted, c-rotated angle [degrees]")
-        plt.ylabel("real angle [degrees]")
+        plt.xlabel("c-rotated angle [degrees], polar camera coordinates")
+        plt.ylabel("real angle [degrees], polar camera coordinates")
         plt.show()
 
     if plot_fits:
         plt.plot(r2d(nominal_angle_rad), r2d(nominal_angle_rad), "k-", label="nominal / nominal".format(motor_axis))
         plt.plot(r2d(nominal_angle_rad), r2d(corrected_angle_rad), "r.", label="correction table {} (nominal)".format(motor_axis))
 
-        plt.title("FPU {}: fitted, c-rotated nominal to corrected (real) angle for {}".format(fpu_id, motor_axis))
+        plt.title("FPU {}: fitted nominal angle to corrected (real) angle for {}".format(fpu_id, motor_axis))
         plt.legend(loc="best", labelspacing=0.1)
-        plt.xlabel("nominal angle [degrees]")
-        plt.ylabel("real angle [degrees]")
+        plt.xlabel("nominal angle [degrees], FPU arm coordinates")
+        plt.ylabel("real angle [degrees], FPU arm coordinates")
         plt.show()
 
     if 1 in plot_residuals:
         plt.plot(r2d(phi_fitted_rad), R_real - R, "r.", label="radial delta")
 
-        plt.title("FPU {}: first-order residual radius  for {}".format(fpu_id, motor_axis))
+        plt.title("FPU {}: first-order residual radius  for {} vs. c-rotated angle".format(fpu_id, motor_axis))
         plt.legend(loc="best", labelspacing=0.1)
-        plt.xlabel("nominal angle [degrees]")
+        plt.xlabel("fitted c-rotated angle [degrees], polar camera coordinates")
         plt.ylabel("residual radius [millimeter]")
         plt.show()
 
@@ -716,7 +716,7 @@ def plot_gearbox_calibration(
             )
         )
         plt.legend(loc="best", labelspacing=0.1)
-        plt.xlabel("c-rotated angle [degrees]")
+        plt.xlabel("c-rotated angle [degrees], polar camera coordinates")
         plt.ylabel("real angle deltas [degrees]")
         plt.show()
 
@@ -731,7 +731,7 @@ def plot_gearbox_calibration(
             )
         )
         plt.legend(loc="best", labelspacing=0.1)
-        plt.xlabel("c-rotated angle [degrees]")
+        plt.xlabel("c-rotated angle [degrees], polar camera coordinates")
         plt.ylabel("real angle deltas [degrees]")
         plt.show()
 
@@ -740,8 +740,8 @@ def plot_gearbox_calibration(
                 fpu_id, motor_axis
             )
         )
-        plt.xlabel("nominal angle [degrees]")
-        plt.ylabel("real angle deltas [degrees]")
+        plt.xlabel("nominal angle [degrees], FPU arm coordinates")
+        plt.ylabel("real angle deltas [degrees], FPU arm coordinates")
 
         for iteration, direction, nom_angles, residual_angles in split_iterations(
                 motor_axis,
@@ -797,12 +797,12 @@ def plot_correction(fpu_id, motor_axis, fits=None, **coefs):
     phi_fit_support_rad = fits[0][0]
     corrected_shifted_angle_rad = [apply_gearbox_parameters_fitted(phi, **coefs) for phi in real_angle_rad]
 
-    plt.plot(r2d(phi_fit_support_rad), r2d(phi_fit_support_rad), "b-", label="nominal/nominal")
-    plt.plot(r2d(phi_fit_support_rad), r2d(corrected_shifted_angle_rad), "g.", label="nominal/corrected")
+    plt.plot(r2d(phi_fit_support_rad), r2d(phi_fit_support_rad), "b-", label="fitted nominal/ fitted nominal")
+    plt.plot(r2d(phi_fit_support_rad), r2d(corrected_shifted_angle_rad), "g.", label="fitted nominal/corrected")
     plt.title("FPU {}: c-rotated vs. corrected real angle for {}".format(fpu_id, motor_axis))
     plt.legend(loc="best", labelspacing=0.1)
-    plt.xlabel("c-rotated angle [degrees]")
-    plt.ylabel("corrected angle [degrees]")
+    plt.xlabel("c-rotated angle [degrees], polar camera coordinates")
+    plt.ylabel("corrected angle [degrees], polar camera coordinates")
     plt.show()
 
 
@@ -970,12 +970,12 @@ def plot_measured_vs_expected_points(serial_number,
             #if len(expected_points) > 5:
             #    break
         xe, ye = np.array(expected_points).T
-        plt.plot(xe, ye, color2 + "+", label="{} points expected from nominal angle".format(motor_axis), mew=1)
+        plt.plot(xe, ye, color2 + "+", label="{} points expected from transformed nominal angle".format(motor_axis), mew=1)
 
         plt.legend(loc="best", labelspacing=0.1)
 
     plt.grid()
     plt.title("FPU {}: measured vs expected points".format(serial_number))
-    plt.xlabel("x")
-    plt.ylabel("y")
+    plt.xlabel("x [millimeter], Cartesian camera coordinates")
+    plt.ylabel("y [millimeter], Cartesian camera coordinates")
     plt.show()
