@@ -396,10 +396,10 @@ def angle_to_point(
     gamma_rad = beta_rad + alpha_rad
 
 
-    # compute expected Cartesian coordinate of observation
-    # the value of 0.07234 rad (4.15 degrees) minimizes the error for FPU P13A2
-    vec_alpha = np.array(polar2cartesian(alpha_rad, R_alpha))
-    vec_beta = np.array(polar2cartesian(gamma_rad, R_beta_midpoint))
+    delta_alpha = 0
+    #delta_beta = 0
+    vec_alpha = np.array(polar2cartesian(alpha_rad + delta_alpha, R_alpha))
+    vec_beta = np.array(polar2cartesian(gamma_rad + delta_beta, R_beta_midpoint))
 
     if broadcast and (len(P0.shape) < len(vec_alpha.shape)):
         # adapt shape
@@ -865,7 +865,7 @@ def apply_gearbox_parameters(
     ), "no matching algorithm -- repeat fitting"
 
     nominal_angle_rad = np.array(nominal_angle_rad, dtype=float)
-    corrected_shifted_angle_rad = np.array(corrected_angle_rad, dtype=float)
+    corrected_angle_rad = np.array(corrected_angle_rad, dtype=float)
 
     if inverse_transform:
         x_points = nominal_angle_rad
