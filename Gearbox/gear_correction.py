@@ -371,36 +371,29 @@ def angle_to_point(
     """
 
 
-    alpha0_rad = alpha_nom_rad
-    if coeffs is not None:
-        alpha_nom_rad = apply_gearbox_parameters(alpha_nom_rad, wrap=True, inverse_transform=inverse, **coeffs["coeffs_alpha"])
-        #beta_nom_rad = apply_gearbox_parameters(beta_nom_rad, wrap=True, inverse_transform=inverse, **coeffs["coeffs_beta"])
-        pass
+    if coeffs is None:
+        delta_alpha = 0.0
+        delta_beta = 0.0
+    else:
+        delta_alpha = - alpha_nom_rad + apply_gearbox_parameters(alpha_nom_rad, wrap=True, inverse_transform=inverse, **coeffs["coeffs_alpha"])
+        delta_beta = - beta_nom_rad + apply_gearbox_parameters(beta_nom_rad, wrap=True, inverse_transform=inverse, **coeffs["coeffs_beta"])
 
     # rotate (possibly corrected) angles to camera orientation,
     # and apply beta arm offset
     alpha_rad = alpha_nom_rad + camera_offset_rad
     beta_rad = beta_nom_rad + beta0_rad
 
-#    if coeffs is not None:
-#        alpha_rad = apply_gearbox_parameters_fitted(alpha_rad, wrap=True, inverse_transform=inverse, **coeffs["coeffs_alpha"])
-#        beta_rad = apply_gearbox_parameters_fitted(beta_rad, wrap=True, inverse_transform=inverse, **coeffs["coeffs_beta"])
-#
     # add difference to alpha when the beta
     # correction was measured (these angles add up
     # because when the alpha arm is turned (clockwise),
     # this turns the beta arm (clockwise) as well).
-    #gamma_rad = beta_rad + (alpha0_rad + camera_offset_rad)
     gamma_rad = beta_rad + alpha_rad
 
-#    if coeffs is not None:
-#        alpha_rad = apply_gearbox_parameters_fitted(alpha_rad, wrap=True, inverse_transform=inverse, **coeffs["coeffs_alpha"])
-#        gamma_rad = apply_gearbox_parameters_fitted(gamma_rad, wrap=True, inverse_transform=inverse, **coeffs["coeffs_beta"])
 
     # compute expected Cartesian coordinate of observation
     # the value of 0.07234 rad (4.15 degrees) minimizes the error for FPU P13A2
-    vec_alpha = np.array(polar2cartesian(alpha_rad, R_alpha))
-    vec_beta = np.array(polar2cartesian(gamma_rad, R_beta_midpoint))
+    vec_alpha = np.array(polar2cartesian(alpha_rad + delta_alpha, R_alpha))
+    vec_beta = np.array(polar2cartesian(gamma_rad + delta_beta - delta_alpha, R_beta_midpoint))
 
     if broadcast:
         expected_point = P0[:,np.newaxis] + vec_alpha + vec_beta
@@ -931,7 +924,7 @@ def plot_measured_vs_expected_points(serial_number,
 
     for lcoeffs, motor_axis, color, color2 in [
             (coeffs["coeffs_alpha"], "alpha", "r", "m"),
-            (coeffs["coeffs_beta"], "beta", "b", "c"),
+            (coeffs["coeffs_beta"], "beta", "b", "g"),
     ]:
         xc = lcoeffs["xc"]
         yc = lcoeffs["yc"]
@@ -946,9 +939,9 @@ def plot_measured_vs_expected_points(serial_number,
         y_fit = yc + R * np.sin(theta_fit)
 
         if motor_axis == "alpha":
-            fc = "c-"
+            fc = "y-"
         else:
-            fc= "g-"
+            fc= "c-"
 
         plt.plot(x_fit, y_fit, fc, label="{} fitted circle ".format(motor_axis), lw=2)
         plt.plot([xc], [yc], color + "D", mec="y", mew=1, label="{} fitted center".format(motor_axis))
@@ -967,8 +960,8 @@ def plot_measured_vs_expected_points(serial_number,
                 camera_offset_rad=camera_offset_rad,
                 beta0_rad=beta0_rad,
                 inverse=True,
-                coeffs=coeffs,
-                #coeffs=None,
+                #coeffs=coeffs,
+                coeffs=None,
                 broadcast=False
             )
 
