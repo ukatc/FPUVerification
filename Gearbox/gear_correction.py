@@ -185,6 +185,7 @@ def get_angle_error(x_s, y_s,
                     beta0_rad=None
 ):
 
+    print("get_angle_error: center = ({},{})".format(xc, yc))
     x_real = x_s - xc
     y_real = y_s - yc
 
@@ -242,6 +243,7 @@ def fit_gearbox_parameters(motor_axis, circle_data,
     beta_nominal_rad = circle_data["beta_nominal_rad"]
 
     _, R_real = cartesian2polar(x_s - xc, y_s - yc)
+    print("fit_gearbox_parameters(): finding angular error for {} arm ".format(motor_axis))
 
     phi_real_rad, phi_fitted_rad, err_phi_1_rad = get_angle_error(x_s, y_s,
                                                                    xc, yc,
