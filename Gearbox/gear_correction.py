@@ -377,8 +377,12 @@ def angle_to_point(
         delta_alpha = 0.0
         delta_beta = 0.0
     else:
-        delta_alpha = - alpha_nom_rad + apply_gearbox_parameters(alpha_nom_rad, wrap=True, inverse_transform=inverse, **coeffs["coeffs_alpha"])
-        delta_beta = - beta_nom_rad + apply_gearbox_parameters(beta_nom_rad, wrap=True, inverse_transform=inverse, **coeffs["coeffs_beta"])
+        delta_alpha = - alpha_nom_rad + apply_gearbox_parameters(
+            alpha_nom_rad, wrap=True, inverse_transform=inverse, **coeffs["coeffs_alpha"]
+        )
+        delta_beta = - beta_nom_rad + apply_gearbox_parameters(
+            beta_nom_rad, wrap=True, inverse_transform=inverse, **coeffs["coeffs_beta"]
+        )
 
     # rotate (possibly corrected) angles to camera orientation,
     # and apply beta arm offset
