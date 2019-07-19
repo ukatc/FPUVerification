@@ -392,13 +392,14 @@ def angle_to_point(
 
     # compute expected Cartesian coordinate of observation
     # the value of 0.07234 rad (4.15 degrees) minimizes the error for FPU P13A2
-    vec_alpha = np.array(polar2cartesian(alpha_rad + delta_alpha, R_alpha))
-    vec_beta = np.array(polar2cartesian(gamma_rad + delta_beta - delta_alpha, R_beta_midpoint))
+    vec_alpha = np.array(polar2cartesian(alpha_rad, R_alpha))
+    vec_beta = np.array(polar2cartesian(gamma_rad, R_beta_midpoint))
 
-    if broadcast:
-        expected_point = P0[:,np.newaxis] + vec_alpha + vec_beta
-    else:
-        expected_point = P0 + vec_alpha + vec_beta
+    if broadcast and (len(P0.shape) < len(vec_alpha.shape)):
+        # adapt shape
+        P0 = np.reshape(P0, P0.shape + (1,))
+
+    expected_point = P0 + vec_alpha + vec_beta
 
     return expected_point
 
@@ -960,8 +961,8 @@ def plot_measured_vs_expected_points(serial_number,
                 camera_offset_rad=camera_offset_rad,
                 beta0_rad=beta0_rad,
                 inverse=True,
-                #coeffs=coeffs,
-                coeffs=None,
+                coeffs=coeffs,
+                #coeffs=None,
                 broadcast=False
             )
 
