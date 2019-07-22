@@ -242,6 +242,14 @@ def fit_gearbox_parameters(motor_axis, circle_data,
     alpha_nominal_rad = circle_data["alpha_nominal_rad"]
     beta_nominal_rad = circle_data["beta_nominal_rad"]
 
+    if motor_axis == "beta":
+        # common angle for beta measurements
+        alpha_fixpoint_rad = np.mean(alpha_nominal_rad)
+        beta_fixpoint_rad = np.NaN
+    else:
+        alpha_fixpoint_rad = np.NaN
+        beta_fixpoint_rad = np.mean(beta_nominal_rad)
+
     _, R_real = cartesian2polar(x_s - xc, y_s - yc)
     print("fit_gearbox_parameters(): finding angular error for {} arm ".format(motor_axis))
 
@@ -299,6 +307,8 @@ def fit_gearbox_parameters(motor_axis, circle_data,
         "R_beta_midpoint" : R_beta_midpoint,
         "camera_offset_rad" : camera_offset_rad,
         "beta0_rad" : beta0_rad,
+        "alpha_fixpoint_rad" : alpha_fixpoint_rad,
+        "beta_fixpoint_rad" : beta_fixpoint_rad,
         "num_support_points": len(phi_fit_support_rad),
         "num_data_points": len(x_s),
         "nominal_angle_rad" : nominal_angle_rad,
@@ -372,16 +382,28 @@ def angle_to_point(
 
     """
 
+    #coeffs = None
 
     if coeffs is None:
         delta_alpha = 0.0
         delta_beta = 0.0
+        delta_alpha_fixpoint = 0.0
+        delta_beta_fixpoint = 0.0
     else:
         delta_alpha = - alpha_nom_rad + apply_gearbox_parameters(
             alpha_nom_rad, wrap=True, inverse_transform=inverse, **coeffs["coeffs_alpha"]
         )
         delta_beta = - beta_nom_rad + apply_gearbox_parameters(
             beta_nom_rad, wrap=True, inverse_transform=inverse, **coeffs["coeffs_beta"]
+        )
+        alpha_fixpoint_rad = coeffs["coeffs_beta"]["alpha_fixpoint_rad"]
+        delta_alpha_fixpoint = - alpha_fixpoint_rad + apply_gearbox_parameters(
+            alpha_fixpoint_rad, wrap=True, inverse_transform=inverse, **coeffs["coeffs_alpha"]
+        )
+
+        beta_fixpoint_rad = coeffs["coeffs_alpha"]["beta_fixpoint_rad"]
+        delta_beta_fixpoint = - beta_fixpoint_rad + apply_gearbox_parameters(
+            beta_fixpoint_rad, wrap=True, inverse_transform=inverse, **coeffs["coeffs_alpha"]
         )
 
     # rotate (possibly corrected) angles to camera orientation,
@@ -393,13 +415,15 @@ def angle_to_point(
     # correction was measured (these angles add up
     # because when the alpha arm is turned (clockwise),
     # this turns the beta arm (clockwise) as well).
-    gamma_rad = beta_rad + alpha_rad
+    gamma_rad = beta_rad + alpha_rad + (delta_alpha - delta_alpha_fixpoint)
 
 
-    delta_alpha = 0
+    #delta_alpha = 0
     #delta_beta = 0
-    vec_alpha = np.array(polar2cartesian(alpha_rad + delta_alpha, R_alpha))
-    vec_beta = np.array(polar2cartesian(gamma_rad + delta_beta, R_beta_midpoint))
+    #delta_alpha_fixpoint = 0
+    #delta_beta_fixpoint = 0
+    vec_alpha = np.array(polar2cartesian(alpha_rad + delta_alpha - delta_alpha_fixpoint, R_alpha))
+    vec_beta = np.array(polar2cartesian(gamma_rad + delta_beta - delta_beta_fixpoint, R_beta_midpoint))
 
     if broadcast and (len(P0.shape) < len(vec_alpha.shape)):
         # adapt shape
@@ -640,6 +664,8 @@ def plot_gearbox_calibration(
     alpha_nominal_rad=None,
     beta_nominal_rad=None,
     phi_fit_support_rad=None,
+    alpha_fixpoint_rad=None,
+    beta_fixpoint_rad=None,
     yp=None,
     corrected_shifted_angle_rad=None,
     corrected_angle_rad=None,
