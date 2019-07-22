@@ -382,7 +382,7 @@ def angle_to_point(
 
     """
 
-    #coeffs = None
+    coeffs = None
 
     if coeffs is None:
         delta_alpha = 0.0
@@ -406,6 +406,11 @@ def angle_to_point(
             beta_fixpoint_rad, wrap=True, inverse_transform=inverse, **coeffs["coeffs_alpha"]
         )
 
+    delta_alpha = 0
+    delta_beta = 0
+    delta_alpha_fixpoint = 0
+    delta_beta_fixpoint = 0
+
     # rotate (possibly corrected) angles to camera orientation,
     # and apply beta arm offset
     alpha_rad = alpha_nom_rad + camera_offset_rad
@@ -418,10 +423,6 @@ def angle_to_point(
     gamma_rad = beta_rad + alpha_rad + (delta_alpha - delta_alpha_fixpoint)
 
 
-    #delta_alpha = 0
-    #delta_beta = 0
-    #delta_alpha_fixpoint = 0
-    #delta_beta_fixpoint = 0
     vec_alpha = np.array(polar2cartesian(alpha_rad + delta_alpha - delta_alpha_fixpoint, R_alpha))
     vec_beta = np.array(polar2cartesian(gamma_rad + delta_beta - delta_beta_fixpoint, R_beta_midpoint))
 
@@ -1001,8 +1002,12 @@ def plot_measured_vs_expected_points(serial_number,
             expected_points.append(ep)
             #if len(expected_points) > 5:
             #    break
-        xe, ye = np.array(expected_points).T
-        plt.plot(xe, ye, color2 + "+", label="{} points expected from transformed nominal angle".format(motor_axis), mew=1)
+        expected_points = np.array(expected_points).T
+        measured_points = np.array((x,y))
+        xe, ye = expected_points
+        RMS = np.sqrt(np.mean(np.linalg.norm(expected_points - measured_points, axis=0) ** 2))
+        print("RMS [{}] = {} mm".format(motor_axis, RMS))
+        plt.plot(xe, ye, color2 + "+", label="{} points expected from transformed nominal angle, RMS = {:5.1f} micron".format(motor_axis, RMS * 1000), mew=1)
 
         plt.legend(loc="best", labelspacing=0.1)
 
