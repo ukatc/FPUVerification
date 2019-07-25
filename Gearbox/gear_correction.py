@@ -3,6 +3,7 @@ from __future__ import division, print_function
 from math import pi
 import numpy as np
 import warnings
+import functools
 # import matplotlib.pyplot as plt
 
 # import numpy as np
@@ -290,6 +291,10 @@ def fit_gearbox_parameters(motor_axis, circle_data,
     #    phi_fit_support_rad, phi_fit_support_rad, phi_corr_support_rad, period=2 * pi
     #)
     corrected_shifted_angle_rad = np.array(phi_corr_support_rad) + phi_fit_support_rad
+
+    print("fit_gearbox_parameters(): beta0_rad = {} rad = {} degree".format(beta0_rad, np.rad2deg(beta0_rad)))
+    print("fit_gearbox_parameters(): beta0_rad - pi = {} rad = {} degree".format(beta0_rad - pi, 360 + np.rad2deg(beta0_rad - pi)))
+
     if motor_axis == "alpha":
         nominal_angle_rad = phi_fit_support_rad - camera_offset_rad
         corrected_angle_rad = corrected_shifted_angle_rad - camera_offset_rad
@@ -388,15 +393,13 @@ def angle_to_point(
 
     """
 
-    #coeffs = None
-
     if coeffs is None:
         delta_alpha = 0.0
         delta_beta = 0.0
         delta_alpha_fixpoint = 0.0
         delta_beta_fixpoint = 0.0
     else:
-        APPLY_DIRECT = True
+        APPLY_DIRECT = False
         if APPLY_DIRECT:
             if "alpha" in correct_axis:
                 alpha_nom_rad = apply_gearbox_parameters(
@@ -429,10 +432,12 @@ def angle_to_point(
                 beta_fixpoint_rad, wrap=True, inverse_transform=inverse, **coeffs["coeffs_alpha"]
             )
 
-            delta_alpha = 0
-            delta_beta = 0
-            delta_alpha_fixpoint = 0
-            delta_beta_fixpoint = 0
+            if "alpha" not in correct_axis:
+                delta_alpha = 0
+                delta_alpha_fixpoint = 0
+            if "beta" not in correct_axis:
+                delta_beta = 0
+                delta_beta_fixpoint = 0
 
     # rotate (possibly corrected) angles to camera orientation,
     # and apply beta arm offset
@@ -746,7 +751,40 @@ def plot_gearbox_calibration(
         plt.plot(r2d(nominal_angle_rad), r2d(nominal_angle_rad), "k-", label="nominal / nominal".format(motor_axis))
         plt.plot(r2d(nominal_angle_rad), r2d(corrected_angle_rad), "r.", label="correction table {} (nominal)".format(motor_axis))
 
-        plt.title("FPU {}: fitted nominal angle to corrected (real) angle for {}".format(fpu_id, motor_axis))
+        plt.title("FPU {}: fitted nominal angle to tabled corrected (real) angle for {}".format(fpu_id, motor_axis))
+        plt.legend(loc="best", labelspacing=0.1)
+        plt.xlabel("nominal angle [degrees], FPU arm coordinates")
+        plt.ylabel("real angle [degrees], FPU arm coordinates")
+        plt.show()
+
+    if plot_fits:
+        input_nominal_angle_rad = np.deg2rad(np.linspace(-185, 185, 450, endpoint=True))
+        apply_fit = functools.partial(apply_gearbox_parameters,
+                                      nominal_angle_rad=nominal_angle_rad,
+                                      corrected_angle_rad=corrected_angle_rad,
+                                      inverse_transform=True,
+                                      algorithm=algorithm,
+                                      wrap=True,
+                                      )
+
+
+        interpolated_corrected_angle_rad = apply_fit(input_nominal_angle_rad)
+
+        if motor_axis == "alpha":
+            fixpoint_rad = beta_fixpoint_rad
+            fname = "beta"
+        else:
+            fixpoint_rad = alpha_fixpoint_rad
+            fname = "alpha"
+
+        fixpoint_value = apply_fit(fixpoint_rad)
+
+        plt.plot(r2d(input_nominal_angle_rad), r2d(input_nominal_angle_rad), "k-", label="nominal / nominal".format(motor_axis))
+        plt.plot(r2d(input_nominal_angle_rad), r2d(interpolated_corrected_angle_rad), "r.",
+                 label="inverse correction table {} (nominal)".format(motor_axis))
+        plt.plot([r2d(fixpoint_rad)], [r2d(fixpoint_value)], "mD", label="fixpoint {}".format(fname))
+
+        plt.title("FPU {}: fitted nominal angle to inverse interpolated (real) angle for {}".format(fpu_id, motor_axis))
         plt.legend(loc="best", labelspacing=0.1)
         plt.xlabel("nominal angle [degrees], FPU arm coordinates")
         plt.ylabel("real angle [degrees], FPU arm coordinates")
@@ -995,18 +1033,8 @@ def plot_measured_vs_expected_points(serial_number,
 
         x_fit = xc + R * np.cos(theta_fit)
         y_fit = yc + R * np.sin(theta_fit)
-
-        if motor_axis == "alpha":
-            fc = "y-"
-        else:
-            fc= "c-"
-
-        plt.plot(x_fit, y_fit, fc, label="{} fitted circle ".format(motor_axis), lw=2)
-        plt.plot([xc], [yc], color + "D", mec="y", mew=1, label="{} fitted center".format(motor_axis))
-        # plot data
         s = slice(0,None)
-        #s = slice(5,100)
-        plt.plot(x[s], y[s], color + ".", label="{} measured point ".format(motor_axis), mew=1)
+
 
         print_mean_correction = True
         if print_mean_correction:
@@ -1017,12 +1045,28 @@ def plot_measured_vs_expected_points(serial_number,
             beta_nom_corrected_rad = apply_gearbox_parameters(
                 beta_nominal_rad, wrap=True, inverse_transform=True, **coeffs["coeffs_beta"]
             )
+
+            # if motor_axis == "alpha":
+            #     beta_nom_corrected_rad -= np.deg2rad(5.00563875726)
+            # else:
+            #     alpha_nom_corrected_rad -= np.deg2rad(4.10830826615)
+
             print("for axis {}: mean(corrected - nominal) = {} degrees".format(
                 "alpha", np.rad2deg(np.mean(alpha_nom_corrected_rad - alpha_nominal_rad
                 ))))
             print("for axis {}: mean(corrected - nominal) = {} degrees".format(
                 "beta", np.rad2deg(np.mean(beta_nom_corrected_rad - beta_nominal_rad
                 ))))
+
+
+            r2d = np.rad2deg
+            plt.plot(r2d(alpha_nominal_rad), r2d(alpha_nom_corrected_rad), "r.", label="nominal/corrected alpha")
+            plt.title("nominal vs corrected angle for axis {}".format( motor_axis))
+            plt.legend(loc="best", labelspacing=0.1)
+            plt.xlabel("nominal angle [degrees]")
+            plt.ylabel("corrected nominal angle [degrees]")
+            plt.show()
+
             alpha_fixpoint_rad = lcoeffs["alpha_fixpoint_rad"]
             beta_fixpoint_rad = lcoeffs["beta_fixpoint_rad"]
             alpha_fixpoint_corrected_rad = apply_gearbox_parameters(
@@ -1031,6 +1075,10 @@ def plot_measured_vs_expected_points(serial_number,
             beta_fixpoint_corrected_rad = apply_gearbox_parameters(
                 beta_fixpoint_rad, wrap=True, inverse_transform=True, **coeffs["coeffs_beta"]
             )
+
+            #beta_fixpoint_corrected_rad -= np.deg2rad(5.00563875726)
+            #alpha_fixpoint_corrected_rad -= np.deg2rad(4.10830826615)
+
             print("for axis {}: mean(corrected - fixpoint) = {}".format(
                 "alpha", np.rad2deg(np.mean(alpha_fixpoint_corrected_rad - alpha_fixpoint_rad
                 ))))
@@ -1041,6 +1089,7 @@ def plot_measured_vs_expected_points(serial_number,
 
         expected_points = []
         for alpha_nom_rad, beta_nom_rad in zip(alpha_nominal_rad[s], beta_nominal_rad[s]):
+
             ep = angle_to_point(
                 alpha_nom_rad,
                 beta_nom_rad,
@@ -1051,13 +1100,27 @@ def plot_measured_vs_expected_points(serial_number,
                 beta0_rad=beta0_rad,
                 inverse=True,
                 coeffs=coeffs,
-                correct_axis=[motor_axis],
+                #correct_axis=[motor_axis],
+                #correct_axis=["alpha","beta" ] if (motor_axis == "beta") else [],
+                correct_axis=["alpha","beta" ],
                 broadcast=False
             )
 
             expected_points.append(ep)
             #if len(expected_points) > 5:
             #    break
+
+        if motor_axis == "alpha":
+            fc = "y-"
+        else:
+            fc= "c-"
+
+        plt.plot(x_fit, y_fit, fc, label="{} fitted circle ".format(motor_axis), lw=2)
+        plt.plot([xc], [yc], color + "D", mec="y", mew=1, label="{} fitted center".format(motor_axis))
+        # plot data
+        #s = slice(5,100)
+        plt.plot(x[s], y[s], color + ".", label="{} measured point ".format(motor_axis), mew=1)
+
         expected_points = np.array(expected_points).T
         measured_points = np.array((x,y))[:,s]
         xe, ye = expected_points
