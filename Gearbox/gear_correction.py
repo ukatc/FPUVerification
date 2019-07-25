@@ -281,7 +281,7 @@ def fit_gearbox_parameters(motor_axis, circle_data,
     err_phi_support_rad = normalize_difference_radian(err_phi_1_rad - np.interp(phi_fitted_rad, phi_fit_support_rad, phi_corr_support_rad, period=2 * pi))
 
 
-    phi_fitted_support_rad = phi_fitted_rad + np.interp(
+    phi_fitted_correction_rad = phi_fitted_rad + np.interp(
         phi_fitted_rad, phi_fit_support_rad, phi_corr_support_rad, period=2 * pi
     )
 
@@ -349,7 +349,7 @@ def fit_gearbox_parameters(motor_axis, circle_data,
                 ),
                 2: (
                     phi_fitted_rad,
-                    phi_fitted_support_rad,
+                    phi_fitted_correction_rad,
                     "second-order fitted, c-rotated angle as function of fitted, c-rotated nominal angle",
                 ),
             },
