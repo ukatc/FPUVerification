@@ -221,7 +221,7 @@ POS_REP_MEASUREMENT_PARS = Namespace(
     # measurements made within an
     # extra sweep from the
     # starting position
-    POS_REP_SAFETY_MARGIN=5.0,  # safety margin, in degree, for
+    POS_REP_SAFETY_MARGIN=1.0,  # safety margin, in degree, for
     # distance to range limits when testing
     POS_REP_WAVEFORM_PARS={
         "mode": "limacc",
