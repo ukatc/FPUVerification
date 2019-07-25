@@ -29,11 +29,11 @@ class GearboxFitError(Exception):
 # (each different result for the same data
 # should yield a version number increase)
 
-GEARBOX_CORRECTION_VERSION = (4, 0, 0)
+GEARBOX_CORRECTION_VERSION = (5, 0, 0)
 
 # minimum version for which this code works
 # and yields a tolerable result
-GEARBOX_CORRECTION_MINIMUM_VERSION = (3, 0, 0)
+GEARBOX_CORRECTION_MINIMUM_VERSION = (5, 0, 0)
 
 def cartesian2polar(x, y):
     rho = np.sqrt(x ** 2 + y ** 2)
@@ -216,7 +216,7 @@ def get_angle_error(x_s, y_s,
     # (no unwrapping needed because we use the complex domain)
     #
     # note, the alpha0 / beta0 values are not included
-    # (they are considered to be specific to the camera)
+    # (camera_offset is considered to be specific to the camera)
     angular_difference = np.log(points_real / points_fitted).imag
 
     phi_fitted_rad = wrap_complex_vals(np.log(points_fitted).imag)
@@ -287,9 +287,6 @@ def fit_gearbox_parameters(motor_axis, circle_data,
 
     ## combine first and second order fit, to get an invertible function
 
-    #corrected_shifted_angle_rad = phi_fit_support_rad + np.interp(
-    #    phi_fit_support_rad, phi_fit_support_rad, phi_corr_support_rad, period=2 * pi
-    #)
     corrected_shifted_angle_rad = np.array(phi_corr_support_rad) + phi_fit_support_rad
 
     print("fit_gearbox_parameters(): beta0_rad = {} rad = {} degree".format(beta0_rad, np.rad2deg(beta0_rad)))
@@ -305,6 +302,16 @@ def fit_gearbox_parameters(motor_axis, circle_data,
     print("for axis {}: mean(corrected - nominal) = {} degrees".format(
         motor_axis, np.rad2deg(np.mean(corrected_angle_rad - nominal_angle_rad
         ))))
+
+    # Pad table support points with values for the ends of the range.
+    # This is espcially needed since the support points which are
+    # used in the control plot, are outside the fitted range,
+    # and without these padding values, the result of the
+    # gearbox interpolation would be off to the first defined point.
+    phi_min = np.deg2rad(-185)
+    phi_max = np.deg2rad(+185)
+    nominal_angle_rad = np.hstack([[phi_min], nominal_angle_rad, [phi_max]])
+    corrected_angle_rad = np.hstack([[phi_min], corrected_angle_rad, [phi_max]])
 
 
     results = {
@@ -384,7 +391,8 @@ def angle_to_point(
         inverse=False,
         coeffs=None,
         broadcast=True,
-        correct_axis=[],
+        correct_axis=["alpha", "beta"],
+        correct_fixpoint=True,
 ):
     """convert nominal angles with a given pair of offsets to expected
     coordinate in the image plane.
@@ -399,45 +407,38 @@ def angle_to_point(
         delta_alpha_fixpoint = 0.0
         delta_beta_fixpoint = 0.0
     else:
-        APPLY_DIRECT = False
-        if APPLY_DIRECT:
             if "alpha" in correct_axis:
-                alpha_nom_rad = apply_gearbox_parameters(
-                alpha_nom_rad, wrap=True, inverse_transform=inverse, **coeffs["coeffs_alpha"]
+
+                delta_alpha = - alpha_nom_rad + apply_gearbox_parameters(
+                    alpha_nom_rad, wrap=True, inverse_transform=inverse, **coeffs["coeffs_alpha"]
                 )
+
+                alpha_fixpoint_rad = coeffs["coeffs_beta"]["alpha_fixpoint_rad"]
+                delta_alpha_fixpoint = - alpha_fixpoint_rad + apply_gearbox_parameters(
+                    alpha_fixpoint_rad, wrap=True, inverse_transform=inverse, **coeffs["coeffs_alpha"]
+                )
+            else:
+                delta_alpha = 0
+                delta_alpha_fixpoint = 0
+
             if "beta" in correct_axis:
-                beta_nom_rad = apply_gearbox_parameters(
+                delta_beta = - beta_nom_rad + apply_gearbox_parameters(
                     beta_nom_rad, wrap=True, inverse_transform=inverse, **coeffs["coeffs_beta"]
                 )
 
-
-            delta_alpha = 0
-            delta_beta = 0
-            delta_alpha_fixpoint = 0
-            delta_beta_fixpoint = 0
-        else:
-            delta_alpha = - alpha_nom_rad + apply_gearbox_parameters(
-                alpha_nom_rad, wrap=True, inverse_transform=inverse, **coeffs["coeffs_alpha"]
-            )
-            delta_beta = - beta_nom_rad + apply_gearbox_parameters(
-                beta_nom_rad, wrap=True, inverse_transform=inverse, **coeffs["coeffs_beta"]
-            )
-            alpha_fixpoint_rad = coeffs["coeffs_beta"]["alpha_fixpoint_rad"]
-            delta_alpha_fixpoint = - alpha_fixpoint_rad + apply_gearbox_parameters(
-                alpha_fixpoint_rad, wrap=True, inverse_transform=inverse, **coeffs["coeffs_alpha"]
-            )
-
-            beta_fixpoint_rad = coeffs["coeffs_alpha"]["beta_fixpoint_rad"]
-            delta_beta_fixpoint = - beta_fixpoint_rad + apply_gearbox_parameters(
-                beta_fixpoint_rad, wrap=True, inverse_transform=inverse, **coeffs["coeffs_alpha"]
-            )
-
-            if "alpha" not in correct_axis:
-                delta_alpha = 0
-                delta_alpha_fixpoint = 0
-            if "beta" not in correct_axis:
+                beta_fixpoint_rad = coeffs["coeffs_alpha"]["beta_fixpoint_rad"]
+                delta_beta_fixpoint = - beta_fixpoint_rad + apply_gearbox_parameters(
+                    beta_fixpoint_rad, wrap=True, inverse_transform=inverse, **coeffs["coeffs_alpha"]
+                )
+            else:
                 delta_beta = 0
                 delta_beta_fixpoint = 0
+
+
+            if not correct_fixpoint:
+                delta_alpha_fixpoint = 0
+                delta_beta_fixpoint = 0
+
 
     # rotate (possibly corrected) angles to camera orientation,
     # and apply beta arm offset
@@ -964,11 +965,7 @@ def apply_gearbox_parameters(
 
     # do not wrap, or shift by offset first!
     # (the nominal angle is not subject to camera rotation)
-    ## # wrap in the same way as we did with the fit
-    ## if wrap:
-    ##     angle_rad = wrap_complex_vals(np.log(np.exp(1j * angle_rad)).imag)
 
-    #phi_corrected = np.interp(angle_rad, x_points, y_points, period=2 * pi)
     phi_corrected = np.interp(angle_rad, x_points, y_points)
 
     return phi_corrected
@@ -1046,10 +1043,6 @@ def plot_measured_vs_expected_points(serial_number,
                 beta_nominal_rad, wrap=True, inverse_transform=True, **coeffs["coeffs_beta"]
             )
 
-            # if motor_axis == "alpha":
-            #     beta_nom_corrected_rad -= np.deg2rad(5.00563875726)
-            # else:
-            #     alpha_nom_corrected_rad -= np.deg2rad(4.10830826615)
 
             print("for axis {}: mean(corrected - nominal) = {} degrees".format(
                 "alpha", np.rad2deg(np.mean(alpha_nom_corrected_rad - alpha_nominal_rad
@@ -1059,14 +1052,6 @@ def plot_measured_vs_expected_points(serial_number,
                 ))))
 
 
-            r2d = np.rad2deg
-            plt.plot(r2d(alpha_nominal_rad), r2d(alpha_nom_corrected_rad), "r.", label="nominal/corrected alpha")
-            plt.title("nominal vs corrected angle for axis {}".format( motor_axis))
-            plt.legend(loc="best", labelspacing=0.1)
-            plt.xlabel("nominal angle [degrees]")
-            plt.ylabel("corrected nominal angle [degrees]")
-            plt.show()
-
             alpha_fixpoint_rad = lcoeffs["alpha_fixpoint_rad"]
             beta_fixpoint_rad = lcoeffs["beta_fixpoint_rad"]
             alpha_fixpoint_corrected_rad = apply_gearbox_parameters(
@@ -1075,9 +1060,6 @@ def plot_measured_vs_expected_points(serial_number,
             beta_fixpoint_corrected_rad = apply_gearbox_parameters(
                 beta_fixpoint_rad, wrap=True, inverse_transform=True, **coeffs["coeffs_beta"]
             )
-
-            #beta_fixpoint_corrected_rad -= np.deg2rad(5.00563875726)
-            #alpha_fixpoint_corrected_rad -= np.deg2rad(4.10830826615)
 
             print("for axis {}: mean(corrected - fixpoint) = {}".format(
                 "alpha", np.rad2deg(np.mean(alpha_fixpoint_corrected_rad - alpha_fixpoint_rad
@@ -1101,14 +1083,11 @@ def plot_measured_vs_expected_points(serial_number,
                 inverse=True,
                 coeffs=coeffs,
                 #correct_axis=[motor_axis],
-                #correct_axis=["alpha","beta" ] if (motor_axis == "beta") else [],
-                correct_axis=["alpha","beta" ],
+                #correct_fixpoint=False,
                 broadcast=False
             )
 
             expected_points.append(ep)
-            #if len(expected_points) > 5:
-            #    break
 
         if motor_axis == "alpha":
             fc = "y-"
