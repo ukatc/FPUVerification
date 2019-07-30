@@ -59,18 +59,16 @@ def rot_axis(x, y, psi):
     y2 = - c2 * x + c1 * y
     return x2, y2
 
-def elliptical_distortion(x, y, psi, stretch):
+def elliptical_distortion(x, y, xc, yc, psi, stretch):
     """this rotates the coordinates x and y by the angle
     psi, applies a stretch factor of stretch to the x axis,
     and rotates the coordinates back. A stretch
     factor of 1 means a perfect circle.
     """
-    x1, y1 = rot_axis(x, y, psi)
-    x2 = stretch * x1
-    y2 = y1
-    x3, y3 = rot_axis(x2, y2, - psi)
+    x1, y1 = rot_axis(x-xc, y-yc, psi)
+    x2, y2 = rot_axis(x1 * stretch, y1, - psi)
 
-    return x2, y3
+    return x2+xc, y2+yc
 
 def f(c, x, y):
     """ calculate the algebraic distance between the data points and the mean circle centered at c=(xc, yc) """
@@ -79,7 +77,7 @@ def f(c, x, y):
 
     if len(c) == 4:
         xc, yc, psi, stretch = c
-        x, y = elliptical_distortion(x, y, psi, stretch)
+        x, y = elliptical_distortion(x, y, xc, yc, psi, stretch)
     else:
         xc, yc = c
 
@@ -96,7 +94,7 @@ def leastsq_circle(x, y):
     apply_elliptical_correction = POS_REP_EVALUATION_PARS.APPLY_ELLIPTICAL_CORRECTION
 
     if apply_elliptical_correction:
-        param_estimate = x_m, y_m, 0.0, 1.0
+        param_estimate = x_m, y_m, 0.0, 1.02
     else:
         param_estimate = x_m, y_m
 
@@ -111,7 +109,7 @@ def leastsq_circle(x, y):
         xc, yc = fitted_params
         psi, stretch = 0.0, 1.0
 
-    x2, y2 = elliptical_distortion(x, y, psi, stretch)
+    x2, y2 = elliptical_distortion(x, y, xc, yc, psi, stretch)
 
     Ri = calc_R(x2, y2, xc, yc)
 
@@ -201,7 +199,7 @@ def fit_circle(analysis_results, motor_axis):
 
     print("axis {}: fitted elliptical params: psi = {} degrees, stretch = {}".format(motor_axis, np.rad2deg(psi), stretch))
 
-    x_s2, y_s2 = elliptical_distortion(x_s, y_s, psi, stretch)
+    x_s2, y_s2 = elliptical_distortion(x_s, y_s, xc, yc, psi, stretch)
 
     phi_real_rad, r_real = cartesian2polar(x_s2 - xc, y_s2 - yc)
     if motor_axis=="alpha":
