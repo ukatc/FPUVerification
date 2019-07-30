@@ -16,7 +16,7 @@ from fpu_constants import (
     StepsPerRadianAlpha,
     StepsPerRadianBeta,
 )
-from vfr.conf import BLOB_WEIGHT_FACTOR, POS_REP_EVALUATION_PARS
+from vfr.conf import BLOB_WEIGHT_FACTOR, POS_REP_EVALUATION_PARS, PERCENTILE_ARGS
 
 # exceptions which are raised if image analysis functions fail
 
@@ -1179,9 +1179,15 @@ def plot_measured_vs_expected_points(serial_number,
         expected_points = np.array(expected_points).T
         measured_points = np.array((x_s, y_s))[:,s]
         xe, ye = expected_points
-        RMS = np.sqrt(np.mean(np.linalg.norm(expected_points - measured_points, axis=0) ** 2))
+        error_magnitudes = np.linalg.norm(expected_points - measured_points, axis=0)
+        RMS = np.sqrt(np.mean(error_magnitudes ** 2))
+        percentile_vals = np.percentile(error_magnitudes, PERCENTILE_ARGS)
+
         print("RMS [{}] = {} micron".format(motor_axis, RMS * 1000.0))
-        plt.plot(xe, ye, color2 + "+", label="{} points expected from transformed nominal angle, RMS = {:5.1f} micron".format(motor_axis, RMS * 1000), mew=1)
+        pcdict = {PERCENTILE_ARGS[k] : pv for k, pv in enumerate(percentile_vals)}
+        print("percentiles = {} microns".format({ k: "%.1f" % (pv * 1000) for k, pv in pcdict.items() }))
+        plt.plot(xe, ye, color2 + "+", label="{} expected pts,"
+                 " RMS = {:5.1f} micron, 95% perc = {:5.1f}".format(motor_axis, RMS * 1000, pcdict[95] * 1000), mew=1)
 
         plt.legend(loc="best", labelspacing=0.1)
 
