@@ -257,7 +257,8 @@ POS_REP_EVALUATION_PARS = Namespace(
     # represents an acceptable FPU
     MIN_NUMBER_POINTS=5,  # number of measurements which are requied
     # before a position is added to the overall statistical measure
-    APPLY_ELLIPTICAL_CORRECTION=False,
+    APPLY_ELLIPTICAL_CORRECTION=True,
+    #APPLY_ELLIPTICAL_CORRECTION=False,
 )
 
 POS_REP_PLATESCALE = 0.0235  # millimeter per pixel
