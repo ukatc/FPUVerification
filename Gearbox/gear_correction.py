@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from __future__ import division, print_function
 
 from math import pi
@@ -1185,9 +1186,9 @@ def plot_measured_vs_expected_points(serial_number,
 
         print("RMS [{}] = {} micron".format(motor_axis, RMS * 1000.0))
         pcdict = {PERCENTILE_ARGS[k] : pv for k, pv in enumerate(percentile_vals)}
-        print("percentiles = {} microns".format({ k: "%.1f" % (pv * 1000) for k, pv in pcdict.items() }))
+        print("percentiles = {} microns".format(", ".join(["P[%s]: %.1f" % (k, pcdict[k] * 1000) for k in sorted(pcdict.keys()) ])))
         plt.plot(xe, ye, color2 + "+", label="{} expected pts,"
-                 " RMS = {:5.1f} micron, 95% perc = {:5.1f}".format(motor_axis, RMS * 1000, pcdict[95] * 1000), mew=1)
+                 " RMS = {:5.1f} $\mu$m, 95% perc = {:5.1f} $\mu$m".format(motor_axis, RMS * 1000, pcdict[95] * 1000), mew=1)
 
         plt.legend(loc="best", labelspacing=0.1)
 
