@@ -198,7 +198,7 @@ def fit_circle(analysis_results, motor_axis):
 
     xc, yc, R, psi, stretch, residual = leastsq_circle(x_s, y_s)
 
-    print("axis {}: fitted elliptical params: psi = {} degrees, strech = {}".format(motor_axis, np.rad2deg(psi), stretch))
+    print("axis {}: fitted elliptical params: psi = {} degrees, stretch = {}".format(motor_axis, np.rad2deg(psi), stretch))
 
     x_s2, y_s2 = elliptical_distortion(x_s, y_s, psi, stretch)
 
@@ -531,8 +531,8 @@ def angle_to_point(
 
 
 def fit_offsets(
-        coordinates_alpha,
-        coordinates_beta,
+        circle_alpha,
+        circle_beta,
         P0=None,
         R_alpha=None,
         R_beta_midpoint=None,
@@ -548,10 +548,16 @@ def fit_offsets(
     coordinates with a variable offset, and minimizing for the
     distance to the actual measured points.
     """
-    all_coords = dict(coordinates_alpha)
-    all_coords.update(coordinates_beta)
 
-    circle_points, nominal_coordinates_rad, _ = extract_points(all_coords)
+    circle_points = []
+    nominal_coordinates_rad = []
+
+    for c in circle_alpha, circle_beta:
+        for x_s2, y_s2 in zip(c["x_s2"], c["y_s2"]):
+            circle_points.append((x_s2,  y_s2))
+        for alpha_nom, beta_nom in zip(c["alpha_nominal_rad"], c["beta_nominal_rad"]):
+            nominal_coordinates_rad.append((alpha_nom, beta_nom))
+
 
     circle_points = np.array(circle_points).T
     alpha_nom_rad, beta_nom_rad = np.array(nominal_coordinates_rad).T
@@ -639,12 +645,12 @@ def fit_gearbox_correction(dict_of_coordinates_alpha, dict_of_coordinates_beta, 
     print("camera_offset_start =", camera_offset_start, "radian = {} degree".format(r2d(camera_offset_start)))
     print("beta0_start =", beta0_start, "radian = {} degree".format(r2d(beta0_start)))
 
-    camera_offset_rad, beta0_rad = fit_offsets(dict_of_coordinates_alpha, dict_of_coordinates_beta,
-                                        P0=P0,
-                                        R_alpha=R_alpha,
-                                        R_beta_midpoint=R_beta_midpoint,
-                                        camera_offset_start=camera_offset_start,
-                                        beta0_start=beta0_start,
+    camera_offset_rad, beta0_rad = fit_offsets(circle_alpha, circle_beta,
+                                               P0=P0,
+                                               R_alpha=R_alpha,
+                                               R_beta_midpoint=R_beta_midpoint,
+                                               camera_offset_start=camera_offset_start,
+                                               beta0_start=beta0_start,
     )
 
     coeffs_alpha = fit_gearbox_parameters(
