@@ -217,7 +217,7 @@ POS_REP_MEASUREMENT_PARS = Namespace(
     # position
     POS_REP_ITERATIONS=3,  # the number of times each FPU
     # sweeps back and forth
-    POS_REP_NUM_HI_RES_INCREMENTS=360,  # the number of hi-resolution
+    POS_REP_NUM_HI_RES_INCREMENTS_FACTOR=24,  # the number of hi-resolution
     # measurements made within an
     # extra sweep from the
     # starting position

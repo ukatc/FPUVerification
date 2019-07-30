@@ -111,18 +111,19 @@ def index_positions(pars):
     for i_iteration in range(pars.POS_REP_ITERATIONS):
         for j_direction in range(4):
             MAX_INCREMENT = pars.POS_REP_NUM_INCREMENTS
+            FIXPOINT = 1
             for k_increment in range(MAX_INCREMENT):
                 if j_direction == 0:
                     idx_alpha = k_increment
-                    idx_beta = 1
+                    idx_beta = FIXPOINT
                 elif j_direction == 1:
                     idx_alpha = MAX_INCREMENT - k_increment - 1
-                    idx_beta = 1
+                    idx_beta = FIXPOINT
                 elif j_direction == 2:
-                    idx_alpha = 1
+                    idx_alpha = FIXPOINT
                     idx_beta = k_increment
                 elif j_direction == 3:
-                    idx_alpha = 1
+                    idx_alpha = FIXPOINT
                     idx_beta = MAX_INCREMENT - k_increment - 1
 
                 yield MeasurementIndex(
@@ -132,19 +133,20 @@ def index_positions(pars):
     # add a single iteration of a high-resolution measurement
     i_iteration = pars.POS_REP_ITERATIONS
     for j_direction in range(4):
-        MAX_INCREMENT = pars.POS_REP_NUM_HI_RES_INCREMENTS
+        FIXPOINT = pars.POS_REP_NUM_HI_RES_INCREMENTS_FACTOR
+        MAX_INCREMENT = pars.POS_REP_NUM_INCREMENTS * pars.POS_REP_NUM_HI_RES_INCREMENTS_FACTOR
         for k_increment in range(MAX_INCREMENT):
             if j_direction == 0:
                 idx_alpha = k_increment
-                idx_beta = 5
+                idx_beta = FIXPOINT
             elif j_direction == 1:
                 idx_alpha = MAX_INCREMENT - k_increment - 1
-                idx_beta = 5
+                idx_beta = FIXPOINT
             elif j_direction == 2:
-                idx_alpha = 5
+                idx_alpha = FIXPOINT
                 idx_beta = k_increment
             elif j_direction == 3:
-                idx_alpha = 5
+                idx_alpha = FIXPOINT
                 idx_beta = MAX_INCREMENT - k_increment - 1
 
             yield MeasurementIndex(
@@ -158,10 +160,16 @@ def get_target_position(limits, pars, measurement_index):
     beta_min = limits.beta_min
     beta_max = limits.beta_max
 
+    # we set a fixpoint index so that the calibration circles
+    # for alpha and beta arm intersect at that fixpoint, and
+    # within the normal movement range of the FPU.
+
     if measurement_index.hires:
-        n_increments = pars.POS_REP_NUM_HI_RES_INCREMENTS
+        n_increments = pars.POS_REP_NUM_HI_RES_INCREMENTS_FACTOR * pars.POS_REP_NUM_INCREMENTS
+        fixpoint = pars.POS_REP_NUM_HI_RES_INCREMENTS_FACTOR
     else:
         n_increments = pars.POS_REP_NUM_INCREMENTS
+        fixpoint = 1
 
     step_a = (
         alpha_max - alpha_min - 2 * pars.POS_REP_SAFETY_MARGIN
@@ -170,11 +178,11 @@ def get_target_position(limits, pars, measurement_index):
         beta_max - beta_min - 2 * pars.POS_REP_SAFETY_MARGIN
     ) / float(n_increments)
 
-    alpha0 = alpha_min + pars.POS_REP_SAFETY_MARGIN
-    beta0 = beta_min + pars.POS_REP_SAFETY_MARGIN
+    alpha0 = alpha_min + pars.POS_REP_SAFETY_MARGIN + fixpoint * step_a
+    beta0 = beta_min + pars.POS_REP_SAFETY_MARGIN + fixpoint * step_b
 
-    abs_alpha = alpha0 + step_a * measurement_index.idx_alpha
-    abs_beta = beta0 + step_b * measurement_index.idx_beta
+    abs_alpha = alpha0 + step_a * (measurement_index.idx_alpha - fixpoint)
+    abs_beta = beta0 + step_b * (measurement_index.idx_beta - fixpoint)
 
     return FPU_Position(abs_alpha, abs_beta)
 
