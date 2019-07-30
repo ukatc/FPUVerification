@@ -16,7 +16,7 @@ from fpu_constants import (
     StepsPerRadianAlpha,
     StepsPerRadianBeta,
 )
-from vfr.conf import BLOB_WEIGHT_FACTOR
+from vfr.conf import BLOB_WEIGHT_FACTOR, POS_REP_EVALUATION_PARS
 
 # exceptions which are raised if image analysis functions fail
 
@@ -51,10 +51,39 @@ def calc_R(x, y, xc, yc):
     """ calculate the distance of each 2D points from the center (xc, yc) """
     return np.sqrt((x - xc) ** 2 + (y - yc) ** 2)
 
+def rot_axis(x, y, psi):
+    c1 = np.cos(psi)
+    c2 = np.sin(psi)
+    x2 = c1 * x + c2 * y
+    y2 = - c2 * x + c1 * y
+    return x2, y2
+
+def elliptical_distortion(x, y, psi, stretch):
+    """this rotates the coordinates x and y by the angle
+    psi, applies a stretch factor of stretch to the x axis,
+    and rotates the coordinates back. A stretch
+    factor of 1 means a perfect circle.
+    """
+    x1, y1 = rot_axis(x, y, psi)
+    x2 = stretch * x1
+    y2 = y1
+    x3, y3 = rot_axis(x2, y2, - psi)
+
+    return x2, y3
 
 def f(c, x, y):
     """ calculate the algebraic distance between the data points and the mean circle centered at c=(xc, yc) """
-    Ri = calc_R(x, y, *c)
+
+    #rotate coordinates, apply stretch, rotate back
+
+    if len(c) == 4:
+        xc, yc, psi, stretch = c
+        x, y = elliptical_distortion(x, y, psi, stretch)
+    else:
+        xc, yc = c
+
+
+    Ri = calc_R(x, y, xc, yc)
     return Ri - Ri.mean()
 
 
@@ -62,18 +91,36 @@ def leastsq_circle(x, y):
     # coordinates of the barycenter
     x_m = np.mean(x)
     y_m = np.mean(y)
-    center_estimate = x_m, y_m
-    center, ier = optimize.leastsq(
-        f, center_estimate, args=(x, y), ftol=1.5e-10, xtol=1.5e-10
+
+    apply_elliptical_correction = POS_REP_EVALUATION_PARS.APPLY_ELLIPTICAL_CORRECTION
+
+    if apply_elliptical_correction:
+        param_estimate = x_m, y_m, 0.0, 1.0
+    else:
+        param_estimate = x_m, y_m
+
+    fitted_params, ier = optimize.leastsq(
+        f, param_estimate, args=(x, y), ftol=1.5e-10, xtol=1.5e-10
     )
-    xc, yc = center
-    Ri = calc_R(x, y, *center)
+
+    if apply_elliptical_correction:
+        xc, yc, psi, stretch = fitted_params
+
+    else:
+        xc, yc = fitted_params
+        psi, stretch = 0.0, 1.0
+
+    x2, y2 = elliptical_distortion(x, y, psi, stretch)
+
+    Ri = calc_R(x2, y2, xc, yc)
+
     R = Ri.mean()
     residu = np.sum((Ri - R) ** 2)
-    return xc, yc, R, residu
+
+    return xc, yc, R, psi, stretch, residu
 
 
-def plot_data_circle(x, y, xc, yc, R, title):
+def plot_data_circle(x_s2, y_s2, xc, yc, R, psi=None, stretch=None, title=None):
     plt.figure(facecolor="white")  # figsize=(7, 5.4), dpi=72,
     plt.axis("equal")
 
@@ -84,7 +131,8 @@ def plot_data_circle(x, y, xc, yc, R, title):
     plt.plot(x_fit, y_fit, "b-", label="fitted circle", lw=2)
     plt.plot([xc], [yc], "bD", mec="y", mew=1)
     # plot data
-    plt.plot(x, y, "r.", label="data", mew=1)
+    plt.plot(x_s2, y_s2, "r.", label="data fitted with psi = {} degree, stretch = {}"
+             .format(np.rad2deg(psi), stretch), mew=1)
 
     plt.legend(loc="best", labelspacing=0.1)
     plt.grid()
@@ -148,9 +196,13 @@ def fit_circle(analysis_results, motor_axis):
     x_s, y_s = np.array(circle_points).T
     alpha_nominal_rad, beta_nominal_rad = np.array(nominal_coordinates_rad).T
 
-    xc, yc, R, residual = leastsq_circle(x_s, y_s)
+    xc, yc, R, psi, stretch, residual = leastsq_circle(x_s, y_s)
 
-    phi_real_rad, r_real = cartesian2polar(x_s - xc, y_s - yc)
+    print("axis {}: fitted elliptical params: psi = {} degrees, strech = {}".format(motor_axis, np.rad2deg(psi), stretch))
+
+    x_s2, y_s2 = elliptical_distortion(x_s, y_s, psi, stretch)
+
+    phi_real_rad, r_real = cartesian2polar(x_s2 - xc, y_s2 - yc)
     if motor_axis=="alpha":
         phi_nominal_rad = alpha_nominal_rad
     else:
@@ -162,8 +214,12 @@ def fit_circle(analysis_results, motor_axis):
         "xc": xc,
         "yc": yc,
         "R": R,
+        "psi" : psi,
+        "stretch" : stretch,
         "x_s" : x_s,
         "y_s" : y_s,
+        "x_s2" : x_s2,
+        "y_s2" : y_s2,
         "pos_keys" : pos_keys,
         "alpha_nominal_rad" : alpha_nominal_rad,
         "beta_nominal_rad" : beta_nominal_rad,
@@ -175,7 +231,7 @@ def wrap_complex_vals(angle) :
     return np.where(angle < - pi / 4, angle + 2 * pi, angle)
 
 
-def get_angle_error(x_s, y_s,
+def get_angle_error(x_s2, y_s2,
                     xc, yc,
                     alpha_nominal_rad,
                     beta_nominal_rad,
@@ -187,8 +243,8 @@ def get_angle_error(x_s, y_s,
 ):
 
     print("get_angle_error: center (x,y) = ({},{}) millimeter".format(xc, yc))
-    x_real = x_s - xc
-    y_real = y_s - yc
+    x_real = x_s2 - xc
+    y_real = y_s2 - yc
 
 
     # compute expected points from common fit parameters
@@ -237,6 +293,12 @@ def fit_gearbox_parameters(motor_axis, circle_data,
 
     x_s = circle_data["x_s"]
     y_s = circle_data["y_s"]
+    x_s2 = circle_data["x_s2"]
+    y_s2 = circle_data["y_s2"]
+
+    psi = circle_data["psi"]
+    stretch=circle_data["stretch"]
+
     xc = circle_data["xc"]
     yc = circle_data["yc"]
 
@@ -253,10 +315,10 @@ def fit_gearbox_parameters(motor_axis, circle_data,
         beta_fixpoint_rad = np.mean(beta_nominal_rad)
         print("beta fixpoint = {} degree".format(np.rad2deg(beta_fixpoint_rad)))
 
-    _, R_real = cartesian2polar(x_s - xc, y_s - yc)
+    _, R_real = cartesian2polar(x_s2 - xc, y_s2 - yc)
     print("fit_gearbox_parameters(): finding angular error for {} arm ".format(motor_axis))
 
-    phi_real_rad, phi_fitted_rad, err_phi_1_rad = get_angle_error(x_s, y_s,
+    phi_real_rad, phi_fitted_rad, err_phi_1_rad = get_angle_error(x_s2, y_s2,
                                                                    xc, yc,
                                                                    alpha_nominal_rad,
                                                                    beta_nominal_rad,
@@ -321,13 +383,15 @@ def fit_gearbox_parameters(motor_axis, circle_data,
         "R": circle_data["R"],
         "P0" : P0,
         "R_alpha" : R_alpha,
+        "psi" : psi,
+        "stretch" : stretch,
         "R_beta_midpoint" : R_beta_midpoint,
         "camera_offset_rad" : camera_offset_rad,
         "beta0_rad" : beta0_rad,
         "alpha_fixpoint_rad" : alpha_fixpoint_rad,
         "beta_fixpoint_rad" : beta_fixpoint_rad,
         "num_support_points": len(phi_fit_support_rad),
-        "num_data_points": len(x_s),
+        "num_data_points": len(x_s2),
         "nominal_angle_rad" : nominal_angle_rad,
         "corrected_angle_rad": corrected_angle_rad,
     }
@@ -335,8 +399,10 @@ def fit_gearbox_parameters(motor_axis, circle_data,
     if return_intermediate_results:
 
         extra_results =  {
-            "x": x_s,
-            "y": y_s,
+            "x_s": x_s,
+            "y_s": y_s,
+            "x_s2": x_s2,
+            "y_s2": y_s2,
             "phi_fitted_rad": phi_fitted_rad,
             "phi_fit_support_rad": phi_fit_support_rad,
             "corrected_shifted_angle_rad": corrected_shifted_angle_rad,
@@ -679,11 +745,15 @@ def plot_gearbox_calibration(
     pos_keys=None,
     num_support_points=None,
     num_data_points=None,
-    x=None,
-    y=None,
+    x_s=None,
+    y_s=None,
+    x_s2=None,
+    y_s2=None,
     xc=None,
     yc=None,
     R=None,
+    psi=None,
+    stretch=None,
     camera_offset_rad=None,
     beta0_rad=None,
     P0=None,
@@ -712,7 +782,7 @@ def plot_gearbox_calibration(
     r2d = np.rad2deg
     # get list of points to which circle is fitted
     if plot_circle:
-        plot_data_circle(x - xc, y - yc, 0, 0, R, title=motor_axis)
+        plot_data_circle(x_s2 - xc, y_s2 - yc, 0, 0, R, psi=psi, stretch=stretch, title=motor_axis)
 
     if plot_func:
         plt.plot(r2d(fits[0][0]), r2d(fits[0][1]), "g.", label=fits[0][2])
@@ -1021,8 +1091,8 @@ def plot_measured_vs_expected_points(serial_number,
         print("evaluating correction for {} motor axis".format(motor_axis))
         xc = lcoeffs["xc"]
         yc = lcoeffs["yc"]
-        x = lcoeffs["x"]
-        y = lcoeffs["y"]
+        x_s = lcoeffs["x_s2"]
+        y_s = lcoeffs["y_s2"]
         R = lcoeffs["R"]
         alpha_nominal_rad = lcoeffs["alpha_nominal_rad"]
         beta_nominal_rad = lcoeffs["beta_nominal_rad"]
@@ -1098,10 +1168,10 @@ def plot_measured_vs_expected_points(serial_number,
         plt.plot([xc], [yc], color + "D", mec="y", mew=1, label="{} fitted center".format(motor_axis))
         # plot data
         #s = slice(5,100)
-        plt.plot(x[s], y[s], color + ".", label="{} measured point ".format(motor_axis), mew=1)
+        plt.plot(x_s[s], y_s[s], color + ".", label="{} measured point ".format(motor_axis), mew=1)
 
         expected_points = np.array(expected_points).T
-        measured_points = np.array((x,y))[:,s]
+        measured_points = np.array((x_s, y_s))[:,s]
         xe, ye = expected_points
         RMS = np.sqrt(np.mean(np.linalg.norm(expected_points - measured_points, axis=0) ** 2))
         print("RMS [{}] = {} micron".format(motor_axis, RMS * 1000.0))
