@@ -22,13 +22,59 @@ POS_REP_GEARCOR_OLD = cleandoc(
 )
 
 POS_REP_GEARCOR_TERSE = cleandoc(
+    """positional repeatability: gearbox correction alpha num support / data points = {gearbox_correction[coeffs][coeffs_alpha][num_support_points]} / {gearbox_correction[coeffs][coeffs_alpha][num_data_points]}
+       positional repeatability: gearbox correction beta num support / data points  = {gearbox_correction[coeffs][coeffs_beta][num_support_points]} / {gearbox_correction[coeffs][coeffs_beta][num_data_points]}
+
+       positional repeatability: gearbox correction alpha RMS fit                        = {gearbox_correction[expected_vals][alpha][RMS]:7.5} microns
+       positional repeatability: gearbox correction alpha fit error 95 % percentile:     = {gearbox_correction[expected_vals][alpha][pcdict][95]:7.5} microns
+       positional repeatability: gearbox correction beta RMS fit                         = {gearbox_correction[expected_vals][beta][RMS]:7.5} microns
+       positional repeatability: gearbox correction beta fit error 95 % percentile:      = {gearbox_correction[expected_vals][beta][pcdict][95]:7.5} microns
+
+"""
+)
+
+POS_REP_GEARCOR_COMPLETE = cleandoc(
+    """positional repeatability: gearbox correction alpha algorithm                 = {gearbox_correction[coeffs][coeffs_alpha][algorithm]}
+       positional repeatability: gearbox correction alpha num support / data points = {gearbox_correction[coeffs][coeffs_alpha][num_support_points]} / {gearbox_correction[coeffs][coeffs_alpha][num_data_points]}
+       positional repeatability: gearbox correction beta num support / data points  = {gearbox_correction[coeffs][coeffs_beta][num_support_points]} / {gearbox_correction[coeffs][coeffs_beta][num_data_points]}
+
+       positional repeatability: gearbox correction alpha RMS fit                        = {gearbox_correction[expected_vals][alpha][RMS]:7.5} microns
+       positional repeatability: gearbox correction alpha fit error 50 % percentile:     = {gearbox_correction[expected_vals][alpha][pcdict][50]:7.5} microns
+       positional repeatability: gearbox correction alpha fit error 90 % percentile:     = {gearbox_correction[expected_vals][alpha][pcdict][90]:7.5} microns
+       positional repeatability: gearbox correction alpha fit error 95 % percentile:     = {gearbox_correction[expected_vals][alpha][pcdict][95]:7.5} microns
+       positional repeatability: gearbox correction beta RMS fit                         = {gearbox_correction[expected_vals][beta][RMS]:7.5} microns
+       positional repeatability: gearbox correction beta fit error 50 % percentile:      = {gearbox_correction[expected_vals][beta][pcdict][50]:7.5} microns
+       positional repeatability: gearbox correction beta fit error 90 % percentile:      = {gearbox_correction[expected_vals][beta][pcdict][90]:7.5} microns
+       positional repeatability: gearbox correction beta fit error 95 % percentile:      = {gearbox_correction[expected_vals][beta][pcdict][95]:7.5} microns
+
+
+"""
+    )
+POS_REP_GEARCOR_LONG = cleandoc(
+    """positional repeatability: gearbox correction alpha algorithm                 = {gearbox_correction[coeffs][coeffs_alpha][algorithm]}
+       positional repeatability: gearbox correction alpha num support / data points = {gearbox_correction[coeffs][coeffs_alpha][num_support_points]} / {gearbox_correction[coeffs][coeffs_alpha][num_data_points]}
+       positional repeatability: gearbox correction beta num support / data points  = {gearbox_correction[coeffs][coeffs_beta][num_support_points]} / {gearbox_correction[coeffs][coeffs_beta][num_data_points]}
+
+       positional repeatability: gearbox correction alpha RMS fit                        = {gearbox_correction[expected_vals][alpha][RMS]:7.5} microns
+       positional repeatability: gearbox correction alpha fit error 50 % percentile:     = {gearbox_correction[expected_vals][alpha][pcdict][50]:7.5} microns
+       positional repeatability: gearbox correction alpha fit error 90 % percentile:     = {gearbox_correction[expected_vals][alpha][pcdict][90]:7.5} microns
+       positional repeatability: gearbox correction alpha fit error 95 % percentile:     = {gearbox_correction[expected_vals][alpha][pcdict][95]:7.5} microns
+       positional repeatability: gearbox correction beta RMS fit                         = {gearbox_correction[expected_vals][beta][RMS]:7.5} microns
+       positional repeatability: gearbox correction beta fit error 50 % percentile:      = {gearbox_correction[expected_vals][beta][pcdict][50]:7.5} microns
+       positional repeatability: gearbox correction beta fit error 90 % percentile:      = {gearbox_correction[expected_vals][beta][pcdict][90]:7.5} microns
+       positional repeatability: gearbox correction beta fit error 95 % percentile:      = {gearbox_correction[expected_vals][beta][pcdict][95]:7.5} microns
+
+
+"""
+    )
+POS_REP_GEARCOR_EXTENDED = cleandoc(
     """positional repeatability: gearbox correction alpha algorithm                 = {gearbox_correction[coeffs][coeffs_alpha][algorithm]}
        positional repeatability: gearbox correction alpha num support / data points = {gearbox_correction[coeffs][coeffs_alpha][num_support_points]} / {gearbox_correction[coeffs][coeffs_alpha][num_data_points]}
 
-       positional repeatability: gearbox correction alpha RMS fit                         = {gearbox_correction[expected_vals][alpha][RMS]:7.5} microns
-       positional repeatability: gearbox correction alpha fit error 50 % percentile:      = {gearbox_correction[expected_vals][alpha][pcdict][50]:7.5} microns
-       positional repeatability: gearbox correction alpha fit error 90 % percentile:      = {gearbox_correction[expected_vals][alpha][pcdict][90]:7.5} microns
-       positional repeatability: gearbox correction alpha fit error 95 % percentile:      = {gearbox_correction[expected_vals][alpha][pcdict][95]:7.5} microns
+       positional repeatability: gearbox correction alpha RMS fit                        = {gearbox_correction[expected_vals][alpha][RMS]:7.5} microns
+       positional repeatability: gearbox correction alpha fit error 50 % percentile:     = {gearbox_correction[expected_vals][alpha][pcdict][50]:7.5} microns
+       positional repeatability: gearbox correction alpha fit error 90 % percentile:     = {gearbox_correction[expected_vals][alpha][pcdict][90]:7.5} microns
+       positional repeatability: gearbox correction alpha fit error 95 % percentile:     = {gearbox_correction[expected_vals][alpha][pcdict][95]:7.5} microns
        positional repeatability: gearbox correction beta RMS fit                         = {gearbox_correction[expected_vals][beta][RMS]:7.5} microns
        positional repeatability: gearbox correction beta fit error 50 % percentile:      = {gearbox_correction[expected_vals][beta][pcdict][50]:7.5} microns
        positional repeatability: gearbox correction beta fit error 90 % percentile:      = {gearbox_correction[expected_vals][beta][pcdict][90]:7.5} microns
@@ -49,11 +95,7 @@ POS_REP_GEARCOR_TERSE = cleandoc(
        positional repeatability: gearbox correction beta R midpoint                 = {gearbox_correction[coeffs][coeffs_beta][R]:6.5} mm
 
 """
-)
-
-POS_REP_GEARCOR_COMPLETE = POS_REP_GEARCOR_TERSE
-POS_REP_GEARCOR_LONG = POS_REP_GEARCOR_TERSE
-POS_REP_GEARCOR_EXTENDED = POS_REP_GEARCOR_TERSE
+    )
 
 
 POS_REP_GEARALGO = cleandoc(
