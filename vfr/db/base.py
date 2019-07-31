@@ -89,7 +89,8 @@ def get_test_result(dbe, fpu_id, keyfunc, count=None):
 
         val = txn.get(key2)
 
-        if val is not None:
+    if val is not None:
+        try:
             try:
                 val = ast.literal_eval(val)
 
@@ -101,10 +102,13 @@ def get_test_result(dbe, fpu_id, keyfunc, count=None):
                 val = eval(val)
             val["record-count"] = count
 
-        trace = logging.getLogger(__name__).trace
-        trace("got %r : %r" % (key2, val))
+            trace = logging.getLogger(__name__).trace
+            trace("got %r : %r" % (key2, val))
+        except SyntaxError:
+            logger = logging.getLogger(__name__)
+            logger.error("syntax error for key = %r, count = %r" % (key2, count))
+            val = None
 
-    return val
 
 
 def save_named_record(
