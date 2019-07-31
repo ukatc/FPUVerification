@@ -671,16 +671,16 @@ def get_expected_points(
         axis_result = {
             "RMS" : RMS,
             "pcdict" : pcdict,
-            "expected_points" : expected_points,
-            "measured_points" : measured_points,
-            "xc" : xc,
-            "yc" : yc,
-            "R" : R,
             }
 
         if return_points:
             # include extra results for plotting
             axis_result.update({
+                "xc" : xc,
+                "yc" : yc,
+                "R" : R,
+                "expected_points" : expected_points,
+                "measured_points" : measured_points,
                 "x_s" : x_s,
                 "y_s" : y_s,
                 "xe" : xe,
