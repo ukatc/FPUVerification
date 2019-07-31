@@ -30,7 +30,7 @@ class GearboxFitError(Exception):
 # (each different result for the same data
 # should yield a version number increase)
 
-GEARBOX_CORRECTION_VERSION = (5, 0, 0)
+GEARBOX_CORRECTION_VERSION = (5, 0, 1)
 
 # minimum version for which this code works
 # and yields a tolerable result
