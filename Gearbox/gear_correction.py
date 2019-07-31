@@ -568,6 +568,7 @@ def fit_offsets(
     return camera_offset, beta0
 
 def get_expected_points(
+        fpu_id,
         coeffs,
         R_alpha=None,
         R_beta_midpoint=None,
@@ -585,7 +586,7 @@ def get_expected_points(
             (coeffs["coeffs_alpha"], "alpha"),
             (coeffs["coeffs_beta"], "beta"),
     ]:
-        logger.info("evaluating correction for {} motor axis".format(motor_axis))
+        logger.info("FPU {}: evaluating correction for {} motor axis".format(fpu_id, motor_axis))
         xc = lcoeffs["xc"]
         yc = lcoeffs["yc"]
         x_s = lcoeffs["x_s2"]
@@ -604,10 +605,12 @@ def get_expected_points(
         )
 
 
-        logger.info("for axis {}: mean(corrected - nominal) = {} degrees".format(
+        logger.info("FPU {}: for axis {}: mean(corrected - nominal) = {} degrees".format(
+            fpu_id,
             "alpha", np.rad2deg(np.mean(alpha_nom_corrected_rad - alpha_nominal_rad
             ))))
-        logger.info("for axis {}: mean(corrected - nominal) = {} degrees".format(
+        logger.info("FPU {}: for axis {}: mean(corrected - nominal) = {} degrees".format(
+            fpu_id,
             "beta", np.rad2deg(np.mean(beta_nom_corrected_rad - beta_nominal_rad
             ))))
 
@@ -621,10 +624,12 @@ def get_expected_points(
             beta_fixpoint_rad, wrap=True, inverse_transform=True, **coeffs["coeffs_beta"]
         )
 
-        logger.info("for axis {}: mean(corrected - fixpoint) = {}".format(
+        logger.info("FPU {}: for axis {}: mean(corrected - fixpoint) = {}".format(
+            fpu_id,
             "alpha", np.rad2deg(np.mean(alpha_fixpoint_corrected_rad - alpha_fixpoint_rad
             ))))
-        logger.info("for axis {}: mean(corrected - fixpoint) = {}".format(
+        logger.info("FPU {}: for axis {}: mean(corrected - fixpoint) = {}".format(
+            fpu_id,
             "beta", np.rad2deg(np.mean(beta_fixpoint_corrected_rad - beta_fixpoint_rad
             ))))
 
@@ -657,9 +662,12 @@ def get_expected_points(
         RMS = np.sqrt(np.mean(error_magnitudes ** 2)) * 1000
         percentile_vals = np.percentile(error_magnitudes * 1000, PERCENTILE_ARGS)
 
-        logger.info("RMS [{}] = {} micron".format(motor_axis, RMS))
+        logger.info("FPU {}: RMS [{}] = {} micron".format(fpu_id, motor_axis, RMS))
         pcdict = {PERCENTILE_ARGS[k] : pv for k, pv in enumerate(percentile_vals)}
-        logger.info("percentiles = {} microns".format(", ".join(["P[%s]: %.1f" % (k, pcdict[k]) for k in sorted(pcdict.keys()) ])))
+        logger.info("FPU {}: percentiles = {} microns".format(
+            fpu_id,
+            ", ".join(["P[%s]: %.1f" % (k, pcdict[k]) for k in sorted(pcdict.keys()) ]))
+        )
         axis_result = {
             "RMS" : RMS,
             "pcdict" : pcdict,
@@ -683,7 +691,7 @@ def get_expected_points(
 
     return expected_vals
 
-def fit_gearbox_correction(dict_of_coordinates_alpha, dict_of_coordinates_beta, return_intermediate_results=False):
+def fit_gearbox_correction(fpu_id, dict_of_coordinates_alpha, dict_of_coordinates_beta, return_intermediate_results=False):
     """Computes gearbox correction and returns correction coefficients
     as a dictionary.
 
@@ -784,6 +792,7 @@ def fit_gearbox_correction(dict_of_coordinates_alpha, dict_of_coordinates_beta, 
     P0 = np.array([x_center, y_center])
 
     expected_vals= get_expected_points(
+        fpu_id,
         coeffs,
         R_alpha=R_alpha,
         R_beta_midpoint=R_beta_midpoint,

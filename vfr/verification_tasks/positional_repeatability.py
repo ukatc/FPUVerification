@@ -498,7 +498,7 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
             )
 
             gearbox_correction = fit_gearbox_correction(
-                analysis_results_alpha, analysis_results_beta
+                fpu_id, analysis_results_alpha, analysis_results_beta
             )
             errmsg = ""
 

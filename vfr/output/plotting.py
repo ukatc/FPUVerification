@@ -146,6 +146,7 @@ def plot(dbe, opts):
             result_beta = pos_rep_result["analysis_results_beta"]
 
             gear_correction = fit_gearbox_correction(
+                fpu_id,
                 result_alpha,
                 result_beta,
                 return_intermediate_results=True,
