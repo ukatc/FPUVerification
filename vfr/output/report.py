@@ -357,7 +357,7 @@ def format_report_terse(
 
             yield EMPTY_LINE
 
-            if positional_repeatability_result["gearbox_correction_version"] < (5, 0, 0):
+            if positional_repeatability_result["gearbox_correction_version"] < (5, 0, 1):
                 yield (
                     rfmt_pos_rep.POS_REP_GEARCOR_OLD.format(**positional_repeatability_result)
                 )
@@ -521,9 +521,15 @@ def format_report_complete(
 
             yield EMPTY_LINE
 
-            yield (
-                rfmt_pos_rep.POS_REP_GEARCOR.format(**positional_repeatability_result)
-            )
+            if positional_repeatability_result["gearbox_correction_version"] < (5, 0, 1):
+                yield (
+                    rfmt_pos_rep.POS_REP_GEARCOR_OLD.format(**positional_repeatability_result)
+                )
+            else:
+                yield (
+                    rfmt_pos_rep.POS_REP_GEARCOR.format(**positional_repeatability_result)
+                )
+
 
             yield rfmt_pos_rep.POS_REP_GEARALGO.format(
                 **positional_repeatability_result
@@ -727,9 +733,14 @@ def format_report_long(
 
             yield EMPTY_LINE
 
-            yield (
-                rfmt_pos_rep.POS_REP_GEARCOR.format(**positional_repeatability_result)
-            )
+            if positional_repeatability_result["gearbox_correction_version"] < (5, 0, 1):
+                yield (
+                    rfmt_pos_rep.POS_REP_GEARCOR_OLD.format(**positional_repeatability_result)
+                )
+            else:
+                yield (
+                    rfmt_pos_rep.POS_REP_GEARCOR.format(**positional_repeatability_result)
+                )
 
             yield rfmt_pos_rep.POS_REP_GEARALGO.format(
                 **positional_repeatability_result
@@ -943,9 +954,14 @@ def format_report_extended(
 
             yield EMPTY_LINE
 
-            yield (
-                rfmt_pos_rep.POS_REP_GEARCOR.format(**positional_repeatability_result)
-            )
+            if positional_repeatability_result["gearbox_correction_version"] < (5, 0, 1):
+                yield (
+                    rfmt_pos_rep.POS_REP_GEARCOR_OLD.format(**positional_repeatability_result)
+                )
+            else:
+                yield (
+                    rfmt_pos_rep.POS_REP_GEARCOR.format(**positional_repeatability_result)
+                )
 
             yield rfmt_pos_rep.POS_REP_GEARALGO.format(
                 **positional_repeatability_result

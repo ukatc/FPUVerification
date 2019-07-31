@@ -12,9 +12,12 @@ from matplotlib import pyplot as plt
 
 from Gearbox.gear_correction import (
     fit_gearbox_correction,
+    angle_to_point,
+)
+
+from Gearbox.plot_gear_correction import (
     plot_gearbox_calibration,
     plot_correction,
-    angle_to_point,
     plot_measured_vs_expected_points,
     CALIBRATION_PLOTSET,
     PLOT_FIT,
