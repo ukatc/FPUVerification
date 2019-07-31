@@ -130,8 +130,9 @@ def get_test_result(dbe, fpu_id, keyfunc, count=None,
             trace = logging.getLogger(__name__).trace
             trace("got %r : %r" % (key2, val))
         except SyntaxError:
+            record_length = len(val)
             logger = logging.getLogger(__name__)
-            logger.error("syntax error for key = %r, count = %r" % (key2, count))
+            logger.error("syntax error for key = %r, count = %r, record length = %i" % (key2, count, record_length))
             val = None
 
     if val is None:
