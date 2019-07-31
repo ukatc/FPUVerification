@@ -393,6 +393,10 @@ def fit_gearbox_parameters(motor_axis, circle_data,
         "num_data_points": len(x_s2),
         "nominal_angle_rad" : nominal_angle_rad,
         "corrected_angle_rad": corrected_angle_rad,
+        "alpha_nominal_rad" : circle_data["alpha_nominal_rad"],
+        "beta_nominal_rad" : circle_data["beta_nominal_rad"],
+        "x_s2": x_s2,
+        "y_s2": y_s2,
     }
 
     if return_intermediate_results:
@@ -400,13 +404,9 @@ def fit_gearbox_parameters(motor_axis, circle_data,
         extra_results =  {
             "x_s": x_s,
             "y_s": y_s,
-            "x_s2": x_s2,
-            "y_s2": y_s2,
             "phi_fitted_rad": phi_fitted_rad,
             "phi_fit_support_rad": phi_fit_support_rad,
             "corrected_shifted_angle_rad": corrected_shifted_angle_rad,
-            "alpha_nominal_rad" : circle_data["alpha_nominal_rad"],
-            "beta_nominal_rad" : circle_data["beta_nominal_rad"],
             "R_real": R_real,
             "yp": phi_corr_support_rad,
             "pos_keys" : circle_data["pos_keys"],
@@ -812,6 +812,17 @@ def fit_gearbox_correction(dict_of_coordinates_alpha, dict_of_coordinates_beta, 
         beta0_rad=beta0_rad,
         P0=P0,
     )
+
+
+    if not return_intermediate_results:
+        # delete some data to save space in
+        # database record
+        for axis in ["coeffs_alpha", "coeffs_beta"]:
+            for del_key in [ "alpha_nominal_rad",
+                             "beta_nominal_rad",
+                             "x_s2",
+                             "y_s2",]:
+                del coeffs[axis][del_key]
 
 
     return {
