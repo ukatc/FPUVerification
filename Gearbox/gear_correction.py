@@ -119,7 +119,7 @@ def leastsq_circle(x, y):
     return xc, yc, R, psi, stretch, residu
 
 
-def plot_data_circle(x_s2, y_s2, xc, yc, R, psi=None, stretch=None, title=None):
+def plot_data_circle(fpu_id, x_s2, y_s2, xc, yc, R, psi=None, stretch=None, axis=None):
     plt.figure(facecolor="white")  # figsize=(7, 5.4), dpi=72,
     plt.axis("equal")
 
@@ -135,7 +135,7 @@ def plot_data_circle(x_s2, y_s2, xc, yc, R, psi=None, stretch=None, title=None):
 
     plt.legend(loc="best", labelspacing=0.1)
     plt.grid()
-    plt.title("Least Squares Circle " + title)
+    plt.title(fpu_id + " plot C: Least Squares Circle " + axis)
     plt.xlabel("x [millimeter], Cartesian camera coordinates")
     plt.ylabel("y [millimeter], Cartesian camera coordinates")
     plt.show()
@@ -743,6 +743,12 @@ def split_iterations(
             yield selected_iteration, direction, nom_ang_rad, residual_ang_rad
 
 
+CALIBRATION_PLOTSET = set("CDEFGHIJKLMOP")
+PLOT_CORR = "P"
+PLOT_FIT = "Q"
+PLOT_CAL_DEFAULT = set("IKLOQ")
+PLOT_CAL_ALL = set("CDEFHIJKLMOPQ")
+
 def plot_gearbox_calibration(
     fpu_id,
     motor_axis,
@@ -778,62 +784,59 @@ def plot_gearbox_calibration(
     err_phi_support_rad=None,
     fits=None,
     residuals=None,
-    plot_circle=False,
-    plot_func=True,
-    plot_fits=[0, 1, 2, 3],
-    plot_residuals=[0, 1, 2],
+    plot_selection="CD",
 ):
 
     r2d = np.rad2deg
     # get list of points to which circle is fitted
-    if plot_circle:
-        plot_data_circle(x_s2 - xc, y_s2 - yc, 0, 0, R, psi=psi, stretch=stretch, title=motor_axis)
+    if "C" in plot_selection:
+        plot_data_circle(fpu_id, x_s2 - xc, y_s2 - yc, 0, 0, R, psi=psi, stretch=stretch, axis=motor_axis)
 
-    if plot_func:
+    if "D" in plot_selection:
         plt.plot(r2d(fits[0][0]), r2d(fits[0][1]), "g.", label=fits[0][2])
-        plt.title("FPU {}: real vs c-rotated angle for {}".format(fpu_id, motor_axis))
+        plt.title("FPU {} plot D: real vs c-rotated angle for {}".format(fpu_id, motor_axis))
         plt.legend(loc="best", labelspacing=0.1)
         plt.xlabel("c-rotated angle [degrees], polar camera coordinates")
         plt.ylabel("real angle [degrees], polar camera coordinates")
         plt.show()
 
-    if 0 in plot_fits:
+    if "E" in plot_selection:
         plt.plot(r2d(fits[0][0]), r2d(fits[0][1]), "g.", label=fits[0][2])
 
-    if 1 in plot_fits:
+    if "F" in plot_selection:
         plt.plot(r2d(fits[1][0]), r2d(fits[1][1]), "b+", label="{}".format(fits[1][2]))
 
-    if 2 in plot_fits:
+    if "G" in plot_selection:
         plt.plot(r2d(fits[2][0]), r2d(fits[2][1]), "r.", label=fits[2][2])
 
 
-    if plot_fits:
-        plt.title("FPU {}: fitted, c-rotated nominal angle vs real angle for {}".format(fpu_id, motor_axis))
+    if set("EFG") & plot_selection:
+        plt.title("FPU {} plot E,F,G: fitted, c-rotated nominal angle vs real angle for {}".format(fpu_id, motor_axis))
         plt.legend(loc="best", labelspacing=0.1)
         plt.xlabel("c-rotated angle [degrees], polar camera coordinates")
         plt.ylabel("real angle [degrees], polar camera coordinates")
         plt.show()
 
-    if plot_fits:
+    if "H" in plot_selection:
         plt.plot(r2d(phi_fit_support_rad), r2d(corrected_shifted_angle_rad), "r.", label="correction table {} (fitted, c-rotated)".format(motor_axis))
 
-        plt.title("FPU {}: fitted, c-rotated angle to corrected (real) angle for {}".format(fpu_id, motor_axis))
+        plt.title("FPU {} plot H: fitted, c-rotated angle to corrected (real) angle for {}".format(fpu_id, motor_axis))
         plt.legend(loc="best", labelspacing=0.1)
         plt.xlabel("c-rotated angle [degrees], polar camera coordinates")
         plt.ylabel("real angle [degrees], polar camera coordinates")
         plt.show()
 
-    if plot_fits:
+    if "I" in plot_selection:
         plt.plot(r2d(nominal_angle_rad), r2d(nominal_angle_rad), "k-", label="nominal / nominal".format(motor_axis))
         plt.plot(r2d(nominal_angle_rad), r2d(corrected_angle_rad), "r.", label="correction table {} (nominal)".format(motor_axis))
 
-        plt.title("FPU {}: fitted nominal angle to tabled corrected (real) angle for {}".format(fpu_id, motor_axis))
+        plt.title("FPU {} plot I: fitted nominal angle to tabled corrected (real) angle for {}".format(fpu_id, motor_axis))
         plt.legend(loc="best", labelspacing=0.1)
         plt.xlabel("nominal angle [degrees], FPU arm coordinates")
         plt.ylabel("real angle [degrees], FPU arm coordinates")
         plt.show()
 
-    if plot_fits:
+    if "J" in plot_selection:
         input_nominal_angle_rad = np.deg2rad(np.linspace(-185, 185, 450, endpoint=True))
         apply_fit = functools.partial(apply_gearbox_parameters,
                                       nominal_angle_rad=nominal_angle_rad,
@@ -860,28 +863,28 @@ def plot_gearbox_calibration(
                  label="inverse correction table {} (nominal)".format(motor_axis))
         plt.plot([r2d(fixpoint_rad)], [r2d(fixpoint_value)], "mD", label="fixpoint {}".format(fname))
 
-        plt.title("FPU {}: fitted nominal angle to inverse interpolated (real) angle for {}".format(fpu_id, motor_axis))
+        plt.title("FPU {} plot J: fitted nominal angle to inverse interpolated (real) angle for {}".format(fpu_id, motor_axis))
         plt.legend(loc="best", labelspacing=0.1)
         plt.xlabel("nominal angle [degrees], FPU arm coordinates")
         plt.ylabel("real angle [degrees], FPU arm coordinates")
         plt.show()
 
-    if 1 in plot_residuals:
+    if "K" in plot_selection:
         plt.plot(r2d(phi_fitted_rad), R_real - R, "r.", label="radial delta")
 
-        plt.title("FPU {}: first-order residual radius  for {} vs. c-rotated angle".format(fpu_id, motor_axis))
+        plt.title("FPU {} plot K: first-order residual radius  for {} vs. c-rotated angle".format(fpu_id, motor_axis))
         plt.legend(loc="best", labelspacing=0.1)
         plt.xlabel("fitted c-rotated angle [degrees], polar camera coordinates")
         plt.ylabel("residual radius [millimeter]")
         plt.show()
 
-    if 1 in plot_residuals:
+    if "L" in plot_selection:
         plt.plot(
             r2d(residuals[1][0]), r2d(residuals[1][1]), "r.", label=residuals[1][2]
         )
 
         plt.title(
-            "FPU {}: first-order residual real vs c-rotated angle for {}".format(
+            "FPU {} plot L: first-order residual real vs c-rotated angle for {}".format(
                 fpu_id, motor_axis
             )
         )
@@ -890,13 +893,13 @@ def plot_gearbox_calibration(
         plt.ylabel("real angle deltas [degrees]")
         plt.show()
 
-    if 2 in plot_residuals:
+    if "M" in plot_selection:
         plt.plot(
             r2d(residuals[2][0]), r2d(residuals[2][1]), "b+", label=residuals[2][2]
         )
 
         plt.title(
-            "FPU {}: second-order residual real vs c-rotated angle for {}".format(
+            "FPU {} plot M: second-order residual real vs c-rotated angle for {}".format(
                 fpu_id, motor_axis
             )
         )
@@ -905,8 +908,10 @@ def plot_gearbox_calibration(
         plt.ylabel("real angle deltas [degrees]")
         plt.show()
 
+    if "O" in plot_selection:
+
         plt.title(
-            "FPU {}: second-order residual vs nominal angle by iteration for {}".format(
+            "FPU {} plot O: second-order residual vs nominal angle by iteration for {}".format(
                 fpu_id, motor_axis
             )
         )
@@ -969,7 +974,7 @@ def plot_correction(fpu_id, motor_axis, fits=None, **coefs):
 
     plt.plot(r2d(phi_fit_support_rad), r2d(phi_fit_support_rad), "b-", label="fitted nominal/ fitted nominal")
     plt.plot(r2d(phi_fit_support_rad), r2d(corrected_shifted_angle_rad), "g.", label="fitted nominal/corrected")
-    plt.title("FPU {}: c-rotated vs. corrected real angle for {}".format(fpu_id, motor_axis))
+    plt.title("FPU {} plot {}: c-rotated vs. corrected real angle for {}".format(fpu_id, PLOT_CORR, motor_axis))
     plt.legend(loc="best", labelspacing=0.1)
     plt.xlabel("c-rotated angle [degrees], polar camera coordinates")
     plt.ylabel("corrected angle [degrees], polar camera coordinates")
@@ -1191,7 +1196,7 @@ def plot_measured_vs_expected_points(serial_number,
         plt.legend(loc="best", labelspacing=0.1)
 
     plt.grid()
-    plt.title("FPU {}: measured vs expected points".format(serial_number))
+    plt.title("FPU {} plot {}: measured vs expected points".format(serial_number, PLOT_FIT))
     plt.xlabel("x [millimeter], Cartesian camera coordinates")
     plt.ylabel("y [millimeter], Cartesian camera coordinates")
     plt.show()

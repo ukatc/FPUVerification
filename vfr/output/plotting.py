@@ -16,6 +16,11 @@ from Gearbox.gear_correction import (
     plot_correction,
     angle_to_point,
     plot_measured_vs_expected_points,
+    CALIBRATION_PLOTSET,
+    PLOT_FIT,
+    PLOT_CORR,
+    PLOT_CAL_DEFAULT,
+    PLOT_CAL_ALL,
 )
 
 
@@ -56,7 +61,7 @@ def plot_pos_rep(fpu_id, analysis_results_alpha, analysis_results_beta, opts):
             ax.grid(True)
             plt.xlabel("x [millimeter], Cartesian camera coordinates")
             plt.ylabel("y [millimeter], Cartesian camera coordinates")
-            plt.title("%s : positional repeatability" % fpu_id)
+            plt.title("%s plot B: positional repeatability" % fpu_id)
 
         plt.show()
 
@@ -87,16 +92,23 @@ def plot_dat_rep(fpu_id, datumed_coords, moved_coords, opts):
     ax.grid(True)
     plt.xlabel("x [millimeter], Cartesian camera coordinates")
     plt.ylabel("y [millimeter], Cartesian camera coordinates")
-    plt.title("%s : datum repeatability" % fpu_id)
+    plt.title("%s plot A: datum repeatability" % fpu_id)
 
     plt.show()
 
+PLOT_DEFAULT_SELECTION = PLOT_CAL_DEFAULT | set("AB")
+PLOT_ALL = set("AB") | PLOT_CAL_ALL
 
 def plot(dbe, opts):
 
     plot_selection = dbe.opts.plot_selection
     for count, fpu_id in enumerate(dbe.eval_fpuset):
         ddict = vars(get_data(dbe, fpu_id))
+        if plot_selection =="*":
+            plot_selection = PLOT_ALL
+        else:
+            plot_selection = set(plot_selection)
+
         if type(fpu_id) == types.IntType:
             fpu_id = dbe.fpu_config[fpu_id]["serialnumber"]
 
@@ -114,7 +126,7 @@ def plot(dbe, opts):
 
             plot_pos_rep(fpu_id, result_alpha, result_beta, opts)
 
-        if set("CDE") & set(plot_selection):
+        if (CALIBRATION_PLOTSET | set(PLOT_FIT)) & plot_selection:
             pos_rep_result = ddict["positional_repeatability_result"]
             result_alpha = pos_rep_result["analysis_results_alpha"]
             result_beta = pos_rep_result["analysis_results_beta"]
@@ -125,37 +137,34 @@ def plot(dbe, opts):
                 return_intermediate_results=True,
             )
             fit_alpha = gear_correction["coeffs"]["coeffs_alpha"]
-            plot_circle = "D" in plot_selection
-            if set("CD") & set(plot_selection):
+            if CALIBRATION_PLOTSET & plot_selection:
                 if fit_alpha is None:
                     print("no parameters found for FPU %s, %s arm" % (fpu_id, "alpha"))
                 else:
                     plot_gearbox_calibration(
                         fpu_id,
                         "alpha",
-                        plot_circle=plot_circle,
-                        plot_fits=[0, 1, 2],
-                        plot_residuals=[1, 2],
+                        plot_selection=plot_selection,
                         **fit_alpha
                     )
 
-                    plot_correction(fpu_id, "alpha", **fit_alpha)
+                    if PLOT_CORR in plot_selection:
+                        plot_correction(fpu_id, "alpha", **fit_alpha)
 
             fit_beta = gear_correction["coeffs"]["coeffs_beta"]
-            if set("CD") & set(plot_selection):
+            if CALIBRATION_PLOTSET & plot_selection:
                 if fit_beta is None:
                     print("no parameters found for FPU %s, %s arm" % (fpu_id, "beta"))
                 else:
                     plot_gearbox_calibration(
                         fpu_id,
                         "beta",
-                        plot_circle=plot_circle,
-                        plot_fits=[0, 1, 2],
-                        plot_residuals=[1, 2],
+                        plot_selection=plot_selection,
                         **fit_beta
                     )
-                    plot_correction(fpu_id, "beta", **fit_beta)
+                    if PLOT_CORR in plot_selection:
+                        plot_correction(fpu_id, "beta", **fit_beta)
 
 
-            if "E" in plot_selection:
+            if PLOT_FIT in plot_selection:
                 plot_measured_vs_expected_points(fpu_id, **gear_correction)

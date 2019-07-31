@@ -18,8 +18,9 @@ from fpu_constants import (
 from vfr.tests_common import lit_eval_file
 from vfr.conf import DEFAULT_TASKS, DEFAULT_TASKS_NONFIBRE
 from vfr.db.snset import get_snset
-from vfr.helptext import examples, summary
+from vfr.helptext import examples, summary, plot_selection_help
 from vfr.task_config import USERTASKS, MEASUREMENT_TASKS, T
+from vfr.output.plotting import PLOT_DEFAULT_SELECTION
 
 
 def parse_args():
@@ -30,7 +31,10 @@ def parse_args():
         DEFAULT_LOGLEVEL = logging.INFO
 
     parser = argparse.ArgumentParser(
-        description=summary.format(DEFAULT_TASKS=DEFAULT_TASKS, **T.__dict__),
+        description=summary.format(DEFAULT_TASKS=DEFAULT_TASKS,
+                                   plot_selection_help=plot_selection_help,
+                                   plot_default_selection="".join(list(PLOT_DEFAULT_SELECTION)),
+                                   **T.__dict__),
         epilog=examples.format(DEFAULT_TASKS=DEFAULT_TASKS, **T.__dict__),
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
@@ -88,15 +92,19 @@ def parse_args():
     parser.add_argument(
         "-sel",
         "--plot-selection",
-        default="ABCDE",
+        default="".join(list(PLOT_DEFAULT_SELECTION)),
         type=str,
-        help="""Selection of plots
-        A) dat_rep scatter plot in (x,y) image plane,
-        B) pos_rep scatter plot,
-        C) plot fitted pos_rep data (raw data and fits)
-        D) plot raw data, fits, and fitted circle
-        E) plot measured points vs. expected points from inverse calibration
+        help="""Selection of plots. Use option "--help-plot-selection" to
+        get info on how to select specific plots.
         """,
+    )
+
+    parser.add_argument(
+        "-hps",
+        "--help-plot-selection",
+        default=False,
+        action="store_true",
+        help="show options to select plots when using the 'plot' task.",
     )
 
     parser.add_argument(
@@ -105,7 +113,7 @@ def parse_args():
         choices=["small", "large"],
         default="large",
         type=str,
-        help="""blob type selected for plotting, one of "small" or "large" """,
+        help="""blob type selected for plotting measurements, one of "small" or "large" """,
     )
 
     parser.add_argument(
@@ -352,6 +360,11 @@ def parse_args():
 
     if args.list_tasks:
         print("available tasks in alphabetic order: %r" % sorted(list(USERTASKS)))
+        sys.exit(0)
+
+    if args.help_plot_selection:
+        print(plot_selection_help)
+        print("\n\nThe default is: %r " % "".join(list(PLOT_DEFAULT_SELECTION)))
         sys.exit(0)
 
     if len(args.tasks) == 0:
