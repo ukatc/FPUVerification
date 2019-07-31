@@ -10,7 +10,7 @@ from target_detection_otsu import OtsuTargetFindingError
 # (each different result for the same data
 # should yield a version number increase)
 
-METROLOGY_ANALYSIS_ALGORITHM_VERSION = 0.1
+METROLOGY_ANALYSIS_ALGORITHM_VERSION = (1,0,0)
 
 CONTOUR_ALGORITHM = "contour"
 OTSU_ALGORITHM = "otsu"

@@ -76,7 +76,6 @@ def upgrade_version(record, fieldname="version"):
     if fieldname not in record:
         return record
     old_version = record[fieldname]
-    print("version type:", type(old_version))
     if type(old_version) == types.FloatType:
         version_major = int(old_version)
         version = (old_version - version_major) * 10

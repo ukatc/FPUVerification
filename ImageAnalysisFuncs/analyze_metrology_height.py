@@ -10,7 +10,7 @@ from numpy.polynomial import Polynomial
 # (each different result for the same data
 # should yield a version number increase)
 
-METROLOGY_HEIGHT_ANALYSIS_ALGORITHM_VERSION = 0.1
+METROLOGY_HEIGHT_ANALYSIS_ALGORITHM_VERSION = (1,0,0)
 
 
 # exceptions which are raised if image analysis functions fail

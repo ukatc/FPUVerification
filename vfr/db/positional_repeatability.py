@@ -2,7 +2,8 @@ from __future__ import absolute_import, division, print_function
 
 from collections import namedtuple
 from functools import partial
-from vfr.db.base import TestResult, save_named_record, get_named_record
+from vfr.db.base import TestResult, save_named_record, get_named_record, upgrade_version
+from numpy import NaN
 
 RECORD_TYPE = "positional-repeatability"
 
@@ -43,20 +44,21 @@ save_positional_repeatability_result = partial(
     save_named_record, (RECORD_TYPE, "result")
 )
 
-_get_positional_repeatability_result = partial(get_named_record, (RECORD_TYPE, "result"))
+# convert version from float format to 3-tuple, using semantic versioning
+upgrade_func1 = partial(upgrade_version, fieldname="algorithm_version")
+upgrade_func2 = partial(upgrade_version, fieldname="gearbox_correction_version")
 
-def get_positional_repeatability_result(dbe, fpu_id, count=None):
+def upgrade_func(x):
+    return upgrade_func2(upgrade_func1(x))
 
-    val = _get_positional_repeatability_result(dbe, fpu_id, count=count)
+default_vals = {
+    "gearbox_correction_version" : (0, 1, 0),
+}
 
-    if val is None:
-        return None
-
-    # if version value is missing, set it to first version
-    if "gearbox_correction_version" not in val:
-        val["gearbox_correction_version"] = 0.1
-
-    return val
+get_positional_repeatability_result = partial(get_named_record, (RECORD_TYPE, "result"),
+                                              upgrade_func=upgrade_func,
+                                              default_vals=default_vals,
+)
 
 
 def get_positional_repeatability_passed_p(dbe, fpu_id, count=None):

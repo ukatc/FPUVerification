@@ -10,14 +10,25 @@ POS_REP_CALPARS = (
     """positional repeatability: calibration_pars = {calibration_pars!r}"""
 )
 
-POS_REP_GEARCOR = cleandoc(
+POS_REP_GEARCOR_OLD = cleandoc(
     """positional repeatability: gearbox correction alpha algorithm                 = {gearbox_correction[coeffs][coeffs_alpha][algorithm]}
        positional repeatability: gearbox correction alpha num support / data points = {gearbox_correction[coeffs][coeffs_alpha][num_support_points]} / {gearbox_correction[coeffs][coeffs_alpha][num_data_points]}
-       positional repeatability: gearbox correction alpha coefs                     c0 = {gearbox_correction[coeffs][coeffs_alpha][c0]:7.5}, c1 = {gearbox_correction[coeffs][coeffs_alpha][c1]:7.5}
        positional repeatability: gearbox correction alpha R                         = {gearbox_correction[coeffs][coeffs_alpha][R]:6.5} mm
        positional repeatability: gearbox correction beta algorithm                  = {gearbox_correction[coeffs][coeffs_beta][algorithm]}
        positional repeatability: gearbox correction beta num support / data points  = {gearbox_correction[coeffs][coeffs_beta][num_support_points]} / {gearbox_correction[coeffs][coeffs_beta][num_data_points]}
-       positional repeatability: gearbox correction beta coefs                      c0 = {gearbox_correction[coeffs][coeffs_beta][c0]:7.5}, c1 = {gearbox_correction[coeffs][coeffs_beta][c1]:7.5}
+       positional repeatability: gearbox correction beta R                          = {gearbox_correction[coeffs][coeffs_beta][R]:6.5} mm
+
+"""
+)
+
+POS_REP_GEARCOR = cleandoc(
+    """positional repeatability: gearbox correction alpha algorithm                 = {gearbox_correction[coeffs][coeffs_alpha][algorithm]}
+       positional repeatability: gearbox correction alpha num support / data points = {gearbox_correction[coeffs][coeffs_alpha][num_support_points]} / {gearbox_correction[coeffs][coeffs_alpha][num_data_points]}
+       positional repeatability: gearbox correction alpha coefs                     camera_offset_rad = {gearbox_correction[coeffs][coeffs_alpha][camera_offset_rad]:7.5}
+       positional repeatability: gearbox correction alpha R                         = {gearbox_correction[coeffs][coeffs_alpha][R]:6.5} mm
+       positional repeatability: gearbox correction beta algorithm                  = {gearbox_correction[coeffs][coeffs_beta][algorithm]}
+       positional repeatability: gearbox correction beta num support / data points  = {gearbox_correction[coeffs][coeffs_beta][num_support_points]} / {gearbox_correction[coeffs][coeffs_beta][num_data_points]}
+       positional repeatability: gearbox correction beta coefs                      beta0_rad = {gearbox_correction[coeffs][coeffs_beta][beta0_rad]:7.5}
        positional repeatability: gearbox correction beta R                          = {gearbox_correction[coeffs][coeffs_beta][R]:6.5} mm
 
 """

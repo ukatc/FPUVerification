@@ -357,9 +357,14 @@ def format_report_terse(
 
             yield EMPTY_LINE
 
-            yield (
-                rfmt_pos_rep.POS_REP_GEARCOR.format(**positional_repeatability_result)
-            )
+            if positional_repeatability_result["gearbox_correction_version"] < (5, 0, 0):
+                yield (
+                    rfmt_pos_rep.POS_REP_GEARCOR_OLD.format(**positional_repeatability_result)
+                )
+            else:
+                yield (
+                    rfmt_pos_rep.POS_REP_GEARCOR.format(**positional_repeatability_result)
+                )
 
             yield rfmt_pos_rep.POS_REP_GEARALGO.format(
                 **positional_repeatability_result
