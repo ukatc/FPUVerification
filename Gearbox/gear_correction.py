@@ -588,6 +588,121 @@ def fit_offsets(
 
     return camera_offset, beta0
 
+def get_expected_points(
+        coeffs,
+        R_alpha=None,
+        R_beta_midpoint=None,
+        camera_offset_rad=None,
+        beta0_rad=None,
+        P0=None,
+        return_points=False,
+):
+    expected_vals = {}
+
+    for lcoeffs, motor_axis in [
+            (coeffs["coeffs_alpha"], "alpha"),
+            (coeffs["coeffs_beta"], "beta"),
+    ]:
+        print("evaluating correction for {} motor axis".format(motor_axis))
+        xc = lcoeffs["xc"]
+        yc = lcoeffs["yc"]
+        x_s = lcoeffs["x_s2"]
+        y_s = lcoeffs["y_s2"]
+        R = lcoeffs["R"]
+        alpha_nominal_rad = lcoeffs["alpha_nominal_rad"]
+        beta_nominal_rad = lcoeffs["beta_nominal_rad"]
+
+
+
+        print_mean_correction = True
+        if print_mean_correction:
+
+            alpha_nom_corrected_rad = apply_gearbox_parameters(
+                alpha_nominal_rad, wrap=True, inverse_transform=True, **coeffs["coeffs_alpha"]
+            )
+            beta_nom_corrected_rad = apply_gearbox_parameters(
+                beta_nominal_rad, wrap=True, inverse_transform=True, **coeffs["coeffs_beta"]
+            )
+
+
+            print("for axis {}: mean(corrected - nominal) = {} degrees".format(
+                "alpha", np.rad2deg(np.mean(alpha_nom_corrected_rad - alpha_nominal_rad
+                ))))
+            print("for axis {}: mean(corrected - nominal) = {} degrees".format(
+                "beta", np.rad2deg(np.mean(beta_nom_corrected_rad - beta_nominal_rad
+                ))))
+
+
+            alpha_fixpoint_rad = lcoeffs["alpha_fixpoint_rad"]
+            beta_fixpoint_rad = lcoeffs["beta_fixpoint_rad"]
+            alpha_fixpoint_corrected_rad = apply_gearbox_parameters(
+                alpha_fixpoint_rad, wrap=True, inverse_transform=True, **coeffs["coeffs_alpha"]
+            )
+            beta_fixpoint_corrected_rad = apply_gearbox_parameters(
+                beta_fixpoint_rad, wrap=True, inverse_transform=True, **coeffs["coeffs_beta"]
+            )
+
+            print("for axis {}: mean(corrected - fixpoint) = {}".format(
+                "alpha", np.rad2deg(np.mean(alpha_fixpoint_corrected_rad - alpha_fixpoint_rad
+                ))))
+            print("for axis {}: mean(corrected - fixpoint) = {}".format(
+                "beta", np.rad2deg(np.mean(beta_fixpoint_corrected_rad - beta_fixpoint_rad
+                ))))
+
+
+        expected_points = []
+        for alpha_nom_rad, beta_nom_rad in zip(alpha_nominal_rad, beta_nominal_rad):
+
+            ep = angle_to_point(
+                alpha_nom_rad,
+                beta_nom_rad,
+                P0=P0,
+                R_alpha=R_alpha,
+                R_beta_midpoint=R_beta_midpoint,
+                camera_offset_rad=camera_offset_rad,
+                beta0_rad=beta0_rad,
+                inverse=True,
+                coeffs=coeffs,
+                #correct_axis=[motor_axis],
+                #correct_fixpoint=False,
+                broadcast=False
+            )
+
+            expected_points.append(ep)
+
+
+        expected_points = np.array(expected_points).T
+        measured_points = np.array((x_s, y_s))
+        xe, ye = expected_points
+        error_magnitudes = np.linalg.norm(expected_points - measured_points, axis=0)
+        RMS = np.sqrt(np.mean(error_magnitudes ** 2)) * 1000
+        percentile_vals = np.percentile(error_magnitudes * 1000, PERCENTILE_ARGS)
+
+        print("RMS [{}] = {} micron".format(motor_axis, RMS))
+        pcdict = {PERCENTILE_ARGS[k] : pv for k, pv in enumerate(percentile_vals)}
+        print("percentiles = {} microns".format(", ".join(["P[%s]: %.1f" % (k, pcdict[k]) for k in sorted(pcdict.keys()) ])))
+        axis_result = {
+            "RMS" : RMS,
+            "pcdict" : pcdict,
+            "expected_points" : expected_points,
+            "measured_points" : measured_points,
+            "xc" : xc,
+            "yc" : yc,
+            "R" : R,
+            }
+
+        if return_points:
+            # include extra results for plotting
+            axis_result.update({
+                "x_s" : x_s,
+                "y_s" : y_s,
+                "xe" : xe,
+                "ye" : ye,
+                })
+
+        expected_vals[motor_axis] = axis_result
+
+    return expected_vals
 
 def fit_gearbox_correction(dict_of_coordinates_alpha, dict_of_coordinates_beta, return_intermediate_results=False):
     """Computes gearbox correction and returns correction coefficients
@@ -685,11 +800,23 @@ def fit_gearbox_correction(dict_of_coordinates_alpha, dict_of_coordinates_beta, 
     print("camera_offset_rad =", camera_offset_rad, "= {} degree".format(r2d(camera_offset_rad)))
     print("beta0_rad =", beta0_rad, "= {} degree".format(r2d(beta0_rad)))
 
+    coeffs = {"coeffs_alpha": coeffs_alpha, "coeffs_beta": coeffs_beta}
+
+    P0 = np.array([x_center, y_center])
+
+    expected_vals= get_expected_points(
+        coeffs,
+        R_alpha=R_alpha,
+        R_beta_midpoint=R_beta_midpoint,
+        camera_offset_rad=camera_offset_rad,
+        beta0_rad=beta0_rad,
+        P0=P0,
+    )
 
 
     return {
         "version": GEARBOX_CORRECTION_VERSION,
-        "coeffs": {"coeffs_alpha": coeffs_alpha, "coeffs_beta": coeffs_beta},
+        "coeffs": coeffs,
         "x_center": x_center,
         "y_center": y_center,
         "camera_offset_rad" : camera_offset_rad,
@@ -697,6 +824,7 @@ def fit_gearbox_correction(dict_of_coordinates_alpha, dict_of_coordinates_beta, 
         "R_alpha": R_alpha,
         "R_beta_midpoint": R_beta_midpoint,
         "BLOB_WEIGHT_FACTOR": BLOB_WEIGHT_FACTOR,
+        "expected_vals" : expected_vals,
     }
 
 
@@ -1083,6 +1211,7 @@ def plot_measured_vs_expected_points(serial_number,
                                      R_alpha=None,
                                      R_beta_midpoint=None,
                                      BLOB_WEIGHT_FACTOR=None,
+                                     expected_vals=None,
 ):
 
     if (coeffs["coeffs_alpha"] is None) or (
@@ -1093,105 +1222,51 @@ def plot_measured_vs_expected_points(serial_number,
     plt.axis("equal")
 
     theta_fit = np.linspace(-pi, pi, 2 * 360)
+    P0=np.array([x_center, y_center])
 
-    for lcoeffs, motor_axis, color, color2 in [
-            (coeffs["coeffs_alpha"], "alpha", "r", "m"),
-            (coeffs["coeffs_beta"], "beta", "b", "g"),
-    ]:
-        print("evaluating correction for {} motor axis".format(motor_axis))
-        xc = lcoeffs["xc"]
-        yc = lcoeffs["yc"]
-        x_s = lcoeffs["x_s2"]
-        y_s = lcoeffs["y_s2"]
-        R = lcoeffs["R"]
-        alpha_nominal_rad = lcoeffs["alpha_nominal_rad"]
-        beta_nominal_rad = lcoeffs["beta_nominal_rad"]
+    # re-compute expected values, to get point coordinates
 
+    for motor_axis, expected_vals in get_expected_points(
+            coeffs,
+            R_alpha=R_alpha,
+            R_beta_midpoint=R_beta_midpoint,
+            camera_offset_rad=camera_offset_rad,
+            beta0_rad=beta0_rad,
+            P0=P0,
+            return_points=True,
+    ).items():
+
+        if motor_axis == "alpha":
+            color = "r"
+            color2 = "m"
+            fc = "y-"
+        else:
+            color = "b"
+            color2 = "g"
+            fc= "c-"
+
+        RMS = expected_vals["RMS" ]
+        pcdict = expected_vals["pcdict" ]
+        expected_points = expected_vals["expected_points"]
+        measured_points = expected_vals["measured_points"]
+
+        xc = expected_vals["xc"]
+        yc = expected_vals["yc"]
+        xe = expected_vals["xe"]
+        ye = expected_vals["ye"]
+
+        x_s = expected_vals["x_s"]
+        y_s = expected_vals["y_s"]
+        R = expected_vals["R"]
 
         x_fit = xc + R * np.cos(theta_fit)
         y_fit = yc + R * np.sin(theta_fit)
-        s = slice(0,None)
-
-
-        print_mean_correction = True
-        if print_mean_correction:
-
-            alpha_nom_corrected_rad = apply_gearbox_parameters(
-                alpha_nominal_rad, wrap=True, inverse_transform=True, **coeffs["coeffs_alpha"]
-            )
-            beta_nom_corrected_rad = apply_gearbox_parameters(
-                beta_nominal_rad, wrap=True, inverse_transform=True, **coeffs["coeffs_beta"]
-            )
-
-
-            print("for axis {}: mean(corrected - nominal) = {} degrees".format(
-                "alpha", np.rad2deg(np.mean(alpha_nom_corrected_rad - alpha_nominal_rad
-                ))))
-            print("for axis {}: mean(corrected - nominal) = {} degrees".format(
-                "beta", np.rad2deg(np.mean(beta_nom_corrected_rad - beta_nominal_rad
-                ))))
-
-
-            alpha_fixpoint_rad = lcoeffs["alpha_fixpoint_rad"]
-            beta_fixpoint_rad = lcoeffs["beta_fixpoint_rad"]
-            alpha_fixpoint_corrected_rad = apply_gearbox_parameters(
-                alpha_fixpoint_rad, wrap=True, inverse_transform=True, **coeffs["coeffs_alpha"]
-            )
-            beta_fixpoint_corrected_rad = apply_gearbox_parameters(
-                beta_fixpoint_rad, wrap=True, inverse_transform=True, **coeffs["coeffs_beta"]
-            )
-
-            print("for axis {}: mean(corrected - fixpoint) = {}".format(
-                "alpha", np.rad2deg(np.mean(alpha_fixpoint_corrected_rad - alpha_fixpoint_rad
-                ))))
-            print("for axis {}: mean(corrected - fixpoint) = {}".format(
-                "beta", np.rad2deg(np.mean(beta_fixpoint_corrected_rad - beta_fixpoint_rad
-                ))))
-
-
-        expected_points = []
-        for alpha_nom_rad, beta_nom_rad in zip(alpha_nominal_rad[s], beta_nominal_rad[s]):
-
-            ep = angle_to_point(
-                alpha_nom_rad,
-                beta_nom_rad,
-                P0=np.array([x_center, y_center]),
-                R_alpha=R_alpha,
-                R_beta_midpoint=R_beta_midpoint,
-                camera_offset_rad=camera_offset_rad,
-                beta0_rad=beta0_rad,
-                inverse=True,
-                coeffs=coeffs,
-                #correct_axis=[motor_axis],
-                #correct_fixpoint=False,
-                broadcast=False
-            )
-
-            expected_points.append(ep)
-
-        if motor_axis == "alpha":
-            fc = "y-"
-        else:
-            fc= "c-"
 
         plt.plot(x_fit, y_fit, fc, label="{} fitted circle ".format(motor_axis), lw=2)
         plt.plot([xc], [yc], color + "D", mec="y", mew=1, label="{} fitted center".format(motor_axis))
-        # plot data
-        #s = slice(5,100)
-        plt.plot(x_s[s], y_s[s], color + ".", label="{} measured point ".format(motor_axis), mew=1)
-
-        expected_points = np.array(expected_points).T
-        measured_points = np.array((x_s, y_s))[:,s]
-        xe, ye = expected_points
-        error_magnitudes = np.linalg.norm(expected_points - measured_points, axis=0)
-        RMS = np.sqrt(np.mean(error_magnitudes ** 2))
-        percentile_vals = np.percentile(error_magnitudes, PERCENTILE_ARGS)
-
-        print("RMS [{}] = {} micron".format(motor_axis, RMS * 1000.0))
-        pcdict = {PERCENTILE_ARGS[k] : pv for k, pv in enumerate(percentile_vals)}
-        print("percentiles = {} microns".format(", ".join(["P[%s]: %.1f" % (k, pcdict[k] * 1000) for k in sorted(pcdict.keys()) ])))
+        plt.plot(x_s, y_s, color + ".", label="{} measured point ".format(motor_axis), mew=1)
         plt.plot(xe, ye, color2 + "+", label="{} expected pts,"
-                 " RMS = {:5.1f} $\mu$m, 95% perc = {:5.1f} $\mu$m".format(motor_axis, RMS * 1000, pcdict[95] * 1000), mew=1)
+                 " RMS = {:5.1f} $\mu$m, 95% perc = {:5.1f} $\mu$m".format(motor_axis, RMS, pcdict[95]), mew=1)
 
         plt.legend(loc="best", labelspacing=0.1)
 
