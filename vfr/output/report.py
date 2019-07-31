@@ -363,7 +363,7 @@ def format_report_terse(
                 )
             else:
                 yield (
-                    rfmt_pos_rep.POS_REP_GEARCOR.format(**positional_repeatability_result)
+                    rfmt_pos_rep.POS_REP_GEARCOR_TERSE.format(**positional_repeatability_result)
                 )
 
             yield rfmt_pos_rep.POS_REP_GEARALGO.format(
@@ -527,7 +527,7 @@ def format_report_complete(
                 )
             else:
                 yield (
-                    rfmt_pos_rep.POS_REP_GEARCOR.format(**positional_repeatability_result)
+                    rfmt_pos_rep.POS_REP_GEARCOR_COMPLETE.format(**positional_repeatability_result)
                 )
 
 
@@ -739,7 +739,7 @@ def format_report_long(
                 )
             else:
                 yield (
-                    rfmt_pos_rep.POS_REP_GEARCOR.format(**positional_repeatability_result)
+                    rfmt_pos_rep.POS_REP_GEARCOR_LONG.format(**positional_repeatability_result)
                 )
 
             yield rfmt_pos_rep.POS_REP_GEARALGO.format(
@@ -960,7 +960,7 @@ def format_report_extended(
                 )
             else:
                 yield (
-                    rfmt_pos_rep.POS_REP_GEARCOR.format(**positional_repeatability_result)
+                    rfmt_pos_rep.POS_REP_GEARCOR_EXTENDED.format(**positional_repeatability_result)
                 )
 
             yield rfmt_pos_rep.POS_REP_GEARALGO.format(

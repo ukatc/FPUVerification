@@ -21,7 +21,7 @@ POS_REP_GEARCOR_OLD = cleandoc(
 """
 )
 
-POS_REP_GEARCOR = cleandoc(
+POS_REP_GEARCOR_TERSE = cleandoc(
     """positional repeatability: gearbox correction alpha algorithm                 = {gearbox_correction[coeffs][coeffs_alpha][algorithm]}
        positional repeatability: gearbox correction alpha num support / data points = {gearbox_correction[coeffs][coeffs_alpha][num_support_points]} / {gearbox_correction[coeffs][coeffs_alpha][num_data_points]}
 
@@ -46,6 +46,11 @@ POS_REP_GEARCOR = cleandoc(
 
 """
 )
+
+POS_REP_GEARCOR_COMPLETE = POS_REP_GEARCOR_TERSE
+POS_REP_GEARCOR_LONG = POS_REP_GEARCOR_TERSE
+POS_REP_GEARCOR_EXTENDED = POS_REP_GEARCOR_TERSE
+
 
 POS_REP_GEARALGO = cleandoc(
     """positional repeatability: gearbox correction algorithm version               = {gearbox_correction[version]}"""
