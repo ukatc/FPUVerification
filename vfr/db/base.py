@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
+import types
 import ast
 import inspect
 import logging
@@ -63,7 +64,32 @@ def save_test_result(dbe, fpuset, keyfunc, valfunc):
             txn.put(key2, val)
 
 
-def get_test_result(dbe, fpu_id, keyfunc, count=None):
+def identity(x):
+    return x
+
+def upgrade_version(record, fieldname="version"):
+    """
+    Upgrade version information from using floats
+    to using semantic versioning with a tuple of
+    three integers.
+    """
+    if fieldname not in record:
+        return record
+    old_version = record[fieldname]
+    print("version type:", type(old_version))
+    if type(old_version) == types.FloatType:
+        version_major = int(old_version)
+        version = (old_version - version_major) * 10
+        version_minor = int(version)
+        version = (version - version_minor) * 10
+        version_patch = int(version)
+        new_version = (version_major, version_minor, version_patch)
+        record[fieldname] = new_version
+
+    return record
+
+def get_test_result(dbe, fpu_id, keyfunc, count=None,
+                    default_vals={}, upgrade_func=identity):
 
     with dbe.env.begin(write=False, db=dbe.vfdb) as txn:
 
@@ -109,6 +135,15 @@ def get_test_result(dbe, fpu_id, keyfunc, count=None):
             logger.error("syntax error for key = %r, count = %r" % (key2, count))
             val = None
 
+    if val is None:
+        result = None
+    else:
+        # apply default values and upgrade function
+        rval = default_vals.copy()
+        rval.update(val)
+        result = upgrade_func(rval)
+
+    return result
 
 
 def save_named_record(
@@ -136,7 +171,7 @@ def save_named_record(
     save_test_result(dbe, [fpu_id], keyfunc, valfunc)
 
 
-def get_named_record(record_type, dbe, fpu_id, count=None, loglevel=logging.DEBUG - 5):
+def get_named_record(record_type, dbe, fpu_id, count=None, loglevel=logging.DEBUG - 5, default_vals={}, upgrade_func=identity):
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
@@ -144,7 +179,7 @@ def get_named_record(record_type, dbe, fpu_id, count=None, loglevel=logging.DEBU
         keybase = (serialnumber,) + record_type
         return keybase
 
-    rval = get_test_result(dbe, fpu_id, keyfunc, count=count)
+    rval = get_test_result(dbe, fpu_id, keyfunc, count=count, default_vals=default_vals, upgrade_func=upgrade_func)
 
     logger = logging.getLogger(__name__)
     logger.log(loglevel, "getting " + str(record_type))
