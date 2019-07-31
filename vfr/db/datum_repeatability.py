@@ -2,7 +2,7 @@ from __future__ import absolute_import, division, print_function
 
 from collections import namedtuple
 from functools import partial
-from vfr.db.base import TestResult, save_named_record, get_named_record
+from vfr.db.base import TestResult, save_named_record, get_named_record, upgrade_version
 
 RECORD_TYPE = "datum-repeatability"
 
@@ -35,7 +35,9 @@ get_datum_repeatability_images = partial(get_named_record, (RECORD_TYPE, "images
 
 save_datum_repeatability_result = partial(save_named_record, (RECORD_TYPE, "result"))
 
-get_datum_repeatability_result = partial(get_named_record, (RECORD_TYPE, "result"))
+upgrade_func = partial(upgrade_version, fieldname="algorithm_version")
+
+get_datum_repeatability_result = partial(get_named_record, (RECORD_TYPE, "result"), upgrade_func=upgrade_func)
 
 
 def get_datum_repeatability_passed_p(dbe, fpu_id, count=None):
