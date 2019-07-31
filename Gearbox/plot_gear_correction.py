@@ -352,6 +352,7 @@ def plot_measured_vs_expected_points(serial_number,
     # re-compute expected values, to get point coordinates
 
     for motor_axis, expected_vals in get_expected_points(
+            serial_number,
             coeffs,
             R_alpha=R_alpha,
             R_beta_midpoint=R_beta_midpoint,
