@@ -4,6 +4,7 @@ from __future__ import division, print_function
 from math import pi
 import numpy as np
 import warnings
+import logging
 import functools
 # import matplotlib.pyplot as plt
 
@@ -575,13 +576,16 @@ def get_expected_points(
         P0=None,
         return_points=False,
 ):
+    logger = logging.getLogger(__name__)
+    logger.info("computing gearbox calibration error")
+
     expected_vals = {}
 
     for lcoeffs, motor_axis in [
             (coeffs["coeffs_alpha"], "alpha"),
             (coeffs["coeffs_beta"], "beta"),
     ]:
-        print("evaluating correction for {} motor axis".format(motor_axis))
+        logger.info("evaluating correction for {} motor axis".format(motor_axis))
         xc = lcoeffs["xc"]
         yc = lcoeffs["yc"]
         x_s = lcoeffs["x_s2"]
@@ -592,40 +596,37 @@ def get_expected_points(
 
 
 
-        print_mean_correction = True
-        if print_mean_correction:
-
-            alpha_nom_corrected_rad = apply_gearbox_parameters(
-                alpha_nominal_rad, wrap=True, inverse_transform=True, **coeffs["coeffs_alpha"]
-            )
-            beta_nom_corrected_rad = apply_gearbox_parameters(
-                beta_nominal_rad, wrap=True, inverse_transform=True, **coeffs["coeffs_beta"]
-            )
+        alpha_nom_corrected_rad = apply_gearbox_parameters(
+            alpha_nominal_rad, wrap=True, inverse_transform=True, **coeffs["coeffs_alpha"]
+        )
+        beta_nom_corrected_rad = apply_gearbox_parameters(
+            beta_nominal_rad, wrap=True, inverse_transform=True, **coeffs["coeffs_beta"]
+        )
 
 
-            print("for axis {}: mean(corrected - nominal) = {} degrees".format(
-                "alpha", np.rad2deg(np.mean(alpha_nom_corrected_rad - alpha_nominal_rad
-                ))))
-            print("for axis {}: mean(corrected - nominal) = {} degrees".format(
-                "beta", np.rad2deg(np.mean(beta_nom_corrected_rad - beta_nominal_rad
-                ))))
+        logger.info("for axis {}: mean(corrected - nominal) = {} degrees".format(
+            "alpha", np.rad2deg(np.mean(alpha_nom_corrected_rad - alpha_nominal_rad
+            ))))
+        logger.info("for axis {}: mean(corrected - nominal) = {} degrees".format(
+            "beta", np.rad2deg(np.mean(beta_nom_corrected_rad - beta_nominal_rad
+            ))))
 
 
-            alpha_fixpoint_rad = lcoeffs["alpha_fixpoint_rad"]
-            beta_fixpoint_rad = lcoeffs["beta_fixpoint_rad"]
-            alpha_fixpoint_corrected_rad = apply_gearbox_parameters(
-                alpha_fixpoint_rad, wrap=True, inverse_transform=True, **coeffs["coeffs_alpha"]
-            )
-            beta_fixpoint_corrected_rad = apply_gearbox_parameters(
-                beta_fixpoint_rad, wrap=True, inverse_transform=True, **coeffs["coeffs_beta"]
-            )
+        alpha_fixpoint_rad = lcoeffs["alpha_fixpoint_rad"]
+        beta_fixpoint_rad = lcoeffs["beta_fixpoint_rad"]
+        alpha_fixpoint_corrected_rad = apply_gearbox_parameters(
+            alpha_fixpoint_rad, wrap=True, inverse_transform=True, **coeffs["coeffs_alpha"]
+        )
+        beta_fixpoint_corrected_rad = apply_gearbox_parameters(
+            beta_fixpoint_rad, wrap=True, inverse_transform=True, **coeffs["coeffs_beta"]
+        )
 
-            print("for axis {}: mean(corrected - fixpoint) = {}".format(
-                "alpha", np.rad2deg(np.mean(alpha_fixpoint_corrected_rad - alpha_fixpoint_rad
-                ))))
-            print("for axis {}: mean(corrected - fixpoint) = {}".format(
-                "beta", np.rad2deg(np.mean(beta_fixpoint_corrected_rad - beta_fixpoint_rad
-                ))))
+        logger.info("for axis {}: mean(corrected - fixpoint) = {}".format(
+            "alpha", np.rad2deg(np.mean(alpha_fixpoint_corrected_rad - alpha_fixpoint_rad
+            ))))
+        logger.info("for axis {}: mean(corrected - fixpoint) = {}".format(
+            "beta", np.rad2deg(np.mean(beta_fixpoint_corrected_rad - beta_fixpoint_rad
+            ))))
 
 
         expected_points = []
@@ -656,9 +657,9 @@ def get_expected_points(
         RMS = np.sqrt(np.mean(error_magnitudes ** 2)) * 1000
         percentile_vals = np.percentile(error_magnitudes * 1000, PERCENTILE_ARGS)
 
-        print("RMS [{}] = {} micron".format(motor_axis, RMS))
+        logger.info("RMS [{}] = {} micron".format(motor_axis, RMS))
         pcdict = {PERCENTILE_ARGS[k] : pv for k, pv in enumerate(percentile_vals)}
-        print("percentiles = {} microns".format(", ".join(["P[%s]: %.1f" % (k, pcdict[k]) for k in sorted(pcdict.keys()) ])))
+        logger.info("percentiles = {} microns".format(", ".join(["P[%s]: %.1f" % (k, pcdict[k]) for k in sorted(pcdict.keys()) ])))
         axis_result = {
             "RMS" : RMS,
             "pcdict" : pcdict,
