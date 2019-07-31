@@ -4,7 +4,7 @@ from vfr.db.retrieval import get_data
 
 import numpy as np
 import types
-
+import logging
 # import matplotlib.pyplot as plt
 
 # import numpy as np
@@ -100,10 +100,14 @@ PLOT_DEFAULT_SELECTION = PLOT_CAL_DEFAULT | set("AB")
 PLOT_ALL = set("AB") | PLOT_CAL_ALL
 
 def plot(dbe, opts):
+    logger = logging.getLogger(__name__)
 
     plot_selection = dbe.opts.plot_selection
     for count, fpu_id in enumerate(dbe.eval_fpuset):
         ddict = vars(get_data(dbe, fpu_id))
+        if ddict is None:
+            logger.info("FPU %r: no plot data found" % fpu_id)
+            continue
         if plot_selection =="*":
             plot_selection = PLOT_ALL
         else:
@@ -113,11 +117,18 @@ def plot(dbe, opts):
             fpu_id = dbe.fpu_config[fpu_id]["serialnumber"]
 
         if "A" in plot_selection:
-            dat_rep_result = ddict["datum_repeatability_result"]["coords"]
-            coords_datumed = dat_rep_result["datumed_coords"]
-            coords_moved = dat_rep_result["moved_coords"]
+            if ddict["datum_repeatability_result"] is None:
+                logger.info("FPU %r: no plot data for datum repeatability found" % fpu_id)
+            else:
+                dat_rep_result = ddict["datum_repeatability_result"]["coords"]
+                coords_datumed = dat_rep_result["datumed_coords"]
+                coords_moved = dat_rep_result["moved_coords"]
 
-            plot_dat_rep(fpu_id, coords_datumed, coords_moved, opts)
+                plot_dat_rep(fpu_id, coords_datumed, coords_moved, opts)
+
+        if ddict["positional_repeatability_result"] is None:
+            logger.info("FPU %r: no plot data for positional repeatability found" % fpu_id)
+            continue
 
         if "B" in plot_selection:
             pos_rep_result = ddict["positional_repeatability_result"]
