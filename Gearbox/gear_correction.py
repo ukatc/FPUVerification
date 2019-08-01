@@ -30,7 +30,7 @@ class GearboxFitError(Exception):
 # (each different result for the same data
 # should yield a version number increase)
 
-GEARBOX_CORRECTION_VERSION = (5, 0, 1)
+GEARBOX_CORRECTION_VERSION = (5, 0, 2)
 
 # minimum version for which this code works
 # and yields a tolerable result
@@ -116,7 +116,9 @@ def leastsq_circle(x, y):
     R = Ri.mean()
     residu = np.sum((Ri - R) ** 2)
 
-    return xc, yc, R, psi, stretch, residu
+    radius_RMS = np.sqrt(residu / len(x))
+
+    return xc, yc, R, psi, stretch, radius_RMS
 
 
 
@@ -174,7 +176,7 @@ def fit_circle(analysis_results, motor_axis):
     x_s, y_s = np.array(circle_points).T
     alpha_nominal_rad, beta_nominal_rad = np.array(nominal_coordinates_rad).T
 
-    xc, yc, R, psi, stretch, residual = leastsq_circle(x_s, y_s)
+    xc, yc, R, psi, stretch, radius_RMS = leastsq_circle(x_s, y_s)
 
     print("axis {}: fitted elliptical params: psi = {} degrees, stretch = {}".format(motor_axis, np.rad2deg(psi), stretch))
 
@@ -194,6 +196,7 @@ def fit_circle(analysis_results, motor_axis):
         "R": R,
         "psi" : psi,
         "stretch" : stretch,
+        "radius_RMS" : radius_RMS,
         "x_s" : x_s,
         "y_s" : y_s,
         "x_s2" : x_s2,
@@ -363,6 +366,7 @@ def fit_gearbox_parameters(motor_axis, circle_data,
         "R_alpha" : R_alpha,
         "psi" : psi,
         "stretch" : stretch,
+        "radius_RMS" : circle_data["radius_RMS"],
         "R_beta_midpoint" : R_beta_midpoint,
         "camera_offset_rad" : camera_offset_rad,
         "beta0_rad" : beta0_rad,
@@ -660,6 +664,7 @@ def get_expected_points(
         xe, ye = expected_points
         error_magnitudes = np.linalg.norm(expected_points - measured_points, axis=0)
         RMS = np.sqrt(np.mean(error_magnitudes ** 2)) * 1000
+        max_val = error_magnitudes * 1000
         percentile_vals = np.percentile(error_magnitudes * 1000, PERCENTILE_ARGS)
 
         logger.info("FPU {}: RMS [{}] = {} micron".format(fpu_id, motor_axis, RMS))
@@ -671,6 +676,7 @@ def get_expected_points(
         axis_result = {
             "RMS" : RMS,
             "pcdict" : pcdict,
+            "max_val" : max_val,
             }
 
         if return_points:

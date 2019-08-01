@@ -3,6 +3,8 @@ from __future__ import absolute_import, division, print_function
 
 from inspect import cleandoc
 
+MIN_GEARBOX_CORRECTION_VERSION_REPORT = (5, 0, 2)
+
 POS_REP_NA = "positional repeatability  : n/a"
 POS_REP_NA_CSV = "positional repeatability,n/a"
 
@@ -42,10 +44,13 @@ POS_REP_GEARCOR_COMPLETE = cleandoc(
        positional repeatability: gearbox correction alpha fit error 50 % percentile:     = {gearbox_correction[expected_vals][alpha][pcdict][50]:7.2f} μm
        positional repeatability: gearbox correction alpha fit error 90 % percentile:     = {gearbox_correction[expected_vals][alpha][pcdict][90]:7.2f} μm
        positional repeatability: gearbox correction alpha fit error 95 % percentile:     = {gearbox_correction[expected_vals][alpha][pcdict][95]:7.2f} μm
+       positional repeatability: gearbox correction alpha maximum fit error              = {gearbox_correction[expected_vals][alpha][max_val]:7.2f} μm
+
        positional repeatability: gearbox correction beta RMS fit                         = {gearbox_correction[expected_vals][beta][RMS]:7.2f} μm
        positional repeatability: gearbox correction beta fit error 50 % percentile:      = {gearbox_correction[expected_vals][beta][pcdict][50]:7.2f} μm
        positional repeatability: gearbox correction beta fit error 90 % percentile:      = {gearbox_correction[expected_vals][beta][pcdict][90]:7.2f} μm
        positional repeatability: gearbox correction beta fit error 95 % percentile:      = {gearbox_correction[expected_vals][beta][pcdict][95]:7.2f} μm
+       positional repeatability: gearbox correction beta maximum fit error               = {gearbox_correction[expected_vals][beta][max_val]:7.2f} μm
 
 
 """
@@ -59,10 +64,15 @@ POS_REP_GEARCOR_LONG = cleandoc(
        positional repeatability: gearbox correction alpha fit error 50 % percentile:     = {gearbox_correction[expected_vals][alpha][pcdict][50]:7.2f} μm
        positional repeatability: gearbox correction alpha fit error 90 % percentile:     = {gearbox_correction[expected_vals][alpha][pcdict][90]:7.2f} μm
        positional repeatability: gearbox correction alpha fit error 95 % percentile:     = {gearbox_correction[expected_vals][alpha][pcdict][95]:7.2f} μm
+       positional repeatability: gearbox correction alpha maximum fit error              = {gearbox_correction[expected_vals][alpha][max_val]:7.2f} μm
+       positional repeatability: gearbox correction alpha radius RMS error               = {gearbox_correction[expected_vals][alpha][radius_RMS]:7.5f} mm
+
        positional repeatability: gearbox correction beta RMS fit                         = {gearbox_correction[expected_vals][beta][RMS]:7.2f} μm
        positional repeatability: gearbox correction beta fit error 50 % percentile:      = {gearbox_correction[expected_vals][beta][pcdict][50]:7.2f} μm
        positional repeatability: gearbox correction beta fit error 90 % percentile:      = {gearbox_correction[expected_vals][beta][pcdict][90]:7.2f} μm
        positional repeatability: gearbox correction beta fit error 95 % percentile:      = {gearbox_correction[expected_vals][beta][pcdict][95]:7.2f} μm
+       positional repeatability: gearbox correction beta maximum fit error               = {gearbox_correction[expected_vals][beta][max_val]:7.2f} μm
+       positional repeatability: gearbox correction beta radius RMS error                = {gearbox_correction[expected_vals][beta][radius_RMS]:7.5f} mm
 
 
 """
@@ -75,10 +85,15 @@ POS_REP_GEARCOR_EXTENDED = cleandoc(
        positional repeatability: gearbox correction alpha fit error 50 % percentile:     = {gearbox_correction[expected_vals][alpha][pcdict][50]:7.2f} μm
        positional repeatability: gearbox correction alpha fit error 90 % percentile:     = {gearbox_correction[expected_vals][alpha][pcdict][90]:7.2f} μm
        positional repeatability: gearbox correction alpha fit error 95 % percentile:     = {gearbox_correction[expected_vals][alpha][pcdict][95]:7.2f} μm
+       positional repeatability: gearbox correction alpha maximum fit error              = {gearbox_correction[expected_vals][alpha][max_val]:7.2f} μm
+       positional repeatability: gearbox correction alpha radius RMS error               = {gearbox_correction[expected_vals][alpha][radius_RMS]:7.5f} mm
+
        positional repeatability: gearbox correction beta RMS fit                         = {gearbox_correction[expected_vals][beta][RMS]:7.2f} μm
        positional repeatability: gearbox correction beta fit error 50 % percentile:      = {gearbox_correction[expected_vals][beta][pcdict][50]:7.2f} μm
        positional repeatability: gearbox correction beta fit error 90 % percentile:      = {gearbox_correction[expected_vals][beta][pcdict][90]:7.2f} μm
        positional repeatability: gearbox correction beta fit error 95 % percentile:      = {gearbox_correction[expected_vals][beta][pcdict][95]:7.2f} μm
+       positional repeatability: gearbox correction beta maximum fit error               = {gearbox_correction[expected_vals][beta][max_val]:7.2f} μm
+       positional repeatability: gearbox correction beta radius RMS error                = {gearbox_correction[expected_vals][beta][radius_RMS]:7.5f} mm
 
 
        positional repeatability: gearbox correction alpha coefs camera_offset_rad        = {gearbox_correction[coeffs][coeffs_alpha][camera_offset_rad]:7.2f}

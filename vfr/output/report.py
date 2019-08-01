@@ -17,7 +17,7 @@ from vfr.output.report_formats import (
     rfmt_pos_ver,
     rfmt_pup_aln,
 )
-
+from vfr.output.report_formats.rfmt_pos_rep import MIN_GEARBOX_CORRECTION_VERSION_REPORT
 
 tw = TextWrapper(
     width=120,
@@ -357,7 +357,7 @@ def format_report_terse(
 
             yield EMPTY_LINE
 
-            if positional_repeatability_result["gearbox_correction_version"] < (5, 0, 1):
+            if positional_repeatability_result["gearbox_correction_version"] < MIN_GEARBOX_CORRECTION_VERSION_REPORT:
                 yield (
                     rfmt_pos_rep.POS_REP_GEARCOR_OLD.format(**positional_repeatability_result)
                 )
@@ -521,7 +521,7 @@ def format_report_complete(
 
             yield EMPTY_LINE
 
-            if positional_repeatability_result["gearbox_correction_version"] < (5, 0, 1):
+            if positional_repeatability_result["gearbox_correction_version"] < MIN_GEARBOX_CORRECTION_VERSION_REPORT:
                 yield (
                     rfmt_pos_rep.POS_REP_GEARCOR_OLD.format(**positional_repeatability_result)
                 )
@@ -733,7 +733,7 @@ def format_report_long(
 
             yield EMPTY_LINE
 
-            if positional_repeatability_result["gearbox_correction_version"] < (5, 0, 1):
+            if positional_repeatability_result["gearbox_correction_version"] < MIN_GEARBOX_CORRECTION_VERSION_REPORT:
                 yield (
                     rfmt_pos_rep.POS_REP_GEARCOR_OLD.format(**positional_repeatability_result)
                 )
@@ -954,7 +954,7 @@ def format_report_extended(
 
             yield EMPTY_LINE
 
-            if positional_repeatability_result["gearbox_correction_version"] < (5, 0, 1):
+            if positional_repeatability_result["gearbox_correction_version"] < MIN_GEARBOX_CORRECTION_VERSION_REPORT:
                 yield (
                     rfmt_pos_rep.POS_REP_GEARCOR_OLD.format(**positional_repeatability_result)
                 )
