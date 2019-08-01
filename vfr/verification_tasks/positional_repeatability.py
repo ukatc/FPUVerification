@@ -6,7 +6,11 @@ import logging
 from os.path import abspath
 from vfr.auditlog import get_fpuLogger
 
-from Gearbox.gear_correction import GearboxFitError, fit_gearbox_correction, GEARBOX_CORRECTION_VERSION
+from Gearbox.gear_correction import (
+    GearboxFitError,
+    fit_gearbox_correction,
+    GEARBOX_CORRECTION_VERSION,
+)
 from GigE.GigECamera import BASLER_DEVICE_CLASS, DEVICE_CLASS, IP_ADDRESS
 from ImageAnalysisFuncs.base import get_min_quality
 from ImageAnalysisFuncs.analyze_positional_repeatability import (
@@ -134,7 +138,9 @@ def index_positions(pars):
     i_iteration = pars.POS_REP_ITERATIONS
     for j_direction in range(4):
         FIXPOINT = pars.POS_REP_NUM_HI_RES_INCREMENTS_FACTOR
-        MAX_INCREMENT = pars.POS_REP_NUM_INCREMENTS * pars.POS_REP_NUM_HI_RES_INCREMENTS_FACTOR
+        MAX_INCREMENT = (
+            pars.POS_REP_NUM_INCREMENTS * pars.POS_REP_NUM_HI_RES_INCREMENTS_FACTOR
+        )
         for k_increment in range(MAX_INCREMENT):
             if j_direction == 0:
                 idx_alpha = k_increment
@@ -165,18 +171,20 @@ def get_target_position(limits, pars, measurement_index):
     # within the normal movement range of the FPU.
 
     if measurement_index.hires:
-        n_increments = pars.POS_REP_NUM_HI_RES_INCREMENTS_FACTOR * pars.POS_REP_NUM_INCREMENTS
+        n_increments = (
+            pars.POS_REP_NUM_HI_RES_INCREMENTS_FACTOR * pars.POS_REP_NUM_INCREMENTS
+        )
         fixpoint = pars.POS_REP_NUM_HI_RES_INCREMENTS_FACTOR
     else:
         n_increments = pars.POS_REP_NUM_INCREMENTS
         fixpoint = 1
 
-    step_a = (
-        alpha_max - alpha_min - 2 * pars.POS_REP_SAFETY_MARGIN
-    ) / float(n_increments)
-    step_b = (
-        beta_max - beta_min - 2 * pars.POS_REP_SAFETY_MARGIN
-    ) / float(n_increments)
+    step_a = (alpha_max - alpha_min - 2 * pars.POS_REP_SAFETY_MARGIN) / float(
+        n_increments
+    )
+    step_b = (beta_max - beta_min - 2 * pars.POS_REP_SAFETY_MARGIN) / float(
+        n_increments
+    )
 
     alpha0 = alpha_min + pars.POS_REP_SAFETY_MARGIN + fixpoint * step_a
     beta0 = beta_min + pars.POS_REP_SAFETY_MARGIN + fixpoint * step_b
@@ -328,7 +336,7 @@ def measure_positional_repeatability(rig, dbe, pars=None):
                 continue
 
             def capture_image(measurement_index, real_pos):
-                res = 'H' if measurement_index.hires else 'L'
+                res = "H" if measurement_index.hires else "L"
                 ipath = store_image(
                     pos_rep_cam,
                     "{sn}/{tn}/{ts}/i{itr:03d}-j{dir:03d}-k{inc:03d}-{res}_({alpha:+08.3f},_{beta:+08.3f}).bmp",

@@ -31,10 +31,12 @@ def parse_args():
         DEFAULT_LOGLEVEL = logging.INFO
 
     parser = argparse.ArgumentParser(
-        description=summary.format(DEFAULT_TASKS=DEFAULT_TASKS,
-                                   plot_selection_help=plot_selection_help,
-                                   plot_default_selection="".join(list(PLOT_DEFAULT_SELECTION)),
-                                   **T.__dict__),
+        description=summary.format(
+            DEFAULT_TASKS=DEFAULT_TASKS,
+            plot_selection_help=plot_selection_help,
+            plot_default_selection="".join(list(PLOT_DEFAULT_SELECTION)),
+            **T.__dict__
+        ),
         epilog=examples.format(DEFAULT_TASKS=DEFAULT_TASKS, **T.__dict__),
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
@@ -434,6 +436,7 @@ def parse_args():
 
 sn_pat = re.compile("[a-zA-Z0-9]{1,5}$")
 
+
 def expand_set(eval_snset, fpu_config, all_serial_numbers):
 
     if eval_snset == "all":
@@ -448,7 +451,7 @@ def expand_set(eval_snset, fpu_config, all_serial_numbers):
             # a string with a quoted string literal, or a string
             try:
                 vals = literal_eval(eval_snset)
-            except (ValueError,SyntaxError):
+            except (ValueError, SyntaxError):
                 vals = eval_snset.split(",")
 
             if type(vals) != types.ListType:
@@ -457,7 +460,7 @@ def expand_set(eval_snset, fpu_config, all_serial_numbers):
             expanded_vals = []
             for v in vals:
                 if len(v) > 0:
-                    if v[0] != '~':
+                    if v[0] != "~":
                         expanded_vals.append(v)
                     else:
                         pat = re.compile(v[1:])
@@ -473,6 +476,7 @@ def expand_set(eval_snset, fpu_config, all_serial_numbers):
                     raise ValueError("serial number %r is not valid!" % sn)
 
     return eval_snset, fpu_config
+
 
 def get_sets(all_serial_numbers, fpu_config, opts):
     """Under normal operation, we want to measure and evaluate the FPUs
@@ -571,11 +575,13 @@ def check_config_item(fpu_id, val):
             "serial number %r for FPU %i is not valid!" % (serialnumber, key)
         )
 
+
 def get_id(entry):
     if "fpu_id" in entry:
         return entry["fpu_id"]
     else:
-        return (entry["can_id"] - 1)
+        return entry["can_id"] - 1
+
 
 def load_config(config_file_name):
     logger = logging.getLogger(__name__)

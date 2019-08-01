@@ -371,7 +371,8 @@ examples = cleandoc(
 )
 
 
-plot_selection_help = cleandoc("""
+plot_selection_help = cleandoc(
+    """
 A) plot dat_rep measurement as scatter plot in (x,y) image plane (camera coordinates)
 B) plot pos_rep measurement as scatter plot in (x,y) image plane (camera coordinates)
 C) plot fitted pos_rep data (raw data and circle fits)
@@ -392,4 +393,5 @@ Q) plot measured points vs. expected points from inverse calibration
 
 "*" will select all available plots.
 
-""")
+"""
+)

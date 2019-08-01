@@ -8,7 +8,12 @@ import numpy as np
 from vfr.auditlog import get_fpuLogger
 
 from fpu_commands import gen_wf
-from Gearbox.gear_correction import GearboxFitError, apply_gearbox_correction, GEARBOX_CORRECTION_VERSION, GEARBOX_CORRECTION_MINIMUM_VERSION
+from Gearbox.gear_correction import (
+    GearboxFitError,
+    apply_gearbox_correction,
+    GEARBOX_CORRECTION_VERSION,
+    GEARBOX_CORRECTION_MINIMUM_VERSION,
+)
 from GigE.GigECamera import BASLER_DEVICE_CLASS, DEVICE_CLASS, IP_ADDRESS
 from ImageAnalysisFuncs.base import get_min_quality
 from ImageAnalysisFuncs.analyze_positional_repeatability import (
@@ -183,8 +188,7 @@ def measure_positional_verification(rig, dbe, pars=None):
             ):
                 warnings.warn(
                     "FPU %s: positional repeatability data uses old "
-                    "version of image analysis, results might be incorrect"
-                    % sn
+                    "version of image analysis, results might be incorrect" % sn
                 )
 
             if (
@@ -194,32 +198,23 @@ def measure_positional_verification(rig, dbe, pars=None):
                 fpu_log.error(
                     "FPU %s: positional repeatability result data derived from"
                     " too old version of gearbox correction, skipping measurement."
-                    " re-evaluate positional repeatability data to fix this!"
-                    % sn
+                    " re-evaluate positional repeatability data to fix this!" % sn
                 )
 
                 continue
 
             gearbox_correction_version = pr_result["gearbox_correction_version"]
-            if (
-                gearbox_correction_version[0]
-                < GEARBOX_CORRECTION_VERSION[0]
-            ):
+            if gearbox_correction_version[0] < GEARBOX_CORRECTION_VERSION[0]:
                 warnings.warn(
                     "FPU %s: positional repeatability data uses incompatible older"
                     " version of gearbox correction, test skipped - re-compute"
-                    " positional compatibility results first"
-                    % sn
+                    " positional compatibility results first" % sn
                 )
                 continue
-            if (
-                gearbox_correction_version
-                < GEARBOX_CORRECTION_VERSION
-            ):
+            if gearbox_correction_version < GEARBOX_CORRECTION_VERSION:
                 warnings.warn(
                     "FPU %s: positional repeatability data uses older"
-                    " version of gearbox correction, results might be suboptimal"
-                    % sn
+                    " version of gearbox correction, results might be suboptimal" % sn
                 )
 
             gearbox_correction = pr_result["gearbox_correction"]
@@ -345,11 +340,14 @@ def eval_positional_verification(dbe, pos_ver_analysis_pars, pos_ver_evaluation_
         if gearbox_algorithm_version < GEARBOX_CORRECTION_MINIMUM_VERSION:
             logger.info(
                 "FPU %s: positional verification data uses algorithm version %s, "
-                "required minimum version is %s. Evaluation skipped." % (
-                    fpu_id, gearbox_algorithm_version, GEARBOX_CORRECTION_MINIMUM_VERSION)
+                "required minimum version is %s. Evaluation skipped."
+                % (
+                    fpu_id,
+                    gearbox_algorithm_version,
+                    GEARBOX_CORRECTION_MINIMUM_VERSION,
+                )
             )
             continue
-
 
         images = measurement["images"]
         gearbox_correction = measurement["gearbox_correction"]

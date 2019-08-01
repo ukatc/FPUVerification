@@ -32,6 +32,7 @@ GEARBOX_CORRECTION_VERSION = (5, 0, 2)
 # and yields a tolerable result
 GEARBOX_CORRECTION_MINIMUM_VERSION = (5, 0, 0)
 
+
 def cartesian2polar(x, y):
     rho = np.sqrt(x ** 2 + y ** 2)
     phi_rad = np.arctan2(y, x)
@@ -48,12 +49,14 @@ def calc_R(x, y, xc, yc):
     """ calculate the distance of each 2D points from the center (xc, yc) """
     return np.sqrt((x - xc) ** 2 + (y - yc) ** 2)
 
+
 def rot_axis(x, y, psi):
     c1 = np.cos(psi)
     c2 = np.sin(psi)
     x2 = c1 * x + c2 * y
-    y2 = - c2 * x + c1 * y
+    y2 = -c2 * x + c1 * y
     return x2, y2
+
 
 def elliptical_distortion(x, y, xc, yc, psi, stretch):
     """this rotates the coordinates x and y by the angle
@@ -61,22 +64,22 @@ def elliptical_distortion(x, y, xc, yc, psi, stretch):
     and rotates the coordinates back. A stretch
     factor of 1 means a perfect circle.
     """
-    x1, y1 = rot_axis(x-xc, y-yc, psi)
-    x2, y2 = rot_axis(x1 * stretch, y1, - psi)
+    x1, y1 = rot_axis(x - xc, y - yc, psi)
+    x2, y2 = rot_axis(x1 * stretch, y1, -psi)
 
-    return x2+xc, y2+yc
+    return x2 + xc, y2 + yc
+
 
 def f(c, x, y):
     """ calculate the algebraic distance between the data points and the mean circle centered at c=(xc, yc) """
 
-    #rotate coordinates, apply stretch, rotate back
+    # rotate coordinates, apply stretch, rotate back
 
     if len(c) == 4:
         xc, yc, psi, stretch = c
         x, y = elliptical_distortion(x, y, xc, yc, psi, stretch)
     else:
         xc, yc = c
-
 
     Ri = calc_R(x, y, xc, yc)
     return Ri - Ri.mean()
@@ -117,7 +120,6 @@ def leastsq_circle(x, y):
     return xc, yc, R, psi, stretch, radius_RMS
 
 
-
 def cartesian_blob_position(val):
     x1, y1, q1, x2, y2, q2 = val
 
@@ -132,19 +134,22 @@ def cartesian_blob_position(val):
     # so that correct orientation conventions are used.
 
     x = image_x
-    y = - image_y
+    y = -image_y
 
     return x, y
 
-def normalize_difference_radian(x):
-    x = np.where(x < - pi, x + 2 * pi, x)
 
-    x = np.where(x > + pi, x - 2 * pi, x)
+def normalize_difference_radian(x):
+    x = np.where(x < -pi, x + 2 * pi, x)
+
+    x = np.where(x > +pi, x - 2 * pi, x)
 
     return x
 
+
 def nominal_angle_radian(key):
     return np.deg2rad(key[0]), np.deg2rad(key[1])
+
 
 def extract_points(analysis_results):
     """returns (x,y) positions from image analysis and
@@ -164,6 +169,7 @@ def extract_points(analysis_results):
 
     return circle_points, nominal_coordinates_rad, pos_keys
 
+
 def fit_circle(analysis_results, motor_axis):
     # get list of points to which circle is fitted
 
@@ -174,12 +180,16 @@ def fit_circle(analysis_results, motor_axis):
 
     xc, yc, R, psi, stretch, radius_RMS = leastsq_circle(x_s, y_s)
 
-    print("axis {}: fitted elliptical params: psi = {} degrees, stretch = {}".format(motor_axis, np.rad2deg(psi), stretch))
+    print(
+        "axis {}: fitted elliptical params: psi = {} degrees, stretch = {}".format(
+            motor_axis, np.rad2deg(psi), stretch
+        )
+    )
 
     x_s2, y_s2 = elliptical_distortion(x_s, y_s, xc, yc, psi, stretch)
 
     phi_real_rad, r_real = cartesian2polar(x_s2 - xc, y_s2 - yc)
-    if motor_axis=="alpha":
+    if motor_axis == "alpha":
         phi_nominal_rad = alpha_nominal_rad
     else:
         phi_nominal_rad = beta_nominal_rad
@@ -190,55 +200,58 @@ def fit_circle(analysis_results, motor_axis):
         "xc": xc,
         "yc": yc,
         "R": R,
-        "psi" : psi,
-        "stretch" : stretch,
-        "radius_RMS" : radius_RMS,
-        "x_s" : x_s,
-        "y_s" : y_s,
-        "x_s2" : x_s2,
-        "y_s2" : y_s2,
-        "pos_keys" : pos_keys,
-        "alpha_nominal_rad" : alpha_nominal_rad,
-        "beta_nominal_rad" : beta_nominal_rad,
-        "offset_estimate" : offset_estimate,
+        "psi": psi,
+        "stretch": stretch,
+        "radius_RMS": radius_RMS,
+        "x_s": x_s,
+        "y_s": y_s,
+        "x_s2": x_s2,
+        "y_s2": y_s2,
+        "pos_keys": pos_keys,
+        "alpha_nominal_rad": alpha_nominal_rad,
+        "beta_nominal_rad": beta_nominal_rad,
+        "offset_estimate": offset_estimate,
     }
     return result
 
-def wrap_complex_vals(angle) :
-    return np.where(angle < - pi / 4, angle + 2 * pi, angle)
+
+def wrap_complex_vals(angle):
+    return np.where(angle < -pi / 4, angle + 2 * pi, angle)
 
 
-def get_angle_error(x_s2, y_s2,
-                    xc, yc,
-                    alpha_nominal_rad,
-                    beta_nominal_rad,
-                    P0=None,
-                    R_alpha=None,
-                    R_beta_midpoint=None,
-                    camera_offset_rad=None,
-                    beta0_rad=None
+def get_angle_error(
+    x_s2,
+    y_s2,
+    xc,
+    yc,
+    alpha_nominal_rad,
+    beta_nominal_rad,
+    P0=None,
+    R_alpha=None,
+    R_beta_midpoint=None,
+    camera_offset_rad=None,
+    beta0_rad=None,
 ):
 
     print("get_angle_error: center (x,y) = ({},{}) millimeter".format(xc, yc))
     x_real = x_s2 - xc
     y_real = y_s2 - yc
 
-
     # compute expected points from common fit parameters
 
-    x_n, y_n = angle_to_point(alpha_nominal_rad,
-                              beta_nominal_rad,
-                              P0=P0,
-                              R_alpha=R_alpha,
-                              R_beta_midpoint=R_beta_midpoint,
-                              camera_offset_rad=camera_offset_rad,
-                              beta0_rad=beta0_rad,
-                              broadcast=True)
-
+    x_n, y_n = angle_to_point(
+        alpha_nominal_rad,
+        beta_nominal_rad,
+        P0=P0,
+        R_alpha=R_alpha,
+        R_beta_midpoint=R_beta_midpoint,
+        camera_offset_rad=camera_offset_rad,
+        beta0_rad=beta0_rad,
+        broadcast=True,
+    )
 
     x_fitted = x_n - xc
     y_fitted = y_n - yc
-
 
     # compute remaining difference in the complex plane
 
@@ -255,18 +268,19 @@ def get_angle_error(x_s2, y_s2,
     phi_fitted_rad = wrap_complex_vals(np.log(points_fitted).imag)
     phi_real_rad = wrap_complex_vals(np.log(points_real).imag)
 
-
     return phi_real_rad, phi_fitted_rad, angular_difference
 
 
-def fit_gearbox_parameters(motor_axis, circle_data,
-                           P0=None,
-                           R_alpha=None,
-                           R_beta_midpoint=None,
-                           camera_offset_rad=None,
-                           beta0_rad=None,
-                           return_intermediate_results=False):
-
+def fit_gearbox_parameters(
+    motor_axis,
+    circle_data,
+    P0=None,
+    R_alpha=None,
+    R_beta_midpoint=None,
+    camera_offset_rad=None,
+    beta0_rad=None,
+    return_intermediate_results=False,
+):
 
     x_s = circle_data["x_s"]
     y_s = circle_data["y_s"]
@@ -274,7 +288,7 @@ def fit_gearbox_parameters(motor_axis, circle_data,
     y_s2 = circle_data["y_s2"]
 
     psi = circle_data["psi"]
-    stretch=circle_data["stretch"]
+    stretch = circle_data["stretch"]
 
     xc = circle_data["xc"]
     yc = circle_data["yc"]
@@ -293,19 +307,23 @@ def fit_gearbox_parameters(motor_axis, circle_data,
         print("beta fixpoint = {} degree".format(np.rad2deg(beta_fixpoint_rad)))
 
     _, R_real = cartesian2polar(x_s2 - xc, y_s2 - yc)
-    print("fit_gearbox_parameters(): finding angular error for {} arm ".format(motor_axis))
+    print(
+        "fit_gearbox_parameters(): finding angular error for {} arm ".format(motor_axis)
+    )
 
-    phi_real_rad, phi_fitted_rad, err_phi_1_rad = get_angle_error(x_s2, y_s2,
-                                                                   xc, yc,
-                                                                   alpha_nominal_rad,
-                                                                   beta_nominal_rad,
-                                                                   P0=P0,
-                                                                   R_alpha=R_alpha,
-                                                                   R_beta_midpoint=R_beta_midpoint,
-                                                                   camera_offset_rad=camera_offset_rad,
-                                                                   beta0_rad=beta0_rad)
-
-
+    phi_real_rad, phi_fitted_rad, err_phi_1_rad = get_angle_error(
+        x_s2,
+        y_s2,
+        xc,
+        yc,
+        alpha_nominal_rad,
+        beta_nominal_rad,
+        P0=P0,
+        R_alpha=R_alpha,
+        R_beta_midpoint=R_beta_midpoint,
+        camera_offset_rad=camera_offset_rad,
+        beta0_rad=beta0_rad,
+    )
 
     support_points = {}
     for (fitted_angle, yp) in zip(phi_fitted_rad, err_phi_1_rad):
@@ -315,10 +333,16 @@ def fit_gearbox_parameters(motor_axis, circle_data,
 
     phi_fit_support_rad = np.array(sorted(support_points.keys()))
 
-    phi_corr_support_rad = [np.mean(np.array(support_points[k])) for k in phi_fit_support_rad]
+    phi_corr_support_rad = [
+        np.mean(np.array(support_points[k])) for k in phi_fit_support_rad
+    ]
 
-    err_phi_support_rad = normalize_difference_radian(err_phi_1_rad - np.interp(phi_fitted_rad, phi_fit_support_rad, phi_corr_support_rad, period=2 * pi))
-
+    err_phi_support_rad = normalize_difference_radian(
+        err_phi_1_rad
+        - np.interp(
+            phi_fitted_rad, phi_fit_support_rad, phi_corr_support_rad, period=2 * pi
+        )
+    )
 
     phi_fitted_correction_rad = phi_fitted_rad + np.interp(
         phi_fitted_rad, phi_fit_support_rad, phi_corr_support_rad, period=2 * pi
@@ -328,19 +352,31 @@ def fit_gearbox_parameters(motor_axis, circle_data,
 
     corrected_shifted_angle_rad = np.array(phi_corr_support_rad) + phi_fit_support_rad
 
-    print("fit_gearbox_parameters(): beta0_rad = {} rad = {} degree".format(beta0_rad, np.rad2deg(beta0_rad)))
-    print("fit_gearbox_parameters(): beta0_rad - pi = {} rad = {} degree".format(beta0_rad - pi, 360 + np.rad2deg(beta0_rad - pi)))
+    print(
+        "fit_gearbox_parameters(): beta0_rad = {} rad = {} degree".format(
+            beta0_rad, np.rad2deg(beta0_rad)
+        )
+    )
+    print(
+        "fit_gearbox_parameters(): beta0_rad - pi = {} rad = {} degree".format(
+            beta0_rad - pi, 360 + np.rad2deg(beta0_rad - pi)
+        )
+    )
 
     if motor_axis == "alpha":
         nominal_angle_rad = phi_fit_support_rad - camera_offset_rad
         corrected_angle_rad = corrected_shifted_angle_rad - camera_offset_rad
     else:
         nominal_angle_rad = phi_fit_support_rad - beta0_rad - camera_offset_rad - pi
-        corrected_angle_rad = corrected_shifted_angle_rad - beta0_rad - camera_offset_rad - pi
+        corrected_angle_rad = (
+            corrected_shifted_angle_rad - beta0_rad - camera_offset_rad - pi
+        )
 
-    print("for axis {}: mean(corrected - nominal) = {} degrees".format(
-        motor_axis, np.rad2deg(np.mean(corrected_angle_rad - nominal_angle_rad
-        ))))
+    print(
+        "for axis {}: mean(corrected - nominal) = {} degrees".format(
+            motor_axis, np.rad2deg(np.mean(corrected_angle_rad - nominal_angle_rad))
+        )
+    )
 
     # Pad table support points with values for the ends of the range.
     # This is espcially needed since the support points which are
@@ -352,35 +388,34 @@ def fit_gearbox_parameters(motor_axis, circle_data,
     nominal_angle_rad = np.hstack([[phi_min], nominal_angle_rad, [phi_max]])
     corrected_angle_rad = np.hstack([[phi_min], corrected_angle_rad, [phi_max]])
 
-
     results = {
         "algorithm": "linfit+piecewise_interpolation",
         "xc": xc,
         "yc": yc,
         "R": circle_data["R"],
-        "P0" : P0,
-        "R_alpha" : R_alpha,
-        "psi" : psi,
-        "stretch" : stretch,
-        "radius_RMS" : circle_data["radius_RMS"],
-        "R_beta_midpoint" : R_beta_midpoint,
-        "camera_offset_rad" : camera_offset_rad,
-        "beta0_rad" : beta0_rad,
-        "alpha_fixpoint_rad" : alpha_fixpoint_rad,
-        "beta_fixpoint_rad" : beta_fixpoint_rad,
+        "P0": P0,
+        "R_alpha": R_alpha,
+        "psi": psi,
+        "stretch": stretch,
+        "radius_RMS": circle_data["radius_RMS"],
+        "R_beta_midpoint": R_beta_midpoint,
+        "camera_offset_rad": camera_offset_rad,
+        "beta0_rad": beta0_rad,
+        "alpha_fixpoint_rad": alpha_fixpoint_rad,
+        "beta_fixpoint_rad": beta_fixpoint_rad,
         "num_support_points": len(phi_fit_support_rad),
         "num_data_points": len(x_s2),
-        "nominal_angle_rad" : nominal_angle_rad,
+        "nominal_angle_rad": nominal_angle_rad,
         "corrected_angle_rad": corrected_angle_rad,
-        "alpha_nominal_rad" : circle_data["alpha_nominal_rad"],
-        "beta_nominal_rad" : circle_data["beta_nominal_rad"],
+        "alpha_nominal_rad": circle_data["alpha_nominal_rad"],
+        "beta_nominal_rad": circle_data["beta_nominal_rad"],
         "x_s2": x_s2,
         "y_s2": y_s2,
     }
 
     if return_intermediate_results:
 
-        extra_results =  {
+        extra_results = {
             "x_s": x_s,
             "y_s": y_s,
             "phi_fitted_rad": phi_fitted_rad,
@@ -388,11 +423,14 @@ def fit_gearbox_parameters(motor_axis, circle_data,
             "corrected_shifted_angle_rad": corrected_shifted_angle_rad,
             "R_real": R_real,
             "yp": phi_corr_support_rad,
-            "pos_keys" : circle_data["pos_keys"],
-            "err_phi_support_rad" : err_phi_support_rad,
-
+            "pos_keys": circle_data["pos_keys"],
+            "err_phi_support_rad": err_phi_support_rad,
             "fits": {
-                0: (phi_fitted_rad, phi_real_rad, "real angle as function of c-rotated nominal angle"),
+                0: (
+                    phi_fitted_rad,
+                    phi_real_rad,
+                    "real angle as function of c-rotated nominal angle",
+                ),
                 1: (
                     phi_fitted_rad,
                     phi_fitted_rad,
@@ -423,20 +461,19 @@ def fit_gearbox_parameters(motor_axis, circle_data,
     return results
 
 
-
 def angle_to_point(
-        alpha_nom_rad,
-        beta_nom_rad,
-        P0=None,
-        R_alpha=None,
-        R_beta_midpoint=None,
-        camera_offset_rad=None,
-        beta0_rad=None,
-        inverse=False,
-        coeffs=None,
-        broadcast=True,
-        correct_axis=["alpha", "beta"],
-        correct_fixpoint=True,
+    alpha_nom_rad,
+    beta_nom_rad,
+    P0=None,
+    R_alpha=None,
+    R_beta_midpoint=None,
+    camera_offset_rad=None,
+    beta0_rad=None,
+    inverse=False,
+    coeffs=None,
+    broadcast=True,
+    correct_axis=["alpha", "beta"],
+    correct_fixpoint=True,
 ):
     """convert nominal angles with a given pair of offsets to expected
     coordinate in the image plane.
@@ -451,38 +488,48 @@ def angle_to_point(
         delta_alpha_fixpoint = 0.0
         delta_beta_fixpoint = 0.0
     else:
-            if "alpha" in correct_axis:
+        if "alpha" in correct_axis:
 
-                delta_alpha = - alpha_nom_rad + apply_gearbox_parameters(
-                    alpha_nom_rad, wrap=True, inverse_transform=inverse, **coeffs["coeffs_alpha"]
-                )
+            delta_alpha = -alpha_nom_rad + apply_gearbox_parameters(
+                alpha_nom_rad,
+                wrap=True,
+                inverse_transform=inverse,
+                **coeffs["coeffs_alpha"]
+            )
 
-                alpha_fixpoint_rad = coeffs["coeffs_beta"]["alpha_fixpoint_rad"]
-                delta_alpha_fixpoint = - alpha_fixpoint_rad + apply_gearbox_parameters(
-                    alpha_fixpoint_rad, wrap=True, inverse_transform=inverse, **coeffs["coeffs_alpha"]
-                )
-            else:
-                delta_alpha = 0
-                delta_alpha_fixpoint = 0
+            alpha_fixpoint_rad = coeffs["coeffs_beta"]["alpha_fixpoint_rad"]
+            delta_alpha_fixpoint = -alpha_fixpoint_rad + apply_gearbox_parameters(
+                alpha_fixpoint_rad,
+                wrap=True,
+                inverse_transform=inverse,
+                **coeffs["coeffs_alpha"]
+            )
+        else:
+            delta_alpha = 0
+            delta_alpha_fixpoint = 0
 
-            if "beta" in correct_axis:
-                delta_beta = - beta_nom_rad + apply_gearbox_parameters(
-                    beta_nom_rad, wrap=True, inverse_transform=inverse, **coeffs["coeffs_beta"]
-                )
+        if "beta" in correct_axis:
+            delta_beta = -beta_nom_rad + apply_gearbox_parameters(
+                beta_nom_rad,
+                wrap=True,
+                inverse_transform=inverse,
+                **coeffs["coeffs_beta"]
+            )
 
-                beta_fixpoint_rad = coeffs["coeffs_alpha"]["beta_fixpoint_rad"]
-                delta_beta_fixpoint = - beta_fixpoint_rad + apply_gearbox_parameters(
-                    beta_fixpoint_rad, wrap=True, inverse_transform=inverse, **coeffs["coeffs_alpha"]
-                )
-            else:
-                delta_beta = 0
-                delta_beta_fixpoint = 0
+            beta_fixpoint_rad = coeffs["coeffs_alpha"]["beta_fixpoint_rad"]
+            delta_beta_fixpoint = -beta_fixpoint_rad + apply_gearbox_parameters(
+                beta_fixpoint_rad,
+                wrap=True,
+                inverse_transform=inverse,
+                **coeffs["coeffs_alpha"]
+            )
+        else:
+            delta_beta = 0
+            delta_beta_fixpoint = 0
 
-
-            if not correct_fixpoint:
-                delta_alpha_fixpoint = 0
-                delta_beta_fixpoint = 0
-
+        if not correct_fixpoint:
+            delta_alpha_fixpoint = 0
+            delta_beta_fixpoint = 0
 
     # rotate (possibly corrected) angles to camera orientation,
     # and apply beta arm offset
@@ -495,9 +542,12 @@ def angle_to_point(
     # this turns the beta arm (clockwise) as well).
     gamma_rad = beta_rad + alpha_rad + (delta_alpha - delta_alpha_fixpoint)
 
-
-    vec_alpha = np.array(polar2cartesian(alpha_rad + (delta_alpha - delta_alpha_fixpoint), R_alpha))
-    vec_beta = np.array(polar2cartesian(gamma_rad + (delta_beta - delta_beta_fixpoint), R_beta_midpoint))
+    vec_alpha = np.array(
+        polar2cartesian(alpha_rad + (delta_alpha - delta_alpha_fixpoint), R_alpha)
+    )
+    vec_beta = np.array(
+        polar2cartesian(gamma_rad + (delta_beta - delta_beta_fixpoint), R_beta_midpoint)
+    )
 
     if broadcast and (len(P0.shape) < len(vec_alpha.shape)):
         # adapt shape
@@ -509,13 +559,13 @@ def angle_to_point(
 
 
 def fit_offsets(
-        circle_alpha,
-        circle_beta,
-        P0=None,
-        R_alpha=None,
-        R_beta_midpoint=None,
-        camera_offset_start=None,
-        beta0_start=None
+    circle_alpha,
+    circle_beta,
+    P0=None,
+    R_alpha=None,
+    R_beta_midpoint=None,
+    camera_offset_start=None,
+    beta0_start=None,
 ):
     """ The goal of this function is to find the best matching global
     offset between nominal coordinates and camera coordinates
@@ -532,10 +582,9 @@ def fit_offsets(
 
     for c in circle_alpha, circle_beta:
         for x_s2, y_s2 in zip(c["x_s2"], c["y_s2"]):
-            circle_points.append((x_s2,  y_s2))
+            circle_points.append((x_s2, y_s2))
         for alpha_nom, beta_nom in zip(c["alpha_nominal_rad"], c["beta_nominal_rad"]):
             nominal_coordinates_rad.append((alpha_nom, beta_nom))
-
 
     circle_points = np.array(circle_points).T
     alpha_nom_rad, beta_nom_rad = np.array(nominal_coordinates_rad).T
@@ -549,33 +598,30 @@ def fit_offsets(
             R_alpha=R_alpha,
             R_beta_midpoint=R_beta_midpoint,
             camera_offset_rad=camera_offset,
-            beta0_rad=beta0
+            beta0_rad=beta0,
         )
 
         return np.linalg.norm(points - circle_points, axis=0)
 
-
     # coordinates of the barycenter
-    offsets_estimate = np.array([camera_offset_start,  beta0_start])
-    offsets, ier = optimize.leastsq(
-        g, offsets_estimate,
-        ftol=1.5e-10, xtol=1.5e-10
-    )
-    camera_offset,beta0 = offsets
+    offsets_estimate = np.array([camera_offset_start, beta0_start])
+    offsets, ier = optimize.leastsq(g, offsets_estimate, ftol=1.5e-10, xtol=1.5e-10)
+    camera_offset, beta0 = offsets
 
     print("mean norm from offset fitting = ", np.mean(g(offsets)))
 
     return camera_offset, beta0
 
+
 def get_expected_points(
-        fpu_id,
-        coeffs,
-        R_alpha=None,
-        R_beta_midpoint=None,
-        camera_offset_rad=None,
-        beta0_rad=None,
-        P0=None,
-        return_points=False,
+    fpu_id,
+    coeffs,
+    R_alpha=None,
+    R_beta_midpoint=None,
+    camera_offset_rad=None,
+    beta0_rad=None,
+    P0=None,
+    return_points=False,
 ):
     logger = logging.getLogger(__name__)
     logger.info("computing gearbox calibration error")
@@ -583,10 +629,12 @@ def get_expected_points(
     expected_vals = {}
 
     for lcoeffs, motor_axis in [
-            (coeffs["coeffs_alpha"], "alpha"),
-            (coeffs["coeffs_beta"], "beta"),
+        (coeffs["coeffs_alpha"], "alpha"),
+        (coeffs["coeffs_beta"], "beta"),
     ]:
-        logger.info("FPU {}: evaluating correction for {} motor axis".format(fpu_id, motor_axis))
+        logger.info(
+            "FPU {}: evaluating correction for {} motor axis".format(fpu_id, motor_axis)
+        )
         xc = lcoeffs["xc"]
         yc = lcoeffs["yc"]
         x_s = lcoeffs["x_s2"]
@@ -595,44 +643,60 @@ def get_expected_points(
         alpha_nominal_rad = lcoeffs["alpha_nominal_rad"]
         beta_nominal_rad = lcoeffs["beta_nominal_rad"]
 
-
-
         alpha_nom_corrected_rad = apply_gearbox_parameters(
-            alpha_nominal_rad, wrap=True, inverse_transform=True, **coeffs["coeffs_alpha"]
+            alpha_nominal_rad,
+            wrap=True,
+            inverse_transform=True,
+            **coeffs["coeffs_alpha"]
         )
         beta_nom_corrected_rad = apply_gearbox_parameters(
             beta_nominal_rad, wrap=True, inverse_transform=True, **coeffs["coeffs_beta"]
         )
 
-
-        logger.info("FPU {}: for axis {}: mean(corrected - nominal) = {} degrees".format(
-            fpu_id,
-            "alpha", np.rad2deg(np.mean(alpha_nom_corrected_rad - alpha_nominal_rad
-            ))))
-        logger.info("FPU {}: for axis {}: mean(corrected - nominal) = {} degrees".format(
-            fpu_id,
-            "beta", np.rad2deg(np.mean(beta_nom_corrected_rad - beta_nominal_rad
-            ))))
-
+        logger.info(
+            "FPU {}: for axis {}: mean(corrected - nominal) = {} degrees".format(
+                fpu_id,
+                "alpha",
+                np.rad2deg(np.mean(alpha_nom_corrected_rad - alpha_nominal_rad)),
+            )
+        )
+        logger.info(
+            "FPU {}: for axis {}: mean(corrected - nominal) = {} degrees".format(
+                fpu_id,
+                "beta",
+                np.rad2deg(np.mean(beta_nom_corrected_rad - beta_nominal_rad)),
+            )
+        )
 
         alpha_fixpoint_rad = lcoeffs["alpha_fixpoint_rad"]
         beta_fixpoint_rad = lcoeffs["beta_fixpoint_rad"]
         alpha_fixpoint_corrected_rad = apply_gearbox_parameters(
-            alpha_fixpoint_rad, wrap=True, inverse_transform=True, **coeffs["coeffs_alpha"]
+            alpha_fixpoint_rad,
+            wrap=True,
+            inverse_transform=True,
+            **coeffs["coeffs_alpha"]
         )
         beta_fixpoint_corrected_rad = apply_gearbox_parameters(
-            beta_fixpoint_rad, wrap=True, inverse_transform=True, **coeffs["coeffs_beta"]
+            beta_fixpoint_rad,
+            wrap=True,
+            inverse_transform=True,
+            **coeffs["coeffs_beta"]
         )
 
-        logger.info("FPU {}: for axis {}: mean(corrected - fixpoint) = {}".format(
-            fpu_id,
-            "alpha", np.rad2deg(np.mean(alpha_fixpoint_corrected_rad - alpha_fixpoint_rad
-            ))))
-        logger.info("FPU {}: for axis {}: mean(corrected - fixpoint) = {}".format(
-            fpu_id,
-            "beta", np.rad2deg(np.mean(beta_fixpoint_corrected_rad - beta_fixpoint_rad
-            ))))
-
+        logger.info(
+            "FPU {}: for axis {}: mean(corrected - fixpoint) = {}".format(
+                fpu_id,
+                "alpha",
+                np.rad2deg(np.mean(alpha_fixpoint_corrected_rad - alpha_fixpoint_rad)),
+            )
+        )
+        logger.info(
+            "FPU {}: for axis {}: mean(corrected - fixpoint) = {}".format(
+                fpu_id,
+                "beta",
+                np.rad2deg(np.mean(beta_fixpoint_corrected_rad - beta_fixpoint_rad)),
+            )
+        )
 
         expected_points = []
         for alpha_nom_rad, beta_nom_rad in zip(alpha_nominal_rad, beta_nominal_rad):
@@ -647,13 +711,12 @@ def get_expected_points(
                 beta0_rad=beta0_rad,
                 inverse=True,
                 coeffs=coeffs,
-                #correct_axis=[motor_axis],
-                #correct_fixpoint=False,
-                broadcast=False
+                # correct_axis=[motor_axis],
+                # correct_fixpoint=False,
+                broadcast=False,
             )
 
             expected_points.append(ep)
-
 
         expected_points = np.array(expected_points).T
         measured_points = np.array((x_s, y_s))
@@ -664,36 +727,44 @@ def get_expected_points(
         percentile_vals = np.percentile(error_magnitudes * 1000, PERCENTILE_ARGS)
 
         logger.info("FPU {}: RMS [{}] = {} micron".format(fpu_id, motor_axis, RMS))
-        pcdict = {PERCENTILE_ARGS[k] : pv for k, pv in enumerate(percentile_vals)}
-        logger.info("FPU {}: percentiles = {} microns".format(
-            fpu_id,
-            ", ".join(["P[%s]: %.1f" % (k, pcdict[k]) for k in sorted(pcdict.keys()) ]))
+        pcdict = {PERCENTILE_ARGS[k]: pv for k, pv in enumerate(percentile_vals)}
+        logger.info(
+            "FPU {}: percentiles = {} microns".format(
+                fpu_id,
+                ", ".join(
+                    ["P[%s]: %.1f" % (k, pcdict[k]) for k in sorted(pcdict.keys())]
+                ),
+            )
         )
-        axis_result = {
-            "RMS" : RMS,
-            "pcdict" : pcdict,
-            "max_val" : max_val,
-            }
+        axis_result = {"RMS": RMS, "pcdict": pcdict, "max_val": max_val}
 
         if return_points:
             # include extra results for plotting
-            axis_result.update({
-                "xc" : xc,
-                "yc" : yc,
-                "R" : R,
-                "expected_points" : expected_points,
-                "measured_points" : measured_points,
-                "x_s" : x_s,
-                "y_s" : y_s,
-                "xe" : xe,
-                "ye" : ye,
-                })
+            axis_result.update(
+                {
+                    "xc": xc,
+                    "yc": yc,
+                    "R": R,
+                    "expected_points": expected_points,
+                    "measured_points": measured_points,
+                    "x_s": x_s,
+                    "y_s": y_s,
+                    "xe": xe,
+                    "ye": ye,
+                }
+            )
 
         expected_vals[motor_axis] = axis_result
 
     return expected_vals
 
-def fit_gearbox_correction(fpu_id, dict_of_coordinates_alpha, dict_of_coordinates_beta, return_intermediate_results=False):
+
+def fit_gearbox_correction(
+    fpu_id,
+    dict_of_coordinates_alpha,
+    dict_of_coordinates_beta,
+    return_intermediate_results=False,
+):
     """Computes gearbox correction and returns correction coefficients
     as a dictionary.
 
@@ -718,15 +789,9 @@ def fit_gearbox_correction(fpu_id, dict_of_coordinates_alpha, dict_of_coordinate
 
     """
 
-    circle_alpha = fit_circle(
-        dict_of_coordinates_alpha,
-        "alpha"
-    )
+    circle_alpha = fit_circle(dict_of_coordinates_alpha, "alpha")
 
-    circle_beta = fit_circle(
-        dict_of_coordinates_beta,
-        "beta"
-    )
+    circle_beta = fit_circle(dict_of_coordinates_beta, "beta")
 
     # find centers of alpha circle
     x_center = circle_alpha["xc"]
@@ -745,15 +810,21 @@ def fit_gearbox_correction(fpu_id, dict_of_coordinates_alpha, dict_of_coordinate
     beta0_start = circle_beta["offset_estimate"] + camera_offset_start
 
     r2d = np.rad2deg
-    print("camera_offset_start =", camera_offset_start, "radian = {} degree".format(r2d(camera_offset_start)))
+    print(
+        "camera_offset_start =",
+        camera_offset_start,
+        "radian = {} degree".format(r2d(camera_offset_start)),
+    )
     print("beta0_start =", beta0_start, "radian = {} degree".format(r2d(beta0_start)))
 
-    camera_offset_rad, beta0_rad = fit_offsets(circle_alpha, circle_beta,
-                                               P0=P0,
-                                               R_alpha=R_alpha,
-                                               R_beta_midpoint=R_beta_midpoint,
-                                               camera_offset_start=camera_offset_start,
-                                               beta0_start=beta0_start,
+    camera_offset_rad, beta0_rad = fit_offsets(
+        circle_alpha,
+        circle_beta,
+        P0=P0,
+        R_alpha=R_alpha,
+        R_beta_midpoint=R_beta_midpoint,
+        camera_offset_start=camera_offset_start,
+        beta0_start=beta0_start,
     )
 
     coeffs_alpha = fit_gearbox_parameters(
@@ -784,16 +855,18 @@ def fit_gearbox_correction(fpu_id, dict_of_coordinates_alpha, dict_of_coordinate
             "coeffs": {"coeffs_alpha": coeffs_alpha, "coeffs_beta": coeffs_beta},
         }
 
-
-
-    print("camera_offset_rad =", camera_offset_rad, "= {} degree".format(r2d(camera_offset_rad)))
+    print(
+        "camera_offset_rad =",
+        camera_offset_rad,
+        "= {} degree".format(r2d(camera_offset_rad)),
+    )
     print("beta0_rad =", beta0_rad, "= {} degree".format(r2d(beta0_rad)))
 
     coeffs = {"coeffs_alpha": coeffs_alpha, "coeffs_beta": coeffs_beta}
 
     P0 = np.array([x_center, y_center])
 
-    expected_vals= get_expected_points(
+    expected_vals = get_expected_points(
         fpu_id,
         coeffs,
         R_alpha=R_alpha,
@@ -803,46 +876,35 @@ def fit_gearbox_correction(fpu_id, dict_of_coordinates_alpha, dict_of_coordinate
         P0=P0,
     )
 
-
     if not return_intermediate_results:
         # delete some data to save space in
         # database record
         for axis in ["coeffs_alpha", "coeffs_beta"]:
-            for del_key in [ "alpha_nominal_rad",
-                             "beta_nominal_rad",
-                             "x_s2",
-                             "y_s2",]:
+            for del_key in ["alpha_nominal_rad", "beta_nominal_rad", "x_s2", "y_s2"]:
                 del coeffs[axis][del_key]
-
 
     return {
         "version": GEARBOX_CORRECTION_VERSION,
         "coeffs": coeffs,
         "x_center": x_center,
         "y_center": y_center,
-        "camera_offset_rad" : camera_offset_rad,
-        "beta0_rad" : beta0_rad,
+        "camera_offset_rad": camera_offset_rad,
+        "beta0_rad": beta0_rad,
         "R_alpha": R_alpha,
         "R_beta_midpoint": R_beta_midpoint,
         "BLOB_WEIGHT_FACTOR": BLOB_WEIGHT_FACTOR,
-        "expected_vals" : expected_vals,
+        "expected_vals": expected_vals,
     }
 
 
-
-
-
-
-
-
 def apply_gearbox_parameters_fitted(
-        angle_rad,
-        phi_fit_support_rad=None,
-        corrected_shifted_angle_rad=None,
-        algorithm=None,
-        inverse_transform=False,
-        wrap=False,
-        **rest_coeffs
+    angle_rad,
+    phi_fit_support_rad=None,
+    corrected_shifted_angle_rad=None,
+    algorithm=None,
+    inverse_transform=False,
+    wrap=False,
+    **rest_coeffs
 ):
     """applies gearbox parameters to the fitted, c-rotated (rotated) angle
     (instead of the FPU coordinates).
@@ -866,20 +928,20 @@ def apply_gearbox_parameters_fitted(
     if wrap:
         angle_rad = wrap_complex_vals(np.log(np.exp(1j * angle_rad)).imag)
 
-    #phi_corrected = np.interp(angle_rad, x_points, y_points, period=2 * pi)
+    # phi_corrected = np.interp(angle_rad, x_points, y_points, period=2 * pi)
     phi_corrected = np.interp(angle_rad, x_points, y_points)
 
     return phi_corrected
 
 
 def apply_gearbox_parameters(
-        angle_rad,
-        nominal_angle_rad=None,
-        corrected_angle_rad=None,
-        algorithm=None,
-        inverse_transform=False,
-        wrap=False,
-        **rest_coeffs
+    angle_rad,
+    nominal_angle_rad=None,
+    corrected_angle_rad=None,
+    algorithm=None,
+    inverse_transform=False,
+    wrap=False,
+    **rest_coeffs
 ):
 
     assert (
@@ -918,6 +980,8 @@ def apply_gearbox_correction(incoords_rad, coeffs=None):
     alpha_steps = int(
         round((alpha_corrected_rad - ALPHA_DATUM_OFFSET_RAD) * StepsPerRadianAlpha)
     )
-    beta_steps = int(round((beta_corrected_rad - BETA_DATUM_OFFSET_RAD) * StepsPerRadianBeta))
+    beta_steps = int(
+        round((beta_corrected_rad - BETA_DATUM_OFFSET_RAD) * StepsPerRadianBeta)
+    )
 
     return (alpha_steps, beta_steps)

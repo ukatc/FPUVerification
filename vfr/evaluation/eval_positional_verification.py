@@ -10,7 +10,6 @@ from vfr.evaluation.measures import get_errors, get_grouped_errors
 import numpy as np
 
 
-
 def evaluate_positional_verification(
     dict_of_coords,
     pars=None,
@@ -48,7 +47,6 @@ def evaluate_positional_verification(
 
     """
 
-
     error_by_angle = {}
     # get measured circle center point from alpha arm
     # calibration
@@ -77,7 +75,7 @@ def evaluate_positional_verification(
             R_beta_midpoint=R_beta_midpoint,
             alpha0_rad=alpha0_rad,
             already_corrected=True,
-            )
+        )
 
         expected_coords.append(expected_point)
         point_list.append([point_pair])
@@ -88,9 +86,7 @@ def evaluate_positional_verification(
 
     print("############ computing summary statistics")
     error_measures = get_grouped_errors(
-        point_list,
-        list_of_centroids=expected_coords,
-        weight_factor=BLOB_WEIGHT_FACTOR,
+        point_list, list_of_centroids=expected_coords, weight_factor=BLOB_WEIGHT_FACTOR
     )
     print("pos ver error_measures=%r" % error_measures)
     return error_by_angle, error_measures

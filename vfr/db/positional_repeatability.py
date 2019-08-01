@@ -47,16 +47,18 @@ save_positional_repeatability_result = partial(
 upgrade_func1 = partial(upgrade_version, fieldname="algorithm_version")
 upgrade_func2 = partial(upgrade_version, fieldname="gearbox_correction_version")
 
+
 def upgrade_func(x):
     return upgrade_func2(upgrade_func1(x))
 
-default_vals = {
-    "gearbox_correction_version" : (0, 1, 0),
-}
 
-get_positional_repeatability_result = partial(get_named_record, (RECORD_TYPE, "result"),
-                                              upgrade_func=upgrade_func,
-                                              default_vals=default_vals,
+default_vals = {"gearbox_correction_version": (0, 1, 0)}
+
+get_positional_repeatability_result = partial(
+    get_named_record,
+    (RECORD_TYPE, "result"),
+    upgrade_func=upgrade_func,
+    default_vals=default_vals,
 )
 
 

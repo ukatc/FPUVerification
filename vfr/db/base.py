@@ -67,6 +67,7 @@ def save_test_result(dbe, fpuset, keyfunc, valfunc):
 def identity(x):
     return x
 
+
 def upgrade_version(record, fieldname="version"):
     """
     Upgrade version information from using floats
@@ -87,8 +88,10 @@ def upgrade_version(record, fieldname="version"):
 
     return record
 
-def get_test_result(dbe, fpu_id, keyfunc, count=None,
-                    default_vals={}, upgrade_func=identity):
+
+def get_test_result(
+    dbe, fpu_id, keyfunc, count=None, default_vals={}, upgrade_func=identity
+):
 
     with dbe.env.begin(write=False, db=dbe.vfdb) as txn:
 
@@ -132,7 +135,10 @@ def get_test_result(dbe, fpu_id, keyfunc, count=None,
         except SyntaxError:
             record_length = len(val)
             logger = logging.getLogger(__name__)
-            logger.error("syntax error for key = %r, count = %r, record length = %i" % (key2, count, record_length))
+            logger.error(
+                "syntax error for key = %r, count = %r, record length = %i"
+                % (key2, count, record_length)
+            )
             val = None
 
     if val is None:
@@ -171,7 +177,15 @@ def save_named_record(
     save_test_result(dbe, [fpu_id], keyfunc, valfunc)
 
 
-def get_named_record(record_type, dbe, fpu_id, count=None, loglevel=logging.DEBUG - 5, default_vals={}, upgrade_func=identity):
+def get_named_record(
+    record_type,
+    dbe,
+    fpu_id,
+    count=None,
+    loglevel=logging.DEBUG - 5,
+    default_vals={},
+    upgrade_func=identity,
+):
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
@@ -179,7 +193,14 @@ def get_named_record(record_type, dbe, fpu_id, count=None, loglevel=logging.DEBU
         keybase = (serialnumber,) + record_type
         return keybase
 
-    rval = get_test_result(dbe, fpu_id, keyfunc, count=count, default_vals=default_vals, upgrade_func=upgrade_func)
+    rval = get_test_result(
+        dbe,
+        fpu_id,
+        keyfunc,
+        count=count,
+        default_vals=default_vals,
+        upgrade_func=upgrade_func,
+    )
 
     logger = logging.getLogger(__name__)
     logger.log(loglevel, "getting " + str(record_type))

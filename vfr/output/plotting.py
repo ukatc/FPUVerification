@@ -5,14 +5,13 @@ from vfr.db.retrieval import get_data
 import numpy as np
 import types
 import logging
+
 # import matplotlib.pyplot as plt
 
 # import numpy as np
 from matplotlib import pyplot as plt
 
-from Gearbox.gear_correction import (
-    fit_gearbox_correction,
-)
+from Gearbox.gear_correction import fit_gearbox_correction
 
 from Gearbox.plot_gear_correction import (
     plot_gearbox_calibration,
@@ -98,8 +97,10 @@ def plot_dat_rep(fpu_id, datumed_coords, moved_coords, opts):
 
     plt.show()
 
+
 PLOT_DEFAULT_SELECTION = PLOT_CAL_DEFAULT | set("AB")
 PLOT_ALL = set("AB") | PLOT_CAL_ALL
+
 
 def plot(dbe, opts):
     logger = logging.getLogger(__name__)
@@ -110,7 +111,7 @@ def plot(dbe, opts):
         if ddict is None:
             logger.info("FPU %r: no plot data found" % fpu_id)
             continue
-        if plot_selection =="*":
+        if plot_selection == "*":
             plot_selection = PLOT_ALL
         else:
             plot_selection = set(plot_selection)
@@ -120,7 +121,9 @@ def plot(dbe, opts):
 
         if "A" in plot_selection:
             if ddict["datum_repeatability_result"] is None:
-                logger.info("FPU %r: no plot data for datum repeatability found" % fpu_id)
+                logger.info(
+                    "FPU %r: no plot data for datum repeatability found" % fpu_id
+                )
             else:
                 dat_rep_result = ddict["datum_repeatability_result"]["coords"]
                 coords_datumed = dat_rep_result["datumed_coords"]
@@ -129,7 +132,9 @@ def plot(dbe, opts):
                 plot_dat_rep(fpu_id, coords_datumed, coords_moved, opts)
 
         if ddict["positional_repeatability_result"] is None:
-            logger.info("FPU %r: no plot data for positional repeatability found" % fpu_id)
+            logger.info(
+                "FPU %r: no plot data for positional repeatability found" % fpu_id
+            )
             continue
 
         if "B" in plot_selection:
@@ -145,10 +150,7 @@ def plot(dbe, opts):
             result_beta = pos_rep_result["analysis_results_beta"]
 
             gear_correction = fit_gearbox_correction(
-                fpu_id,
-                result_alpha,
-                result_beta,
-                return_intermediate_results=True,
+                fpu_id, result_alpha, result_beta, return_intermediate_results=True
             )
             fit_alpha = gear_correction["coeffs"]["coeffs_alpha"]
             if CALIBRATION_PLOTSET & plot_selection:
@@ -156,10 +158,7 @@ def plot(dbe, opts):
                     print("no parameters found for FPU %s, %s arm" % (fpu_id, "alpha"))
                 else:
                     plot_gearbox_calibration(
-                        fpu_id,
-                        "alpha",
-                        plot_selection=plot_selection,
-                        **fit_alpha
+                        fpu_id, "alpha", plot_selection=plot_selection, **fit_alpha
                     )
 
                     if PLOT_CORR in plot_selection:
@@ -171,14 +170,10 @@ def plot(dbe, opts):
                     print("no parameters found for FPU %s, %s arm" % (fpu_id, "beta"))
                 else:
                     plot_gearbox_calibration(
-                        fpu_id,
-                        "beta",
-                        plot_selection=plot_selection,
-                        **fit_beta
+                        fpu_id, "beta", plot_selection=plot_selection, **fit_beta
                     )
                     if PLOT_CORR in plot_selection:
                         plot_correction(fpu_id, "beta", **fit_beta)
-
 
             if PLOT_FIT in plot_selection:
                 plot_measured_vs_expected_points(fpu_id, **gear_correction)

@@ -28,4 +28,6 @@ save_metrology_height_result = partial(save_named_record, (RECORD_TYPE, "result"
 
 upgrade_func = partial(upgrade_version, fieldname="algorithm_version")
 
-get_metrology_height_result = partial(get_named_record, (RECORD_TYPE, "result"), upgrade_func=upgrade_func)
+get_metrology_height_result = partial(
+    get_named_record, (RECORD_TYPE, "result"), upgrade_func=upgrade_func
+)
