@@ -1,9 +1,52 @@
 	CHANGELOG
 
+	Version 1.0.4 / 2019-08-01
+	==========================
+
+	* The coordinate value of the "fixed" arm in
+	the positional repeatability measurement is now
+	adjusted so that it is within the range of
+	measurement when it is the variable parameter.
+
+	* For the high-resolution measurement, the number of positional
+	repeatability arm angles is now configured as a multiple of the
+	low-resolution number of measurements.
+
+	* Added gearbox calibration function which fits data
+	from positional repeatability test and stores
+	a calibration table.
+
+	* Include fitting to elliptical distortion of
+	the positional repeatability images.
+
+	* Calibration results are reported in the
+	report section for positional repeatability.
+
+	* The positional verification measurement checks
+	now that the major version number of the
+	calibration data matches the current version.
+
+	* Changed algorithm and analysis version numbering to
+	use semantic versioning of the form "major.minor.patch".
+	Old floating point version numbers are upgraded
+	when retrieved from the database.
+
+	* Organised and streamlined options to plot
+	result data from datum repeatability, positional
+	repeatability, and calibration. Plot options
+	are documented in the general help and can
+	also be viewed with the '--help-plot-selection'
+	(alias '-hps') command line option.
+
+	* Return error estimates for calibration in
+	report output.
+
+	* Automatically estimate camera rotation offset.
+
 	Version 0.4.1
 	=============
 	* it is now possible to run the program from another
-	directory than the source diractory
+	directory than the source directory
 
 	Version 0.4.0 / 2019-04-03 - first tested version
 	=================================================
