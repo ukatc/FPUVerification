@@ -4,10 +4,9 @@
 """
 from __future__ import division, print_function
 
-from Gearbox.gear_correction import polar2cartesian, angle_to_point
-from vfr.evaluation.measures import get_errors, get_grouped_errors, group_by_subkeys
+from Gearbox.gear_correction import angle_to_point
+from vfr.evaluation.measures import get_errors, get_grouped_errors
 
-from math import sin, cos
 import numpy as np
 
 
@@ -88,7 +87,6 @@ def evaluate_positional_verification(
         print("error_by_angle[%r]=%r" % (coords, error_by_angle[coords]))
 
     print("############ computing summary statistics")
-    keyfun = lambda x: (x[1], x[2])
     error_measures = get_grouped_errors(
         point_list,
         list_of_centroids=expected_coords,

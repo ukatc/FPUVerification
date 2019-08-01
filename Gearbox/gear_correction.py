@@ -3,12 +3,8 @@ from __future__ import division, print_function
 
 from math import pi
 import numpy as np
-import warnings
 import logging
-import functools
-# import matplotlib.pyplot as plt
 
-# import numpy as np
 from scipy import optimize
 
 from fpu_constants import (

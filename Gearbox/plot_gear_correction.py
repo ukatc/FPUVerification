@@ -3,24 +3,11 @@ from __future__ import division, print_function
 
 from math import pi
 import numpy as np
-import warnings
 import functools
-# import matplotlib.pyplot as plt
 
-# import numpy as np
-from scipy import optimize
 from matplotlib import pyplot as plt
 
-from fpu_constants import (
-    ALPHA_DATUM_OFFSET_RAD,
-    BETA_DATUM_OFFSET_RAD,
-    StepsPerRadianAlpha,
-    StepsPerRadianBeta,
-)
-from vfr.conf import BLOB_WEIGHT_FACTOR, POS_REP_EVALUATION_PARS, PERCENTILE_ARGS
 from Gearbox.gear_correction import (
-    fit_gearbox_correction,
-    angle_to_point,
     get_expected_points,
     apply_gearbox_parameters,
     apply_gearbox_parameters_fitted,
@@ -374,8 +361,6 @@ def plot_measured_vs_expected_points(serial_number,
 
         RMS = expected_vals["RMS" ]
         pcdict = expected_vals["pcdict" ]
-        expected_points = expected_vals["expected_points"]
-        measured_points = expected_vals["measured_points"]
 
         xc = expected_vals["xc"]
         yc = expected_vals["yc"]

@@ -3,7 +3,6 @@ from __future__ import absolute_import, division, print_function
 from collections import namedtuple
 from functools import partial
 from vfr.db.base import TestResult, save_named_record, get_named_record, upgrade_version
-from numpy import NaN
 
 RECORD_TYPE = "positional-repeatability"
 
