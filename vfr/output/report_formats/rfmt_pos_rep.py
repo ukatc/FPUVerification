@@ -31,6 +31,7 @@ POS_REP_GEARCOR_TERSE = cleandoc(
        positional repeatability: gearbox correction alpha fit error 95 % percentile:     = {gearbox_correction[expected_vals][alpha][pcdict][95]:7.2f} μm
        positional repeatability: gearbox correction beta RMS fit                         = {gearbox_correction[expected_vals][beta][RMS]:7.2f} μm
        positional repeatability: gearbox correction beta fit error 95 % percentile:      = {gearbox_correction[expected_vals][beta][pcdict][95]:7.2f} μm
+       .
 
 """
 )
@@ -51,6 +52,7 @@ POS_REP_GEARCOR_COMPLETE = cleandoc(
        positional repeatability: gearbox correction beta fit error 90 % percentile:      = {gearbox_correction[expected_vals][beta][pcdict][90]:7.2f} μm
        positional repeatability: gearbox correction beta fit error 95 % percentile:      = {gearbox_correction[expected_vals][beta][pcdict][95]:7.2f} μm
        positional repeatability: gearbox correction beta maximum fit error               = {gearbox_correction[expected_vals][beta][max_val]:7.2f} μm
+       .
 
 
 """
@@ -73,6 +75,7 @@ POS_REP_GEARCOR_LONG = cleandoc(
        positional repeatability: gearbox correction beta fit error 95 % percentile:      = {gearbox_correction[expected_vals][beta][pcdict][95]:7.2f} μm
        positional repeatability: gearbox correction beta maximum fit error               = {gearbox_correction[expected_vals][beta][max_val]:7.2f} μm
        positional repeatability: gearbox correction beta radius RMS error                = {gearbox_correction[coeffs][coeffs_beta][radius_RMS]:7.5f} mm
+       .
 
 
 """
@@ -108,6 +111,7 @@ POS_REP_GEARCOR_EXTENDED = cleandoc(
        positional repeatability: gearbox correction beta ellipsis angle                  =  {gearbox_correction[coeffs][coeffs_beta][psi]:7.2f} rad
        positional repeatability: gearbox correction beta ellipsis stretch                = {gearbox_correction[coeffs][coeffs_beta][stretch]:7.2f} [1]
        positional repeatability: gearbox correction beta R midpoint                      = {gearbox_correction[coeffs][coeffs_beta][R]:6.5} mm
+       .
 
 """
     )
