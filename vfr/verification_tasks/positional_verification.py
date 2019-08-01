@@ -200,8 +200,20 @@ def measure_positional_verification(rig, dbe, pars=None):
 
                 continue
 
+            gearbox_correction_version = pr_result["gearbox_correction_version"]
             if (
-                pr_result["gearbox_correction_version"]
+                gearbox_correction_version[0]
+                < GEARBOX_CORRECTION_VERSION[0]
+            ):
+                warnings.warn(
+                    "FPU %s: positional repeatability data uses incompatible older"
+                    " version of gearbox correction, test skipped - re-compute"
+                    " positional compatibility results first"
+                    % sn
+                )
+                continue
+            if (
+                gearbox_correction_version
                 < GEARBOX_CORRECTION_VERSION
             ):
                 warnings.warn(
@@ -212,7 +224,6 @@ def measure_positional_verification(rig, dbe, pars=None):
 
             gearbox_correction = pr_result["gearbox_correction"]
             fpu_coeffs = gearbox_correction["coeffs"]
-            gearbox_correction_version = pr_result["gearbox_correction_version"]
             gearbox_git_version = pr_result["git_version"]
             gearbox_record_count = pr_result["record-count"]
 
