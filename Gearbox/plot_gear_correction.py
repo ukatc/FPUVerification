@@ -110,6 +110,7 @@ def plot_gearbox_calibration(
     R=None,
     psi=None,
     stretch=None,
+    radius_RMS=None,
     camera_offset_rad=None,
     beta0_rad=None,
     P0=None,
