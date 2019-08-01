@@ -18,8 +18,9 @@ from fpu_constants import (
 from vfr.tests_common import lit_eval_file
 from vfr.conf import DEFAULT_TASKS, DEFAULT_TASKS_NONFIBRE
 from vfr.db.snset import get_snset
-from vfr.helptext import examples, summary
+from vfr.helptext import examples, summary, plot_selection_help
 from vfr.task_config import USERTASKS, MEASUREMENT_TASKS, T
+from vfr.output.plotting import PLOT_DEFAULT_SELECTION
 
 
 def parse_args():
@@ -30,7 +31,12 @@ def parse_args():
         DEFAULT_LOGLEVEL = logging.INFO
 
     parser = argparse.ArgumentParser(
-        description=summary.format(DEFAULT_TASKS=DEFAULT_TASKS, **T.__dict__),
+        description=summary.format(
+            DEFAULT_TASKS=DEFAULT_TASKS,
+            plot_selection_help=plot_selection_help,
+            plot_default_selection="".join(list(PLOT_DEFAULT_SELECTION)),
+            **T.__dict__
+        ),
         epilog=examples.format(DEFAULT_TASKS=DEFAULT_TASKS, **T.__dict__),
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
@@ -88,13 +94,19 @@ def parse_args():
     parser.add_argument(
         "-sel",
         "--plot-selection",
-        default="ABC",
+        default="".join(list(PLOT_DEFAULT_SELECTION)),
         type=str,
-        help="""Selection of plots
-        A) dat_rep scatter plot in (x,y) image plane,
-        B) pos_rep scatter plot,
-        C) circle fitted to pos_rep data
+        help="""Selection of plots. Use option "--help-plot-selection" to
+        get info on how to select specific plots.
         """,
+    )
+
+    parser.add_argument(
+        "-hps",
+        "--help-plot-selection",
+        default=False,
+        action="store_true",
+        help="show options to select plots when using the 'plot' task.",
     )
 
     parser.add_argument(
@@ -103,7 +115,7 @@ def parse_args():
         choices=["small", "large"],
         default="large",
         type=str,
-        help="""blob type selected for plotting, one of "small" or "large" """,
+        help="""blob type selected for plotting measurements, one of "small" or "large" """,
     )
 
     parser.add_argument(
@@ -352,6 +364,11 @@ def parse_args():
         print("available tasks in alphabetic order: %r" % sorted(list(USERTASKS)))
         sys.exit(0)
 
+    if args.help_plot_selection:
+        print(plot_selection_help)
+        print("\n\nThe default is: %r " % "".join(list(PLOT_DEFAULT_SELECTION)))
+        sys.exit(0)
+
     if len(args.tasks) == 0:
         if args.skip_fibre:
             args.tasks = DEFAULT_TASKS_NONFIBRE
@@ -419,6 +436,7 @@ def parse_args():
 
 sn_pat = re.compile("[a-zA-Z0-9]{1,5}$")
 
+
 def expand_set(eval_snset, fpu_config, all_serial_numbers):
 
     if eval_snset == "all":
@@ -433,7 +451,7 @@ def expand_set(eval_snset, fpu_config, all_serial_numbers):
             # a string with a quoted string literal, or a string
             try:
                 vals = literal_eval(eval_snset)
-            except (ValueError,SyntaxError):
+            except (ValueError, SyntaxError):
                 vals = eval_snset.split(",")
 
             if type(vals) != types.ListType:
@@ -442,7 +460,7 @@ def expand_set(eval_snset, fpu_config, all_serial_numbers):
             expanded_vals = []
             for v in vals:
                 if len(v) > 0:
-                    if v[0] != '~':
+                    if v[0] != "~":
                         expanded_vals.append(v)
                     else:
                         pat = re.compile(v[1:])
@@ -458,6 +476,7 @@ def expand_set(eval_snset, fpu_config, all_serial_numbers):
                     raise ValueError("serial number %r is not valid!" % sn)
 
     return eval_snset, fpu_config
+
 
 def get_sets(all_serial_numbers, fpu_config, opts):
     """Under normal operation, we want to measure and evaluate the FPUs
@@ -556,11 +575,13 @@ def check_config_item(fpu_id, val):
             "serial number %r for FPU %i is not valid!" % (serialnumber, key)
         )
 
+
 def get_id(entry):
     if "fpu_id" in entry:
         return entry["fpu_id"]
     else:
-        return (entry["can_id"] - 1)
+        return entry["can_id"] - 1
+
 
 def load_config(config_file_name):
     logger = logging.getLogger(__name__)

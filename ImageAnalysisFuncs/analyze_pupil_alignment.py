@@ -17,7 +17,7 @@ class PupilAlignmentAnalysisError(ImageAnalysisError):
 # (each different result for the same data
 # should yield a version number increase)
 
-PUPIL_ALIGNMENT_ALGORITHM_VERSION = 0.1
+PUPIL_ALIGNMENT_ALGORITHM_VERSION = (1,0,0)
 
 
 def pupalnCoordinates(

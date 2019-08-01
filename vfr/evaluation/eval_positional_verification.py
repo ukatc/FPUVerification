@@ -4,12 +4,10 @@
 """
 from __future__ import division, print_function
 
-from Gearbox.gear_correction import polar2cartesian, angle_to_point
-from vfr.evaluation.measures import get_errors, get_grouped_errors, group_by_subkeys
+from Gearbox.gear_correction import angle_to_point
+from vfr.evaluation.measures import get_errors, get_grouped_errors
 
-from math import sin, cos
 import numpy as np
-
 
 
 def evaluate_positional_verification(
@@ -19,7 +17,7 @@ def evaluate_positional_verification(
     y_center=None,
     R_alpha=None,
     R_beta_midpoint=None,
-    alpha0=None,
+    alpha0_rad=None,
     coeffs=None,
     BLOB_WEIGHT_FACTOR=None,
     **kwargs
@@ -49,7 +47,6 @@ def evaluate_positional_verification(
 
     """
 
-
     error_by_angle = {}
     # get measured circle center point from alpha arm
     # calibration
@@ -61,22 +58,24 @@ def evaluate_positional_verification(
     expected_coords = []
     point_list = []
 
+    deg2rad = np.deg2rad
     print(">>>>>>>>>>>> computing point error values")
     for coords, point_pair in dict_of_coords.items():
         print("-------------")
         # get nominal coordinates
-        (idx, alpha_nom, beta_nom) = coords
+        (idx, alpha_nom_deg, beta_nom_deg) = coords
+        alpha_nom_rad, beta_nom_rad = deg2rad(alpha_nom_deg), deg2rad(beta_nom_deg)
         expected_point = angle_to_point(
-            alpha_nom,
-            beta_nom,
+            alpha_nom_rad,
+            beta_nom_rad,
             coeffs=coeffs,
             x_center=x_center,
             y_center=y_center,
             R_alpha=R_alpha,
             R_beta_midpoint=R_beta_midpoint,
-            alpha0=alpha0,
+            alpha0_rad=alpha0_rad,
             already_corrected=True,
-            )
+        )
 
         expected_coords.append(expected_point)
         point_list.append([point_pair])
@@ -86,11 +85,8 @@ def evaluate_positional_verification(
         print("error_by_angle[%r]=%r" % (coords, error_by_angle[coords]))
 
     print("############ computing summary statistics")
-    keyfun = lambda x: (x[1], x[2])
     error_measures = get_grouped_errors(
-        point_list,
-        list_of_centroids=expected_coords,
-        weight_factor=BLOB_WEIGHT_FACTOR,
+        point_list, list_of_centroids=expected_coords, weight_factor=BLOB_WEIGHT_FACTOR
     )
     print("pos ver error_measures=%r" % error_measures)
     return error_by_angle, error_measures

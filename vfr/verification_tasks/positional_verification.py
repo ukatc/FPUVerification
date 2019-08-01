@@ -8,13 +8,18 @@ import numpy as np
 from vfr.auditlog import get_fpuLogger
 
 from fpu_commands import gen_wf
-from Gearbox.gear_correction import GearboxFitError, apply_gearbox_correction
+from Gearbox.gear_correction import (
+    GearboxFitError,
+    apply_gearbox_correction,
+    GEARBOX_CORRECTION_VERSION,
+    GEARBOX_CORRECTION_MINIMUM_VERSION,
+)
 from GigE.GigECamera import BASLER_DEVICE_CLASS, DEVICE_CLASS, IP_ADDRESS
 from ImageAnalysisFuncs.base import get_min_quality
 from ImageAnalysisFuncs.analyze_positional_repeatability import (
-    POSITIONAL_REPEATABILITY_ALGORITHM_VERSION,
     ImageAnalysisError,
     posrepCoordinates,
+    POSITIONAL_REPEATABILITY_ALGORITHM_VERSION,
 )
 from vfr.evaluation.measures import NO_MEASURES
 from vfr.evaluation.eval_positional_verification import evaluate_positional_verification
@@ -182,13 +187,38 @@ def measure_positional_verification(rig, dbe, pars=None):
                 < POSITIONAL_REPEATABILITY_ALGORITHM_VERSION
             ):
                 warnings.warn(
-                    "FPU %s: positional repeatability data uses old version of image analysis"
-                    % sn
+                    "FPU %s: positional repeatability data uses old "
+                    "version of image analysis, results might be incorrect" % sn
+                )
+
+            if (
+                pr_result["gearbox_correction_version"]
+                < GEARBOX_CORRECTION_MINIMUM_VERSION
+            ):
+                fpu_log.error(
+                    "FPU %s: positional repeatability result data derived from"
+                    " too old version of gearbox correction, skipping measurement."
+                    " re-evaluate positional repeatability data to fix this!" % sn
+                )
+
+                continue
+
+            gearbox_correction_version = pr_result["gearbox_correction_version"]
+            if gearbox_correction_version[0] < GEARBOX_CORRECTION_VERSION[0]:
+                warnings.warn(
+                    "FPU %s: positional repeatability data uses incompatible older"
+                    " version of gearbox correction, test skipped - re-compute"
+                    " positional compatibility results first" % sn
+                )
+                continue
+            if gearbox_correction_version < GEARBOX_CORRECTION_VERSION:
+                warnings.warn(
+                    "FPU %s: positional repeatability data uses older"
+                    " version of gearbox correction, results might be suboptimal" % sn
                 )
 
             gearbox_correction = pr_result["gearbox_correction"]
             fpu_coeffs = gearbox_correction["coeffs"]
-            gearbox_algorithm_version = pr_result["algorithm_version"]
             gearbox_git_version = pr_result["git_version"]
             gearbox_record_count = pr_result["record-count"]
 
@@ -224,18 +254,20 @@ def measure_positional_verification(rig, dbe, pars=None):
             find_datum(gd, grid_state, opts)
 
             image_dict = {}
-            for k, (alpha, beta) in enumerate(tested_positions):
+            deg2rad = np.deg2rad
+
+            for k, (alpha_deg, beta_deg) in enumerate(tested_positions):
                 # get current step count
                 alpha_cursteps, beta_cursteps = get_stepcounts(gd, grid_state, fpu_id)
 
                 # get absolute corrected step count from desired absolute angle
                 asteps_target, bsteps_target = apply_gearbox_correction(
-                    (alpha, beta), coeffs=fpu_coeffs
+                    (deg2rad(alpha_deg), deg2rad(beta_deg)), coeffs=fpu_coeffs
                 )
 
                 fpu_log.info(
                     "FPU %s: measurement #%i - moving to (%7.2f, %7.2f) degrees = (%i, %i) steps"
-                    % (sn, k, alpha, beta, asteps_target, bsteps_target)
+                    % (sn, k, alpha_deg, beta_deg, asteps_target, bsteps_target)
                 )
 
                 # compute deltas of step counts
@@ -262,23 +294,23 @@ def measure_positional_verification(rig, dbe, pars=None):
 
                 fpu_log.debug("FPU %s: saving image # %i..." % (sn, k))
 
-                ipath = capture_image(k, alpha, beta)
+                ipath = capture_image(k, alpha_deg, beta_deg)
                 fpu_log.audit(
                     "saving image for position (%7.3f, %7.3f) to %r"
-                    % (alpha, beta, abspath(ipath))
+                    % (alpha_deg, beta_deg, abspath(ipath))
                 )
                 check_image_analyzability(
                     ipath, posrepCoordinates, pars=POS_REP_ANALYSIS_PARS
                 )
 
-                image_dict[(k, alpha, beta)] = ipath
+                image_dict[(k, alpha_deg, beta_deg)] = ipath
 
             # store dict of image paths, together with all data and algorithms
             # which are relevant to assess result later
             record = PositionalVerificationImages(
                 images=image_dict,
                 gearbox_correction=gearbox_correction,
-                gearbox_algorithm_version=gearbox_algorithm_version,
+                gearbox_algorithm_version=GEARBOX_CORRECTION_VERSION,
                 gearbox_git_version=gearbox_git_version,
                 gearbox_record_count=gearbox_record_count,
                 calibration_mapfile=pars.POS_VER_CALIBRATION_MAPFILE,
@@ -303,6 +335,19 @@ def eval_positional_verification(dbe, pos_ver_analysis_pars, pos_ver_evaluation_
             continue
 
         logger.info("evaluating positional verification for FPU %s" % fpu_id)
+
+        gearbox_algorithm_version = measurement["gearbox_algorithm_version"]
+        if gearbox_algorithm_version < GEARBOX_CORRECTION_MINIMUM_VERSION:
+            logger.info(
+                "FPU %s: positional verification data uses algorithm version %s, "
+                "required minimum version is %s. Evaluation skipped."
+                % (
+                    fpu_id,
+                    gearbox_algorithm_version,
+                    GEARBOX_CORRECTION_MINIMUM_VERSION,
+                )
+            )
+            continue
 
         images = measurement["images"]
         gearbox_correction = measurement["gearbox_correction"]
@@ -399,7 +444,7 @@ def eval_positional_verification(dbe, pos_ver_analysis_pars, pos_ver_evaluation_
             min_quality=min_quality,
             arg_max_error=arg_max_error,
             error_message=errmsg,
-            algorithm_version=POSITIONAL_REPEATABILITY_ALGORITHM_VERSION,
+            algorithm_version=GEARBOX_CORRECTION_VERSION,
         )
         logger.debug("FPU %r: saving result record = %r" % (fpu_id, record))
         save_positional_verification_result(dbe, fpu_id, record)

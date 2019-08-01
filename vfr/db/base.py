@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
+import types
 import ast
 import inspect
 import logging
@@ -63,7 +64,34 @@ def save_test_result(dbe, fpuset, keyfunc, valfunc):
             txn.put(key2, val)
 
 
-def get_test_result(dbe, fpu_id, keyfunc, count=None):
+def identity(x):
+    return x
+
+
+def upgrade_version(record, fieldname="version"):
+    """
+    Upgrade version information from using floats
+    to using semantic versioning with a tuple of
+    three integers.
+    """
+    if fieldname not in record:
+        return record
+    old_version = record[fieldname]
+    if type(old_version) == types.FloatType:
+        version_major = int(old_version)
+        version = (old_version - version_major) * 10
+        version_minor = int(version)
+        version = (version - version_minor) * 10
+        version_patch = int(version)
+        new_version = (version_major, version_minor, version_patch)
+        record[fieldname] = new_version
+
+    return record
+
+
+def get_test_result(
+    dbe, fpu_id, keyfunc, count=None, default_vals={}, upgrade_func=identity
+):
 
     with dbe.env.begin(write=False, db=dbe.vfdb) as txn:
 
@@ -89,27 +117,48 @@ def get_test_result(dbe, fpu_id, keyfunc, count=None):
 
         val = txn.get(key2)
 
-        if val is not None:
+    if val is not None:
+        try:
             try:
-                try:
-                    val = ast.literal_eval(val)
+                val = ast.literal_eval(val)
 
-                except ValueError:
-                    # Resolve Namespace constructors.
-                    # We also need to work around the disappointing fact that
-                    # literal_eval() does not recognize IEEE754 NaN
-                    # symbols.
-                    val = eval(val)
-            except SyntaxError:
-                logging.getLogger(__name__).error("trying to retrieve %r: broken record / record too long, returning None" % key2)
-                return None
+            except ValueError:
+                # Resolve Namespace constructors.
+                # We also need to work around the disappointing fact that
+                # literal_eval() does not recognize IEEE754 NaN
+                # symbols.
+                val = eval(val)
 
-            val["record-count"] = count
+        except SyntaxError:
+            # A syntax error is an indication that the record isn't a valid
+            # python literal and the likely cause is that the data was
+            # too large for LMDB, so that only a partial result was returned.
+            #
+            # In this case, log an error and return None.
+            logging.getLogger(__name__).error("" % key2)
+            record_length = len(val)
+            logger = logging.getLogger(__name__)
+            logger.error(
+                "syntax error when trying to retrieve for key = %r, count = %r (record length = %i):"
+                " broken record / record too long, returning None"
+                % (key2, count, record_length)
+            )
+            return None
+
+        val["record-count"] = count
 
         trace = logging.getLogger(__name__).trace
         trace("got %r : %r" % (key2, val))
 
-    return val
+    if val is None:
+        result = None
+    else:
+        # apply default values and upgrade function
+        rval = default_vals.copy()
+        rval.update(val)
+        result = upgrade_func(rval)
+
+    return result
 
 
 def save_named_record(
@@ -137,7 +186,15 @@ def save_named_record(
     save_test_result(dbe, [fpu_id], keyfunc, valfunc)
 
 
-def get_named_record(record_type, dbe, fpu_id, count=None, loglevel=logging.DEBUG - 5):
+def get_named_record(
+    record_type,
+    dbe,
+    fpu_id,
+    count=None,
+    loglevel=logging.DEBUG - 5,
+    default_vals={},
+    upgrade_func=identity,
+):
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
@@ -145,7 +202,14 @@ def get_named_record(record_type, dbe, fpu_id, count=None, loglevel=logging.DEBU
         keybase = (serialnumber,) + record_type
         return keybase
 
-    rval = get_test_result(dbe, fpu_id, keyfunc, count=count)
+    rval = get_test_result(
+        dbe,
+        fpu_id,
+        keyfunc,
+        count=count,
+        default_vals=default_vals,
+        upgrade_func=upgrade_func,
+    )
 
     logger = logging.getLogger(__name__)
     logger.log(loglevel, "getting " + str(record_type))

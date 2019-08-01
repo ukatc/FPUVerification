@@ -214,6 +214,18 @@ summary = cleandoc(
 
 
 
+    5) PLOTTING
+    -----------
+
+    Plots of measurement data can be generated using the {TASK_PLOT}
+    task. Plots can be selected with the "--plot-selection" or "-sel"
+    option, which is a string of letters. Each letter indicates
+    a plot type. The available plot types are:
+
+    {plot_selection_help}
+
+    The default selection of plots is {plot_default_selection!r}.
+
     ..................................................................
     """
 )
@@ -337,7 +349,7 @@ examples = cleandoc(
                                    /moonsdata/verification.
 
 
-   - VFR_LOGLEVEL                - This variable contains the numerical log level for
+    - VFR_LOGLEVEL               - This variable contains the numerical log level for
                                    messages which are logged to the console. The levels
                                    are as documented for the python logging module, in
                                    https://docs.python.org/2/library/logging.html?highlight=logging#levels .
@@ -346,6 +358,40 @@ examples = cleandoc(
                                    is primarily intended for development and debugging purposes,
                                    not for normal use.
 
+   - FPU_DATABASE                - Path to the LMDB database which keeps both the
+                                   hardware protection and position data, and all
+                                   the image paths and evaluation results which
+                                   are returned by the 'report' command.
+
+                                   This can be pointed to a copy of the original
+                                   database for test and debugging purposes.
+
 
     """
+)
+
+
+plot_selection_help = cleandoc(
+    """
+A) plot dat_rep measurement as scatter plot in (x,y) image plane (camera coordinates)
+B) plot pos_rep measurement as scatter plot in (x,y) image plane (camera coordinates)
+C) plot fitted pos_rep data (raw data and circle fits)
+D) plot data with fitted offset only (zero-order fit)
+E) plot zero-order fit against camera angle
+F) plot first-order fit against camera angle
+G) plot second-order fit against camera angle
+H) plot fitted function table against camera angle
+I) plot fitted function against matched arm angle (camera orientation taken out)
+J) plot nominal angle against corrected angle, and mark measurement fixpoint
+K) plot first-order residual radius as a function of c-rotated angle (camera coordinates)
+L) plot first-order residual angle as a function of c-rotated angle (camera coordinates)
+M) plot second-order residual angle as a function of c-rotated angle
+O) plot second-order residual as a function of fitted arm angle,
+        with different markers for each iteration.
+P) plot gearbox correction function from nominal to desired real angles (in camera coordinates)
+Q) plot measured points vs. expected points from inverse calibration
+
+"*" will select all available plots.
+
+"""
 )

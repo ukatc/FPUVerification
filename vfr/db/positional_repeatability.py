@@ -2,7 +2,7 @@ from __future__ import absolute_import, division, print_function
 
 from collections import namedtuple
 from functools import partial
-from vfr.db.base import TestResult, save_named_record, get_named_record
+from vfr.db.base import TestResult, save_named_record, get_named_record, upgrade_version
 
 RECORD_TYPE = "positional-repeatability"
 
@@ -28,7 +28,8 @@ PositionalRepeatabilityResults = namedtuple(
     " pass_threshold_mm"
     " gearbox_correction"
     " error_message"
-    " algorithm_version",
+    " algorithm_version"
+    " gearbox_correction_version",
 )
 
 
@@ -42,7 +43,23 @@ save_positional_repeatability_result = partial(
     save_named_record, (RECORD_TYPE, "result")
 )
 
-get_positional_repeatability_result = partial(get_named_record, (RECORD_TYPE, "result"))
+# convert version from float format to 3-tuple, using semantic versioning
+upgrade_func1 = partial(upgrade_version, fieldname="algorithm_version")
+upgrade_func2 = partial(upgrade_version, fieldname="gearbox_correction_version")
+
+
+def upgrade_func(x):
+    return upgrade_func2(upgrade_func1(x))
+
+
+default_vals = {"gearbox_correction_version": (0, 1, 0)}
+
+get_positional_repeatability_result = partial(
+    get_named_record,
+    (RECORD_TYPE, "result"),
+    upgrade_func=upgrade_func,
+    default_vals=default_vals,
+)
 
 
 def get_positional_repeatability_passed_p(dbe, fpu_id, count=None):

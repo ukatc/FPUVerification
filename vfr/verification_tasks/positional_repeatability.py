@@ -6,7 +6,11 @@ import logging
 from os.path import abspath
 from vfr.auditlog import get_fpuLogger
 
-from Gearbox.gear_correction import GearboxFitError, fit_gearbox_correction
+from Gearbox.gear_correction import (
+    GearboxFitError,
+    fit_gearbox_correction,
+    GEARBOX_CORRECTION_VERSION,
+)
 from GigE.GigECamera import BASLER_DEVICE_CLASS, DEVICE_CLASS, IP_ADDRESS
 from ImageAnalysisFuncs.base import get_min_quality
 from ImageAnalysisFuncs.analyze_positional_repeatability import (
@@ -111,18 +115,19 @@ def index_positions(pars):
     for i_iteration in range(pars.POS_REP_ITERATIONS):
         for j_direction in range(4):
             MAX_INCREMENT = pars.POS_REP_NUM_INCREMENTS
+            FIXPOINT = 1
             for k_increment in range(MAX_INCREMENT):
                 if j_direction == 0:
                     idx_alpha = k_increment
-                    idx_beta = 0
+                    idx_beta = FIXPOINT
                 elif j_direction == 1:
                     idx_alpha = MAX_INCREMENT - k_increment - 1
-                    idx_beta = 0
+                    idx_beta = FIXPOINT
                 elif j_direction == 2:
-                    idx_alpha = 0
+                    idx_alpha = FIXPOINT
                     idx_beta = k_increment
                 elif j_direction == 3:
-                    idx_alpha = 0
+                    idx_alpha = FIXPOINT
                     idx_beta = MAX_INCREMENT - k_increment - 1
 
                 yield MeasurementIndex(
@@ -132,19 +137,22 @@ def index_positions(pars):
     # add a single iteration of a high-resolution measurement
     i_iteration = pars.POS_REP_ITERATIONS
     for j_direction in range(4):
-        MAX_INCREMENT = pars.POS_REP_NUM_HI_RES_INCREMENTS
+        FIXPOINT = pars.POS_REP_NUM_HI_RES_INCREMENTS_FACTOR
+        MAX_INCREMENT = (
+            pars.POS_REP_NUM_INCREMENTS * pars.POS_REP_NUM_HI_RES_INCREMENTS_FACTOR
+        )
         for k_increment in range(MAX_INCREMENT):
             if j_direction == 0:
                 idx_alpha = k_increment
-                idx_beta = 0
+                idx_beta = FIXPOINT
             elif j_direction == 1:
                 idx_alpha = MAX_INCREMENT - k_increment - 1
-                idx_beta = 0
+                idx_beta = FIXPOINT
             elif j_direction == 2:
-                idx_alpha = 0
+                idx_alpha = FIXPOINT
                 idx_beta = k_increment
             elif j_direction == 3:
-                idx_alpha = 0
+                idx_alpha = FIXPOINT
                 idx_beta = MAX_INCREMENT - k_increment - 1
 
             yield MeasurementIndex(
@@ -158,23 +166,31 @@ def get_target_position(limits, pars, measurement_index):
     beta_min = limits.beta_min
     beta_max = limits.beta_max
 
+    # we set a fixpoint index so that the calibration circles
+    # for alpha and beta arm intersect at that fixpoint, and
+    # within the normal movement range of the FPU.
+
     if measurement_index.hires:
-        n_increments = pars.POS_REP_NUM_HI_RES_INCREMENTS
+        n_increments = (
+            pars.POS_REP_NUM_HI_RES_INCREMENTS_FACTOR * pars.POS_REP_NUM_INCREMENTS
+        )
+        fixpoint = pars.POS_REP_NUM_HI_RES_INCREMENTS_FACTOR
     else:
         n_increments = pars.POS_REP_NUM_INCREMENTS
-        
-    step_a = (
-        alpha_max - alpha_min - 2 * pars.POS_REP_SAFETY_MARGIN
-    ) / float(n_increments)
-    step_b = (
-        beta_max - beta_min - 2 * pars.POS_REP_SAFETY_MARGIN
-    ) / float(n_increments)
+        fixpoint = 1
 
-    alpha0 = alpha_min + pars.POS_REP_SAFETY_MARGIN
-    beta0 = beta_min + pars.POS_REP_SAFETY_MARGIN
+    step_a = (alpha_max - alpha_min - 2 * pars.POS_REP_SAFETY_MARGIN) / float(
+        n_increments
+    )
+    step_b = (beta_max - beta_min - 2 * pars.POS_REP_SAFETY_MARGIN) / float(
+        n_increments
+    )
 
-    abs_alpha = alpha0 + step_a * measurement_index.idx_alpha
-    abs_beta = beta0 + step_b * measurement_index.idx_beta
+    alpha0 = alpha_min + pars.POS_REP_SAFETY_MARGIN + fixpoint * step_a
+    beta0 = beta_min + pars.POS_REP_SAFETY_MARGIN + fixpoint * step_b
+
+    abs_alpha = alpha0 + step_a * (measurement_index.idx_alpha - fixpoint)
+    abs_beta = beta0 + step_b * (measurement_index.idx_beta - fixpoint)
 
     return FPU_Position(abs_alpha, abs_beta)
 
@@ -320,7 +336,7 @@ def measure_positional_repeatability(rig, dbe, pars=None):
                 continue
 
             def capture_image(measurement_index, real_pos):
-                res = 'H' if measurement_index.hires else 'L'
+                res = "H" if measurement_index.hires else "L"
                 ipath = store_image(
                     pos_rep_cam,
                     "{sn}/{tn}/{ts}/i{itr:03d}-j{dir:03d}-k{inc:03d}-{res}_({alpha:+08.3f},_{beta:+08.3f}).bmp",
@@ -490,7 +506,7 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
             )
 
             gearbox_correction = fit_gearbox_correction(
-                analysis_results_alpha, analysis_results_beta
+                fpu_id, analysis_results_alpha, analysis_results_beta
             )
             errmsg = ""
 
@@ -540,6 +556,7 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
             gearbox_correction=gearbox_correction,
             error_message=errmsg,
             algorithm_version=POSITIONAL_REPEATABILITY_ALGORITHM_VERSION,
+            gearbox_correction_version=GEARBOX_CORRECTION_VERSION,
         )
 
         logger.debug("FPU %r: saving result record = %r" % (fpu_id, record))

@@ -1,7 +1,50 @@
 	CHANGELOG
 
-	Version 1.0.3
-	=============
+	Version 1.0.4 / 2019-08-01
+	==========================
+
+	* The coordinate value of the "fixed" arm in
+	the positional repeatability measurement is now
+	adjusted so that it is within the range of
+	measurement when it is the variable parameter.
+
+	* For the high-resolution measurement, the number of positional
+	repeatability arm angles is now configured as an integer multiple
+	of the low-resolution number of measurements.
+
+	* Added gearbox calibration function which fits data
+	from positional repeatability test and stores
+	a calibration table.
+
+	* Include fitting to elliptical distortion of
+	the positional repeatability images.
+
+	* Calibration results are reported in the
+	report section for positional repeatability.
+
+	* The positional verification measurement checks
+	now that the major version number of the
+	calibration data matches the current version.
+
+	* Changed algorithm and analysis version numbering to
+	use semantic versioning of the form "major.minor.patch".
+	Old floating point version numbers are upgraded automatically
+	when retrieved from the database.
+
+	* Organised and streamlined options to plot
+	result data from datum repeatability, positional
+	repeatability, and calibration. Plot options
+	are documented in the general help and can
+	also be viewed with the '--help-plot-selection'
+	(alias '-hps') command line option.
+
+	* Return error estimates for calibration in
+	report output.
+
+	* Automatically estimate camera rotation offset.
+
+	Version 1.0.3 / 2019-07-08
+	==========================
 
 	* fix bug in reporting of large target metrology height result,
 	which was erroneously reporting the result for the small target
@@ -10,19 +53,19 @@
 	and report them as a non-fatal error. This allows to use the "all"
 	symbol to report results for all serial numbers
 
-	Version 1.0.2
-	=============
+	Version 1.0.2 / 2019-07-02
+	==========================
 
 	* Move FPU to position (-179,0) after checking alpha_limit_min,
 	to allow for higher tolerances in datum switch
 
-	Version 1.0.1
-	=============
+	Version 1.0.1 / 2019-06-27
+	==========================
 
 	* correct fix in parsion of CAN id
 
-	Version 1.0.0
-	=============
+	Version 1.0.0 / 2019-06-14
+	==========================
 
 	* allow to use CAN IDs instead of logical fpu_ids in
 	measurement configuration
@@ -30,32 +73,34 @@
 	* improvements in gearbox calibration evaluation; still not completely
 	working
 
-	Version 0.9.3
-	=============
+	Version 0.9.3 / 2019-06-18
+	==========================
 
 	* allow to select set of serial numbers by -sn="~${REGEX}"
 	where ${REGEX} is a regular expression such as "C.*".
 
-	Version 0.9.2
-	=============
+	Version 0.9.2 / 2019-06-11
+	==========================
+
 	* increase default acceleration limits
 
-	Version 0.9.0
-	=============
+	Version 0.9.0 / 2019-06-11
+	==========================
+
 	* add tolerance parameter to Otsu blob detection algorithm
 
 	* colorize "OK"/"FAILED" result in report
 
 	* many improvements and bug fixes
 
-	Version 0.8.7
-	=============
+	Version 0.8.7 / 2019-06-05
+	==========================
 
 	* Replace RSS error measure with percentile values of magnitude
 	of error vectors in the image plane
 
-	Version 0.8.6
-	=============
+	Version 0.8.6 / 2019-05-30
+	==========================
 
 	* add plot subcommand which allows to inspect repeatability errors
 
@@ -63,53 +108,51 @@
 
 	* fix reporting for limit detection
 
-	Version 0.8.5
-	=============
+	Version 0.8.5 / 2019-05-27
+	==========================
 
 	* correct and complete task sets
 
 	* tolerate a configurable fraction of image analysis errors
 
-	Version 0.8.4
-	=============
+	Version 0.8.4 / 2019-05-23
+	==========================
 
 	* add distortion correction function
 
-	Version 0.8.4
-	=============
+	Version 0.8.4 / 2019-05-13
+	==========================
 
 	* fix passing of custom waveform parameters
 	* fix bug in datum repeatability computation
 
-	Version 0.8.2
-	=============
+	Version 0.8.2 / 2019-05-02
+	==========================
 
 	* added: mail handler for reporting fatal errors
 
-	Version 0.8.1
-	=============
+	Version 0.8.1 / 2019-05-03
+	==========================
 
 	* improve logging
 
-	Version 0.8.0
-	=============
+	Version 0.8.0 / 2019-05-01
+	==========================
 
 	* added extensive logging
 
-	Version 0.7.0
-	=============
+	Version 0.7.0 / 2019-04-29
+	==========================
 
 	* by default, omit measurements which require a fibre in the FPU
 
-	Version 0.6.0
-	=============
+	Version 0.6.0 / 2019-04-25
+	==========================
 
 	* allow to orderly stop program using SIGQUIT / "<Ctrl><\>" keys
 
-	Version 0.4.1
-	=============
 	* it is now possible to run the program from another
-	directory than the source diractory
+	directory than the source directory
 
 	Version 0.4.0 / 2019-04-03 - first tested version
 	=================================================
