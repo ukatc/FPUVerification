@@ -664,7 +664,7 @@ def get_expected_points(
         xe, ye = expected_points
         error_magnitudes = np.linalg.norm(expected_points - measured_points, axis=0)
         RMS = np.sqrt(np.mean(error_magnitudes ** 2)) * 1000
-        max_val = error_magnitudes * 1000
+        max_val = np.max(error_magnitudes * 1000)
         percentile_vals = np.percentile(error_magnitudes * 1000, PERCENTILE_ARGS)
 
         logger.info("FPU {}: RMS [{}] = {} micron".format(fpu_id, motor_axis, RMS))
