@@ -225,6 +225,102 @@ def fit_circle(analysis_results, motor_axis):
 def wrap_complex_vals(angle):
     return np.where(angle < -pi / 4, angle + 2 * pi, angle)
 
+def angle_to_point(
+    alpha_nom_rad,
+    beta_nom_rad,
+    P0=None,
+    R_alpha=None,
+    R_beta_midpoint=None,
+    camera_offset_rad=None,
+    beta0_rad=None,
+    inverse=False,
+    coeffs=None,
+    broadcast=True,
+    correct_axis=["alpha", "beta"],
+    correct_fixpoint=True,
+):
+    """convert nominal angles with a given pair of offsets to expected
+    coordinate in the image plane.
+
+    alpha_nom_rad and beta_nom_rad can be arrays.
+
+    """
+
+    if coeffs is None:
+        delta_alpha = 0.0
+        delta_beta = 0.0
+        delta_alpha_fixpoint = 0.0
+        delta_beta_fixpoint = 0.0
+    else:
+        if "alpha" in correct_axis:
+
+            delta_alpha = -alpha_nom_rad + apply_gearbox_parameters(
+                alpha_nom_rad,
+                wrap=True,
+                inverse_transform=inverse,
+                **coeffs["coeffs_alpha"]
+            )
+
+            alpha_fixpoint_rad = coeffs["coeffs_beta"]["alpha_fixpoint_rad"]
+            delta_alpha_fixpoint = -alpha_fixpoint_rad + apply_gearbox_parameters(
+                alpha_fixpoint_rad,
+                wrap=True,
+                inverse_transform=inverse,
+                **coeffs["coeffs_alpha"]
+            )
+        else:
+            delta_alpha = 0
+            delta_alpha_fixpoint = 0
+
+        if "beta" in correct_axis:
+            delta_beta = -beta_nom_rad + apply_gearbox_parameters(
+                beta_nom_rad,
+                wrap=True,
+                inverse_transform=inverse,
+                **coeffs["coeffs_beta"]
+            )
+
+            beta_fixpoint_rad = coeffs["coeffs_alpha"]["beta_fixpoint_rad"]
+            delta_beta_fixpoint = -beta_fixpoint_rad + apply_gearbox_parameters(
+                beta_fixpoint_rad,
+                wrap=True,
+                inverse_transform=inverse,
+                **coeffs["coeffs_alpha"]
+            )
+        else:
+            delta_beta = 0
+            delta_beta_fixpoint = 0
+
+        if not correct_fixpoint:
+            delta_alpha_fixpoint = 0
+            delta_beta_fixpoint = 0
+
+    # rotate (possibly corrected) angles to camera orientation,
+    # and apply beta arm offset
+    alpha_rad = alpha_nom_rad + camera_offset_rad
+    beta_rad = beta_nom_rad + beta0_rad
+
+    # add difference to alpha when the beta
+    # correction was measured (these angles add up
+    # because when the alpha arm is turned (clockwise),
+    # this turns the beta arm (clockwise) as well).
+    gamma_rad = beta_rad + alpha_rad + (delta_alpha - delta_alpha_fixpoint)
+
+    vec_alpha = np.array(
+        polar2cartesian(alpha_rad + (delta_alpha - delta_alpha_fixpoint), R_alpha)
+    )
+    vec_beta = np.array(
+        polar2cartesian(gamma_rad + (delta_beta - delta_beta_fixpoint), R_beta_midpoint)
+    )
+
+    if broadcast and (len(P0.shape) < len(vec_alpha.shape)):
+        # adapt shape
+        P0 = np.reshape(P0, P0.shape + (1,))
+
+    expected_point = P0 + vec_alpha + vec_beta
+
+    return expected_point
+
 
 def get_angle_error(
     x_s2,
@@ -468,101 +564,6 @@ def fit_gearbox_parameters(
     return results
 
 
-def angle_to_point(
-    alpha_nom_rad,
-    beta_nom_rad,
-    P0=None,
-    R_alpha=None,
-    R_beta_midpoint=None,
-    camera_offset_rad=None,
-    beta0_rad=None,
-    inverse=False,
-    coeffs=None,
-    broadcast=True,
-    correct_axis=["alpha", "beta"],
-    correct_fixpoint=True,
-):
-    """convert nominal angles with a given pair of offsets to expected
-    coordinate in the image plane.
-
-    alpha_nom_rad and beta_nom_rad can be arrays.
-
-    """
-
-    if coeffs is None:
-        delta_alpha = 0.0
-        delta_beta = 0.0
-        delta_alpha_fixpoint = 0.0
-        delta_beta_fixpoint = 0.0
-    else:
-        if "alpha" in correct_axis:
-
-            delta_alpha = -alpha_nom_rad + apply_gearbox_parameters(
-                alpha_nom_rad,
-                wrap=True,
-                inverse_transform=inverse,
-                **coeffs["coeffs_alpha"]
-            )
-
-            alpha_fixpoint_rad = coeffs["coeffs_beta"]["alpha_fixpoint_rad"]
-            delta_alpha_fixpoint = -alpha_fixpoint_rad + apply_gearbox_parameters(
-                alpha_fixpoint_rad,
-                wrap=True,
-                inverse_transform=inverse,
-                **coeffs["coeffs_alpha"]
-            )
-        else:
-            delta_alpha = 0
-            delta_alpha_fixpoint = 0
-
-        if "beta" in correct_axis:
-            delta_beta = -beta_nom_rad + apply_gearbox_parameters(
-                beta_nom_rad,
-                wrap=True,
-                inverse_transform=inverse,
-                **coeffs["coeffs_beta"]
-            )
-
-            beta_fixpoint_rad = coeffs["coeffs_alpha"]["beta_fixpoint_rad"]
-            delta_beta_fixpoint = -beta_fixpoint_rad + apply_gearbox_parameters(
-                beta_fixpoint_rad,
-                wrap=True,
-                inverse_transform=inverse,
-                **coeffs["coeffs_alpha"]
-            )
-        else:
-            delta_beta = 0
-            delta_beta_fixpoint = 0
-
-        if not correct_fixpoint:
-            delta_alpha_fixpoint = 0
-            delta_beta_fixpoint = 0
-
-    # rotate (possibly corrected) angles to camera orientation,
-    # and apply beta arm offset
-    alpha_rad = alpha_nom_rad + camera_offset_rad
-    beta_rad = beta_nom_rad + beta0_rad
-
-    # add difference to alpha when the beta
-    # correction was measured (these angles add up
-    # because when the alpha arm is turned (clockwise),
-    # this turns the beta arm (clockwise) as well).
-    gamma_rad = beta_rad + alpha_rad + (delta_alpha - delta_alpha_fixpoint)
-
-    vec_alpha = np.array(
-        polar2cartesian(alpha_rad + (delta_alpha - delta_alpha_fixpoint), R_alpha)
-    )
-    vec_beta = np.array(
-        polar2cartesian(gamma_rad + (delta_beta - delta_beta_fixpoint), R_beta_midpoint)
-    )
-
-    if broadcast and (len(P0.shape) < len(vec_alpha.shape)):
-        # adapt shape
-        P0 = np.reshape(P0, P0.shape + (1,))
-
-    expected_point = P0 + vec_alpha + vec_beta
-
-    return expected_point
 
 
 def fit_offsets(
