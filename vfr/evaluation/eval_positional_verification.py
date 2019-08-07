@@ -23,6 +23,7 @@ def evaluate_positional_verification(
     beta0_rad=None,
     coeffs=None,
     BLOB_WEIGHT_FACTOR=None,
+    plot=True,
     **kwargs
 ):
     """Takes a dictionary. The keys of the dictionary
@@ -70,7 +71,8 @@ def evaluate_positional_verification(
 
     print("P0 = ", P0)
 
-    plt.axis("equal")
+    if plot:
+        plt.axis("equal")
     x_measured = []
     y_measured = []
     x_expected = []
@@ -127,14 +129,16 @@ def evaluate_positional_verification(
         ).max
         print("error_by_angle[%r]=%r" % (coords, error_by_angle[coords]))
 
-    plt.plot(x_measured, y_measured, "r.")
-    plt.plot(x_expected, y_expected, "b+")
-    plt.legend(loc="best", labelspacing=0.1)
-    plt.grid()
-    plt.title("measured and expected points")
-    plt.xlabel("x [millimeter], Cartesian camera coordinates")
-    plt.ylabel("y [millimeter], Cartesian camera coordinates")
-    #plt.show()
+    if plot:
+        plt.plot([x_center], [y_center], "mD")
+        plt.plot(x_measured, y_measured, "r.")
+        plt.plot(x_expected, y_expected, "b+")
+        plt.legend(loc="best", labelspacing=0.1)
+        plt.grid()
+        plt.title("measured and expected points")
+        plt.xlabel("x [millimeter], Cartesian camera coordinates")
+        plt.ylabel("y [millimeter], Cartesian camera coordinates")
+
     print("############ computing summary statistics")
     error_measures = get_grouped_errors(
         point_list, list_of_centroids=expected_coords, weight_factor=BLOB_WEIGHT_FACTOR
