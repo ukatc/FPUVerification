@@ -26,25 +26,26 @@ def evaluate_positional_verification(
     plot=True,
     **kwargs
 ):
-    """Takes a dictionary. The keys of the dictionary
-    are the i,j,k indices of the positional repeteability measurement.
-    Equal i and k mean equal step counts, and j indicates
-    the arm and movement direction of the corresponding arm
-    during measurement.
+    """Takes a dictionary. The keys of the dictionary are the idx, alpha_nom,
+    beta_nom parameters of the positional repeteability measurement.
 
-    The values of the dictionary are a 4-tuple
-    (alpha_steps, beta_steps, x_measured_1, y_measured_1, x_measured_2, y_measured_2).
+    The values of the dictionary are a 6-tuple
+    (x_measured_1, y_measured_1, qual1, x_measured_2, y_measured_2, qual2).
 
-    Here, (alpha_steps, beta_steps) are the angle coordinates given by
-    the motor step counts (measured in degrees), and (x_measured,
+    Here, (alpha_nom, beta_nom) are the angle coordinates given by the
+    motor step counts (measured in degrees), and (x_measured,
     y_measured) are the cartesian values of the large (index 1) and
-    the small (index 2) target measured from the images taken.
+    the small (index 2) blob target coordinates measured from the
+    images taken.
 
 
-    The units are in dimensionless counts (for alpha_steps and beta_steps)
-    and millimeter (for x_measured and y_measured).
+    The units are in degrees (for alpha_nom and beta_nom) and pixel
+    units (for x_measured and y_measured). The y axis of the pixel
+    units is always positive with the origiin in the upper left corner
+    (that is, it is pointing in the inverse direction compared to the
+    y axis of a Cartesian system).
 
-    The returned value is the repeatability value in millimeter.
+    The returned value are the repeatability measures in millimeter.
 
     Any error should be signalled by throwing an Exception of class
     ImageAnalysisError, with a string member which describes the problem.
