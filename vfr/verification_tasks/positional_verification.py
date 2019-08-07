@@ -391,15 +391,6 @@ def eval_positional_verification(dbe, pos_ver_analysis_pars, pos_ver_evaluation_
                         )
                         continue
 
-                (
-                    x_measured_small,
-                    y_measured_small,
-                    qual_small,
-                    x_measured_big,
-                    y_measured_big,
-                    qual_big,
-                ) = analysis_results[k]
-
                 posver_error_by_angle, posver_error_measures, plt = evaluate_positional_verification(
                     analysis_results, pars=pos_ver_evaluation_pars, **gearbox_correction
                 )
