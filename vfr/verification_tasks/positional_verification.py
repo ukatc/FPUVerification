@@ -400,7 +400,7 @@ def eval_positional_verification(dbe, pos_ver_analysis_pars, pos_ver_evaluation_
                     qual_big,
                 ) = analysis_results[k]
 
-                posver_error_by_angle, posver_error_measures = evaluate_positional_verification(
+                posver_error_by_angle, posver_error_measures, plt = evaluate_positional_verification(
                     analysis_results, pars=pos_ver_evaluation_pars, **gearbox_correction
                 )
 
@@ -422,6 +422,7 @@ def eval_positional_verification(dbe, pos_ver_analysis_pars, pos_ver_evaluation_
             arg_max_error, _ = arg_max_dict(posver_error_by_angle)
 
             errmsg = ""
+            plt.show()
 
         except (ImageAnalysisError, GearboxFitError) as e:
             analysis_results = None

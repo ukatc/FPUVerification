@@ -4,10 +4,12 @@
 """
 from __future__ import division, print_function
 
-from Gearbox.gear_correction import angle_to_point, cartesian_blob_position
+from Gearbox.gear_correction import angle_to_point, cartesian_blob_position, elliptical_distortion
 from vfr.evaluation.measures import get_errors, get_grouped_errors, get_weighted_coordinates
 
 import numpy as np
+from matplotlib import pyplot as plt
+import warnings
 
 
 def evaluate_positional_verification(
@@ -53,7 +55,7 @@ def evaluate_positional_verification(
     # calibration
     #
     # IMPORTANT: Keep in mind this center point is ONLY valid as long
-    # as the alpha arm is in exactly the same position relative to the
+    # as the FPU is in exactly the same position relative to the
     # camera, so no changes to the camera or verification rig are
     # allowed!
     expected_coords = []
@@ -62,9 +64,17 @@ def evaluate_positional_verification(
     deg2rad = np.deg2rad
     print(">>>>>>>>>>>> computing point error values")
     P0 = np.array([x_center, y_center])
+    # get elliptical coefficients for alpha arm circle
+    psi=coeffs["coeffs_alpha"]["psi"]
+    stretch=coeffs["coeffs_alpha"]["stretch"]
 
     print("P0 = ", P0)
 
+    plt.axis("equal")
+    x_measured = []
+    y_measured = []
+    x_expected = []
+    y_expected = []
     for coords, blob_pair in dict_of_coords.items():
         print("-------------")
         # get nominal coordinates
@@ -82,12 +92,30 @@ def evaluate_positional_verification(
             beta0_rad=beta0_rad,
         )
 
+        warnings.warn("applying fudge factor to reduce error. FIXME: Needs to be replaced by correct term")
+        expected_point += np.array([4.943, -3.340])
+        xe1, ye1 = expected_point
+
+        # FIXME: This is sloppy and only a stop-gap: we probably need
+        # to model that the FPU metrology targets are really moving on
+        # a sphere, not on a tilted plane. The circles for alpha and
+        # beta calibration measurements are just two subsets of that
+        # sphere, but the verification can select any point on it.
+        xe, ye = elliptical_distortion(xe1, ye1, x_center, y_center, psi, stretch)
+
+        x_expected.append(xe)
+        y_expected.append(ye)
+
         print("expected point = ", expected_point)
         # convert blob pair image coordinates to
-        # Cartesian coordinates of mod point
+        # Cartesian coordinates of mid point
         #
         # Attention: This flips the y axis, as in the gearbox calibration
         measured_point = cartesian_blob_position(blob_pair, weight_factor=BLOB_WEIGHT_FACTOR)
+        xm, ym = measured_point
+        x_measured.append(xm)
+        y_measured.append(ym)
+
         #measured_point = get_weighted_coordinates(blob_pair, weight_factor=BLOB_WEIGHT_FACTOR)[0]
         print("measured point = ", measured_point)
         print("error = ", measured_point - expected_point, "magnitude = ", np.linalg.norm(measured_point - expected_point))
@@ -99,9 +127,17 @@ def evaluate_positional_verification(
         ).max
         print("error_by_angle[%r]=%r" % (coords, error_by_angle[coords]))
 
+    plt.plot(x_measured, y_measured, "r.")
+    plt.plot(x_expected, y_expected, "b+")
+    plt.legend(loc="best", labelspacing=0.1)
+    plt.grid()
+    plt.title("measured and expected points")
+    plt.xlabel("x [millimeter], Cartesian camera coordinates")
+    plt.ylabel("y [millimeter], Cartesian camera coordinates")
+    #plt.show()
     print("############ computing summary statistics")
     error_measures = get_grouped_errors(
         point_list, list_of_centroids=expected_coords, weight_factor=BLOB_WEIGHT_FACTOR
     )
     print("pos ver error_measures=%r" % error_measures)
-    return error_by_angle, error_measures
+    return error_by_angle, error_measures, plt
