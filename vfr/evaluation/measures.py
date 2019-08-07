@@ -9,6 +9,7 @@ import numpy as np
 import argparse
 
 from vfr.conf import BLOB_WEIGHT_FACTOR, PERCENTILE_ARGS
+from Gearbox.gear_correction import get_weighted_coordinates
 
 NO_MEASURES = argparse.Namespace(
     max=np.NaN, mean=np.NaN, percentiles={p: np.NaN for p in PERCENTILE_ARGS}, N=0
@@ -57,9 +58,7 @@ def get_magnitudes(
     # to be smaller.)
     #
     # The quality factors are ignored.
-    weighted_coordinates = (weight_factor * blob_coordinates[:, 3:5]) + (
-        1.0 - weight_factor
-    ) * blob_coordinates[:, :2]
+    weighted_coordinates = get_weighted_coordinates(blob_coordinates, weight_factor)
 
     # If the centroid (mean vector) is not defined, compute it.
     if centroid is None:

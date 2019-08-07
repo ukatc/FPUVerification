@@ -4,8 +4,8 @@
 """
 from __future__ import division, print_function
 
-from Gearbox.gear_correction import angle_to_point
-from vfr.evaluation.measures import get_errors, get_grouped_errors
+from Gearbox.gear_correction import angle_to_point, cartesian_blob_position
+from vfr.evaluation.measures import get_errors, get_grouped_errors, get_weighted_coordinates
 
 import numpy as np
 
@@ -17,7 +17,8 @@ def evaluate_positional_verification(
     y_center=None,
     R_alpha=None,
     R_beta_midpoint=None,
-    alpha0_rad=None,
+    camera_offset_rad=None,
+    beta0_rad=None,
     coeffs=None,
     BLOB_WEIGHT_FACTOR=None,
     **kwargs
@@ -32,8 +33,8 @@ def evaluate_positional_verification(
     (alpha_steps, beta_steps, x_measured_1, y_measured_1, x_measured_2, y_measured_2).
 
     Here, (alpha_steps, beta_steps) are the angle coordinates given by
-    the motor step counts (measured in degrees), and (alpha_measured,
-    beta_measured) are the cartesian values of the large (index 1) and
+    the motor step counts (measured in degrees), and (x_measured,
+    y_measured) are the cartesian values of the large (index 1) and
     the small (index 2) target measured from the images taken.
 
 
@@ -60,27 +61,41 @@ def evaluate_positional_verification(
 
     deg2rad = np.deg2rad
     print(">>>>>>>>>>>> computing point error values")
-    for coords, point_pair in dict_of_coords.items():
+    P0 = np.array([x_center, y_center])
+
+    print("P0 = ", P0)
+
+    for coords, blob_pair in dict_of_coords.items():
         print("-------------")
         # get nominal coordinates
         (idx, alpha_nom_deg, beta_nom_deg) = coords
+        print("nominal: (alpha, beta) = ", (alpha_nom_deg, beta_nom_deg))
         alpha_nom_rad, beta_nom_rad = deg2rad(alpha_nom_deg), deg2rad(beta_nom_deg)
         expected_point = angle_to_point(
             alpha_nom_rad,
             beta_nom_rad,
-            coeffs=coeffs,
-            x_center=x_center,
-            y_center=y_center,
+            P0=P0,
+            #coeffs=coeffs, # inactive because already corrected
             R_alpha=R_alpha,
             R_beta_midpoint=R_beta_midpoint,
-            alpha0_rad=alpha0_rad,
-            already_corrected=True,
+            camera_offset_rad=camera_offset_rad,
+            beta0_rad=beta0_rad,
         )
 
+        print("expected point = ", expected_point)
+        # convert blob pair image coordinates to
+        # Cartesian coordinates of mod point
+        #
+        # Attention: This flips the y axis, as in the gearbox calibration
+        measured_point = cartesian_blob_position(blob_pair, weight_factor=BLOB_WEIGHT_FACTOR)
+        #measured_point = get_weighted_coordinates(blob_pair, weight_factor=BLOB_WEIGHT_FACTOR)[0]
+        print("measured point = ", measured_point)
+        print("error = ", measured_point - expected_point, "magnitude = ", np.linalg.norm(measured_point - expected_point))
+
         expected_coords.append(expected_point)
-        point_list.append([point_pair])
+        point_list.append([blob_pair])
         error_by_angle[coords] = get_errors(
-            [point_pair], centroid=expected_point, weight_factor=BLOB_WEIGHT_FACTOR
+            [blob_pair], centroid=expected_point, weight_factor=BLOB_WEIGHT_FACTOR
         ).max
         print("error_by_angle[%r]=%r" % (coords, error_by_angle[coords]))
 

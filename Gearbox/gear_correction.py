@@ -119,23 +119,30 @@ def leastsq_circle(x, y):
 
     return xc, yc, R, psi, stretch, radius_RMS
 
+def get_weighted_coordinates(blob_coordinates, weight_factor=BLOB_WEIGHT_FACTOR):
+    # compute weigthed coordinates of
+    # point between big and small metrology blob
 
-def cartesian_blob_position(val):
-    x1, y1, q1, x2, y2, q2 = val
+    # This is also used to compute error measures
+    # from the datum repeatability / positional
+    # repeatability, it is called in the
+    # vfr.evaluation.measures module.
+    blob_coordinates = np.asarray(blob_coordinates)
+    assert( blob_coordinates.ndim == 2)
 
-    # compute weigthed midpoint between small (x, y1) and
-    # large metrology target (x2, y2)
-    image_x = (1.0 - BLOB_WEIGHT_FACTOR) * x1 + BLOB_WEIGHT_FACTOR * x2
-    image_y = (1.0 - BLOB_WEIGHT_FACTOR) * y1 + BLOB_WEIGHT_FACTOR * y2
-    # the resulting coordinates are image coordinates, which
-    # are always positive, with (x0,y0) the upper left edge.
 
-    # convert image coordinates to Cartesian coordinates,
-    # so that correct orientation conventions are used.
+    coords_big_blob = blob_coordinates[:, 3:5]
+    coords_small_blob = blob_coordinates[:, :2]
+    weighted_coordinates = ( ( 1.0 - weight_factor ) *
+                             coords_small_blob + (weight_factor *
+                                                  coords_big_blob))
 
-    x = image_x
-    y = -image_y
+    # return Cartesian coordinates, by
+    # inverting y axis of OpenCV image coordinates
+    return weighted_coordinates * np.array([1, -1])
 
+def cartesian_blob_position(val, weight_factor=BLOB_WEIGHT_FACTOR):
+    x, y = get_weighted_coordinates([val], weight_factor=weight_factor)[0]
     return x, y
 
 
