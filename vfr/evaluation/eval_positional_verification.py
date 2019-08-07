@@ -93,6 +93,7 @@ def evaluate_positional_verification(
             R_beta_midpoint=R_beta_midpoint,
             camera_offset_rad=camera_offset_rad,
             beta0_rad=beta0_rad,
+            broadcast=False,
         )
 
         warnings.warn("applying fudge factor to reduce error. FIXME: Needs"
