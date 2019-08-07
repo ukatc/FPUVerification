@@ -84,7 +84,7 @@ def evaluate_positional_verification(
         (idx, alpha_nom_deg, beta_nom_deg) = coords
         print("nominal: (alpha, beta) = ", (alpha_nom_deg, beta_nom_deg))
         alpha_nom_rad, beta_nom_rad = deg2rad(alpha_nom_deg), deg2rad(beta_nom_deg)
-        expected_point1 = angle_to_point(
+        expected_point = angle_to_point(
             alpha_nom_rad,
             beta_nom_rad,
             P0=P0,
@@ -95,33 +95,38 @@ def evaluate_positional_verification(
             beta0_rad=beta0_rad,
         )
 
-        warnings.warn("applying fudge factor to reduce error. FIXME: Needs to be replaced by correct term")
-        expected_point1 += np.array([4.943, -3.340])
-        xe1, ye1 = expected_point1
+        warnings.warn("applying fudge factor to reduce error. FIXME: Needs"
+                      " to be replaced by correctly derived term")
 
-        # FIXME: This is sloppy and only a stop-gap: we probably need
-        # to model that the FPU metrology targets are really moving on
-        # a sphere, not on a tilted plane. The circles for alpha and
-        # beta calibration measurements are just two subsets of that
-        # sphere, but the verification can select any point on it.
-        xe, ye = elliptical_distortion(xe1, ye1, x_center, y_center, psi, stretch)
-
+        expected_point += np.array([4.943, -3.340])
+        xe, ye = expected_point
         x_expected.append(xe)
         y_expected.append(ye)
 
-        expected_point = np.array([xe, ye], dtype=float)
 
         print("expected point = ", expected_point)
         # convert blob pair image coordinates to
         # Cartesian coordinates of mid point
         #
-        # Attention: This flips the y axis, as in the gearbox calibration
-        measured_point = cartesian_blob_position(blob_pair, weight_factor=BLOB_WEIGHT_FACTOR)
-        xm, ym = measured_point
+        # Attention: This function flips the y axis, as in the gearbox calibration
+        xmd, ymd = cartesian_blob_position(blob_pair, weight_factor=BLOB_WEIGHT_FACTOR)
+
+        # apply (small) elliptical distortion correction as in the
+        # gearbox calibration computation for the alpha arm.
+        #
+        # FIXME: This is sloppy and only a stop-gap: we probably need
+        # to model that the FPU metrology targets are really moving on
+        # a sphere, not on a tilted plane. The circles for alpha and
+        # beta calibration measurements are just two subsets of that
+        # sphere, but the verification measurement can select any
+        # point on it.
+        xm, ym = elliptical_distortion(xmd, ymd, x_center, y_center, psi, stretch)
+
+        measured_point = np.array([xm, ym], dtype=float)
+
         x_measured.append(xm)
         y_measured.append(ym)
 
-        #measured_point = get_weighted_coordinates(blob_pair, weight_factor=BLOB_WEIGHT_FACTOR)[0]
         print("measured point = ", measured_point)
         print("error = ", measured_point - expected_point, "magnitude = ", np.linalg.norm(measured_point - expected_point))
 
