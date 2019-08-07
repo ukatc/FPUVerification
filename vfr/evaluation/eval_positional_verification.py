@@ -83,7 +83,7 @@ def evaluate_positional_verification(
         (idx, alpha_nom_deg, beta_nom_deg) = coords
         print("nominal: (alpha, beta) = ", (alpha_nom_deg, beta_nom_deg))
         alpha_nom_rad, beta_nom_rad = deg2rad(alpha_nom_deg), deg2rad(beta_nom_deg)
-        expected_point = angle_to_point(
+        expected_point1 = angle_to_point(
             alpha_nom_rad,
             beta_nom_rad,
             P0=P0,
@@ -95,8 +95,8 @@ def evaluate_positional_verification(
         )
 
         warnings.warn("applying fudge factor to reduce error. FIXME: Needs to be replaced by correct term")
-        expected_point += np.array([4.943, -3.340])
-        xe1, ye1 = expected_point
+        expected_point1 += np.array([4.943, -3.340])
+        xe1, ye1 = expected_point1
 
         # FIXME: This is sloppy and only a stop-gap: we probably need
         # to model that the FPU metrology targets are really moving on
@@ -107,6 +107,8 @@ def evaluate_positional_verification(
 
         x_expected.append(xe)
         y_expected.append(ye)
+
+        expected_point = np.array([xe, ye], dtype=float)
 
         print("expected point = ", expected_point)
         # convert blob pair image coordinates to
