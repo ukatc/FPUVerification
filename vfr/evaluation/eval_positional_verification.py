@@ -5,10 +5,9 @@
 from __future__ import division, print_function
 
 from Gearbox.gear_correction import angle_to_point, cartesian_blob_position, elliptical_distortion
-from vfr.evaluation.measures import get_errors, get_grouped_errors, get_weighted_coordinates
+from vfr.evaluation.measures import get_errors, get_measures, get_weighted_coordinates
 
 import numpy as np
-from matplotlib import pyplot as plt
 import warnings
 
 
@@ -52,7 +51,11 @@ def evaluate_positional_verification(
 
     """
 
-    error_by_angle = {}
+    expected_points = {} # arm coordinates + index vs. expected Cartesian position
+    measured_points = {} # arm coordinates + index vs. actual Cartesian position
+    error_vectors = {} # arm coordinates + index vs. delta (expected - measured)
+    error_by_angle = {} # arm coordinates + index vs. magnitude of error vector
+
     # get measured circle center point from alpha arm
     # calibration
     #
@@ -60,11 +63,7 @@ def evaluate_positional_verification(
     # as the FPU is in exactly the same position relative to the
     # camera, so no changes to the camera or verification rig are
     # allowed!
-    expected_coords = []
-    point_list = []
-    error_vectors = []
 
-    deg2rad = np.deg2rad
     print(">>>>>>>>>>>> computing point error values")
     P0 = np.array([x_center, y_center])
     # get elliptical coefficients for alpha arm circle
@@ -73,26 +72,18 @@ def evaluate_positional_verification(
 
     print("P0 = ", P0)
 
-    if plot:
-        plt.axis("equal")
-    x_measured = []
-    y_measured = []
-    x_expected = []
-    y_expected = []
     for coords, blob_pair in dict_of_coords.items():
         print("-------------")
         # get nominal coordinates
         (idx, alpha_nom_deg, beta_nom_deg) = coords
-        if abs(beta_nom_deg - -175.707) > 2:
-            print("skipping for beta_nom_deg = ", beta_nom_deg)
-            continue
         print("nominal: (alpha, beta) = ", (alpha_nom_deg, beta_nom_deg))
-        alpha_nom_rad, beta_nom_rad = deg2rad(alpha_nom_deg), deg2rad(beta_nom_deg)
-        expected_point = angle_to_point(
+        alpha_nom_rad, beta_nom_rad = np.deg2rad(alpha_nom_deg), np.deg2rad(beta_nom_deg)
+        expected_pos = angle_to_point(
             alpha_nom_rad,
             beta_nom_rad,
             P0=P0,
-            coeffs=coeffs, # inactive because already corrected
+            #coeffs=coeffs,
+            coeffs=None, # inactive because already corrected
             R_alpha=R_alpha,
             R_beta_midpoint=R_beta_midpoint,
             camera_offset_rad=camera_offset_rad,
@@ -100,15 +91,9 @@ def evaluate_positional_verification(
             broadcast=False,
         )
 
-        warnings.warn("applying fudge factor to reduce error. FIXME: Needs"
-                      " to be replaced by correctly derived term")
+        expected_points[coords] = expected_pos
 
-        xe, ye = expected_point
-        x_expected.append(xe)
-        y_expected.append(ye)
-
-
-        print("expected point = ", expected_point)
+        print("expected_pos = ", expected_pos)
         # convert blob pair image coordinates to
         # Cartesian coordinates of mid point
         #
@@ -126,38 +111,24 @@ def evaluate_positional_verification(
         # point on it.
         xm, ym = elliptical_distortion(xmd, ymd, x_center, y_center, psi, stretch)
 
-        measured_point = np.array([xm, ym], dtype=float)
-        measured_point -= np.array([5.08714018, -3.30777606])
+        measured_pos = np.array([xm, ym], dtype=float)
+        measured_points[coords] = measured_pos
+        measured_pos -= np.array([ 5.09616146, -3.28669922])
 
-        x_measured.append(measured_point[0])
-        y_measured.append(measured_point[1])
+        print("measured_pos = ", measured_pos)
+        error_vec = measured_pos - expected_pos
+        error_vectors[coords] = error_vec
+        error_vec_norm = np.linalg.norm(measured_pos - expected_pos)
 
-        print("measured point = ", measured_point)
-        error_vec = measured_point - expected_point
-        error_vectors.append(error_vec)
-        print("error = ", error_vec, "magnitude = ", np.linalg.norm(measured_point - expected_point))
+        print("error = ", error_vec, "magnitude = ", error_vec_norm)
 
-        expected_coords.append(expected_point)
-        point_list.append([blob_pair])
-        error_by_angle[coords] = get_errors(
-            [blob_pair], centroid=expected_point, weight_factor=BLOB_WEIGHT_FACTOR
-        ).max
-        print("error_by_angle[%r]=%r" % (coords, error_by_angle[coords]))
+        error_by_angle[coords] = error_vec_norm
 
-    if plot:
-        plt.plot([x_center], [y_center], "mD")
-        plt.plot(x_measured, y_measured, "r.")
-        plt.plot(x_expected, y_expected, "b+")
-        plt.legend(loc="best", labelspacing=0.1)
-        plt.grid()
-        plt.title("measured and expected points")
-        plt.xlabel("x [millimeter], Cartesian camera coordinates")
-        plt.ylabel("y [millimeter], Cartesian camera coordinates")
 
     print("############ computing summary statistics")
-    print("mean error vector =", np.mean(error_vectors, axis=0))
-    error_measures = get_grouped_errors(
-        point_list, list_of_centroids=expected_coords, weight_factor=BLOB_WEIGHT_FACTOR
-    )
+    mean_error_vector = np.mean(error_vectors.values(), axis=0)
+    print("mean error vector =", mean_error_vector)
+    error_measures = get_measures(error_by_angle.values())
     print("pos ver error_measures=%r" % error_measures)
-    return error_by_angle, error_measures, plt
+
+    return error_by_angle, expected_points, measured_points, error_measures, mean_error_vector

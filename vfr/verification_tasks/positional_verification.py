@@ -3,7 +3,6 @@ from __future__ import absolute_import, division, print_function
 import random
 import warnings
 import logging
-import os
 from os.path import abspath
 import numpy as np
 from vfr.auditlog import get_fpuLogger
@@ -392,9 +391,10 @@ def eval_positional_verification(dbe, pos_ver_analysis_pars, pos_ver_evaluation_
                         )
                         continue
 
-                posver_error_by_angle, posver_error_measures, plt = evaluate_positional_verification(
-                    analysis_results, pars=pos_ver_evaluation_pars, **gearbox_correction
-                )
+            (posver_error_by_angle, expected_points, measured_points,
+             posver_error_measures, mean_error_vector) = evaluate_positional_verification(
+                 analysis_results, pars=pos_ver_evaluation_pars,
+                 **gearbox_correction )
 
             if (95 not in posver_error_measures.percentiles) or np.isnan(
                 posver_error_measures.percentiles[95]
@@ -414,14 +414,15 @@ def eval_positional_verification(dbe, pos_ver_analysis_pars, pos_ver_evaluation_
             arg_max_error, _ = arg_max_dict(posver_error_by_angle)
 
             errmsg = ""
-            if os.environ.get("PLOT_POS_VER_ERR") is not None:
-                plt.show()
 
         except (ImageAnalysisError, GearboxFitError) as e:
             analysis_results = None
             errmsg = str(e)
             posver_error_by_angle = []
             posver_error_measures = NO_MEASURES
+            mean_error_vector = np.array([np.Nan, np.NaN])
+            expected_points=[]
+            measured_points = []
             positional_verification_has_passed = TestResult.NA
             min_quality = NaN
             arg_max_error = NaN
@@ -438,6 +439,9 @@ def eval_positional_verification(dbe, pos_ver_analysis_pars, pos_ver_evaluation_
             pass_threshold_mm=pos_ver_evaluation_pars.POS_VER_PASS,
             min_quality=min_quality,
             arg_max_error=arg_max_error,
+            expected_points=expected_points,
+            measured_points=measured_points,
+            mean_error_vector=mean_error_vector,
             error_message=errmsg,
             algorithm_version=GEARBOX_CORRECTION_VERSION,
         )

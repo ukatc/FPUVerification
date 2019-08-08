@@ -128,12 +128,12 @@ def get_grouped_errors(
     Each element of the list has the form
 
     (x1, y1, q1, x2, x2, q2)
-    Where the (x1, y1) are coordnates of the small blobs,
+    Where the (x1, y1) are coordinates of the small blobs,
     and (x2, y2) coordinates of the large blobs.
 
     The functions computes the magnitudes of the error vectors within
     each group, taking the centroid of the group as center. It returns
-    the statistical error measures for all magnitudes compined.
+    the statistical error measures for all magnitudes combined.
 
     """
 

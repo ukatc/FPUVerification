@@ -28,6 +28,9 @@ PositionalVerificationResult = namedtuple(
     " min_quality"
     " arg_max_error"
     " error_message"
+    " measured_points"
+    " expected_points"
+    " mean_error_vector"
     " algorithm_version",
 )
 
@@ -44,8 +47,14 @@ save_positional_verification_result = partial(
 
 upgrade_func = partial(upgrade_version, fieldname="algorithm_version")
 
+DEFAULT_RECORD = {
+    "expected_points" : [],
+    "measured_points" : [],
+    "mean_error_vector" : [],
+}
+
 get_positional_verification_result = partial(
-    get_named_record, (RECORD_TYPE, "result"), upgrade_func=upgrade_func
+    get_named_record, (RECORD_TYPE, "result"), upgrade_func=upgrade_func, default_vals=DEFAULT_RECORD,
 )
 
 
