@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function
 import random
 import warnings
 import logging
+import os
 from os.path import abspath
 import numpy as np
 from vfr.auditlog import get_fpuLogger
@@ -413,7 +414,8 @@ def eval_positional_verification(dbe, pos_ver_analysis_pars, pos_ver_evaluation_
             arg_max_error, _ = arg_max_dict(posver_error_by_angle)
 
             errmsg = ""
-            plt.show()
+            if os.environ.get("PLOT_POS_VER_ERR") is not None:
+                plt.show()
 
         except (ImageAnalysisError, GearboxFitError) as e:
             analysis_results = None

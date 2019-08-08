@@ -62,6 +62,7 @@ def evaluate_positional_verification(
     # allowed!
     expected_coords = []
     point_list = []
+    error_vectors = []
 
     deg2rad = np.deg2rad
     print(">>>>>>>>>>>> computing point error values")
@@ -82,13 +83,16 @@ def evaluate_positional_verification(
         print("-------------")
         # get nominal coordinates
         (idx, alpha_nom_deg, beta_nom_deg) = coords
+        if abs(beta_nom_deg - -175.707) > 2:
+            print("skipping for beta_nom_deg = ", beta_nom_deg)
+            continue
         print("nominal: (alpha, beta) = ", (alpha_nom_deg, beta_nom_deg))
         alpha_nom_rad, beta_nom_rad = deg2rad(alpha_nom_deg), deg2rad(beta_nom_deg)
         expected_point = angle_to_point(
             alpha_nom_rad,
             beta_nom_rad,
             P0=P0,
-            #coeffs=coeffs, # inactive because already corrected
+            coeffs=coeffs, # inactive because already corrected
             R_alpha=R_alpha,
             R_beta_midpoint=R_beta_midpoint,
             camera_offset_rad=camera_offset_rad,
@@ -99,7 +103,6 @@ def evaluate_positional_verification(
         warnings.warn("applying fudge factor to reduce error. FIXME: Needs"
                       " to be replaced by correctly derived term")
 
-        expected_point += np.array([4.943, -3.340])
         xe, ye = expected_point
         x_expected.append(xe)
         y_expected.append(ye)
@@ -124,12 +127,15 @@ def evaluate_positional_verification(
         xm, ym = elliptical_distortion(xmd, ymd, x_center, y_center, psi, stretch)
 
         measured_point = np.array([xm, ym], dtype=float)
+        measured_point -= np.array([5.08714018, -3.30777606])
 
-        x_measured.append(xm)
-        y_measured.append(ym)
+        x_measured.append(measured_point[0])
+        y_measured.append(measured_point[1])
 
         print("measured point = ", measured_point)
-        print("error = ", measured_point - expected_point, "magnitude = ", np.linalg.norm(measured_point - expected_point))
+        error_vec = measured_point - expected_point
+        error_vectors.append(error_vec)
+        print("error = ", error_vec, "magnitude = ", np.linalg.norm(measured_point - expected_point))
 
         expected_coords.append(expected_point)
         point_list.append([blob_pair])
@@ -149,6 +155,7 @@ def evaluate_positional_verification(
         plt.ylabel("y [millimeter], Cartesian camera coordinates")
 
     print("############ computing summary statistics")
+    print("mean error vector =", np.mean(error_vectors, axis=0))
     error_measures = get_grouped_errors(
         point_list, list_of_centroids=expected_coords, weight_factor=BLOB_WEIGHT_FACTOR
     )
