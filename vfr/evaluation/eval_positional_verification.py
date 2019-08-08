@@ -113,7 +113,7 @@ def evaluate_positional_verification(
 
         measured_pos = np.array([xm, ym], dtype=float)
         measured_points[coords] = measured_pos
-        measured_pos -= np.array([ 5.09616146, -3.28669922])
+        #measured_pos -= np.array([ 5.09616146, -3.28669922])
 
         print("measured_pos = ", measured_pos)
         error_vec = measured_pos - expected_pos

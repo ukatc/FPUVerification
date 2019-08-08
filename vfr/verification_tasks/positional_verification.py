@@ -15,6 +15,7 @@ from Gearbox.gear_correction import (
     GEARBOX_CORRECTION_MINIMUM_VERSION,
 )
 from GigE.GigECamera import BASLER_DEVICE_CLASS, DEVICE_CLASS, IP_ADDRESS
+from DistortionCorrection import get_correction_func
 from ImageAnalysisFuncs.base import get_min_quality
 from ImageAnalysisFuncs.analyze_positional_repeatability import (
     ImageAnalysisError,
@@ -323,7 +324,7 @@ def measure_positional_verification(rig, dbe, pars=None):
     logger.info("positional verification captured sucessfully")
 
 
-def eval_positional_verification(dbe, pos_ver_analysis_pars, pos_ver_evaluation_pars):
+def eval_positional_verification(dbe, pos_rep_analysis_pars, pos_ver_evaluation_pars):
 
     logger = logging.getLogger(__name__)
     for fpu_id in dbe.eval_fpuset:
@@ -353,16 +354,28 @@ def eval_positional_verification(dbe, pos_ver_analysis_pars, pos_ver_evaluation_
         images = measurement["images"]
         gearbox_correction = measurement["gearbox_correction"]
         mapfile = measurement["calibration_mapfile"]
-        if mapfile:
-            # passing coefficients is a temporary solution because
-            # ultimately we want to pass a function reference to
-            # calibrate points, because that's more efficient.
-            pos_ver_analysis_pars.POS_REP_CALIBRATION_PARS = get_config_from_mapfile(
-                mapfile
-            )
 
-            def analysis_func(ipath):
-                return posrepCoordinates(fixup_ipath(ipath), pars=pos_ver_analysis_pars)
+
+        ####
+        if pos_rep_analysis_pars.TARGET_DETECTION_ALGORITHM == "otsu":
+            pars = pos_rep_analysis_pars.TARGET_DETECTION_OTSU_PARS
+        else:
+            pars = pos_rep_analysis_pars.TARGET_DETECTION_CONTOUR_PARS
+
+        pars.PLATESCALE = pos_rep_analysis_pars.PLATESCALE
+
+        if mapfile:
+            pars.CALIBRATION_PARS = get_config_from_mapfile(mapfile)
+
+        correct = get_correction_func(
+            calibration_pars=pars.CALIBRATION_PARS,
+            platescale=pars.PLATESCALE,
+            loglevel=pos_rep_analysis_pars.loglevel,
+        )
+
+        ####
+        def analysis_func(ipath):
+            return posrepCoordinates(fixup_ipath(ipath), pars=pos_rep_analysis_pars, correct=correct)
 
         try:
             analysis_results = {}
@@ -374,6 +387,7 @@ def eval_positional_verification(dbe, pos_ver_analysis_pars, pos_ver_evaluation_
                 ipath = v
                 try:
                     count_images += 1
+                    logger.info("analyzing image {}".format(ipath))
                     analysis_results[k] = analysis_func(ipath)
 
                 except ImageAnalysisError as err:
@@ -381,7 +395,7 @@ def eval_positional_verification(dbe, pos_ver_analysis_pars, pos_ver_evaluation_
                     # ignore image analysis exceptions as long as they are not too frequent
                     if (
                         count_failures
-                        > count_images * pos_ver_analysis_pars.MAX_FAILURE_QUOTIENT
+                        > count_images * pos_rep_analysis_pars.MAX_FAILURE_QUOTIENT
                     ):
                         raise
                     else:
@@ -431,7 +445,7 @@ def eval_positional_verification(dbe, pos_ver_analysis_pars, pos_ver_evaluation_
             )
 
         record = PositionalVerificationResult(
-            calibration_pars=pos_ver_analysis_pars.POS_REP_CALIBRATION_PARS,
+            calibration_pars=pars.CALIBRATION_PARS,
             analysis_results=analysis_results,
             posver_error_measures=posver_error_measures,
             posver_error_by_angle=posver_error_by_angle,
