@@ -390,6 +390,7 @@ O) plot second-order residual as a function of fitted arm angle,
         with different markers for each iteration.
 P) plot gearbox correction function from nominal to desired real angles (in camera coordinates)
 Q) plot measured points vs. expected points from inverse calibration
+R) plot measured vs expected points for positional verification
 
 "*" will select all available plots.
 

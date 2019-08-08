@@ -98,8 +98,32 @@ def plot_dat_rep(fpu_id, datumed_coords, moved_coords, opts):
     plt.show()
 
 
-PLOT_DEFAULT_SELECTION = PLOT_CAL_DEFAULT | set("AB")
-PLOT_ALL = set("AB") | PLOT_CAL_ALL
+PLOT_DEFAULT_SELECTION = PLOT_CAL_DEFAULT | set("ABR")
+PLOT_ALL = set("ABR") | PLOT_CAL_ALL
+
+def plot_pos_ver(fpu_id, pos_ver_result, pos_rep_result, opts):
+    x_center = pos_rep_result["gearbox_correction"]["x_center"]
+    y_center = pos_rep_result["gearbox_correction"]["y_center"]
+
+    measured_points = pos_ver_result["measured_points"]
+    x_measured, y_measured = np.array(measured_points.values()).T
+
+    expected_points = pos_ver_result["expected_points"]
+    x_expected, y_expected = np.array(expected_points.values()).T
+
+    plt.plot([x_center], [y_center], "mD", label="alpha arm center point")
+    error_95_percentile_micron = pos_ver_result["posver_error_measures"].percentiles[95] * 1000
+    plt.plot(x_measured, y_measured, "r.", label="measured points, 95 % percentile ="
+             " {:5.0f} $\mu$m".format(error_95_percentile_micron)
+    #         " {posver_error_measures.percentiles[95]:8.4f}".format(**pos_ver_result)
+    )
+    plt.plot(x_expected, y_expected, "b+", label="expected points")
+    plt.legend(loc="best", labelspacing=0.1)
+    plt.grid()
+    plt.title("FPU {} plot R: positional verification -- measured and expected points".format(fpu_id))
+    plt.xlabel("x [millimeter], Cartesian camera coordinates")
+    plt.ylabel("y [millimeter], Cartesian camera coordinates")
+    plt.show()
 
 
 def plot(dbe, opts):
@@ -177,3 +201,10 @@ def plot(dbe, opts):
 
             if PLOT_FIT in plot_selection:
                 plot_measured_vs_expected_points(fpu_id, **gear_correction)
+
+        if "R" in plot_selection:
+            pos_ver_result = ddict["positional_verification_result"]
+            pos_rep_result = ddict["positional_repeatability_result"]
+
+            if pos_ver_result is not None:
+                plot_pos_ver(fpu_id, pos_ver_result, pos_rep_result, opts)
