@@ -4,6 +4,7 @@ from collections import namedtuple
 from functools import partial
 from vfr.db.base import TestResult, save_named_record, get_named_record, upgrade_version
 
+import numpy as np
 
 RECORD_TYPE = "positional-verification"
 
@@ -31,7 +32,8 @@ PositionalVerificationResult = namedtuple(
     " measured_points"
     " expected_points"
     " mean_error_vector"
-    " algorithm_version",
+    " algorithm_version"
+    " evaluation_version",
 )
 
 
@@ -50,7 +52,8 @@ upgrade_func = partial(upgrade_version, fieldname="algorithm_version")
 DEFAULT_RECORD = {
     "expected_points" : [],
     "measured_points" : [],
-    "mean_error_vector" : [],
+    "mean_error_vector" : [np.NaN, np.NaN],
+    "evaluation_version" : (0, 1, 0),
 }
 
 get_positional_verification_result = partial(

@@ -23,7 +23,7 @@ from ImageAnalysisFuncs.analyze_positional_repeatability import (
     POSITIONAL_REPEATABILITY_ALGORITHM_VERSION,
 )
 from vfr.evaluation.measures import NO_MEASURES
-from vfr.evaluation.eval_positional_verification import evaluate_positional_verification
+from vfr.evaluation.eval_positional_verification import evaluate_positional_verification, POS_VER_ALGORITHM_VERSION
 from vfr.evaluation.measures import arg_max_dict
 from numpy import NaN
 from vfr.conf import POS_REP_CAMERA_IP_ADDRESS
@@ -434,7 +434,7 @@ def eval_positional_verification(dbe, pos_rep_analysis_pars, pos_ver_evaluation_
             errmsg = str(e)
             posver_error_by_angle = []
             posver_error_measures = NO_MEASURES
-            mean_error_vector = np.array([np.Nan, np.NaN])
+            mean_error_vector = np.array([np.NaN, np.NaN])
             expected_points=[]
             measured_points = []
             positional_verification_has_passed = TestResult.NA
@@ -458,6 +458,7 @@ def eval_positional_verification(dbe, pos_rep_analysis_pars, pos_ver_evaluation_
             mean_error_vector=mean_error_vector,
             error_message=errmsg,
             algorithm_version=GEARBOX_CORRECTION_VERSION,
+            evaluation_version=POS_VER_ALGORITHM_VERSION,
         )
         logger.debug("FPU %r: saving result record = %r" % (fpu_id, record))
         save_positional_verification_result(dbe, fpu_id, record)

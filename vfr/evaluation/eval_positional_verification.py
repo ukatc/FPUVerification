@@ -10,6 +10,7 @@ from vfr.evaluation.measures import get_errors, get_measures, get_weighted_coord
 import numpy as np
 import warnings
 
+POS_VER_ALGORITHM_VERSION = (1, 0, 0)
 
 def evaluate_positional_verification(
     dict_of_coords,
