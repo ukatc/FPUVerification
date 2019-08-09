@@ -61,6 +61,10 @@ REWIND_POS_BETA = 1.0  # alpha start position before initial datum search
 
 METROLOGY_CAL_POSITIONS = [254.0, 314.5, 13.0, 73.0, 133.5]
 
+LARGE_TARGET_RADIUS = 1.25 # mm
+SMALL_TARGET_RADIUS = 0.75 # mm
+TARGET_SEPERATION = 2.37 # mm - The distance between the centers
+
 COLLDECT_MEASUREMENT_PARS = Namespace(
     COLDECT_ALPHA=-180,
     COLDECT_BETA=130,
@@ -272,11 +276,12 @@ POS_REP_CALIBRATION_PARS = {"algorithm": "scale", "scale_factor": POS_REP_PLATES
 
 POS_REP_TARGET_DETECTION_OTSU_PARS = Namespace(
     CALIBRATION_PARS=POS_REP_CALIBRATION_PARS,
-    MIN_RADIUS=15,  # in pixels
-    MAX_RADIUS=55,  # in pixels
-    GROUP_RANGE=200,  # in pixels
+    SMALL_RADIUS=SMALL_TARGET_RADIUS,  # in mm
+    LARGE_RADIUS=LARGE_TARGET_RADIUS,  # in mm
+    GROUP_RANGE=TARGET_SEPERATION,  # in mm
     QUALITY_METRIC=0.4,  # dimensionless
-    TOLERANCE=7.0,  # pixels
+    BLOB_SIZE_TOLERANCE=0.2, # dimensionless
+    GROUP_RANGE_TOLERANCE=0.2 # dimensionless
 )
 POS_REP_TARGET_DETECTION_CONTOUR_PARS = Namespace(
     CALIBRATION_PARS=POS_REP_CALIBRATION_PARS,

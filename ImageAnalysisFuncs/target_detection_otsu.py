@@ -1,10 +1,9 @@
 from __future__ import print_function
 
+import math
+
 import numpy as np
 import cv2
-import math
-import os
-from itertools import chain
 
 from DistortionCorrection import get_correction_func
 from ImageAnalysisFuncs.base import ImageAnalysisError
@@ -15,20 +14,35 @@ class OtsuTargetFindingError(ImageAnalysisError):
 
 
 def distance(p1, p2):
+    """Helper function to find the distance between two points"""
     return math.hypot(p1[0] - p2[0], p1[1] - p2[1])
 
 
-def find_bright_sharp_circles(
-    path, minradius, maxradius, grouprange=None, quality=0.4, show=False, tolerance=7.0
-):
+def find_bright_sharp_circles(path,
+                              small_radius,
+                              large_radius,
+                              group_range=None,
+                              quality=0.4,
+                              blob_size_tolerance=0.2,
+                              group_range_tolerance=0.2,
+                              show=False,
+                              debugging=False):
     """
-    Finds circular dots in the given image within the radius range, displaying them on console and graphically if show is set to True
+    Finds circular dots in the given image within the radius range, displaying
+    them on console and graphically if show is set to True
 
-    Works by detecting white circular blobs in the raw image, and in an otsu thresholded copy.
-    Circles that have similar center locations and radii in both images are kept.
+    Works by detecting white circular blobs in the raw image, and in an otsu
+    thresholded copy.Circles that have similar center locations and radii in
+    both images are kept.
 
-    Setting grouprange to a number will mean only circles within that distance of other circles are returned,
-    however if only 1 is found, it will be returned and grouprange will have no effect.
+    Setting group_range to a number will mean only circles within that distance
+    of other circles are returned, however if only 1 is found, it will be
+    returned and group_range will have no effect.
+    
+    The show and debugging options are for local testing, show = True with print
+    more diagnositcs and debugging = True will save a file with found blobs on
+    the image 
+
     :return: a list of opencv blobs for each detected dot.
     """
     image = cv2.imread(path)
@@ -39,76 +53,73 @@ def find_bright_sharp_circles(
             "OpenCV returned error %s for image %s" % (str(err), path)
         )
     blur = cv2.GaussianBlur(greyscale, (5, 5), 0)
-    retval, thresholded = cv2.threshold(
+    _, thresholded = cv2.threshold(
         blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU
     )
     output = image.copy()
 
-    params = cv2.SimpleBlobDetector_Params()
-    params.minArea = math.pi * minradius ** 2
-    params.maxArea = math.pi * maxradius ** 2
-    params.blobColor = 255  # white
-    params.filterByColor = True
-    params.minCircularity = (
-        quality
-    )  # smooth sided (0 is very pointy) 0.4 was used by Alex
-    params.filterByCircularity = True
-    params.minInertiaRatio = 0.9  # non stretched
-    params.filterByInertia = True
-    params.minConvexity = 0.9  # convex
-    params.filterByConvexity = True
+    small_params = cv2.SimpleBlobDetector_Params()
+    small_params.minArea = math.pi * (small_radius*(1-blob_size_tolerance)) ** 2
+    small_params.maxArea = math.pi * (small_radius*(1+blob_size_tolerance)) ** 2
+    small_params.blobColor = 255  # white
+    small_params.filterByColor = True
+    small_params.minCircularity = (quality)  # smooth sided (0 is very pointy) 0.4 was used by Alex
+    small_params.filterByCircularity = True
+    small_params.minInertiaRatio = 0.7  # non stretched
+    small_params.filterByInertia = True
+    small_params.minConvexity = 0.7  # convex
+    small_params.filterByConvexity = True
 
-    detector = cv2.SimpleBlobDetector_create(params)
+    large_params = cv2.SimpleBlobDetector_Params()
+    large_params.minArea = math.pi * (large_radius*(1-blob_size_tolerance)) ** 2
+    large_params.maxArea = math.pi * (large_radius*(1+blob_size_tolerance)) ** 2
+    large_params.blobColor = 255  # white
+    large_params.filterByColor = True
+    large_params.minCircularity = (quality)  # smooth sided (0 is very pointy) 0.4 was used by Alex
+    large_params.filterByCircularity = True
+    large_params.minInertiaRatio = 0.7  # non stretched
+    large_params.filterByInertia = True
+    large_params.minConvexity = 0.7  # convex
+    large_params.filterByConvexity = True
+
+    small_detector = cv2.SimpleBlobDetector_create(small_params)
+    large_detector = cv2.SimpleBlobDetector_create(large_params)
 
     # blob detect on the original
-    blobs = detector.detect(image)
+    small_blobs = small_detector.detect(thresholded)
 
     # blob detect on the thresholded copy
-    binary_blobs = detector.detect(thresholded)
+    large_blobs = large_detector.detect(thresholded)
 
     # keep blobs found in both with similar sizes
     if show:
         print(path)
-        print("round blobs in original:")
-        print([(blob.pt[0], blob.pt[1], blob.size / 2.0) for blob in blobs])
-        print("round blobs after otsu thresholding:")
-        print([(blob.pt[0], blob.pt[1], blob.size / 2.0) for blob in binary_blobs])
+        print("small round blobs:")
+        print([(blob.pt[0], blob.pt[1], blob.size / 2.0) for blob in small_blobs])
+        print("large round blobs:")
+        print([(blob.pt[0], blob.pt[1], blob.size / 2.0) for blob in large_blobs])
 
-    circles = []
     target_blob_list = []
-    for blob in blobs:
-        for binary_blob in binary_blobs:
-            # They match if center's and radii are similar
-            if (
-                distance(blob.pt, binary_blob.pt)
-                + abs(blob.size / 2.0 - binary_blob.size / 2.0)
-                < tolerance
-            ):
-                circles.append((blob.pt[0], blob.pt[1], blob.size / 2.0))
-                target_blob_list.append(blob)
-                if show:
-                    print(
-                        distance(blob.pt, binary_blob.pt)
-                        + abs(blob.size / 2.0 - binary_blob.size / 2.0)
-                    )
-                break
 
-    if (grouprange is not None) or len(target_blob_list) >= 2:
+    if group_range is not None:
         accepted = []
-        for i in range(len(target_blob_list)):
-            for j in range(i + 1, len(target_blob_list)):
+        for small in small_blobs:
+            for large in large_blobs:
+                dist = distance(small.pt, large.pt)
                 if show:
-                    print(distance(target_blob_list[i].pt, target_blob_list[j].pt))
-                if (
-                    distance(target_blob_list[i].pt, target_blob_list[j].pt)
-                    < grouprange
-                ):
-                    accepted.append(target_blob_list[i])
-                    accepted.append(target_blob_list[j])
+                    print(dist)
+                if (dist > group_range*(1-group_range_tolerance) and
+                        dist < group_range*(1+group_range_tolerance)):
+                    accepted.append(small)
+                    accepted.append(large)
                     break
         target_blob_list = accepted
 
     if show:
+        print("Near blobs")
+        print([(blob.pt[0], blob.pt[1], blob.size / 2.0) for blob in target_blob_list])
+
+    if debugging:
         width, height = image.shape[1] // 4, image.shape[0] // 4
         shrunk_original = cv2.resize(image, (width, height))
         # ensure at least some circles were found
@@ -119,7 +130,7 @@ def find_bright_sharp_circles(
                 [(blob.pt[0], blob.pt[1], blob.size / 2.0) for blob in target_blob_list]
             )
             # loop over the (x, y) coordinates and radius of the circles
-            for circle in target_blob_list:
+            for circle in large_blobs:
                 x, y = circle.pt
                 x = int(x)
                 y = int(y)
@@ -128,14 +139,25 @@ def find_bright_sharp_circles(
                 # corresponding to the center of the circle
                 cv2.circle(output, (x, y), r, (0, 255, 0), 4)
                 cv2.rectangle(output, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
+            for circle in small_blobs:
+                x, y = circle.pt
+                x = int(x)
+                y = int(y)
+                r = int(circle.size / 2)
+                # draw the circle in the output image, then draw a rectangle
+                # corresponding to the center of the circle
+                cv2.circle(output, (x, y), r, (255, 0, 0), 4)
+                cv2.rectangle(output, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
 
         # show the output image
         shrunk_output = cv2.resize(output, (width, height))
         shrunk_thresh = cv2.resize(
             cv2.cvtColor(thresholded, cv2.COLOR_GRAY2BGR), (width, height)
         )
-        cv2.imshow(path, np.hstack([shrunk_original, shrunk_output, shrunk_thresh]))
-        cv2.moveWindow(path, 0, 0)
+        outpath = path.replace('.bmp', 'thresnew.bmp').replace('/', '', 1)
+        cv2.imwrite(outpath, np.hstack([shrunk_original, shrunk_output, shrunk_thresh]))
+        #cv2.imshow(path, np.hstack([shrunk_original, shrunk_output, shrunk_thresh]))
+        #cv2.moveWindow(path, 0, 0)
         print()
 
     return target_blob_list
@@ -146,7 +168,8 @@ def targetCoordinates(image_path, pars=None, correct=None):
 
     :param image_path:
     :param pars:
-    :return: A tuple length 6 containing the x,y coordinate and quality factor for the small and large targets
+    :return: A tuple length 6 containing the x,y coordinate and quality factor
+    for the small and large targets
     (small_x, small_y, small_qual, big_x, big_y, big_qual)
     """
 
@@ -157,13 +180,19 @@ def targetCoordinates(image_path, pars=None, correct=None):
             loglevel=pars.loglevel,
         )
 
+    # ideally replace this with a similar function as above
+    small_radius_px = pars.SMALL_RADIUS / pars.PLATESCALE
+    large_radius_px = pars.LARGE_RADIUS / pars.PLATESCALE
+    group_range_px = pars.GROUP_RANGE / pars.PLATESCALE
+    
     blobs = find_bright_sharp_circles(
         image_path,
-        pars.MIN_RADIUS,
-        pars.MAX_RADIUS,
-        grouprange=pars.GROUP_RANGE,
+        small_radius_px,
+        large_radius_px,
+        group_range=group_range_px,
         quality=pars.QUALITY_METRIC,
-        tolerance=pars.TOLERANCE,
+        blob_size_tolerance=pars.BLOB_SIZE_TOLERANCE,
+        group_range_tolerance=pars.GROUP_RANGE_TOLERANCE,
     )
     if len(blobs) != 2:
         raise OtsuTargetFindingError(
@@ -196,95 +225,3 @@ def targetCoordinates(image_path, pars=None, correct=None):
         large_blob_y,
         pars.QUALITY_METRIC,
     )
-
-
-if __name__ == "__main__":
-    path, maxr, minr = "metrology_dots/PT25_metcal_1_00{}.bmp", 200, 45
-    paths = [path.format(i) for i in range(1, 6)]
-    for path in paths:
-        if os.path.isfile(path):
-            find_bright_sharp_circles(path, minr, maxr, 525, show=True)
-            cv2.waitKey()
-            cv2.destroyWindow(path)
-
-    path, maxr, minr = "metrology_dots/PT25_posrep_1_00{}.bmp", 55, 15
-    paths = [path.format(i) for i in range(1, 6)]
-    for path in paths:
-        if os.path.isfile(path):
-            find_bright_sharp_circles(path, minr, maxr, 200, show=True)
-            cv2.waitKey()
-            cv2.destroyWindow(path)
-
-    path, maxr, minr = "metrology_dots/PT24_posrep_selftest.bmp", 55, 15
-    if os.path.isfile(path):
-        find_bright_sharp_circles(path, minr, maxr, 200, show=True)
-        cv2.waitKey()
-        cv2.destroyWindow(path)
-
-    locations = ("image_dump", "image_dump2")
-
-    posreps = 0
-    empty = 0
-    metcal = 0
-    height = 0
-    pupil = 0
-    other = []
-    for root, directories, files in chain.from_iterable(
-        os.walk(location) for location in locations
-    ):
-        for file in files:
-            path = os.path.join(root, file)
-            if os.stat(path).st_size == 0:
-                empty += 1
-            elif "posrep" in path or "positional" in path:
-                posreps += 1
-            elif "metcal" in path or "datumed" in path or "met-cal-target" in path:
-                metcal += 1
-            elif "metrology-height" in path:
-                height += 1
-            elif "pupil" in path:
-                pupil += 1
-            else:
-                other.append(path)
-
-    print(other, len(other), posreps, metcal, empty, height, pupil)
-
-    opened = 0
-    checked = 0
-    for root, directories, files in chain.from_iterable(
-        os.walk(location) for location in locations
-    ):
-        for file in files:
-            path = os.path.join(root, file)
-            if ("posrep" in path or "positional" in path) and os.stat(path).st_size > 0:
-                blobs = find_bright_sharp_circles(
-                    path, 15, 55, grouprange=200, show=True
-                )
-                cv2.waitKey()
-                cv2.destroyWindow(path)
-                if len(blobs) != 2:
-                    print(path, blobs)
-                    opened += 1
-                checked += 1
-    print(checked, opened)
-
-    opened = 0
-    checked = 0
-    for root, directories, files in chain.from_iterable(
-        os.walk(location) for location in locations
-    ):
-        for file in files:
-            path = os.path.join(root, file)
-            if (
-                "metcal" in path or "datumed" in path or "met-cal-target" in path
-            ) and os.stat(path).st_size > 0:
-                blobs = find_bright_sharp_circles(
-                    path, 45, 200, grouprange=525, show=True
-                )
-                cv2.waitKey()
-                cv2.destroyWindow(path)
-                if len(blobs) != 2:
-                    print(path, blobs)
-                    opened += 1
-                checked += 1
-    print(checked, opened)
