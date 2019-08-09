@@ -3,6 +3,8 @@ from __future__ import absolute_import, division, print_function
 
 from inspect import cleandoc
 
+MIN_VERSION_POS_VER_RESULT = (1, 0, 0)
+
 POS_VER_NA = "positional verification   : n/a"
 POS_VER_NA_CSV = "positional verification,n/a"
 

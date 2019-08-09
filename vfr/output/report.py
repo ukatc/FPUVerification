@@ -19,6 +19,8 @@ from vfr.output.report_formats import (
 )
 from vfr.output.report_formats.rfmt_pos_rep import MIN_GEARBOX_CORRECTION_VERSION_REPORT
 
+from vfr.output.report_formats.rfmt_pos_ver import MIN_VERSION_POS_VER_RESULT
+
 tw = TextWrapper(
     width=120,
     initial_indent="",
@@ -386,13 +388,13 @@ def format_report_terse(
     else:
         err_msg = positional_verification_result["error_message"]
         if not err_msg:
-            yield rfmt_pos_ver.POS_VER_RESULT_TERSE.format(
-                **positional_verification_result
-            )
+            if positional_verification_result["evaluation_version"] < MIN_VERSION_POS_VER_RESULT:
+                yield "positional verification : obsolete result version"
+            else:
+                yield rfmt_pos_ver.POS_VER_RESULT_TERSE.format(
+                    **positional_verification_result
+                )
 
-            yield fill(
-                rfmt_pos_ver.POS_VER_CALPARS.format(**positional_verification_result)
-            )
         else:
             yield rfmt_pos_ver.POS_VER_ERRMSG.format(**positional_verification_result)
 
@@ -557,13 +559,16 @@ def format_report_complete(
     else:
         err_msg = positional_verification_result["error_message"]
         if not err_msg:
-            yield rfmt_pos_ver.POS_VER_RESULT_COMPLETE.format(
-                **positional_verification_result
-            )
+            if positional_verification_result["evaluation_version"] < MIN_VERSION_POS_VER_RESULT:
+                yield "positional verification : obsolete result version"
+            else:
+                yield rfmt_pos_ver.POS_VER_RESULT_COMPLETE.format(
+                    **positional_verification_result
+                )
 
-            yield fill(
-                rfmt_pos_ver.POS_VER_CALPARS.format(**positional_verification_result)
-            )
+                yield fill(
+                    rfmt_pos_ver.POS_VER_CALPARS.format(**positional_verification_result)
+                )
 
         else:
             yield rfmt_pos_ver.POS_VER_ERRMSG.format(**positional_verification_result)
@@ -780,18 +785,21 @@ def format_report_long(
     else:
         err_msg = positional_verification_result["error_message"]
         if not err_msg:
-            yield rfmt_pos_ver.POS_VER_RESULT_LONG.format(
-                **positional_verification_result
-            )
+            if positional_verification_result["evaluation_version"] < MIN_VERSION_POS_VER_RESULT:
+                yield "positional verification : obsolete result version"
+            else:
+                yield rfmt_pos_ver.POS_VER_RESULT_LONG.format(
+                    **positional_verification_result
+                )
 
-            yield fill(
-                rfmt_pos_ver.POS_VER_CALPARS.format(**positional_verification_result)
-            )
+                yield fill(
+                    rfmt_pos_ver.POS_VER_CALPARS.format(**positional_verification_result)
+                )
 
-            error_by_coords = positional_verification_result["posver_error_by_angle"]
-            error_argmax = positional_verification_result["arg_max_error"]
-            for line in list_posver_err_by_coord(error_by_coords, error_argmax):
-                yield line
+                error_by_coords = positional_verification_result["posver_error_by_angle"]
+                error_argmax = positional_verification_result["arg_max_error"]
+                for line in list_posver_err_by_coord(error_by_coords, error_argmax):
+                    yield line
 
         else:
             yield rfmt_pos_ver.POS_VER_ERRMSG.format(**positional_verification_result)
@@ -1037,22 +1045,25 @@ def format_report_extended(
     else:
         err_msg = positional_verification_result["error_message"]
         if not err_msg:
-            yield rfmt_pos_ver.POS_VER_RESULT_EXTENDED.format(
-                **positional_verification_result
-            )
+            if positional_verification_result["evaluation_version"] < MIN_VERSION_POS_VER_RESULT:
+                yield "positional verification : obsolete result version"
+            else:
+                yield rfmt_pos_ver.POS_VER_RESULT_EXTENDED.format(
+                    **positional_verification_result
+                )
 
-            yield fill(
-                rfmt_pos_ver.POS_VER_CALPARS.format(**positional_verification_result)
-            )
+                yield fill(
+                    rfmt_pos_ver.POS_VER_CALPARS.format(**positional_verification_result)
+                )
 
-            error_by_coords = positional_verification_result["posver_error_by_angle"]
-            error_argmax = positional_verification_result["arg_max_error"]
-            for line in list_posver_err_by_coord(error_by_coords, error_argmax):
-                yield line
+                error_by_coords = positional_verification_result["posver_error_by_angle"]
+                error_argmax = positional_verification_result["arg_max_error"]
+                for line in list_posver_err_by_coord(error_by_coords, error_argmax):
+                    yield line
 
-            yield fill(
-                rfmt_pos_ver.POS_VER_ERRVALS.format(**positional_verification_result)
-            )
+                yield fill(
+                    rfmt_pos_ver.POS_VER_ERRVALS.format(**positional_verification_result)
+                )
 
         else:
             yield rfmt_pos_ver.POS_VER_ERRMSG.format(**positional_verification_result)
@@ -1345,22 +1356,25 @@ def format_report_csv(
     else:
         err_msg = positional_verification_result["error_message"]
         if not err_msg:
-            yield rfmt_pos_ver.POS_VER_RESULT_CSV.format(
-                **positional_verification_result
-            )
-
-            yield (
-                rfmt_pos_ver.POS_VER_CALPARS_CSV.format(
+            if positional_verification_result["evaluation_version"] < MIN_VERSION_POS_VER_RESULT:
+                yield "positional verification,obsolete result version"
+            else:
+                yield rfmt_pos_ver.POS_VER_RESULT_CSV.format(
                     **positional_verification_result
                 )
-            )
 
-            error_by_coords = positional_verification_result["posver_error_by_angle"]
-            yield ""
-            yield "posver errors"
-            yield "i,alpha,beta,err"
-            for (i, alpha, beta), err in error_by_coords.items():
-                yield "%i,%f,%f,%f" % (i, alpha, beta, err)
+                yield (
+                    rfmt_pos_ver.POS_VER_CALPARS_CSV.format(
+                        **positional_verification_result
+                    )
+                )
+
+                error_by_coords = positional_verification_result["posver_error_by_angle"]
+                yield ""
+                yield "posver errors"
+                yield "i,alpha,beta,err"
+                for (i, alpha, beta), err in error_by_coords.items():
+                    yield "%i,%f,%f,%f" % (i, alpha, beta, err)
 
         else:
             yield rfmt_pos_ver.POS_VER_ERRMSG_CSV.format(

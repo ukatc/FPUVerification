@@ -102,10 +102,28 @@ PLOT_DEFAULT_SELECTION = PLOT_CAL_DEFAULT | set("ABR")
 PLOT_ALL = set("ABR") | PLOT_CAL_ALL
 
 def plot_pos_ver(fpu_id, pos_ver_result, pos_rep_result, opts):
+    logger = logging.getLogger(__name__)
+
+    measured_points = pos_ver_result["measured_points"]
+    if not measured_points:
+        logger.info("FPU {}: no data for plotting pos-ver result - skipped".format(fpu_id))
+        return
+
+    eval_version = pos_ver_result["evaluation_version"]
+    if eval_version < (1, 0, 0):
+        logger.info("FPU {:s}: positional verification data evaluation "
+                    "version is too old ({:s}) - plot skipped.".format(fpu_id, eval_version))
+        return
+
+    if pos_rep_result is None:
+        logger.info("FPU {:s}: positional repeatability data"
+                    " is missing, plot skipped.".format(fpu_id))
+        return
+
     x_center = pos_rep_result["gearbox_correction"]["x_center"]
     y_center = pos_rep_result["gearbox_correction"]["y_center"]
 
-    measured_points = pos_ver_result["measured_points"]
+
     x_measured, y_measured = np.array(measured_points.values()).T
 
     expected_points = pos_ver_result["expected_points"]
