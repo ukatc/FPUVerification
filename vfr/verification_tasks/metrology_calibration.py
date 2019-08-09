@@ -120,15 +120,16 @@ def eval_metrology_calibration(
 
     logger = logging.getLogger(__name__)
     for fpu_id in dbe.eval_fpuset:
+        sn = dbe.fpu_config[fpu_id]["serialnumber"]
         measurement = get_metrology_calibration_images(dbe, fpu_id)
 
         if measurement is None:
             logger.info(
-                "FPU %s: no metrology calibration measurement data found" % fpu_id
+                "FPU %s: no metrology calibration measurement data found" % sn
             )
             continue
 
-        logger.info("evaluating metrology calibration for FPU %s" % fpu_id)
+        logger.info("evaluating metrology calibration for FPU %s" % sn)
 
         images = measurement["images"]
 
@@ -150,8 +151,10 @@ def eval_metrology_calibration(
                 "fibre_q": fibre_coordinates[2],
             }
 
-            metcal_fibre_large_target_distance_mm, metcal_fibre_small_target_distance_mm, metcal_target_vector_angle_deg = fibre_target_distance(
-                target_coordinates[0:2], target_coordinates[3:5], fibre_coordinates[0:2]
+            (metcal_fibre_large_target_distance_mm,
+             metcal_fibre_small_target_distance_mm,
+             metcal_target_vector_angle_deg) = fibre_target_distance(
+                 target_coordinates[0:2], target_coordinates[3:5], fibre_coordinates[0:2]
             )
 
             errmsg = None
@@ -163,7 +166,7 @@ def eval_metrology_calibration(
             metcal_fibre_small_target_distance_mm = NaN
             metcal_target_vector_angle_deg = NaN
             logger.exception(
-                "image analysis for FPU %s failed with message %s" % (fpu_id, errmsg)
+                "image analysis for FPU %s failed with message %s" % (sn, errmsg)
             )
 
         record = MetrologyCalibrationResult(
@@ -175,5 +178,5 @@ def eval_metrology_calibration(
             algorithm_version=METROLOGY_ANALYSIS_ALGORITHM_VERSION,
         )
 
-        logger.debug("FPU %r: saving result record = %r" % (fpu_id, record))
+        logger.debug("FPU %r: saving result record = %r" % (sn, record))
         save_metrology_calibration_result(dbe, fpu_id, record)

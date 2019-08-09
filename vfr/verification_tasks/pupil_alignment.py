@@ -185,12 +185,13 @@ def eval_pupil_alignment(
 
     for fpu_id in dbe.eval_fpuset:
         measurement = get_pupil_alignment_images(dbe, fpu_id)
+        sn = dbe.fpu_config[fpu_id]["serialnumber"]
 
         if measurement is None:
-            logger.info("FPU %s: no pupil alignment measurement data found" % fpu_id)
+            logger.info("FPU %s: no pupil alignment measurement data found" % sn)
             continue
 
-        logger.info("evaluating pupil alignment for FPU %s" % fpu_id)
+        logger.info("evaluating pupil alignment for FPU %s" % sn)
 
         images = measurement["images"]
 
@@ -238,7 +239,7 @@ def eval_pupil_alignment(
             pupil_alignment_has_passed = TestResult.NA
             min_quality = NaN
             logger.exception(
-                "image analysis for FPU %s failed with message %s" % (fpu_id, errmsg)
+                "image analysis for FPU %s failed with message %s" % (sn, errmsg)
             )
 
         pupil_alignment_measures = {
@@ -257,5 +258,5 @@ def eval_pupil_alignment(
             error_message=errmsg,
             algorithm_version=PUPIL_ALIGNMENT_ALGORITHM_VERSION,
         )
-        logger.debug("FPU %r: saving result record = %r" % (fpu_id, record))
+        logger.debug("FPU %r: saving result record = %r" % (sn, record))
         save_pupil_alignment_result(dbe, fpu_id, record)

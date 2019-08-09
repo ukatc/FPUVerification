@@ -248,14 +248,15 @@ def eval_datum_repeatability(dbe, dat_rep_analysis_pars):
     logger = logging.getLogger(__name__)
 
     for fpu_id in dbe.eval_fpuset:
+        sn = dbe.fpu_config[fpu_id]["serialnumber"]
         measurement = get_datum_repeatability_images(dbe, fpu_id)
         if measurement is None:
             logger.info(
-                "FPU %s: no datum repeatability measurement data found" % fpu_id
+                "FPU %s: no datum repeatability measurement data found" % sn
             )
             continue
 
-        logger.info("evaluating datum repeatability for FPU %s" % fpu_id)
+        logger.info("evaluating datum repeatability for FPU %s" % sn)
 
         images = measurement["images"]
 
@@ -352,7 +353,7 @@ def eval_datum_repeatability(dbe, dat_rep_analysis_pars):
             error_measures = NO_RESULT
 
             logger.exception(
-                "image analysis for FPU %s failed with message %s" % (fpu_id, errmsg)
+                "image analysis for FPU %s failed with message %s" % (sn, errmsg)
             )
 
         record = DatumRepeatabilityResult(
@@ -370,5 +371,5 @@ def eval_datum_repeatability(dbe, dat_rep_analysis_pars):
             result=datum_repeatability_has_passed,
         )
 
-        logger.debug("FPU %r: saving result record = %r" % (fpu_id, record))
+        logger.debug("FPU %r: saving result record = %r" % (sn, record))
         save_datum_repeatability_result(dbe, fpu_id, record)

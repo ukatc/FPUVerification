@@ -368,14 +368,15 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
     logger = logging.getLogger(__name__)
     for fpu_id in dbe.eval_fpuset:
         measurement = get_positional_repeatability_images(dbe, fpu_id)
+        sn = dbe.fpu_config[fpu_id]["serialnumber"]
 
         if measurement is None:
             logger.info(
-                "FPU %s: no positional repeatability measurement data found" % fpu_id
+                "FPU %s: no positional repeatability measurement data found" % sn
             )
             continue
 
-        logger.info("evaluating positional repeatability for FPU %s" % fpu_id)
+        logger.info("evaluating positional repeatability for FPU %s" % sn)
 
         images_alpha = measurement["images_alpha"]
         images_beta = measurement["images_beta"]
@@ -536,7 +537,7 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
             arg_max_alpha_error = NaN
             arg_max_beta_error = NaN
             logger.exception(
-                "image analysis for FPU %s failed with message %s" % (fpu_id, errmsg)
+                "image analysis for FPU %s failed with message %s" % (sn, errmsg)
             )
 
         record = PositionalRepeatabilityResults(
@@ -559,5 +560,5 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
             gearbox_correction_version=GEARBOX_CORRECTION_VERSION,
         )
 
-        logger.debug("FPU %r: saving result record = %r" % (fpu_id, record))
+        logger.debug("FPU %r: saving result record = %r" % (sn, record))
         save_positional_repeatability_result(dbe, fpu_id, record)

@@ -91,12 +91,13 @@ def eval_metrology_height(dbe, met_height_analysis_pars, met_height_evaluation_p
     logger = logging.getLogger(__name__)
     for fpu_id in dbe.eval_fpuset:
         measurement = get_metrology_height_images(dbe, fpu_id)
+        sn = dbe.fpu_config[fpu_id]["serialnumber"]
 
         if measurement is None:
-            logger.info("FPU %s: no metrology height measurement data found" % fpu_id)
+            logger.info("FPU %s: no metrology height measurement data found" % sn)
             continue
 
-        logger.info("evaluating metrology height for FPU %s" % fpu_id)
+        logger.info("evaluating metrology height for FPU %s" % sn)
 
         images = fixup_ipath(measurement["images"])
 
@@ -122,7 +123,7 @@ def eval_metrology_height(dbe, met_height_analysis_pars, met_height_evaluation_p
             metht_large_target_height_mm = NaN
             test_result = TestResult.NA
             logger.exception(
-                "image analysis for FPU %s failed with message %s" % (fpu_id, errmsg)
+                "image analysis for FPU %s failed with message %s" % (sn, errmsg)
             )
 
         record = MetrologyHeightResult(
@@ -132,5 +133,5 @@ def eval_metrology_height(dbe, met_height_analysis_pars, met_height_evaluation_p
             error_message=errmsg,
             algorithm_version=METROLOGY_HEIGHT_ANALYSIS_ALGORITHM_VERSION,
         )
-        logger.debug("FPU %r: saving result record = %r" % (fpu_id, record))
+        logger.debug("FPU %r: saving result record = %r" % (sn, record))
         save_metrology_height_result(dbe, fpu_id, record)

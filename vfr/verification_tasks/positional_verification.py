@@ -328,15 +328,16 @@ def eval_positional_verification(dbe, pos_rep_analysis_pars, pos_ver_evaluation_
 
     logger = logging.getLogger(__name__)
     for fpu_id in dbe.eval_fpuset:
+        sn = dbe.fpu_config[fpu_id]["serialnumber"]
         measurement = get_positional_verification_images(dbe, fpu_id)
 
         if measurement is None:
             logger.info(
-                "FPU %s: no positional verification measurement data found" % fpu_id
+                "FPU %s: no positional verification measurement data found" % sn
             )
             continue
 
-        logger.info("evaluating positional verification for FPU %s" % fpu_id)
+        logger.info("evaluating positional verification for FPU %s" % sn)
 
         gearbox_algorithm_version = measurement["gearbox_algorithm_version"]
         if gearbox_algorithm_version < GEARBOX_CORRECTION_MINIMUM_VERSION:
@@ -344,7 +345,7 @@ def eval_positional_verification(dbe, pos_rep_analysis_pars, pos_ver_evaluation_
                 "FPU %s: positional verification data uses algorithm version %s, "
                 "required minimum version is %s. Evaluation skipped."
                 % (
-                    fpu_id,
+                    sn,
                     gearbox_algorithm_version,
                     GEARBOX_CORRECTION_MINIMUM_VERSION,
                 )
@@ -441,7 +442,7 @@ def eval_positional_verification(dbe, pos_rep_analysis_pars, pos_ver_evaluation_
             min_quality = NaN
             arg_max_error = NaN
             logger.exception(
-                "image analysis for FPU %s failed with message %s" % (fpu_id, errmsg)
+                "image analysis for FPU %s failed with message %s" % (sn, errmsg)
             )
 
         record = PositionalVerificationResult(
@@ -460,5 +461,5 @@ def eval_positional_verification(dbe, pos_rep_analysis_pars, pos_ver_evaluation_
             algorithm_version=GEARBOX_CORRECTION_VERSION,
             evaluation_version=POS_VER_ALGORITHM_VERSION,
         )
-        logger.debug("FPU %r: saving result record = %r" % (fpu_id, record))
+        logger.debug("FPU %r: saving result record = %r" % (sn, record))
         save_positional_verification_result(dbe, fpu_id, record)
