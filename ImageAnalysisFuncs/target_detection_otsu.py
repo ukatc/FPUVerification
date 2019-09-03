@@ -40,7 +40,7 @@ def find_bright_sharp_circles(path,
     returned and group_range will have no effect.
     
     The show and debugging options are for local testing, show = True with print
-    more diagnositcs and debugging = True will save a file with found blobs on
+    more diagnostics and debugging = True will save a file with found blobs on
     the image 
 
     :return: a list of opencv blobs for each detected dot.
@@ -168,11 +168,12 @@ def targetCoordinates(image_path, pars=None, correct=None):
 
     :param image_path:
     :param pars:
-    :return: A tuple length 6 containing the x,y coordinate and quality factor
-    for the small and large targets
+    :return: A tuple length 6 containing the x,y coordinate in mm and a minimun
+    guaranteed quality factor for the small and large targets
     (small_x, small_y, small_qual, big_x, big_y, big_qual)
     """
 
+   # Find correct conversion from px to mm
     if correct is None:
         correct = get_correction_func(
             calibration_pars=pars.CALIBRATION_PARS,
@@ -180,7 +181,8 @@ def targetCoordinates(image_path, pars=None, correct=None):
             loglevel=pars.loglevel,
         )
 
-    # ideally replace this with a similar function as above
+    # Depending on the camera calibration this step is approximate, as the
+    # position is unknown.
     small_radius_px = pars.SMALL_RADIUS / pars.PLATESCALE
     large_radius_px = pars.LARGE_RADIUS / pars.PLATESCALE
     group_range_px = pars.GROUP_RANGE / pars.PLATESCALE
@@ -207,16 +209,14 @@ def targetCoordinates(image_path, pars=None, correct=None):
     else:
         large_blob, small_blob = blobs
 
+    # convert results from pixels to mm
     small_blob_x, small_blob_y = correct(small_blob.pt[0], small_blob.pt[1])
     large_blob_x, large_blob_y = correct(large_blob.pt[0], large_blob.pt[1])
 
-    # out of date
-    # small_quality = 4 * math.pi * small_blob.area / (small_blob.length * small_blob.length)
 
-    # large_quality = 4 * math.pi * large_blob.area / (large_blob.length * large_blob.length)
-
-    # return (small_blob.centroid.x, small_blob.centroid.y, small_quality,
-    #        large_blob.centroid.x, large_blob.centroid.y, large_quality)
+    # The returned quality is a fixed value, the new blob detector doesn't
+    # return the quality of each blob, but a minimum can be set so results
+    # are guaranteed to have a equal or higher quality to the returned value
     return (
         small_blob_x,
         small_blob_y,
