@@ -97,11 +97,12 @@ DAT_REP_CALIBRATION_PARS = {"algorithm": "scale", "scale_factor": DAT_REP_PLATES
 
 DAT_REP_TARGET_DETECTION_OTSU_PARS = Namespace(
     CALIBRATION_PARS=DAT_REP_CALIBRATION_PARS,
-    MIN_RADIUS=50,  # in pixels
-    MAX_RADIUS=187,  # in pixels
-    GROUP_RANGE=680,  # in pixels
+    SMALL_RADIUS=SMALL_TARGET_RADIUS,  # in mm
+    LARGE_RADIUS=LARGE_TARGET_RADIUS,  # in mm
+    GROUP_RANGE=TARGET_SEPERATION,  # in mm
     QUALITY_METRIC=0.4,  # dimensionless
-    TOLERANCE=7.0,  # pixels
+    BLOB_SIZE_TOLERANCE=0.2, # dimensionless
+    GROUP_RANGE_TOLERANCE=0.2 # dimensionless
 )
 DAT_REP_TARGET_DETECTION_CONTOUR_PARS = Namespace(
     CALIBRATION_PARS=DAT_REP_CALIBRATION_PARS,
@@ -160,13 +161,15 @@ MET_CAL_MEASUREMENT_PARS = Namespace(
 
 MET_CAL_PLATESCALE = 0.00668  # millimeter per pixel
 MET_CAL_CALIBRATION_PARS = {"algorithm": "scale", "scale_factor": MET_CAL_PLATESCALE}
+
 MET_CAL_TARGET_DETECTION_OTSU_PARS = Namespace(
     CALIBRATION_PARS=MET_CAL_CALIBRATION_PARS,
-    MIN_RADIUS=45,  # in pixels
-    MAX_RADIUS=200,  # in pixels
-    GROUP_RANGE=525,  # in pixels
+    SMALL_RADIUS=SMALL_TARGET_RADIUS,  # in mm
+    LARGE_RADIUS=LARGE_TARGET_RADIUS,  # in mm
+    GROUP_RANGE=TARGET_SEPERATION,  # in mm
     QUALITY_METRIC=0.4,  # dimensionless
-    TOLERANCE=7.0,  # pixels
+    BLOB_SIZE_TOLERANCE=0.2, # dimensionless
+    GROUP_RANGE_TOLERANCE=0.2 # dimensionless
 )
 MET_CAL_TARGET_DETECTION_CONTOUR_PARS = Namespace(
     SMALL_DIAMETER=1.42,  # millimeter
