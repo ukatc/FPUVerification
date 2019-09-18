@@ -101,15 +101,15 @@ POS_REP_GEARCOR_EXTENDED = cleandoc(
 
        positional repeatability: gearbox correction alpha coefs camera_offset_rad        = {gearbox_correction[coeffs][coeffs_alpha][camera_offset_rad]:7.2f}
        positional repeatability: gearbox correction beta fixpoint_rad                    =  {gearbox_correction[coeffs][coeffs_alpha][beta_fixpoint_rad]:7.2f}
-       positional repeatability: gearbox correction alpha ellipsis angle                 =   {gearbox_correction[coeffs][coeffs_alpha][psi]:7.2f} rad
-       positional repeatability: gearbox correction alpha ellipsis stretch               =  {gearbox_correction[coeffs][coeffs_alpha][stretch]:7.2f} [1]
+       positional repeatability: gearbox correction alpha ellipsis angle                 =   {gearbox_correction[coeffs][coeffs_alpha][psi]:8.6f} rad
+       positional repeatability: gearbox correction alpha ellipsis stretch               =  {gearbox_correction[coeffs][coeffs_alpha][stretch]:8.6f} [1]
        positional repeatability: gearbox correction alpha R                              =  {gearbox_correction[coeffs][coeffs_alpha][R]:6.5} mm
        positional repeatability: gearbox correction beta algorithm                       = {gearbox_correction[coeffs][coeffs_beta][algorithm]}
        positional repeatability: gearbox correction beta num support / data points       = {gearbox_correction[coeffs][coeffs_beta][num_support_points]} / {gearbox_correction[coeffs][coeffs_beta][num_data_points]}
        positional repeatability: gearbox correction beta coefs beta0_rad                 = {gearbox_correction[coeffs][coeffs_beta][beta0_rad]:7.2f}
        positional repeatability: gearbox correction alpha fixpoint_rad                   = {gearbox_correction[coeffs][coeffs_beta][alpha_fixpoint_rad]:7.2f}
-       positional repeatability: gearbox correction beta ellipsis angle                  =  {gearbox_correction[coeffs][coeffs_beta][psi]:7.2f} rad
-       positional repeatability: gearbox correction beta ellipsis stretch                = {gearbox_correction[coeffs][coeffs_beta][stretch]:7.2f} [1]
+       positional repeatability: gearbox correction beta ellipsis angle                  =  {gearbox_correction[coeffs][coeffs_beta][psi]:8.6f} rad
+       positional repeatability: gearbox correction beta ellipsis stretch                = {gearbox_correction[coeffs][coeffs_beta][stretch]:8.6f} [1]
        positional repeatability: gearbox correction beta R midpoint                      = {gearbox_correction[coeffs][coeffs_beta][R]:6.5} mm
        .
 
