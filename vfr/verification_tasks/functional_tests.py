@@ -330,6 +330,9 @@ def test_limit(rig, dbe, which_limit, pars=None):
                         "alpha limit recovery: moving fpu %i back by %i steps [%i]"
                         % (fpu_id, n_steps, k)
                     )
+                    # TODO: Edit here to convert to protocol 2.
+                    # Replace the restFPUs with freeAlphaLimitBreach followed by enableAlphaLimitprotection,
+                    # move to a safe location with software protection=False, then remove the second reset.
                     rig.gd.resetFPUs(rig.grid_state, [fpu_id], verbose=False)
                     wf = gen_wf(n_steps * dirac(fpu_id, N), 0, units="steps")
                     rig.gd.configMotion(
