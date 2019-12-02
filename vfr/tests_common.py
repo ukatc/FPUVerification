@@ -20,7 +20,7 @@ from fpu_constants import ALPHA_DATUM_OFFSET, BETA_DATUM_OFFSET
 import FpuGridDriver
 from FpuGridDriver import (
     CAN_PROTOCOL_VERSION,
-)  # see documentation reference for Exception hierarchy; (for CAN protocol 1, this is section 12. \
+)  # see documentation reference for Exception hierarchy; (for CAN protocol 2, this is section ??. \
 from FpuGridDriver import (
     DASEL_BOTH,
     DATUM_TIMEOUT_DISABLE,

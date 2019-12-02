@@ -6,6 +6,7 @@ from vfr.auditlog import get_fpuLogger
 from fpu_constants import StepsPerDegreeBeta
 from fpu_commands import gen_wf
 from FpuGridDriver import (
+    CAN_PROTOCOL_VERSION,
     DASEL_ALPHA,
     DASEL_BETA,
     DASEL_BOTH,
@@ -142,6 +143,7 @@ def test_datum(rig, dbe, dasel=DASEL_BOTH):
 def test_limit(rig, dbe, which_limit, pars=None):
 
     check_for_quit()
+    assert (CAN_PROTOCOL_VERSION == 2), "This limit testing function only works with CAN protocol 2"
 
     logger = logging.getLogger(__name__)
     logger.info("functional limit test for %s started" % which_limit)
@@ -156,10 +158,12 @@ def test_limit(rig, dbe, which_limit, pars=None):
 
     if which_limit == "alpha_min":
         abs_alpha, abs_beta = pars.LIMIT_ALPHA_NEG_EXPECT, 0.0
+        free_dir = REQD_ANTI_CLOCKWISE
         dw = 30
         idx = 0
     elif which_limit == "alpha_max":
         abs_alpha, abs_beta = pars.LIMIT_ALPHA_POS_EXPECT, 0.0
+        free_dir = REQD_CLOCKWISE
         dw = -30
         idx = 0
     elif which_limit == "beta_min":
@@ -325,24 +329,21 @@ def test_limit(rig, dbe, which_limit, pars=None):
             if which_limit in ["alpha_max", "alpha_min"]:
                 n_steps = 10 * sign(int(dw))
                 n_moves = 10
+
+                # NOTE: This section converted to protocol 2.
+                # resetFPUs replaced with freeAlphaLimitBreach followed by enableAlphaLimitprotection,
+                # move to a safe location with software protection=False, then remove the second reset.
                 for k in range(n_moves):
+                    rig.gd.freeAlphaLimitBreach(
+                        fpu_id, free_dir, rig.grid_state, soft_protection=False
+                    )
+                    rig.gd.pingFPUs(rig.grid_state, [fpu_id])
+                    angle = rig.gd.trackedAngles(rig.grid_state, retrieve=True)[fpu_id]
                     fpu_logger.trace(
-                        "alpha limit recovery: moving fpu %i back by %i steps [%i]"
-                        % (fpu_id, n_steps, k)
+                        "alpha limit recovery: fpu %i current angle = %s [%i}"
+                        % (fpu_id, repr(angle), k)
                     )
-                    # TODO: Edit here to convert to protocol 2.
-                    # Replace the restFPUs with freeAlphaLimitBreach followed by enableAlphaLimitprotection,
-                    # move to a safe location with software protection=False, then remove the second reset.
-                    rig.gd.resetFPUs(rig.grid_state, [fpu_id], verbose=False)
-                    wf = gen_wf(n_steps * dirac(fpu_id, N), 0, units="steps")
-                    rig.gd.configMotion(
-                        wf,
-                        rig.grid_state,
-                        soft_protection=False,
-                        warn_unsafe=False,
-                        allow_uninitialized=True,
-                    )
-                    rig.gd.executeMotion(rig.grid_state, fpuset=[fpu_id])
+                rig.gd.enableAlphaLimitProtection(rig.grid_state)
 
                 fpu_logger.debug("moving fpu %i back by %i degree" % (fpu_id, dw))
                 rig.gd.resetFPUs(rig.grid_state, [fpu_id])
