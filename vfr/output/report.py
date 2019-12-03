@@ -624,18 +624,18 @@ def list_posver_err_by_coord(error_by_coords, error_argmax, csv=False):
         
 def list_posver_expected_measured_coord(expected_coords, measured_coords, csv=False):
     if csv:
-        hdr = """positional verification,expected coordinate x,expected coordinate x,measured coordinatex, measured coordinatex"""
+        hdr = """Positional verification,expected coordinate x,expected coordinate x,measured coordinatex, measured coordinatex"""
         fmt = """Positional verification,{ecoord[0]:+8.2f},{ecoord[1]:+8.2f},{ecoord[0]:+8.2f},{ecoord[1]:+8.2f}"""
     else:
         hdr = (
-            """positional verification : Expected Coordinate, Measured Coordinate\n"""
-            """positional verification :     [mm], [mm], [mm],[mm]"""
+            """Positional verification : Expected Coordinate, Measured Coordinate\n"""
+            """Positional verification :           [mm],       [mm],       [mm],       [mm]"""
         )
-        fmt = """Positional verification :     # {ecoord[0]:+8.2f}, {ecoord[1]:+8.2f} : {ecoord[0]:+8.2f}, {ecoord[1]:+8.2f}"""
+        fmt = """Positional verification :     # {ecoord[0]:+8.6f}, {ecoord[1]:+8.6f} : {mcoord[0]:+8.6f}, {mcoord[1]:+8.6f}"""
 
     yield hdr
-    for ecoord, mcoord in expected_coords,measured_coords:
-        yield (fmt.format(ecoord=ecoord, mcoord=mcoord))
+    for key in expected_coords.keys():
+        yield (fmt.format(ecoord=expected_coords[key], mcoord=measured_coords[key]))
 
 
 
