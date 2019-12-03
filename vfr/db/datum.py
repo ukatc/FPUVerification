@@ -22,8 +22,8 @@ def save_datum_result(rig, dbe, dasel, rigstate):
             a_ok = rig.grid_state.FPU[fpu_id].alpha_was_zeroed
             b_ok = rig.grid_state.FPU[fpu_id].beta_was_zeroed
         else:
-            a_ok = rig.grid_state.FPU[fpu_id].alpha_was_calibrated
-            b_ok = rig.grid_state.FPU[fpu_id].beta_was_calibrated
+            a_ok = rig.grid_state.FPU[fpu_id].alpha_was_referenced
+            b_ok = rig.grid_state.FPU[fpu_id].beta_was_referenced
 
         serial_number = dbe.fpu_config[fpu_id]["serialnumber"]
         fpu_log = get_fpuLogger(fpu_id, dbe.fpu_config, __name__)

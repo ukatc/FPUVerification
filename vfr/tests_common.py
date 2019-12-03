@@ -153,7 +153,7 @@ def find_datum(gd, grid_state, opts=None, uninitialized=False):
     for fpu_id, fpu in enumerate(grid_state.FPU):
         logger.trace(
             "FPU %i (alpha_initalized, beta_initialized) = (%s, %s)"
-            % (fpu_id, fpu.alpha_was_zeroed, fpu.beta_was_zeroed)
+            % (fpu_id, fpu.alpha_was_referenced, fpu.beta_was_referenced)
         )
 
     unreferenced = []
