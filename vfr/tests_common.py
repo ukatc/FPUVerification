@@ -137,7 +137,7 @@ def goto_position(
     if CAN_PROTOCOL_VERSION == 1:
         gd.pingFPUs(grid_state)
 
-    logger.trace("FPU states=", list_states(grid_state))
+    logger.trace("FPU states=%s" % str(list_states(grid_state)))
 
 
 def find_datum(gd, grid_state, opts=None, uninitialized=False):
@@ -194,7 +194,7 @@ def find_datum(gd, grid_state, opts=None, uninitialized=False):
             )
             gd.findDatum(grid_state, fpuset=unreferenced, timeout=timeout)
 
-        logger.trace("findDatum finished, states=", list_states(grid_state))
+        logger.trace("findDatum finished, states=%s" % str(list_states(grid_state)))
     else:
         logger.debug("find_datum(): all FPUs already at datum")
 
@@ -353,10 +353,10 @@ def linear_stage_goto(rig, stage_position):
     logger.info("moving linear stage to position %7.3f ..." % stage_position)
     assert isfinite(stage_position), "stage position is not valid number"
     with rig.hw.pyAPT.MTS50(serial_number=MTS50_SERIALNUMBER) as con:
-        logger.trace("Found APT controller S/N", MTS50_SERIALNUMBER)
+        logger.trace("Found APT controller S/N %s" % str(MTS50_SERIALNUMBER))
         con.goto(stage_position, wait=True)
         logger.debug("\tNew position: %.3f %s" % (con.position(), con.unit))
-        logger.trace("\tStatus:", con.status())
+        logger.trace("\tStatus: %s" % str(con.status()))
     check_for_quit()
     logger.info("moving linear stage to position %f ... OK" % stage_position)
 

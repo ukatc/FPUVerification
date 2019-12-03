@@ -316,7 +316,7 @@ def selftest_nonfibre(
 
     # except Exception as e:
     except SystemError as e:
-        logger.critical("metrology height self-test failed", repr(e))
+        logger.critical("metrology height self-test failed:\n\t %s" % repr(e))
         sys.exit(1)
 
     try:
