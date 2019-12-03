@@ -157,26 +157,31 @@ def test_limit(rig, dbe, which_limit, pars=None):
     )
 
     if which_limit == "alpha_min":
+        print("Alpha min")
         abs_alpha, abs_beta = pars.LIMIT_ALPHA_NEG_EXPECT, 0.0
         free_dir = REQD_ANTI_CLOCKWISE
         dw = 30
         idx = 0
     elif which_limit == "alpha_max":
+        print("Alpha max")
         abs_alpha, abs_beta = pars.LIMIT_ALPHA_POS_EXPECT, 0.0
         free_dir = REQD_CLOCKWISE
         dw = -30
         idx = 0
     elif which_limit == "beta_min":
+        print("Beta min")
         abs_alpha, abs_beta = -180.0, pars.LIMIT_BETA_NEG_EXPECT
         free_dir = REQD_ANTI_CLOCKWISE
         dw = 30
         idx = 1
     elif which_limit == "beta_max":
+        print("Beta max")
         abs_alpha, abs_beta = -180.0, pars.LIMIT_BETA_POS_EXPECT
         free_dir = REQD_CLOCKWISE
         dw = -30
         idx = 1
     elif which_limit == "beta_collision":
+        print("Beta collision")
         abs_alpha, abs_beta = pars.COLDECT_ALPHA, pars.COLDECT_BETA
         free_dir = REQD_CLOCKWISE
         dw = -30
@@ -327,13 +332,15 @@ def test_limit(rig, dbe, which_limit, pars=None):
             # bring FPU back into valid range and protected state
             N = rig.opts.N
             if which_limit in ["alpha_max", "alpha_min"]:
+                print("Alpha max or min. Protocol 2 version.")
                 n_steps = 10 * sign(int(dw))
-                n_moves = 10
+                n_moves = 3
 
                 # NOTE: This section converted to protocol 2.
                 # resetFPUs replaced with freeAlphaLimitBreach followed by enableAlphaLimitprotection,
                 # move to a safe location with software protection=False, then remove the second reset.
                 for k in range(n_moves):
+                    print("freeAlphaLimitBreach: ", k)
                     rig.gd.freeAlphaLimitBreach(
                         fpu_id, free_dir, rig.grid_state, soft_protection=False
                     )
@@ -343,10 +350,12 @@ def test_limit(rig, dbe, which_limit, pars=None):
                         "alpha limit recovery: fpu %i current angle = %s [%i}"
                         % (fpu_id, repr(angle), k)
                     )
+                print("freeAlphaLimitBreach: ", k)
                 rig.gd.enableAlphaLimitProtection(rig.grid_state)
 
+                print("moving fpu %i back by %i degree" % (fpu_id, dw))
                 fpu_logger.debug("moving fpu %i back by %i degree" % (fpu_id, dw))
-                rig.gd.resetFPUs(rig.grid_state, [fpu_id])
+                #rig.gd.resetFPUs(rig.grid_state, [fpu_id])
                 wf = gen_wf(dw * dirac(fpu_id, N), 0)
                 rig.gd.configMotion(
                     wf,
