@@ -634,7 +634,7 @@ def list_posver_expected_measured_coord(expected_coords, measured_coords, csv=Fa
         fmt = """Positional verification :     # {ecoord[0]:+8.6f}, {ecoord[1]:+8.6f} : {mcoord[0]:+8.6f}, {mcoord[1]:+8.6f}"""
 
     yield hdr
-    for key in expected_coords.keys():
+    for key in sorted(expected_coords.keys()):
         yield (fmt.format(ecoord=expected_coords[key], mcoord=measured_coords[key]))
 
 

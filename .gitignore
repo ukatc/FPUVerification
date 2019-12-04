@@ -12,4 +12,5 @@ man/
 mock-*.cfg
 fpus_batch_*.cfg
 /output
+*.log
 
