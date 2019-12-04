@@ -625,7 +625,7 @@ def list_posver_err_by_coord(error_by_coords, error_argmax, csv=False):
 def list_posver_expected_measured_coord(expected_coords, measured_coords, csv=False):
     if csv:
         hdr = """Positional verification,expected coordinate x,expected coordinate x,measured coordinatex, measured coordinatex"""
-        fmt = """Positional verification,{ecoord[0]:+8.2f},{ecoord[1]:+8.2f},{ecoord[0]:+8.2f},{ecoord[1]:+8.2f}"""
+        fmt = """Positional verification,{ecoord[0]:+8.2f},{ecoord[1]:+8.2f},{mcoord[0]:+8.2f},{mcoord[1]:+8.2f}"""
     else:
         hdr = (
             """Positional verification : Expected Coordinate, Measured Coordinate\n"""
