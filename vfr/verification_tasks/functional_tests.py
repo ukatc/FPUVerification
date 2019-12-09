@@ -295,10 +295,12 @@ def test_limit(rig, dbe, which_limit, pars=None):
         )
 
         if test_succeeded:
+            # 2019-12-09: Query the limit location from the step count, not the tracked angles.
             rig.gd.pingFPUs(rig.grid_state, fpuset=[fpu_id])
-            limit_val = (
-                rig.gd.trackedAngles(rig.grid_state, retrieve=True)[fpu_id][idx]
-            ).as_scalar()
+            limit_val = rig.gd.countedAngles(rig.grid_state, show_uninitialized=True)[fpu_id][idx]
+            #limit_val = (
+            #    rig.gd.trackedAngles(rig.grid_state, retrieve=True)[fpu_id][idx]
+            #).as_scalar()
             fpu_logger.info("%s limit hit at position %7.3f" % (which_limit, limit_val))
         else:
             limit_val = NaN
@@ -333,7 +335,7 @@ def test_limit(rig, dbe, which_limit, pars=None):
             # bring FPU back into valid range and protected state
             N = rig.opts.N
             if which_limit in ["alpha_max", "alpha_min"]:
-                print("Alpha max or min. Protocol 2 version.")
+                #print("Alpha max or min. Protocol 2 version.")
                 n_steps = 10 * sign(int(dw))
                 n_moves = 3
 
@@ -351,9 +353,9 @@ def test_limit(rig, dbe, which_limit, pars=None):
                         "alpha limit recovery: fpu %i current angle = %s [%i}"
                         % (fpu_id, repr(angle), k)
                     )
-                print("enableAlphaLimitProtection")
+                #print("enableAlphaLimitProtection")
                 rig.gd.enableAlphaLimitProtection(rig.grid_state)
-                print( "FPU state:\n" + str(rig.grid_state.FPU[0]) )
+                #print( "FPU state:\n" + str(rig.grid_state.FPU[0]) )
 
                 print("moving fpu %i back by %i degree" % (fpu_id, dw))
                 fpu_logger.debug("moving fpu %i back by %i degree" % (fpu_id, dw))
@@ -367,7 +369,7 @@ def test_limit(rig, dbe, which_limit, pars=None):
                     allow_uninitialized=True,
                 )
                 rig.gd.executeMotion(rig.grid_state, fpuset=[fpu_id])
-                print( "FPU state:\n" + str(rig.grid_state.FPU[0]) )
+                #print( "FPU state:\n" + str(rig.grid_state.FPU[0]) )
             else:
                 print("moving fpu %i back by %i steps" % (fpu_id, 10))
                 fpu_logger.debug("moving fpu %i back by %i steps" % (fpu_id, 10))
@@ -383,15 +385,15 @@ def test_limit(rig, dbe, which_limit, pars=None):
                     )
                     rig.gd.pingFPUs(rig.grid_state, [fpu_id])
                     angle = rig.gd.trackedAngles(rig.grid_state, retrieve=True)[fpu_id]
-                    print("recovering FPU, current angle = %s" % repr(angle))
+                    #print("recovering FPU, current angle = %s" % repr(angle))
                     if (k % 10) == 0:
                         fpu_logger.debug(
                             "recovering FPU, current angle = %s" % repr(angle)
                         )
 
-                print("enableBetaCollisionProtection")
+                #print("enableBetaCollisionProtection")
                 rig.gd.enableBetaCollisionProtection(rig.grid_state)
-                print( "FPU state:\n" + str(rig.grid_state.FPU[0]) )
+                #print( "FPU state:\n" + str(rig.grid_state.FPU[0]) )
 
                 print("Move by %f, %f" % (0, dw * dirac(fpu_id, N))) 
                 wf = gen_wf(0, dw * dirac(fpu_id, N))
