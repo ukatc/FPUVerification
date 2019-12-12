@@ -16,7 +16,6 @@ from FpuGridDriver import (
     SEARCH_CLOCKWISE,
     CollisionError,
     ConnectionFailure,
-#    FirmwareTimeoutError,
     InvalidStateException,
     LimitBreachError,
     MovementError,
@@ -98,6 +97,7 @@ def test_datum(rig, dbe, dasel=DASEL_BOTH):
     # this command finished, we pass the rig.grid_state variable.
 
     modes = {fpu_id: SEARCH_CLOCKWISE for fpu_id in rig.measure_fpuset}
+    logger.info("----------------------------------------")
     logger.info("datum functional test: issuing findDatum (%s):" % dasel)
     try:
         rig.gd.findDatum(
@@ -146,6 +146,7 @@ def test_limit(rig, dbe, which_limit, pars=None):
     assert (CAN_PROTOCOL_VERSION == 2), "This limit testing function only works with CAN protocol 2"
 
     logger = logging.getLogger(__name__)
+    logger.info("----------------------------------------")
     logger.info("functional limit test for %s started" % which_limit)
 
     failed_fpus = []
@@ -157,25 +158,25 @@ def test_limit(rig, dbe, which_limit, pars=None):
     )
 
     if which_limit == "alpha_min":
-        print("Alpha min")
+        #print("Alpha min")
         abs_alpha, abs_beta = pars.LIMIT_ALPHA_NEG_EXPECT, 0.0
         free_dir = REQD_ANTI_CLOCKWISE
         dw = 30
         idx = 0
     elif which_limit == "alpha_max":
-        print("Alpha max")
+        #print("Alpha max")
         abs_alpha, abs_beta = pars.LIMIT_ALPHA_POS_EXPECT, 0.0
         free_dir = REQD_CLOCKWISE
         dw = -30
         idx = 0
     elif which_limit == "beta_min":
-        print("Beta min")
+        #print("Beta min")
         abs_alpha, abs_beta = -180.0, pars.LIMIT_BETA_NEG_EXPECT
         free_dir = REQD_ANTI_CLOCKWISE
         dw = 30
         idx = 1
     elif which_limit == "beta_max":
-        print("Beta max")
+        #print("Beta max")
         abs_alpha, abs_beta = -180.0, pars.LIMIT_BETA_POS_EXPECT
         free_dir = REQD_CLOCKWISE
         dw = -30
@@ -331,11 +332,10 @@ def test_limit(rig, dbe, which_limit, pars=None):
             set_protection_limit(dbe, rig.grid_state, which_limit, record)
 
         if test_succeeded:
-            print( "FPU state:\n" + str(rig.grid_state.FPU[0]) )
+            #print( "FPU state:\n" + str(rig.grid_state.FPU[0]) )
             # bring FPU back into valid range and protected state
             N = rig.opts.N
             if which_limit in ["alpha_max", "alpha_min"]:
-                #print("Alpha max or min. Protocol 2 version.")
                 n_steps = 10 * sign(int(dw))
                 n_moves = 3
 
@@ -343,7 +343,7 @@ def test_limit(rig, dbe, which_limit, pars=None):
                 # resetFPUs replaced with freeAlphaLimitBreach followed by enableAlphaLimitprotection,
                 # move to a safe location with software protection=False, then remove the second reset.
                 for k in range(n_moves):
-                    print("freeAlphaLimitBreach: ", k)
+                    #print("freeAlphaLimitBreach: ", k)
                     rig.gd.freeAlphaLimitBreach(
                         fpu_id, free_dir, rig.grid_state, soft_protection=False
                     )
@@ -357,7 +357,6 @@ def test_limit(rig, dbe, which_limit, pars=None):
                 rig.gd.enableAlphaLimitProtection(rig.grid_state)
                 #print( "FPU state:\n" + str(rig.grid_state.FPU[0]) )
 
-                print("moving fpu %i back by %i degree" % (fpu_id, dw))
                 fpu_logger.debug("moving fpu %i back by %i degree" % (fpu_id, dw))
                 #rig.gd.resetFPUs(rig.grid_state, [fpu_id])
                 wf = gen_wf(dw * dirac(fpu_id, N), 0)
@@ -371,7 +370,6 @@ def test_limit(rig, dbe, which_limit, pars=None):
                 rig.gd.executeMotion(rig.grid_state, fpuset=[fpu_id])
                 #print( "FPU state:\n" + str(rig.grid_state.FPU[0]) )
             else:
-                print("moving fpu %i back by %i steps" % (fpu_id, 10))
                 fpu_logger.debug("moving fpu %i back by %i steps" % (fpu_id, 10))
                 RECOVERY_STEPS_PER_ITERATION = 10
                 recovery_steps = pars.RECOVERY_ANGLE_DEG * StepsPerDegreeBeta
@@ -386,7 +384,7 @@ def test_limit(rig, dbe, which_limit, pars=None):
                     rig.gd.pingFPUs(rig.grid_state, [fpu_id])
                     angle = rig.gd.trackedAngles(rig.grid_state, retrieve=True)[fpu_id]
                     #print("recovering FPU, current angle = %s" % repr(angle))
-                    if (k % 10) == 0:
+                    if (k % 8) == 0:
                         fpu_logger.debug(
                             "recovering FPU, current angle = %s" % repr(angle)
                         )
@@ -395,7 +393,7 @@ def test_limit(rig, dbe, which_limit, pars=None):
                 rig.gd.enableBetaCollisionProtection(rig.grid_state)
                 #print( "FPU state:\n" + str(rig.grid_state.FPU[0]) )
 
-                print("Move by %f, %f" % (0, dw * dirac(fpu_id, N))) 
+                logger.debug("Move by %f, %f" % (0, dw * dirac(fpu_id, N))) 
                 wf = gen_wf(0, dw * dirac(fpu_id, N))
                 rig.gd.configMotion(
                     wf,
@@ -405,7 +403,7 @@ def test_limit(rig, dbe, which_limit, pars=None):
                     allow_uninitialized=True,
                 )
                 rig.gd.executeMotion(rig.grid_state, fpuset=[fpu_id])
-                print( "FPU state:\n" + str(rig.grid_state.FPU[0]) )
+                #print( "FPU state:\n" + str(rig.grid_state.FPU[0]) )
 
         # bring fpu back to default position
         with warnings.catch_warnings():
@@ -419,7 +417,6 @@ def test_limit(rig, dbe, which_limit, pars=None):
                 allow_uninitialized=True,
                 soft_protection=False,
             )
-        print("searching datum for FPU %i, to resolve collision" % fpu_id)
         fpu_logger.debug("searching datum for FPU %i, to resolve collision" % fpu_id)
         rig.gd.findDatum(rig.grid_state, fpuset=[fpu_id])
         check_for_quit()

@@ -86,7 +86,9 @@ def get_counter_residuals(rig, fpu_id):
     the step numbers at dataum cancel out to zero.
     """
 
-    rig.gd.getCounterDeviation(rig.grid_state, fpuset=[fpu_id])
+    # getCounterDeviation is now obsolete. Can just query and use the grid state.
+    #rig.gd.getCounterDeviation(rig.grid_state, fpuset=[fpu_id])
+    rig.gd.pingFPUs(rig.grid_state, fpuset=[fpu_id])
     fpu = rig.grid_state.FPU[fpu_id]
     return (fpu.alpha_deviation, fpu.beta_deviation)
 
