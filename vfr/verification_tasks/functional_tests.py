@@ -182,7 +182,7 @@ def test_limit(rig, dbe, which_limit, pars=None):
         dw = -30
         idx = 1
     elif which_limit == "beta_collision":
-        print("Beta collision")
+        #print("Beta collision")
         abs_alpha, abs_beta = pars.COLDECT_ALPHA, pars.COLDECT_BETA
         free_dir = REQD_CLOCKWISE
         dw = -30
@@ -393,7 +393,7 @@ def test_limit(rig, dbe, which_limit, pars=None):
                 rig.gd.enableBetaCollisionProtection(rig.grid_state)
                 #print( "FPU state:\n" + str(rig.grid_state.FPU[0]) )
 
-                logger.debug("Move by %f, %f" % (0, dw * dirac(fpu_id, N))) 
+                logger.debug("Move FPU %d by alpha=%f, beta=%f" % (fpu_id, 0, dw)) 
                 wf = gen_wf(0, dw * dirac(fpu_id, N))
                 rig.gd.configMotion(
                     wf,
