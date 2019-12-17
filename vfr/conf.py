@@ -204,7 +204,7 @@ POS_REP_POSITIONS = [135, 195, 255, 315, 15]
 MOTOR_MIN_STEP_FREQUENCY = 500
 MOTOR_MAX_STEP_FREQUENCY = 2000
 MOTOR_MAX_START_FREQUENCY = 550
-WAVEFORM_SEGMENT_LENGTH_MS = 250
+WAVEFORM_SEGMENT_LENGTH_MS = 125
 STEPS_LOWER_LIMIT = int(MOTOR_MIN_STEP_FREQUENCY * WAVEFORM_SEGMENT_LENGTH_MS / 1000)
 STEPS_UPPER_LIMIT = int(
     ceil(MOTOR_MAX_STEP_FREQUENCY * WAVEFORM_SEGMENT_LENGTH_MS / 1000)
@@ -237,19 +237,19 @@ POS_REP_MEASUREMENT_PARS = Namespace(
         "max_steps": STEPS_UPPER_LIMIT,
         "min_stop_steps": None,
         "max_change_alpha": None,
-        "max_acceleration_alpha": 100,
-        "max_deceleration_alpha": 100,
+        "max_acceleration_alpha": 50,
+        "max_deceleration_alpha": 50,
         "min_steps_alpha": None,
         "min_stop_steps_alpha": None,
         "max_steps_alpha": None,
         "max_change_beta": None,
-        "max_acceleration_beta": 100,
-        "max_deceleration_beta": 100,
+        "max_acceleration_beta": 50,
+        "max_deceleration_beta": 50,
         "min_steps_beta": None,
         "min_stop_steps_beta": None,
         "max_steps_beta": None,
-        "max_acceleration": 25,
-        "max_deceleration": 25,
+        "max_acceleration": 50,
+        "max_deceleration": 50,
     },
     POS_REP_WAVEFORM_RULESET=0,  # '0' does switch off checking
     POS_REP_CALIBRATION_MAPFILE="calibration/mapping/pos-rep-2019-04-10.cfg",
