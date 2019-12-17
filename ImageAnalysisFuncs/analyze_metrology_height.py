@@ -159,11 +159,11 @@ def methtHeight(
             " - target may not be sitting flat" % image_path
         )
 
-    if noiseMetric > pars.METHT_NOISE_METRIC:
-        raise MetrologyHeightAnalysisError(
-            "Image %s: Image noise excessive - consider "
-            "changing Gaussian blur value" % image_path
-        )
+    #if noiseMetric > pars.METHT_NOISE_METRIC:
+    #    raise MetrologyHeightAnalysisError(
+    #        "Image %s: Image noise excessive - consider "
+    #        "changing Gaussian blur value" % image_path
+    #    )
 
     metht_small_target_height = (
         sum(smallTargetHeights) / len(smallTargetHeights) * pars.METHT_PLATESCALE
