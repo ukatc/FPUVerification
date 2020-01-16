@@ -22,6 +22,7 @@ def find_bright_sharp_circles(path,
                               small_radius,
                               large_radius,
                               group_range=None,
+                              threshold=60,
                               quality=0.4,
                               blob_size_tolerance=0.2,
                               group_range_tolerance=0.2,
@@ -31,7 +32,7 @@ def find_bright_sharp_circles(path,
     Finds circular dots in the given image within the radius range, displaying
     them on console and graphically if show is set to True
 
-    Works by detecting white circular blobs in the raw image, and in an otsu
+    Works by detecting white circular blobs in the raw image, and in 
     thresholded copy.Circles that have similar center locations and radii in
     both images are kept.
 
@@ -54,7 +55,7 @@ def find_bright_sharp_circles(path,
         )
     blur = cv2.GaussianBlur(greyscale, (5, 5), 0)
     _, thresholded = cv2.threshold(
-        blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU
+        blur, threshold, 255, cv2.THRESH_BINARY 
     )
     output = image.copy()
 
@@ -191,6 +192,7 @@ def targetCoordinates(image_path, pars=None, correct=None):
         image_path,
         small_radius_px,
         large_radius_px,
+        threshold=pars.THRESHOLD_LIMIT,
         group_range=group_range_px,
         quality=pars.QUALITY_METRIC,
         blob_size_tolerance=pars.BLOB_SIZE_TOLERANCE,
