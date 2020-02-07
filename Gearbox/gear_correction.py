@@ -15,42 +15,49 @@ from fpu_constants import (
 )
 from vfr.conf import BLOB_WEIGHT_FACTOR, POS_REP_EVALUATION_PARS, PERCENTILE_ARGS
 
-# exceptions which are raised if image analysis functions fail
 
-
+# Exceptions which are raised if image analysis functions fail
 class GearboxFitError(Exception):
     pass
 
 
-# version number for gearbox correction algorithm
+# Version number for gearbox correction algorithm
 # (each different result for the same data
 # should yield a version number increase)
-
 GEARBOX_CORRECTION_VERSION = (5, 0, 2)
 
-# minimum version for which this code works
+# Minimum version for which this code works
 # and yields a tolerable result
 GEARBOX_CORRECTION_MINIMUM_VERSION = (5, 0, 0)
 
 
 def cartesian2polar(x, y):
+    # Convert Cartesian to polar coordinates.
+    # phi_rad is returnedin radians.
     rho = np.sqrt(x ** 2 + y ** 2)
     phi_rad = np.arctan2(y, x)
     return (phi_rad, rho)
 
 
 def polar2cartesian(phi_rad, rho):
+    # Convert polar to Cartesian coordinates.
+    # phi_rad must be given in radians.
     x = rho * np.cos(phi_rad)
     y = rho * np.sin(phi_rad)
     return (x, y)
 
 
 def calc_R(x, y, xc, yc):
-    """ calculate the distance of each 2D points from the center (xc, yc) """
+    """ calculate the distance of each 2D points from the center (xc, yc)
+    x and y can be numpy arrays of coordinates.
+    """
     return np.sqrt((x - xc) ** 2 + (y - yc) ** 2)
 
 
 def rot_axis(x, y, psi):
+    """ Transfer the point (x,y) by rotating the Cartesian X and Y axes
+    by psi radians to make a new point (x2,xy).
+    """
     c1 = np.cos(psi)
     c2 = np.sin(psi)
     x2 = c1 * x + c2 * y
@@ -59,7 +66,7 @@ def rot_axis(x, y, psi):
 
 
 def elliptical_distortion(x, y, xc, yc, psi, stretch):
-    """this rotates the coordinates x and y by the angle
+    """ This rotates the coordinates x and y by the angle
     psi, applies a stretch factor of stretch to the x axis,
     and rotates the coordinates back. A stretch
     factor of 1 means a perfect circle.
@@ -71,14 +78,20 @@ def elliptical_distortion(x, y, xc, yc, psi, stretch):
 
 
 def f(c, x, y):
-    """ calculate the algebraic distance between the data points and the mean circle centered at c=(xc, yc) """
+    """ Calculate the algebraic distance between the data points and the mean circle centered at c=(xc, yc)
+    or the mean ellipse of parameters c=(xc, yc, psi, stretch).
+    This function is used by the optimise.leastsq function.
 
-    # rotate coordinates, apply stretch, rotate back
+    NOTE: Arguments x and y are numpy arrays of coordinates.
+    """
 
+    # Rotate coordinates, apply stretch, rotate back
     if len(c) == 4:
+        # Ellipse. Apply an elliptical distortion to the x,y coordinates.
         xc, yc, psi, stretch = c
         x, y = elliptical_distortion(x, y, xc, yc, psi, stretch)
     else:
+        # Circle. No distortion needed.
         xc, yc = c
 
     Ri = calc_R(x, y, xc, yc)
@@ -86,7 +99,13 @@ def f(c, x, y):
 
 
 def leastsq_circle(x, y):
-    # coordinates of the barycenter
+    """ Find optimised circle (or ellipse) parameters.
+    An ellipse is fitted if the parameter POS_REP_EVALUATION_PARS.APPLY_ELLIPTICAL_CORRECTION is True.
+    Called by fit_circle.
+    """
+
+    # The initial estimate of the location of the centre of the circle is
+    # the coordinates of the barycenter.
     x_m = np.mean(x)
     y_m = np.mean(y)
 
@@ -97,16 +116,21 @@ def leastsq_circle(x, y):
     else:
         param_estimate = x_m, y_m
 
+    # scipy.optimize.leastsq: See https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.leastsq.html
+    # f: callable function
+    # param_estimate: The starting estimate for the minimization
+    # args: Any extra arguments to func are placed in this tuple
+    # ftol: Relative error desired in the sum of squares
+    # xtol: Relative error desired in the approximate solution.
     fitted_params, ier = optimize.leastsq(
         f, param_estimate, args=(x, y), ftol=1.5e-10, xtol=1.5e-10
     )
 
     if apply_elliptical_correction:
         xc, yc, psi, stretch = fitted_params
-
     else:
         xc, yc = fitted_params
-        psi, stretch = 0.0, 1.0
+        psi, stretch = 0.0, 1.0 # Default values for a circle fit.
 
     x2, y2 = elliptical_distortion(x, y, xc, yc, psi, stretch)
 
@@ -119,17 +143,17 @@ def leastsq_circle(x, y):
 
     return xc, yc, R, psi, stretch, radius_RMS
 
-def get_weighted_coordinates(blob_coordinates, weight_factor=BLOB_WEIGHT_FACTOR):
-    # compute weigthed coordinates of
-    # point between big and small metrology blob
 
+def get_weighted_coordinates(blob_coordinates, weight_factor=BLOB_WEIGHT_FACTOR):
+    # Compute the weighted coordinates of the point
+    # between the big and small metrology blob
+    #
     # This is also used to compute error measures
     # from the datum repeatability / positional
     # repeatability, it is called in the
     # vfr.evaluation.measures module.
     blob_coordinates = np.asarray(blob_coordinates)
     assert( blob_coordinates.ndim == 2)
-
 
     coords_big_blob = blob_coordinates[:, 3:5]
     coords_small_blob = blob_coordinates[:, :2]
@@ -141,25 +165,29 @@ def get_weighted_coordinates(blob_coordinates, weight_factor=BLOB_WEIGHT_FACTOR)
     # inverting y axis of OpenCV image coordinates
     return weighted_coordinates * np.array([1, -1])
 
+
 def cartesian_blob_position(val, weight_factor=BLOB_WEIGHT_FACTOR):
     x, y = get_weighted_coordinates([val], weight_factor=weight_factor)[0]
     return x, y
 
 
 def normalize_difference_radian(x):
-    x = np.where(x < -pi, x + 2 * pi, x)
-
-    x = np.where(x > +pi, x - 2 * pi, x)
-
+    # Keep the values contained in the array x within the range -pi to +pi.
+    # Add 2*pi to elements smaller than -pi.
+    # Subtract 2*pi from elements larger than +pi.
+    # TODO: Should there be a while loop to account for larger deviations? 
+    x = np.where(x < -pi, x + 2*pi, x)
+    x = np.where(x > +pi, x - 2*pi, x)
     return x
 
 
 def nominal_angle_radian(key):
+    # Convert a pair of angular coordinates from degrees to radians.
     return np.deg2rad(key[0]), np.deg2rad(key[1])
 
 
 def extract_points(analysis_results):
-    """returns (x,y) positions from image analysis and
+    """ Returns (x,y) positions from image analysis and
     nominal angles of alpha and beta arm, in radians.
     """
     nominal_coordinates_rad = []
@@ -178,10 +206,16 @@ def extract_points(analysis_results):
 
 
 def fit_circle(analysis_results, motor_axis):
-    # get list of points to which circle is fitted
+    """
+    Fit a circle or an ellipse to a set of analysis results.
+    An ellipse is fitted if the parameter POS_REP_EVALUATION_PARS.APPLY_ELLIPTICAL_CORRECTION is True.
 
+    """
+    # Get list of points to which circle is fitted
     circle_points, nominal_coordinates_rad, pos_keys = extract_points(analysis_results)
 
+    # NOTE: The .T attribute selects the transposed array from an ndarray object.
+    # See https://docs.scipy.org/doc/numpy/reference/generated/numpy.ndarray.html
     x_s, y_s = np.array(circle_points).T
     alpha_nominal_rad, beta_nominal_rad = np.array(nominal_coordinates_rad).T
 
@@ -223,7 +257,13 @@ def fit_circle(analysis_results, motor_axis):
 
 
 def wrap_complex_vals(angle):
-    return np.where(angle < -pi / 4, angle + 2 * pi, angle)
+
+    # Wrap the values in the array to prevent them going below -pi/4.0
+    # Add 2*pi to elements smaller than -pi/4.0.
+    # Leave other elements the same.
+    # TODO: Should there be a while loop to account for larger deviations? 
+    return np.where(angle < -pi/4.0, angle + 2*pi, angle)
+
 
 def angle_to_point(
     alpha_nom_rad,
@@ -341,7 +381,6 @@ def get_angle_error(
     y_real = y_s2 - yc
 
     # compute expected points from common fit parameters
-
     x_n, y_n = angle_to_point(
         alpha_nominal_rad,
         beta_nominal_rad,
@@ -357,7 +396,6 @@ def get_angle_error(
     y_fitted = y_n - yc
 
     # compute remaining difference in the complex plane
-
     points_real = x_real + 1j * y_real
     points_fitted = x_fitted + 1j * y_fitted
 
@@ -564,8 +602,6 @@ def fit_gearbox_parameters(
     return results
 
 
-
-
 def fit_offsets(
     circle_alpha,
     circle_beta,
@@ -598,6 +634,7 @@ def fit_offsets(
     alpha_nom_rad, beta_nom_rad = np.array(nominal_coordinates_rad).T
 
     def g(offsets):
+        # This function is used by the optimise.leastsq function.
         camera_offset, beta0 = offsets
         points = angle_to_point(
             alpha_nom_rad,
@@ -608,10 +645,15 @@ def fit_offsets(
             camera_offset_rad=camera_offset,
             beta0_rad=beta0,
         )
-
+        # See https://docs.scipy.org/doc/numpy/reference/generated/numpy.linalg.norm.html
         return np.linalg.norm(points - circle_points, axis=0)
 
     # coordinates of the barycenter
+    # scipy.optimize.leastsq: See https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.leastsq.html
+    # g: callable function
+    # offsets_estimate: The starting estimate for the minimization
+    # ftol: Relative error desired in the sum of squares
+    # xtol: Relative error desired in the approximate solution.
     offsets_estimate = np.array([camera_offset_start, beta0_start])
     offsets, ier = optimize.leastsq(g, offsets_estimate, ftol=1.5e-10, xtol=1.5e-10)
     camera_offset, beta0 = offsets
@@ -729,6 +771,7 @@ def get_expected_points(
         expected_points = np.array(expected_points).T
         measured_points = np.array((x_s, y_s))
         xe, ye = expected_points
+        # See https://docs.scipy.org/doc/numpy/reference/generated/numpy.linalg.norm.html
         error_magnitudes = np.linalg.norm(expected_points - measured_points, axis=0)
         RMS = np.sqrt(np.mean(error_magnitudes ** 2)) * 1000
         max_val = np.max(error_magnitudes * 1000)
@@ -805,11 +848,14 @@ def fit_gearbox_correction(
     x_center = circle_alpha["xc"]
     y_center = circle_alpha["yc"]
     P0 = np.array([x_center, y_center])
+
     # find center of beta circles
     x_center_beta = circle_beta["xc"]
     y_center_beta = circle_beta["yc"]
     Pcb = np.array([x_center_beta, y_center_beta])
+
     # radius of alpha arm is distance from P0 to Pcb
+    # See https://docs.scipy.org/doc/numpy/reference/generated/numpy.linalg.norm.html
     R_alpha = np.linalg.norm(Pcb - P0)
     # radius from beta center to weighted midpoint between metrology targets
     R_beta_midpoint = circle_beta["R"]
