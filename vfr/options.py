@@ -346,8 +346,9 @@ def parse_args():
         metavar="LOGLEVEL",
         type=int,
         default=DEFAULT_LOGLEVEL,
-        help="logging level. Set level to 30 to only show warnings and errrors. "
-        "(can also be set by environment variable VFR_LOGLEVEL, default: %(default)s)",
+        help="logging level. Same values as Python logging levels. Set level to 30 (logging.WARNING)"
+        " to only show warnings and errrors. Set level to 10 (logging.DEBUG) to show debugging. "
+        "(Can also be set by environment variable VFR_LOGLEVEL, default: %(default)s)",
     )
 
     parser.add_argument(

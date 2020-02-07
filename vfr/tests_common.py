@@ -214,7 +214,7 @@ def cd_to_data_root(root_folder):
     data_root_path = expanduser(expandvars(root_folder))
     try:
         os.makedirs(data_root_path)
-    except OSError, e:
+    except OSError as e:
         if e.errno == errno.EEXIST:
             pass
         else:
@@ -401,7 +401,7 @@ def check_image_analyzability(ipath, analysis_func, pars=None):
         if len(ecount) > ECOUNT_QUEUE_LEN:
             ecount.pop(0)
 
-    except ImageAnalysisError, err:
+    except ImageAnalysisError as err:
         ecount.append(1)
         if len(ecount) > ECOUNT_QUEUE_LEN:
             ecount.pop(0)
