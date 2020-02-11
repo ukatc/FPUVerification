@@ -1,4 +1,21 @@
 # -*- coding: utf-8 -*-
+"""
+
+This module contains the plotting functions used
+by the MOONS fibre positioner verification system.
+
+See "MOONS Fibre Positioner Gearbox Calibration"
+by Johannes Nix, revision 0.4, 2 October 2019.
+
+Source code documentation added by Steven Beard,
+February 2020. Comments which look like this
+
+# << Here is a code snippet. >>
+
+refer to the snippets of code which are named and
+described in Johannes' document.
+
+"""
 from __future__ import division, print_function
 
 from math import pi
@@ -408,6 +425,18 @@ def plot_measured_vs_expected_points(
     BLOB_WEIGHT_FACTOR=None,
     expected_vals=None,
 ):
+    """
+
+    This function displays the gearbox calibration fit results along
+    with the measured points in the Cartesian plane.
+
+    It first plots the fitted circles for the alpha and beta arm
+    in the Cartesian plane. It then make two passes, one for the
+    alpha arm and one for the beta arm. In each pass, it extracts
+    the measured points and the positions of the expected points
+    from the result dictionary. These are plotted.
+
+    """
 
     if (coeffs["coeffs_alpha"] is None) or (coeffs["coeffs_beta"] is None):
         return
@@ -418,8 +447,11 @@ def plot_measured_vs_expected_points(
     theta_fit = np.linspace(-pi, pi, 2 * 360)
     P0 = np.array([x_center, y_center])
 
-    # re-compute expected values, to get point coordinates
-
+    # Re-compute expected values, to get point coordinates.
+    # Function get_expected_points is a generator which
+    # yields points which are close to the measured point
+    # in the Cartesian plane, except for any non-systematic
+    # residual error.
     for motor_axis, expected_vals in get_expected_points(
         serial_number,
         coeffs,
