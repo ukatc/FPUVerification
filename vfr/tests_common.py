@@ -53,10 +53,14 @@ def handle_quit(signum, stack):
     logger = logging.getLogger(__name__)
     logger.warning("SIGQUIT received, setting flag to exit")
 
+def request_quit():
+    global got_quit_request
+    got_quit_request = True
+    logger = logging.getLogger(__name__)
+    logger.warning("Quit requested, setting flag to exit")
 
 def set_quit_handler():
     signal.signal(signal.SIGQUIT, handle_quit)
-
 
 def check_for_quit():
     global got_quit_request

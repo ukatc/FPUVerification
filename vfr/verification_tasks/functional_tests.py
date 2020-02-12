@@ -37,7 +37,7 @@ from vfr.tests_common import (
     safe_home_turntable,
     turntable_safe_goto,
     check_for_quit,
-    force_quit
+    request_quit
 )
 from vfr.turntable import go_collision_test_pos
 
@@ -306,6 +306,13 @@ def test_limit(rig, dbe, which_limit, pars=None):
             fpu_logger.info("%s limit hit at position %7.3f" % (which_limit, limit_val))
         else:
             limit_val = NaN
+            if 'beta' in which_limit:
+               # A beta limit failure or collision failure is now regarded as
+               # a fatal, critical error (since further tests before the
+               # collision protection circuit is checked could damage the FPU).
+               logger.critical("Limit test %r failed for FPU %i. Quit requested!" % \
+                   (which_limit, fpu_id))
+               request_quit()
 
         if test_valid:
             record = LimitTestResult(
@@ -405,14 +412,6 @@ def test_limit(rig, dbe, which_limit, pars=None):
                 )
                 rig.gd.executeMotion(rig.grid_state, fpuset=[fpu_id])
                 #print( "FPU state:\n" + str(rig.grid_state.FPU[0]) )
-
-        elif 'beta' in which_limit:
-           # A beta limit failure or collision failure is now regarded as
-           # a fatal, critical error (since further tests before the
-           # collision protection circuit is checked could damage the FPU).
-           logger.critical("Limit test %r failed for FPU %i. Forced quit!" % \
-               (which_limit, fpu_id))
-           force_quit()
 
         # bring fpu back to default position
         with warnings.catch_warnings():
