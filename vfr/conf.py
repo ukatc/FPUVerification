@@ -269,6 +269,10 @@ POS_REP_EVALUATION_PARS = Namespace(
     # before a position is added to the overall statistical measure
     APPLY_ELLIPTICAL_CORRECTION=True,
     # APPLY_ELLIPTICAL_CORRECTION=False,
+    APPLY_GEARBOX_CORRECTION_ALPHA=True,
+    APPLY_GEARBOX_CORRECTION_BETA=True,
+    # TODO: Add parameters to control whether a turntable offset is
+    # applied, the order of the fit.
 )
 
 POS_REP_PLATESCALE = 0.0235  # millimeter per pixel

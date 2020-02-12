@@ -1250,8 +1250,15 @@ def apply_gearbox_correction(incoords_rad, coeffs=None):
     coeffs_beta = coeffs["coeffs_beta"]
 
     # Transform from desired / real angle to required nominal (uncalibrated) angle
-    alpha_corrected_rad = apply_gearbox_parameters(alpha_angle_rad, **coeffs_alpha)
-    beta_corrected_rad = apply_gearbox_parameters(beta_angle_rad, **coeffs_beta)
+    if  POS_REP_EVALUATION_PARS.APPLY_GEARBOX_CORRECTION_ALPHA:
+        alpha_corrected_rad = apply_gearbox_parameters(alpha_angle_rad, **coeffs_alpha)
+    else:
+        alpha_corrected_rad = alpha_angle_rad
+
+    if  POS_REP_EVALUATION_PARS.APPLY_GEARBOX_CORRECTION_BETA:
+        beta_corrected_rad = apply_gearbox_parameters(beta_angle_rad, **coeffs_beta)
+    else:
+        beta_corrected_rad = beta_angle_rad
 
     # Transform from nominal (uncalibrated) angle to steps
     alpha_steps = int(
