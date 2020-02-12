@@ -30,6 +30,9 @@ from vfr.db.datum_repeatability import (
     save_datum_repeatability_images,
     save_datum_repeatability_result,
 )
+from vfr.db.colldect_limits import (
+    get_anglimit_passed_p,
+)
 from vfr.tests_common import (
     dirac,
     fixup_ipath,
@@ -45,8 +48,35 @@ from vfr.conf import DATUM_REP_ANALYSIS_PARS
 
 
 def check_skip(rig, dbe, fpu_id):
-    """checks whether an FPU should be skipped because
-    it was already tested. If so, return the reason as a string."""
+    """checks whether an FPU should be skipped because a previous
+    test failed or because it was already tested.
+    If so, return the reason as a string."""
+
+    if not get_anglimit_passed_p(dbe, fpu_id, 'alpha_min'):
+        return (
+            "FPU %s: skipping datum repeatability measurement because"
+            " there is no passed alpha_min limit test" % sn
+        )
+    if not get_anglimit_passed_p(dbe, fpu_id, 'alpha_max'):
+        return (
+            "FPU %s: skipping datum repeatability measurement because"
+            " there is no passed alpha_max limit test" % sn
+        )
+    if not get_anglimit_passed_p(dbe, fpu_id, 'beta_min'):
+        return (
+            "FPU %s: skipping datum repeatability measurement because"
+            " there is no passed beta_min limit test" % sn
+        )
+    if not get_anglimit_passed_p(dbe, fpu_id, 'beta_max'):
+        return (
+            "FPU %s: skipping datum repeatability measurement because"
+            " there is no passed beta_min limit test" % sn
+        )
+    if not get_anglimit_passed_p(dbe, fpu_id, 'beta_collision'):
+        return (
+            "FPU %s: skipping datum repeatability measurement because"
+            " there is no passed beta collision test" % sn
+        )
 
     if get_datum_repeatability_passed_p(dbe, fpu_id) and (
         not rig.opts.repeat_passed_tests
