@@ -37,6 +37,7 @@ from vfr.tests_common import (
     safe_home_turntable,
     turntable_safe_goto,
     check_for_quit,
+    force_quit
 )
 from vfr.turntable import go_collision_test_pos
 
@@ -405,6 +406,14 @@ def test_limit(rig, dbe, which_limit, pars=None):
                 rig.gd.executeMotion(rig.grid_state, fpuset=[fpu_id])
                 #print( "FPU state:\n" + str(rig.grid_state.FPU[0]) )
 
+        elif 'beta' in which_limit:
+           # A beta limit failure or collision failure is now regarded as
+           # a fatal, critical error (since further tests before the
+           # collision protection circuit is checked could damage the FPU).
+           logger.critical("Limit test %r failed for FPU %i. Forced quit!" % \
+               (which_limit, fpu_id))
+           force_quit()
+
         # bring fpu back to default position
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
@@ -417,7 +426,7 @@ def test_limit(rig, dbe, which_limit, pars=None):
                 allow_uninitialized=True,
                 soft_protection=False,
             )
-        fpu_logger.debug("searching datum for FPU %i, to resolve collision" % fpu_id)
+        fpu_logger.debug("Searching datum for FPU %i, to resolve collision" % fpu_id)
         rig.gd.findDatum(rig.grid_state, fpuset=[fpu_id])
         check_for_quit()
 
@@ -426,10 +435,10 @@ def test_limit(rig, dbe, which_limit, pars=None):
         safe_home_turntable(rig, rig.grid_state)
 
     if failed_fpus:
-        logger.critical("limit test %r failed for FPUs %r" % (which_limit, failed_fpus))
+        logger.critical("Limit test %r failed for FPUs %r" % (which_limit, failed_fpus))
         if which_limit == "beta_collision":
             raise CollisionDetectionFailure(
-                "test of beta collision detection failed for FPUs %r" % failed_fpus
+                "Test of beta collision detection failed for FPUs %r" % failed_fpus
             )
         else:
             raise LimitDetectionFailure(

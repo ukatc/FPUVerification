@@ -64,6 +64,9 @@ def check_for_quit():
         got_quit_request = False
         raise SystemExit("quit signal received - terminating orderly")
 
+def force_quit():
+    raise SystemExit("quit forced - terminating orderly")
+
 
 def flush():
     sys.stdout.flush()
