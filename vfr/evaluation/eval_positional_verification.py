@@ -60,16 +60,23 @@ def evaluate_positional_verification(
     # get measured circle center point from alpha arm
     # calibration
     #
-    # IMPORTANT: Keep in mind this center point is ONLY valid as long
-    # as the FPU is in exactly the same position relative to the
-    # camera, so no changes to the camera or verification rig are
-    # allowed!
+    # FPU center has changesd so it needs to be rederived from the images taken
+    # The first 8 images taken are explicitly for this purpose
+    # This method is similar to Gearbox.gear_correction.fit_circle but has different inputs.
+    
+    
+    homeing_dict = {k[0]: blob_pair for k,blob_pair in dict_of_coords.items() if k[0] < 8}
+    circle_points = []
+    for idx in range(8):
+        _,blob_pair = homeing_dict[idx]
+        circle_points.append(cartesian_blob_position(blob_pair, weight_factor=BLOB_WEIGHT_FACTOR))
+    
+    x_s, y_s = np.array(circle_points).T
+    
+    xc, yc, _, psi, strech, _ = leastsq_circle(x_s, y_s)
+    
+    P0 = np.array([x_c, y_c])
 
-    print(">>>>>>>>>>>> computing point error values")
-    P0 = np.array([x_center, y_center])
-    # get elliptical coefficients for alpha arm circle
-    psi=coeffs["coeffs_alpha"]["psi"]
-    stretch=coeffs["coeffs_alpha"]["stretch"]
 
     print("P0 = ", P0)
 
