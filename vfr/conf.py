@@ -315,6 +315,9 @@ POS_REP_ANALYSIS_PARS = Namespace(
     loglevel=0,
 )
 
+# Toggle for taking extra pos_ver images at the same positions but uncalibratied.
+POS_VER_EXTRA_NO_CAL_TEST = True
+
 POS_VER_MEASUREMENT_PARS = Namespace(
     POS_REP_POSITIONS=POS_REP_POSITIONS,  # the rotary stage angle required to
     # place each FPU under the positional
@@ -325,6 +328,7 @@ POS_VER_MEASUREMENT_PARS = Namespace(
     POS_VER_ITERATIONS=10,  # the number of extra random sample points
     POS_VER_SAFETY_TOLERANCE=1.5,  # safety distance towards range limits
     POS_VER_CALIBRATION_MAPFILE="calibration/mapping/pos-rep-2019-04-10.cfg",
+    POS_VER_EXTRA_NO_CAL_TEST= POS_VER_EXTRA_NO_CAL_TEST,
 )
 
 
@@ -334,6 +338,7 @@ POS_VER_EVALUATION_PARS = Namespace(
     # a grouping of measured points at a
     # given nominal position which
     # represents an acceptable FPU
+    POS_VER_EXTRA_NO_CAL_TEST=POS_VER_EXTRA_NO_CAL_TEST,
 )
 
 

@@ -60,7 +60,7 @@ from vfr.conf import POS_REP_ANALYSIS_PARS
 
 
 def generate_tested_positions(
-    niterations, alpha_min=NaN, alpha_max=NaN, beta_min=NaN, beta_max=NaN
+    niterations, alpha_min=NaN, alpha_max=NaN, beta_min=NaN, beta_max=NaN, uncal_extra=False
 ):
     positions = []
 
@@ -77,6 +77,14 @@ def generate_tested_positions(
     random.shuffle(ralpha)
     random.shuffle(rbeta)
     for ra, rb in zip(ralpha, rbeta):
+        alpha_start = alpha_min + ra * interval_alpha
+        beta_start = beta_min + rb * interval_beta
+        alpha = random.uniform(alpha_start, alpha_start + interval_alpha)
+        beta = random.uniform(beta_start, beta_start + interval_beta)
+        positions.append((alpha, beta))
+    #duplicate positions for uncalibrated test
+    if uncal_extra:
+        for ra, rb in zip(ralpha, rbeta):
         alpha_start = alpha_min + ra * interval_alpha
         beta_start = beta_min + rb * interval_beta
         alpha = random.uniform(alpha_start, alpha_start + interval_alpha)
@@ -251,6 +259,7 @@ def measure_positional_verification(rig, dbe, pars=None):
                 alpha_max=alpha_max - tol,
                 beta_min=beta_min + tol,
                 beta_max=beta_max - tol,
+                uncal_extra=pars.POS_VER_EXTRA_NO_CAL_TEST,
             )
 
             find_datum(gd, grid_state, opts)
@@ -263,9 +272,14 @@ def measure_positional_verification(rig, dbe, pars=None):
                 alpha_cursteps, beta_cursteps = get_stepcounts(gd, grid_state, fpu_id)
 
                 # get absolute corrected step count from desired absolute angle
-                asteps_target, bsteps_target = apply_gearbox_correction(
-                    (deg2rad(alpha_deg), deg2rad(beta_deg)), coeffs=fpu_coeffs
-                )
+                if k < pars.POS_VER_ITERATIONS+8:
+                    asteps_target, bsteps_target = apply_gearbox_correction(
+                        (deg2rad(alpha_deg), deg2rad(beta_deg)), coeffs=fpu_coeffs
+                    )
+                else:
+                    asteps_target, bsteps_target = apply_gearbox_correction_uncal(
+                        (deg2rad(alpha_deg), deg2rad(beta_deg)), coeffs=fpu_coeffs
+                    )
 
                 fpu_log.info(
                     "FPU %s: measurement #%i - moving to (%7.2f, %7.2f) degrees = (%i, %i) steps"
