@@ -272,6 +272,7 @@ def measure_positional_verification(rig, dbe, pars=None):
                 alpha_cursteps, beta_cursteps = get_stepcounts(gd, grid_state, fpu_id)
 
                 # get absolute corrected step count from desired absolute angle
+                # if we have more positions than iterations, the rest are meant to be uncalibrated.
                 if k < pars.POS_VER_ITERATIONS+8:
                     asteps_target, bsteps_target = apply_gearbox_correction(
                         (deg2rad(alpha_deg), deg2rad(beta_deg)), coeffs=fpu_coeffs
