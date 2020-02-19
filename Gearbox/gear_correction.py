@@ -1269,3 +1269,30 @@ def apply_gearbox_correction(incoords_rad, coeffs=None):
     )
 
     return (alpha_steps, beta_steps)
+
+def apply_gearbox_correction_uncal(incoords_rad, coeffs=None):
+    """
+
+    The main gearbox correction function.
+
+    incoords_rad is a 2-tuple with the desired real (actual) input coordinates.
+
+    THIS FUNCTION SHOULD ONLY BE USED FOR DIAGNOSTIC TESTS AND DOES NOT APPLY
+    ANY GEARBOX CALIBRATION.
+
+    """
+    logger = logging.getLogger(__name__)
+    logger.info("GEARBOX CORRECTION NOT APPLIED -- CHECK IF THIS IS WANTED")
+    alpha_angle_rad, beta_angle_rad = incoords_rad
+    coeffs_alpha = coeffs["coeffs_alpha"]
+    coeffs_beta = coeffs["coeffs_beta"]
+
+    # Transform from nominal (uncalibrated) angle to steps
+    alpha_steps = int(
+        round((alpha_angle_rad - ALPHA_DATUM_OFFSET_RAD) * StepsPerRadianAlpha)
+    )
+    beta_steps = int(
+        round((beta_angle_rad - BETA_DATUM_OFFSET_RAD) * StepsPerRadianBeta)
+    )
+
+    return (alpha_steps, beta_steps)
