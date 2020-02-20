@@ -63,6 +63,7 @@ def generate_tested_positions(
     niterations, alpha_min=NaN, alpha_max=NaN, beta_min=NaN, beta_max=NaN, uncal_extra=False
 ):
     positions = []
+    extra_positions = []
 
     N_FIX_POS = 8
     for k in range(N_FIX_POS):
@@ -82,14 +83,10 @@ def generate_tested_positions(
         alpha = random.uniform(alpha_start, alpha_start + interval_alpha)
         beta = random.uniform(beta_start, beta_start + interval_beta)
         positions.append((alpha, beta))
+        extra_positions.append((alpha,beta))
     #duplicate positions for uncalibrated test
     if uncal_extra:
-        for ra, rb in zip(ralpha, rbeta):
-        alpha_start = alpha_min + ra * interval_alpha
-        beta_start = beta_min + rb * interval_beta
-        alpha = random.uniform(alpha_start, alpha_start + interval_alpha)
-        beta = random.uniform(beta_start, beta_start + interval_beta)
-        positions.append((alpha, beta))
+        positions = positions + extra_positions
 
     return positions
 
