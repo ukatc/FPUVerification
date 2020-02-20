@@ -11,6 +11,7 @@ from fpu_commands import gen_wf
 from Gearbox.gear_correction import (
     GearboxFitError,
     apply_gearbox_correction,
+    apply_gearbox_correction_uncal,
     GEARBOX_CORRECTION_VERSION,
     GEARBOX_CORRECTION_MINIMUM_VERSION,
 )
