@@ -4,7 +4,7 @@
 """
 from __future__ import division, print_function
 
-from Gearbox.gear_correction import angle_to_point, cartesian_blob_position, elliptical_distortion
+from Gearbox.gear_correction import angle_to_point, cartesian_blob_position, elliptical_distortion, leastsq_circle
 from vfr.evaluation.measures import get_errors, get_measures, get_weighted_coordinates
 
 import numpy as np
@@ -68,14 +68,14 @@ def evaluate_positional_verification(
     homeing_dict = {k[0]: blob_pair for k,blob_pair in dict_of_coords.items() if k[0] < 8}
     circle_points = []
     for idx in range(8):
-        _,blob_pair = homeing_dict[idx]
+        blob_pair = homeing_dict[idx]
         circle_points.append(cartesian_blob_position(blob_pair, weight_factor=BLOB_WEIGHT_FACTOR))
     
     x_s, y_s = np.array(circle_points).T
     
-    xc, yc, _, psi, strech, _ = leastsq_circle(x_s, y_s)
+    xc, yc, _, psi, stretch, _ = leastsq_circle(x_s, y_s)
     
-    P0 = np.array([x_c, y_c])
+    P0 = np.array([x, yc])
 
 
     print("P0 = ", P0)
@@ -117,7 +117,7 @@ def evaluate_positional_verification(
         # beta calibration measurements are just two subsets of that
         # sphere, but the verification measurement can select any
         # point on it.
-        xm, ym = elliptical_distortion(xmd, ymd, x_center, y_center, psi, stretch)
+        xm, ym = elliptical_distortion(xmd, ymd, xc, yc, psi, stretch)
 
         measured_pos = np.array([xm, ym], dtype=float)
         measured_points[coords] = measured_pos
