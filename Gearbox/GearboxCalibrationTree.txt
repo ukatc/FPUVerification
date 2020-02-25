@@ -1,0 +1,64 @@
+Dependency tree for vfr/Gearbox/gear_correction.py
+==================================================
+
+vfr/verification_tasks/positional_verification.py measure_positional_verification
+	apply_gearbox_correction
+		apply_gearbox_parameters
+			np.interp
+
+vfr/verification_tasks/positional_repeatability.py eval_positional_repeatability
+	fit_gearbox_correction
+		fit_circle
+			extract_points
+				nominal_angle_radian
+				cartesian_blob_position
+					get_weighted_coordinates
+			leastsq_circle
+				f
+					elliptical_distortion
+						rot_axis
+					calc_R
+				optimize.leastsq
+				elliptical_distortion
+					rot_axis
+			cartesian2polar
+		np.linalg.norm
+		fit_offsets
+			angle_to_point
+				apply_gearbox_parameters
+					np.interp
+				polar2cartesian
+			optimize.leastsq
+		fit_gearbox_parameters
+			cartesian2polar
+			get_angle_error
+				angle_to_point
+					apply_gearbox_parameters
+						np.interp
+					polar2cartesian
+				wrap_complex_vals
+			sorted
+			normalize_difference_radian
+			np.hstack
+		get_expected_points
+			apply_gearbox_parameters
+				np.interp
+			angle_to_point
+				apply_gearbox_parameters
+					np.interp
+				polar2cartesian
+			np.linalg.norm
+
+vfr/Gearbox/plot_gear_correction.py
+	plot_gearbox_calibration
+		apply_gearbox_calibration
+		apply_gearbox_parameters_fitted
+
+	plot_correction
+		apply_gearbox_parameters_fitted
+
+	plot_measured_vs_expected_points
+		get_expected_points
+
+	
+
