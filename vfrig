@@ -72,6 +72,7 @@ from vfr.verification_tasks.metrology_height import (
 from vfr.verification_tasks.positional_repeatability import (
     eval_positional_repeatability,
     measure_positional_repeatability,
+    eval_gearbox_calibration,
 )
 from vfr.verification_tasks.positional_verification import (
     eval_positional_verification,
@@ -458,6 +459,12 @@ if __name__ == "__main__":
             if T.EVAL_POS_REP in tasks:
                 info("[%s] ###" % T.EVAL_POS_REP)
                 eval_positional_repeatability(
+                    dbe, POS_REP_ANALYSIS_PARS, POS_REP_EVALUATION_PARS
+                )
+
+            if T.EVAL_GEARBOX_CAL in tasks:
+                info("[%s] ###" % T.EVAL_GEARBOX_CAL)
+                eval_gearbox_calibration(
                     dbe, POS_REP_ANALYSIS_PARS, POS_REP_EVALUATION_PARS
                 )
 

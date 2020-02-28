@@ -854,7 +854,7 @@ def get_expected_points(
 
     """
     logger = logging.getLogger(__name__)
-    logger.info("computing gearbox calibration error")
+    logger.info("Computing gearbox calibration error")
 
     expected_vals = {}
 
@@ -1022,8 +1022,11 @@ def fit_gearbox_correction(
     and millimeter (for x_measured and y_measured).
 
     """
+    logger = logging.getLogger(__name__)
+    logger.info("Fitting gearbox correction for FPU %s." % str(fpu_id))
 
     # << Fit circles to the alpha and beta arm points >>
+    logger.debug("Fitting alpha and beta circles...")
     circle_alpha = fit_circle(dict_of_coordinates_alpha, "alpha")
     circle_beta = fit_circle(dict_of_coordinates_beta, "beta")
 
@@ -1031,17 +1034,21 @@ def fit_gearbox_correction(
     x_center = circle_alpha["xc"]
     y_center = circle_alpha["yc"]
     P0 = np.array([x_center, y_center])
+    logger.debug("Alpha circle centre (%f, %f)." % (x_center, y_center))
 
     # Find center of beta circles
     x_center_beta = circle_beta["xc"]
     y_center_beta = circle_beta["yc"]
     Pcb = np.array([x_center_beta, y_center_beta])
+    logger.debug("Beta circle centre (%f, %f)." % (x_center_beta, y_center_beta))
 
     # Radius of alpha arm is distance from P0 to Pcb
     # See https://docs.scipy.org/doc/numpy/reference/generated/numpy.linalg.norm.html
     R_alpha = np.linalg.norm(Pcb - P0)
     # radius from beta center to weighted midpoint between metrology targets
     R_beta_midpoint = circle_beta["R"]
+    logger.debug("Radius of alpha arm: %f" % R_alpha)
+    logger.debug("Radius to beta metrology mid-point: %f" % R_beta_midpoint)
 
     # << Fit offsets of camera orientation >>
     camera_offset_start = circle_alpha["offset_estimate"]
@@ -1066,6 +1073,7 @@ def fit_gearbox_correction(
     )
 
     # << Fit calibration tables for alpha and beta arm >>
+    logger.debug("Fitting gearbox parameters to alpha points.")
     coeffs_alpha = fit_gearbox_parameters(
         "alpha",
         circle_alpha,
@@ -1077,6 +1085,7 @@ def fit_gearbox_correction(
         return_intermediate_results=return_intermediate_results,
     )
 
+    logger.debug("Fitting gearbox parameters to beta points.")
     coeffs_beta = fit_gearbox_parameters(
         "beta",
         circle_beta,
@@ -1103,6 +1112,8 @@ def fit_gearbox_correction(
     print("beta0_rad =", beta0_rad, "= {} degree".format(r2d(beta0_rad)))
 
     coeffs = {"coeffs_alpha": coeffs_alpha, "coeffs_beta": coeffs_beta}
+    logger.debug("coeffs_alpha: %s" % str(coeffs_alpha))
+    logger.debug("coeffs_beta: %s" % str(coeffs_beta))
 
     P0 = np.array([x_center, y_center])
 
@@ -1240,10 +1251,12 @@ def apply_gearbox_correction(incoords_rad, coeffs=None):
 
     incoords_rad is a 2-tuple with the desired real (actual) input coordinates.
 
-    The coeffs parameter holds the coecients which define the correction
+    The coeffs parameter holds the coefficients which define the correction
     function. These are produced by the fit_gearbox_correction function.
 
     """
+    logger = logging.getLogger(__name__)
+    logger.info("Applying gearbox correction.")
 
     alpha_angle_rad, beta_angle_rad = incoords_rad
     coeffs_alpha = coeffs["coeffs_alpha"]
