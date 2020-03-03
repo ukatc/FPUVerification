@@ -1,0 +1,3 @@
+export FPU_DATABASE=/home/jnix/fpudb_vfrig
+vfrig eval_pos_rep -sn PT01 -L 10      >PT01_pos_rep.log 2>&1
+vfrig eval_gearbox_cal -sn PT01 -L 10  >PT01_gearbox_cal.log 2>&1

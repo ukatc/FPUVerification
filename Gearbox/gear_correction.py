@@ -113,12 +113,13 @@ def f(c, x, y):
     if len(c) == 4:
         # Ellipse. Apply an elliptical distortion to the x,y coordinates.
         xc, yc, psi, stretch = c
-        x, y = elliptical_distortion(x, y, xc, yc, psi, stretch)
+        xnew, ynew = elliptical_distortion(x, y, xc, yc, psi, stretch)
+        Ri = calc_R(xnew, ynew, xc, yc)
     else:
         # Circle. No distortion needed.
         xc, yc = c
+        Ri = calc_R(x, y, xc, yc)
 
-    Ri = calc_R(x, y, xc, yc)
     return Ri - Ri.mean()
 
 
@@ -139,8 +140,11 @@ def leastsq_circle(x, y):
     apply_elliptical_correction = POS_REP_EVALUATION_PARS.APPLY_ELLIPTICAL_CORRECTION
 
     if apply_elliptical_correction:
-        param_estimate = x_m, y_m, 0.0, 1.02
+        # Set the starting values for x and y centre, psi, and stretch.
+        # NOTE: stretch has to begin with a value that isn't 1.0 or the fitting of psi becomes unstable.
+        param_estimate = x_m, y_m, 0.0, 1.01
     else:
+        # Set the starting values for x and y centre
         param_estimate = x_m, y_m
 
     # scipy.optimize.leastsq: See https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.leastsq.html
@@ -196,6 +200,16 @@ def get_weighted_coordinates(blob_coordinates, weight_factor=BLOB_WEIGHT_FACTOR)
 def cartesian_blob_position(val, weight_factor=BLOB_WEIGHT_FACTOR):
     x, y = get_weighted_coordinates([val], weight_factor=weight_factor)[0]
     return x, y
+
+
+def wrap_angle_radian(angle):
+    # Wraps a scalar angle to prevent it going outside the range
+    # -pi to +pi.
+    while angle < -pi:
+       angle += 2*pi
+    while angle > pi:
+       angle -= 2*pi
+    return angle
 
 
 def normalize_difference_radian(x):
@@ -256,6 +270,10 @@ def fit_circle(analysis_results, motor_axis):
     # << Perform least-squares fit of circle to input data. >>
     xc, yc, R, psi, stretch, radius_RMS = leastsq_circle(x_s, y_s)
 
+    # Wrap the ellipse orientation to the range +/- pi.
+    psi = wrap_angle_radian( psi )
+
+    # TODO: logger.debug?
     print(
         "axis {}: fitted elliptical params: psi = {} degrees, stretch = {}".format(
             motor_axis, np.rad2deg(psi), stretch
@@ -294,13 +312,12 @@ def fit_circle(analysis_results, motor_axis):
     return result
 
 
-def wrap_complex_vals(angle):
+def wrap_complex_vals(angles):
 
     # Wrap the values in the array to prevent them going below -pi/4.0
     # Add 2*pi to elements smaller than -pi/4.0.
     # Leave other elements the same.
-    # TODO: Should there be a while loop to account for larger deviations? 
-    return np.where(angle < -pi/4.0, angle + 2*pi, angle)
+    return np.where(angles < -pi/4.0, angles + 2*pi, angles)
 
 
 def angle_to_point(
@@ -441,6 +458,7 @@ def get_angle_error(
     and the difference between nominal and real polar coordinates is computed.
 
     """
+    # TODO: logger.debug?
     print("get_angle_error: center (x,y) = ({},{}) millimeter".format(xc, yc))
 
     # << Get place vectors of measured points. >>
@@ -534,16 +552,19 @@ def fit_gearbox_parameters(
     # analyse the measured data. We get the fixpoint values from computing the
     # mean of the non-changed coordinate and storing it.
     if motor_axis == "beta":
-        # common angle for beta measurements
+        # Common angle for beta measurements
         alpha_fixpoint_rad = np.mean(alpha_nominal_rad)
-        print("alpha fixpoint = {} degree".format(np.rad2deg(alpha_fixpoint_rad)))
         beta_fixpoint_rad = np.NaN
+        # TODO: logger.debug?
+        print("alpha fixpoint = {} degree".format(np.rad2deg(alpha_fixpoint_rad)))
     else:
         alpha_fixpoint_rad = np.NaN
         beta_fixpoint_rad = np.mean(beta_nominal_rad)
+        # TODO: logger.debug?
         print("beta fixpoint = {} degree".format(np.rad2deg(beta_fixpoint_rad)))
-
     _, R_real = cartesian2polar(x_s2 - xc, y_s2 - yc)
+
+    # TODO: logger.debug?
     print(
         "fit_gearbox_parameters(): finding angular error for {} arm ".format(motor_axis)
     )
@@ -629,6 +650,7 @@ def fit_gearbox_parameters(
     ## Combine first and second order fit, to get an invertible function
     corrected_shifted_angle_rad = np.array(phi_corr_support_rad) + phi_fit_support_rad
 
+    # TODO: logger.debug?
     print(
         "fit_gearbox_parameters(): beta0_rad = {} rad = {} degree".format(
             beta0_rad, np.rad2deg(beta0_rad)
@@ -662,6 +684,7 @@ def fit_gearbox_parameters(
             corrected_shifted_angle_rad - beta0_rad - camera_offset_rad - pi
         )
 
+    # TODO: logger.debug?
     print(
         "for axis {}: mean(corrected - nominal) = {} degrees".format(
             motor_axis, np.rad2deg(np.mean(corrected_angle_rad - nominal_angle_rad))
@@ -823,6 +846,7 @@ def fit_offsets(
     offsets, ier = optimize.leastsq(g, offsets_estimate, ftol=1.5e-10, xtol=1.5e-10)
     camera_offset, beta0 = offsets
 
+    # TODO: logger.debug?
     print("mean norm from offset fitting = ", np.mean(g(offsets)))
 
     return camera_offset, beta0
@@ -1035,26 +1059,29 @@ def fit_gearbox_correction(
     y_center = circle_alpha["yc"]
     P0 = np.array([x_center, y_center])
     logger.debug("Alpha circle centre (%f, %f)." % (x_center, y_center))
+    logger.debug("Alpha circle distortion: psi=%f (rad), stretch=%f." % (circle_alpha["psi"], circle_alpha["stretch"]))
 
     # Find center of beta circles
     x_center_beta = circle_beta["xc"]
     y_center_beta = circle_beta["yc"]
     Pcb = np.array([x_center_beta, y_center_beta])
     logger.debug("Beta circle centre (%f, %f)." % (x_center_beta, y_center_beta))
+    logger.debug("Beta circle distortion: psi=%f (rad), stretch=%f." % (circle_beta["psi"], circle_beta["stretch"]))
 
     # Radius of alpha arm is distance from P0 to Pcb
     # See https://docs.scipy.org/doc/numpy/reference/generated/numpy.linalg.norm.html
     R_alpha = np.linalg.norm(Pcb - P0)
     # radius from beta center to weighted midpoint between metrology targets
     R_beta_midpoint = circle_beta["R"]
-    logger.debug("Radius of alpha arm: %f" % R_alpha)
-    logger.debug("Radius to beta metrology mid-point: %f" % R_beta_midpoint)
+    logger.debug("Radius of alpha arm: %f (mm)" % R_alpha)
+    logger.debug("Radius to beta metrology mid-point: %f (mm)" % R_beta_midpoint)
 
     # << Fit offsets of camera orientation >>
     camera_offset_start = circle_alpha["offset_estimate"]
     beta0_start = circle_beta["offset_estimate"] + camera_offset_start
 
     r2d = np.rad2deg
+    # TODO: logger.debug?
     print(
         "camera_offset_start =",
         camera_offset_start,
@@ -1104,6 +1131,7 @@ def fit_gearbox_correction(
             "coeffs": {"coeffs_alpha": coeffs_alpha, "coeffs_beta": coeffs_beta},
         }
 
+    # TODO: logger.debug?
     print(
         "camera_offset_rad =",
         camera_offset_rad,
