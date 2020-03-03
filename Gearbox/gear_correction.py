@@ -73,8 +73,11 @@ def calc_R(x, y, xc, yc):
 
 
 def rot_axis(x, y, psi):
-    """ Transfer the point (x,y) by rotating the Cartesian X and Y axes
+    """
+
+    Transfer the point (x,y) by rotating the Cartesian X and Y axes
     by psi radians to make a new point (x2,xy).
+
     """
     c1 = np.cos(psi)
     c2 = np.sin(psi)
@@ -87,9 +90,13 @@ def elliptical_distortion(x, y, xc, yc, psi, stretch):
     """
 
     This rotates the coordinates x and y by the angle
-    psi, applies a stretch factor of stretch to the x axis,
-    and rotates the coordinates back. A stretch
-    factor of 1 means a perfect circle.
+    psi radians, applies a stretch factor of stretch
+    to the x axis, and rotates the coordinates back.
+    A stretch factor of 1 means a perfect circle.
+    The distorted coordinates are returned.
+
+    NOTE: It is pointless calling this function when
+    stretch = 1.0 since it will do nothing.
 
     """
     x1, y1 = rot_axis(x - xc, y - yc, psi)
@@ -130,6 +137,8 @@ def leastsq_circle(x, y):
     An ellipse is fitted if the parameter POS_REP_EVALUATION_PARS.APPLY_ELLIPTICAL_CORRECTION is True.
     Called by fit_circle.
 
+    Returns xc,yc of centre, radius, psi (ellipse), stretch (ellipse) and RMS radius error.
+
     """
 
     # The initial estimate of the location of the centre of the circle is
@@ -159,17 +168,18 @@ def leastsq_circle(x, y):
 
     if apply_elliptical_correction:
         xc, yc, psi, stretch = fitted_params
+        # The fitted radius is the mean distance of the distorted
+        # points from the centre.
+        x2, y2 = elliptical_distortion(x, y, xc, yc, psi, stretch)
+        Ri = calc_R(x2, y2, xc, yc)
     else:
         xc, yc = fitted_params
         psi, stretch = 0.0, 1.0 # Default values for a circle fit.
-
-    x2, y2 = elliptical_distortion(x, y, xc, yc, psi, stretch)
-
-    Ri = calc_R(x2, y2, xc, yc)
+        # The fitted radius is the mean distance of the points from the centre.
+        Ri = calc_R(x, y, xc, yc)
 
     R = Ri.mean()
     residu = np.sum((Ri - R) ** 2)
-
     radius_RMS = np.sqrt(residu / len(x))
 
     return xc, yc, R, psi, stretch, radius_RMS
@@ -281,7 +291,13 @@ def fit_circle(analysis_results, motor_axis):
     )
 
     # << Retrieve angles relative to camera coordinates. >>
-    x_s2, y_s2 = elliptical_distortion(x_s, y_s, xc, yc, psi, stretch)
+    if POS_REP_EVALUATION_PARS.APPLY_ELLIPTICAL_CORRECTION:
+        # Ellipse fitted. Apply the distortion correction to the points
+        x_s2, y_s2 = elliptical_distortion(x_s, y_s, xc, yc, psi, stretch)
+    else:
+        # Circle fitted. Use the original points.
+        x_s2 = x_s
+        y_s2 = y_s
 
     phi_real_rad, r_real = cartesian2polar(x_s2 - xc, y_s2 - yc)
     if motor_axis == "alpha":
@@ -297,13 +313,13 @@ def fit_circle(analysis_results, motor_axis):
         "xc": xc,                               # Coordinates of the
         "yc": yc,                               # centre point.
         "R": R,                                 # Radius found.
-        "psi": psi,                             # Elliptical distortion coeff.
+        "psi": psi,                             # Elliptical orientation (radians)
         "stretch": stretch,                     # Eliiptical "stretch" factor.
         "radius_RMS": radius_RMS,               # Error estimate of fitted radius.
         "x_s": x_s,                             # Input data
         "y_s": y_s,                             #
         "x_s2": x_s2,                           # Input data after distortion correction.
-        "y_s2": y_s2,                           #
+        "y_s2": y_s2,                           # (if elliptical fitting turned on)
         "pos_keys": pos_keys,                   # Iteration parameters for measurement.
         "alpha_nominal_rad": alpha_nominal_rad, # Nominal (demanded) alpha position.
         "beta_nominal_rad": beta_nominal_rad,   # Nominal (demanded) beta position.
