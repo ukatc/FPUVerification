@@ -306,7 +306,16 @@ def fit_circle(analysis_results, motor_axis):
         phi_nominal_rad = beta_nominal_rad
 
     # << Estimate the camera offset. >>
-    offset_estimate = np.mean(phi_real_rad - phi_nominal_rad)
+    # 04-Feb-2020: Changed from mean to median. Angle wrapping can lead to a bi-modal distribution.
+    # np.mean results in an estimate in between the two modes, whereas np.median chooses one of them.
+    offset_estimate = np.median(phi_real_rad - phi_nominal_rad)
+    #offset_estimate = np.mean(phi_real_rad - phi_nominal_rad)
+    # TODO: logger.debug?
+    print(
+        "axis {}: initial camera offset estimate = {} degrees".format(
+            motor_axis, np.rad2deg(offset_estimate)
+        )
+    )
 
     # << Return the result. >>
     result = {
@@ -370,11 +379,19 @@ def angle_to_point(
     """
 
     if coeffs is None:
+        # Extremely verbose diagnostic.
+        #print("angle_to_point: NO gearbox coefficients. Gearbox correction skipped.")
         delta_alpha = 0.0
         delta_beta = 0.0
         delta_alpha_fixpoint = 0.0
         delta_beta_fixpoint = 0.0
     else:
+        # Extremely verbose diagnostic.
+        #if inverse:
+        #    print("angle_to_point: INVERSE gearbox correction applied.")
+        #else:
+        #    print("angle_to_point: NORMAL gearbox correction applied.")
+
         if "alpha" in correct_axis:
 
             # Here the gearbox distortion function (the inverse of the correction
@@ -485,12 +502,16 @@ def get_angle_error(
     y_real = y_s2 - yc
 
     # << Compute expected points. >>
-    # Compute expected points from common fit parameters.
+    # Compute expected Cartesian points from common fit parameters.
     # The points expected from the nominal angles are computed
     # using the angle_to_point function. This might look more
     # complicated than needed, but one of the advantages of
     # using this function is that it includes both camera offset
     # and the beta zero point.
+    #
+    # NOTE: angle_to_point takes a coeffs parameter which defaults to None.
+    # Not specifying a coeffs parameter means no gearbox calibration
+    # coefficients are applied when converting an angle to a point.
     x_n, y_n = angle_to_point(
         alpha_nominal_rad,
         beta_nominal_rad,
@@ -572,12 +593,12 @@ def fit_gearbox_parameters(
         alpha_fixpoint_rad = np.mean(alpha_nominal_rad)
         beta_fixpoint_rad = np.NaN
         # TODO: logger.debug?
-        print("alpha fixpoint = {} degree".format(np.rad2deg(alpha_fixpoint_rad)))
+        print("fit_gearbox_parameters: alpha fixpoint = {} degree".format(np.rad2deg(alpha_fixpoint_rad)))
     else:
         alpha_fixpoint_rad = np.NaN
         beta_fixpoint_rad = np.mean(beta_nominal_rad)
         # TODO: logger.debug?
-        print("beta fixpoint = {} degree".format(np.rad2deg(beta_fixpoint_rad)))
+        print("fit_gearbox_parameters: beta fixpoint = {} degree".format(np.rad2deg(beta_fixpoint_rad)))
     _, R_real = cartesian2polar(x_s2 - xc, y_s2 - yc)
 
     # TODO: logger.debug?
@@ -837,6 +858,10 @@ def fit_offsets(
 
     # << Fit offsets so that the difference between nominal (demanded) and
     # real (measured) points is minimal. >>
+    #
+    # NOTE: angle_to_point takes a coeffs parameter which defaults to None.
+    # Not specifying a coeffs parameter means no gearbox calibration
+    # coefficients are applied when converting an angle to a point.
     def g(offsets):
         # This function is used by the optimise.leastsq function.
         camera_offset, beta0 = offsets
@@ -863,7 +888,10 @@ def fit_offsets(
     camera_offset, beta0 = offsets
 
     # TODO: logger.debug?
-    print("mean norm from offset fitting = ", np.mean(g(offsets)))
+    print(
+        "fit_offset: fitted camera offset = {} degree. beta0 = {} degree".format(np.rad2deg(camera_offset), np.rad2deg(beta0))
+    )
+    print("fit_offset: mean norm from offset fitting = ", np.mean(g(offsets)))
 
     return camera_offset, beta0
 
@@ -894,7 +922,7 @@ def get_expected_points(
 
     """
     logger = logging.getLogger(__name__)
-    logger.info("Computing gearbox calibration error")
+    logger.info("get_expected_points: Computing gearbox calibration error")
 
     expected_vals = {}
 
@@ -971,7 +999,7 @@ def get_expected_points(
         # << Convert nominal angles to expected points. >>
         # Here the function angle_to_point() is called again, but this time the
         # fitted gearbox calibration coefficients are passed, along with the
-        # flag inverse=True.
+        # flag inverse=True (which tells it to apply the inverse transformation).
         expected_points = []
         for alpha_nom_rad, beta_nom_rad in zip(alpha_nominal_rad, beta_nominal_rad):
 
@@ -1099,8 +1127,7 @@ def fit_gearbox_correction(
     r2d = np.rad2deg
     # TODO: logger.debug?
     print(
-        "camera_offset_start =",
-        camera_offset_start,
+        "camera_offset_start =", camera_offset_start,
         "radian = {} degree".format(r2d(camera_offset_start)),
     )
     print("beta0_start =", beta0_start, "radian = {} degree".format(r2d(beta0_start)))
@@ -1149,8 +1176,7 @@ def fit_gearbox_correction(
 
     # TODO: logger.debug?
     print(
-        "camera_offset_rad =",
-        camera_offset_rad,
+        "camera_offset_rad =", camera_offset_rad,
         "= {} degree".format(r2d(camera_offset_rad)),
     )
     print("beta0_rad =", beta0_rad, "= {} degree".format(r2d(beta0_rad)))
@@ -1299,6 +1325,8 @@ def apply_gearbox_correction(incoords_rad, coeffs=None):
     function. These are produced by the fit_gearbox_correction function.
 
     """
+    assert (coeffs is not None), "apply_gearbox_correction: No gearbox correction coefficients provided."
+
     logger = logging.getLogger(__name__)
     logger.info("Applying gearbox correction.")
 
