@@ -23,6 +23,12 @@ from math import pi
 import numpy as np
 import logging
 
+# Plotting library used for diagnostics.
+try:
+    import plotting
+except ImportError:
+    plotting = None
+
 from scipy import optimize
 
 from fpu_constants import (
@@ -305,6 +311,12 @@ def fit_circle(analysis_results, motor_axis):
     else:
         phi_nominal_rad = beta_nominal_rad
 
+    # Diagnostic plot
+    if plotting is not None:
+        title = "fit_circle: Original points for %s axis circle fit." % motor_axis
+        plotting.plot_xy( x_s, y_s, title=title, xlabel='x_s (mm)', ylabel='y_s (mm)',
+                          linefmt='b.', linestyle=' ', equal_aspect=True )
+
     # << Estimate the camera offset. >>
     # 04-Feb-2020: Changed from mean to median. Angle wrapping can lead to a bi-modal distribution.
     # np.mean results in an estimate in between the two modes, whereas np.median chooses one of them.
@@ -316,6 +328,13 @@ def fit_circle(analysis_results, motor_axis):
             motor_axis, np.rad2deg(offset_estimate)
         )
     )
+
+    # Diagnostic plot
+    if plotting is not None:
+        title =  "fit_circle: Comparison used to estimate %s axis camera offset." % motor_axis
+        plotting.plot_xy( phi_nominal_rad, phi_real_rad, title=title,
+                          xlabel='Nominal phi (radians)', ylabel='Measured phi (radians)',
+                          linefmt='b.', linestyle=' ' )
 
     # << Return the result. >>
     result = {
@@ -856,6 +875,38 @@ def fit_offsets(
     circle_points = np.array(circle_points).T
     alpha_nom_rad, beta_nom_rad = np.array(nominal_coordinates_rad).T
 
+    # Diagnostic plot
+    if plotting is not None:
+        title = "fit_offsets: Measured circle points."
+        plotting.plot_xy( circle_points[0], circle_points[1], title=title,
+                          xlabel='X (mm)', ylabel='Y (mm)',
+                          linefmt='b.', linestyle=' ', equal_aspect=True )
+        #print("alpha_nom_rad=", alpha_nom_rad)
+        title = "fit_offsets: Nominal alpha angles, ending with fixpoint (radians)."
+        plotting.plot_xy( None, alpha_nom_rad, title=title,
+                          xlabel='index', ylabel='alpha_nom_rad"',
+                          linefmt='b.', linestyle=' ' )
+        #print("beta_nom_rad=", beta_nom_rad)
+        title = "fit_offsets: Nominal beta angles, starting with fixpoint (radians)."
+        plotting.plot_xy( None, beta_nom_rad, title=title,
+                          xlabel='index', ylabel='beta_nom_rad',
+                          linefmt='b.', linestyle=' ' )
+
+        points = angle_to_point(
+            alpha_nom_rad,
+            beta_nom_rad,
+            P0=P0,
+            R_alpha=R_alpha,
+            R_beta_midpoint=R_beta_midpoint,
+            camera_offset_rad=camera_offset_start,
+            beta0_rad=beta0_start
+        )
+        title = "fit_offsets: Circle points predicted from starting offsets."
+        plotting.plot_xy( points[0], points[1], title=title,
+                          xlabel='X (mm)', ylabel='Y (mm)',
+                          linefmt='g.', linestyle=' ', equal_aspect=True )
+
+
     # << Fit offsets so that the difference between nominal (demanded) and
     # real (measured) points is minimal. >>
     #
@@ -886,6 +937,22 @@ def fit_offsets(
     offsets_estimate = np.array([camera_offset_start, beta0_start])
     offsets, ier = optimize.leastsq(g, offsets_estimate, ftol=1.5e-10, xtol=1.5e-10)
     camera_offset, beta0 = offsets
+
+    if plotting is not None:
+        points = angle_to_point(
+            alpha_nom_rad,
+            beta_nom_rad,
+            P0=P0,
+            R_alpha=R_alpha,
+            R_beta_midpoint=R_beta_midpoint,
+            camera_offset_rad=camera_offset,
+            beta0_rad=beta0
+        )
+        title = "fit_offsets: Circle points predicted from best fitting offsets."
+        plotting.plot_xy( points[0], points[1], title=title,
+                          xlabel='X ?', ylabel='Y ?',
+                          linefmt='r.', linestyle=' ', equal_aspect=True )
+
 
     # TODO: logger.debug?
     print(
