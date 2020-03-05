@@ -18,6 +18,12 @@ from ImageAnalysisFuncs.analyze_positional_repeatability import (
     ImageAnalysisError,
     posrepCoordinates,
 )
+
+from vfr.verification_tasks.positonal_verification import (
+    measure_positional_verification,
+    eval_positional_verification
+)
+
 from vfr.evaluation.measures import NO_MEASURES
 from vfr.evaluation.eval_positional_repeatability import (
     evaluate_positional_repeatability,
@@ -52,7 +58,12 @@ from DistortionCorrection import get_correction_func
 from vfr.verification_tasks.measure_datum_repeatability import (
     get_datum_repeatability_passed_p,
 )
-from vfr.conf import POS_REP_ANALYSIS_PARS
+from vfr.conf import (
+    POS_REP_ANALYSIS_PARS,
+    POS_REP_EVALUATION_PARS,
+    POS_VER_MEASUREMENT_PARS,
+    POS_VER_EVALUATION_PARS,
+)
 
 
 def check_skip_reason(dbe, fpu_id, sn, repeat_passed_tests=None, skip_fibre=False):
@@ -335,6 +346,9 @@ def get_images_for_fpu(rig, fpu_id, range_limits, pars, capture_image):
 
 def measure_positional_repeatability(rig, dbe, pars=None):
 
+    print("THIS IS AN EXPERIMENTAL BRANCH, DO YOU WANT TO RUN THE MERGED POS_VER AND POS_REP TASK??")
+    logger.info("THIS IS AN EXPERIMENTAL BRANCH, DO YOU WANT TO RUN THE MERGED POS_VER AND POS_REP TASK??")
+
     tstamp = timestamp()
     logger = logging.getLogger(__name__)
     logger.info("Capturing positional repeatability")
@@ -396,6 +410,15 @@ def measure_positional_repeatability(rig, dbe, pars=None):
             fpu_log.debug("Saving result record = %r" % (record,))
 
             save_positional_repeatability_images(dbe, fpu_id, record)
+            
+    # START No change mattter
+    
+    eval_positional_repeatability(dbe, POS_REP_ANALYSIS_PARS, POS_REP_EVALUATION_PARS )
+    
+    measure_positional_repeatability(rig, dbe, POS_VER_MEASUREMENT_PARS)
+    
+    eval_positional_verification(dbe, POS_REP_ANALYSIS_PARS, POS_VER_EVALUATION_PARS)
+     
     logger.info("Positional repeatability captured successfully")
 
 

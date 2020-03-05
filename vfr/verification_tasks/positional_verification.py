@@ -87,6 +87,9 @@ def generate_tested_positions(
 
 
 def measure_positional_verification(rig, dbe, pars=None):
+    
+    print("THIS IS AN EXPERIMENTAL BRANCH, DO YOU WANT TO RUN THE MERGED POS_VER AND POS_REP TASK")
+    logger.info("THIS IS AN EXPERIMENTAL BRANCH, DO YOU WANT TO RUN THE MERGED POS_VER AND POS_REP TASK")
 
     # home turntable
     tstamp = timestamp()
@@ -96,8 +99,10 @@ def measure_positional_verification(rig, dbe, pars=None):
     opts = rig.opts
     gd = rig.gd
     grid_state = rig.grid_state
-
-    safe_home_turntable(rig, grid_state)
+    
+    print("TURNTABLE IS NOT MOVING IN POS VER STEP")
+    logger.info("TURNTABLE IS NOT MOVING IN POS VER STEP")
+    #safe_home_turntable(rig, grid_state)
     rig.lctrl.switch_all_off()
 
     with rig.lctrl.use_ambientlight():
@@ -223,9 +228,10 @@ def measure_positional_verification(rig, dbe, pars=None):
             fpu_coeffs = gearbox_correction["coeffs"]
             gearbox_git_version = pr_result["git_version"]
             gearbox_record_count = pr_result["record-count"]
-
+            
+            # DISABLED FOR TEST
             # move rotary stage to POS_VER_POSN_N
-            turntable_safe_goto(rig, grid_state, stage_position)
+            #turntable_safe_goto(rig, grid_state, stage_position)
 
             image_dict = {}
 
@@ -252,8 +258,9 @@ def measure_positional_verification(rig, dbe, pars=None):
                 beta_min=beta_min + tol,
                 beta_max=beta_max - tol,
             )
-
-            find_datum(gd, grid_state, opts)
+            
+            # Disabled Datum here
+            #find_datum(gd, grid_state, opts)
 
             image_dict = {}
             deg2rad = np.deg2rad
