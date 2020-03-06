@@ -88,13 +88,14 @@ def generate_tested_positions(
 
 def measure_positional_verification(rig, dbe, pars=None):
     
-    print("THIS IS AN EXPERIMENTAL BRANCH, DO YOU WANT TO RUN THE MERGED POS_VER AND POS_REP TASK")
-    logger.info("THIS IS AN EXPERIMENTAL BRANCH, DO YOU WANT TO RUN THE MERGED POS_VER AND POS_REP TASK")
+    
 
     # home turntable
     tstamp = timestamp()
     logger = logging.getLogger(__name__)
     logger.info("capturing positional verification")
+    print("THIS IS AN EXPERIMENTAL BRANCH, DO YOU WANT TO RUN THE MERGED POS_VER AND POS_REP TASK")
+    logger.info("THIS IS AN EXPERIMENTAL BRANCH, DO YOU WANT TO RUN THE MERGED POS_VER AND POS_REP TASK")
 
     opts = rig.opts
     gd = rig.gd

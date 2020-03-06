@@ -19,9 +19,9 @@ from ImageAnalysisFuncs.analyze_positional_repeatability import (
     posrepCoordinates,
 )
 
-from vfr.verification_tasks.positonal_verification import (
+from vfr.verification_tasks.positional_verification import (
     measure_positional_verification,
-    eval_positional_verification
+    eval_positional_verification,
 )
 
 from vfr.evaluation.measures import NO_MEASURES
@@ -92,7 +92,6 @@ def check_skip_reason(dbe, fpu_id, sn, repeat_passed_tests=None, skip_fibre=Fals
         )
 
     return None
-
 
 def initialize_rig(rig):
     # home turntable
@@ -238,7 +237,6 @@ def get_target_position(limits, pars, measurement_index):
 
     abs_alpha = alpha0 + step_a * (measurement_index.idx_alpha - fixpoint)
     abs_beta = beta0 + step_b * (measurement_index.idx_beta - fixpoint)
-
     return FPU_Position(abs_alpha, abs_beta)
 
 
@@ -346,12 +344,13 @@ def get_images_for_fpu(rig, fpu_id, range_limits, pars, capture_image):
 
 def measure_positional_repeatability(rig, dbe, pars=None):
 
-    print("THIS IS AN EXPERIMENTAL BRANCH, DO YOU WANT TO RUN THE MERGED POS_VER AND POS_REP TASK??")
-    logger.info("THIS IS AN EXPERIMENTAL BRANCH, DO YOU WANT TO RUN THE MERGED POS_VER AND POS_REP TASK??")
+    
 
     tstamp = timestamp()
     logger = logging.getLogger(__name__)
     logger.info("Capturing positional repeatability")
+    print("THIS IS AN EXPERIMENTAL BRANCH, DO YOU WANT TO RUN THE MERGED POS_VER AND POS_REP TASK??")
+    logger.info("THIS IS AN EXPERIMENTAL BRANCH, DO YOU WANT TO RUN THE MERGED POS_VER AND POS_REP TASK??")
 
     initialize_rig(rig)
 
