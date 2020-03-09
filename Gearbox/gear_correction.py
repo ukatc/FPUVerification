@@ -520,6 +520,13 @@ def get_angle_error(
     x_real = x_s2 - xc
     y_real = y_s2 - yc
 
+    # Diagnostic plot
+    if plotting is not None:
+        title = "get_angle_error: Measured points (from centre)."
+        plotting.plot_xy( x_real, y_real, title=title,
+                          xlabel='X (mm)', ylabel='Y (mm)',
+                          linefmt='b.', linestyle=' ', equal_aspect=True )
+
     # << Compute expected points. >>
     # Compute expected Cartesian points from common fit parameters.
     # The points expected from the nominal angles are computed
@@ -548,12 +555,19 @@ def get_angle_error(
     x_fitted = x_n - xc
     y_fitted = y_n - yc
 
+    # Diagnostic plot
+    if plotting is not None:
+        title = "get_angle_error: Expected nominal points (from centre)."
+        plotting.plot_xy( x_fitted, y_fitted, title=title,
+                          xlabel='X (mm)', ylabel='Y (mm)',
+                          linefmt='b.', linestyle=' ', equal_aspect=True )
+
     # << Compute angular difference. >>
     # Compute the remaining difference in the complex plane.
     # Now both sets of points are converted to polar coordinates.
     # Complex notation is used because it makes the next step easier.
-    points_real = x_real + 1j * y_real
-    points_fitted = x_fitted + 1j * y_fitted
+    points_real = x_real + y_real*1j
+    points_fitted = x_fitted + y_fitted*1j
 
     # compute _residual_ offset of fitted - real
     # (no unwrapping needed because we use the complex domain)
@@ -561,6 +575,15 @@ def get_angle_error(
     # note, the alpha0 / beta0 values are not included
     # (camera_offset is considered to be specific to the camera)
     angular_difference = np.log(points_real / points_fitted).imag
+
+    # Diagnostic plot
+    if plotting is not None:
+        #print("angular_difference=", angular_difference )
+        title = "get_angle_error: Angular differences (radian)."
+        plotting.plot_xy( None, angular_difference, title=title,
+                          xlabel='index', ylabel='angular_difference',
+                          linefmt='b.', linestyle=' ' )
+
 
     # << Compute phase-wrapped real and nominal values. >>
     # Finally, the nominal and real input angles are converted
@@ -612,12 +635,13 @@ def fit_gearbox_parameters(
         alpha_fixpoint_rad = np.mean(alpha_nominal_rad)
         beta_fixpoint_rad = np.NaN
         # TODO: logger.debug?
-        print("fit_gearbox_parameters: alpha fixpoint = {} degree".format(np.rad2deg(alpha_fixpoint_rad)))
+        print("fit_gearbox_parameters: alpha fixpoint = {} rad = {} degree".format(alpha_fixpoint_rad, np.rad2deg(alpha_fixpoint_rad)))
     else:
         alpha_fixpoint_rad = np.NaN
+        # Common angle for alpha measurements
         beta_fixpoint_rad = np.mean(beta_nominal_rad)
         # TODO: logger.debug?
-        print("fit_gearbox_parameters: beta fixpoint = {} degree".format(np.rad2deg(beta_fixpoint_rad)))
+        print("fit_gearbox_parameters: beta fixpoint = {} rad = {} degree".format(beta_fixpoint_rad, np.rad2deg(beta_fixpoint_rad)))
     _, R_real = cartesian2polar(x_s2 - xc, y_s2 - yc)
 
     # TODO: logger.debug?
@@ -720,7 +744,7 @@ def fit_gearbox_parameters(
 
 
     # Using the mean error angles, we then define the interpolation tables.
-    # To get an invertible function, the interpolation input must defin a
+    # To get an invertible function, the interpolation input must define a
     # strictly monotonic function, so we add the function.
     #
     #   y = f(x) = x
@@ -881,12 +905,10 @@ def fit_offsets(
         plotting.plot_xy( circle_points[0], circle_points[1], title=title,
                           xlabel='X (mm)', ylabel='Y (mm)',
                           linefmt='b.', linestyle=' ', equal_aspect=True )
-        #print("alpha_nom_rad=", alpha_nom_rad)
         title = "fit_offsets: Nominal alpha angles, ending with fixpoint (radians)."
         plotting.plot_xy( None, alpha_nom_rad, title=title,
-                          xlabel='index', ylabel='alpha_nom_rad"',
+                          xlabel='index', ylabel='alpha_nom_rad',
                           linefmt='b.', linestyle=' ' )
-        #print("beta_nom_rad=", beta_nom_rad)
         title = "fit_offsets: Nominal beta angles, starting with fixpoint (radians)."
         plotting.plot_xy( None, beta_nom_rad, title=title,
                           xlabel='index', ylabel='beta_nom_rad',
@@ -1340,7 +1362,7 @@ def apply_gearbox_parameters_fitted(
 
     # wrap in the same way as we did with the fit
     if wrap:
-        angle_rad = wrap_complex_vals(np.log(np.exp(1j * angle_rad)).imag)
+        angle_rad = wrap_complex_vals(np.log(np.exp(angle_rad*1j)).imag)
 
     # phi_corrected = np.interp(angle_rad, x_points, y_points, period=2 * pi)
     phi_corrected = np.interp(angle_rad, x_points, y_points)
