@@ -414,7 +414,7 @@ def measure_positional_repeatability(rig, dbe, pars=None):
     
     eval_positional_repeatability(dbe, POS_REP_ANALYSIS_PARS, POS_REP_EVALUATION_PARS )
     
-    measure_positional_repeatability(rig, dbe, POS_VER_MEASUREMENT_PARS)
+    measure_positional_verification(rig, dbe, POS_VER_MEASUREMENT_PARS)
     
     eval_positional_verification(dbe, POS_REP_ANALYSIS_PARS, POS_VER_EVALUATION_PARS)
      
