@@ -23,12 +23,6 @@ from math import pi
 import numpy as np
 import logging
 
-# Plotting library used for diagnostics.
-try:
-    import plotting
-except ImportError:
-    plotting = None
-
 from scipy import optimize
 
 from fpu_constants import (
@@ -37,7 +31,14 @@ from fpu_constants import (
     StepsPerRadianAlpha,
     StepsPerRadianBeta,
 )
-from vfr.conf import BLOB_WEIGHT_FACTOR, POS_REP_EVALUATION_PARS, PERCENTILE_ARGS
+from vfr.conf import BLOB_WEIGHT_FACTOR, POS_REP_EVALUATION_PARS, PERCENTILE_ARGS, GRAPHICAL_DIAGNOSTICS
+
+# Plotting library used for diagnostics.
+if GRAPHICAL_DIAGNOSTICS:
+    try:
+        import plotting
+    except ImportError:
+        GRAPHICAL_DIAGNOSTICS = False
 
 
 # Exceptions which are raised if image analysis functions fail
@@ -312,7 +313,7 @@ def fit_circle(analysis_results, motor_axis):
         phi_nominal_rad = beta_nominal_rad
 
     # Diagnostic plot
-    if plotting is not None:
+    if GRAPHICAL_DIAGNOSTICS:
         title = "fit_circle: Original points for %s axis circle fit." % motor_axis
         plotting.plot_xy( x_s, y_s, title=title, xlabel='x_s (mm)', ylabel='y_s (mm)',
                           linefmt='b.', linestyle=' ', equal_aspect=True )
@@ -330,7 +331,7 @@ def fit_circle(analysis_results, motor_axis):
     )
 
     # Diagnostic plot
-    if plotting is not None:
+    if GRAPHICAL_DIAGNOSTICS:
         title =  "fit_circle: Comparison used to estimate %s axis camera offset." % motor_axis
         plotting.plot_xy( phi_nominal_rad, phi_real_rad, title=title,
                           xlabel='Nominal phi (radians)', ylabel='Measured phi (radians)',
@@ -521,7 +522,7 @@ def get_angle_error(
     y_real = y_s2 - yc
 
     # Diagnostic plot
-    if plotting is not None:
+    if GRAPHICAL_DIAGNOSTICS:
         title = "get_angle_error: Measured points (from centre)."
         plotting.plot_xy( x_real, y_real, title=title,
                           xlabel='X (mm)', ylabel='Y (mm)',
@@ -556,7 +557,7 @@ def get_angle_error(
     y_fitted = y_n - yc
 
     # Diagnostic plot
-    if plotting is not None:
+    if GRAPHICAL_DIAGNOSTICS:
         title = "get_angle_error: Expected nominal points (from centre)."
         plotting.plot_xy( x_fitted, y_fitted, title=title,
                           xlabel='X (mm)', ylabel='Y (mm)',
@@ -577,7 +578,7 @@ def get_angle_error(
     angular_difference = np.log(points_real / points_fitted).imag
 
     # Diagnostic plot
-    if plotting is not None:
+    if GRAPHICAL_DIAGNOSTICS:
         #print("angular_difference=", angular_difference )
         title = "get_angle_error: Angular differences (radian)."
         plotting.plot_xy( None, angular_difference, title=title,
@@ -680,7 +681,7 @@ def fit_gearbox_parameters(
     #      "err_phi_1_rad=", err_phi_1_rad)
 
     # Diagnostic plot
-    if plotting is not None:
+    if GRAPHICAL_DIAGNOSTICS:
         #title = "fit_gearbox_parameters() for %s: phi_real_rad." % motor_axis
         #plotting.plot_xy( None, phi_real_rad, title=title,
         #                  xlabel='Index', ylabel='phi_real_rad (radians)',
@@ -730,14 +731,14 @@ def fit_gearbox_parameters(
     #print("fit_gearbox_parameters(): sorted nominal angles (phi_fit_support_rad)=", phi_fit_support_rad)
 
     # Diagnostic plot
-    if plotting is not None:
+    if GRAPHICAL_DIAGNOSTICS:
         title = "fit_gearbox_parameters() for %s: Sorted support indices ???." % motor_axis
         plotting.plot_xy( None, phi_fit_support_rad, title=title,
                           xlabel='Index', ylabel='phi_fit_support_rad (radians)',
                           linefmt='b.', linestyle=' ' )
 
 #    # Diagnostic plots
-#    if plotting is not None:
+#    if GRAPHICAL_DIAGNOSTICS:
 #        #print("Looping through", phi_fit_support_rad)
 #        for k in phi_fit_support_rad:
 #            temparray = np.array(support_points[k])
@@ -800,10 +801,12 @@ def fit_gearbox_parameters(
     # and corrected_angle_rad (which holds the real value of the gearbox position)
     # are the calibration tables. We need to subtract the camerqa offset to
     # make the tables independent of the camera orientation.
+    # FIXME: Correct the beta padding bug. What are the side effects if treated the same way as alpha?
     if motor_axis == "alpha":
         nominal_angle_rad = phi_fit_support_rad - camera_offset_rad
         corrected_angle_rad = corrected_shifted_angle_rad - camera_offset_rad
     else:
+        # FIXME: Why is beta0_rad subtracted? It takes the lookup table out of range and destroys the padding.
         nominal_angle_rad = phi_fit_support_rad - beta0_rad - camera_offset_rad - pi
         corrected_angle_rad = (
             corrected_shifted_angle_rad - beta0_rad - camera_offset_rad - pi
@@ -817,7 +820,7 @@ def fit_gearbox_parameters(
     )
 
     # Diagnostic plot
-    if plotting is not None:
+    if GRAPHICAL_DIAGNOSTICS:
         title = "fit_gearbox_parameters() for %s: Correction vs demanded angle." % motor_axis
         plotting.plot_xy(nominal_angle_rad, corrected_angle_rad-nominal_angle_rad, title=title,
                           xlabel='nominal_angle_rad (radians)', ylabel='corrected_angle_rad-nominal_angle_rad (radians)',
@@ -841,7 +844,7 @@ def fit_gearbox_parameters(
     corrected_angle_rad = np.hstack([[phi_min], corrected_angle_rad, [phi_max]])
 
     # Diagnostic plot
-    if plotting is not None:
+    if GRAPHICAL_DIAGNOSTICS:
         title = "fit_gearbox_parameters() for %s: Padded correction vs demanded angle." % motor_axis
         plotting.plot_xy(nominal_angle_rad, corrected_angle_rad-nominal_angle_rad, title=title,
                           xlabel='nominal_angle_rad (radians)', ylabel='corrected_angle_rad-nominal_angle_rad (radians)',
@@ -961,7 +964,7 @@ def fit_offsets(
     alpha_nom_rad, beta_nom_rad = np.array(nominal_coordinates_rad).T
 
     # Diagnostic plot
-    if plotting is not None:
+    if GRAPHICAL_DIAGNOSTICS:
         title = "fit_offsets: Measured circle points."
         plotting.plot_xy( circle_points[0], circle_points[1], title=title,
                           xlabel='X (mm)', ylabel='Y (mm)',
@@ -975,7 +978,7 @@ def fit_offsets(
                           xlabel='index', ylabel='beta_nom_rad',
                           linefmt='b.', linestyle=' ' )
 
-        points = angle_to_point(
+        zpoints = angle_to_point(
             alpha_nom_rad,
             beta_nom_rad,
             P0=P0,
@@ -985,7 +988,7 @@ def fit_offsets(
             beta0_rad=beta0_start
         )
         title = "fit_offsets: Circle points predicted from starting offsets."
-        plotting.plot_xy( points[0], points[1], title=title,
+        plotting.plot_xy( zpoints[0], zpoints[1], title=title,
                           xlabel='X (mm)', ylabel='Y (mm)',
                           linefmt='g.', linestyle=' ', equal_aspect=True )
 
@@ -1021,7 +1024,7 @@ def fit_offsets(
     offsets, ier = optimize.leastsq(g, offsets_estimate, ftol=1.5e-10, xtol=1.5e-10)
     camera_offset, beta0 = offsets
 
-    if plotting is not None:
+    if GRAPHICAL_DIAGNOSTICS:
         points = angle_to_point(
             alpha_nom_rad,
             beta_nom_rad,

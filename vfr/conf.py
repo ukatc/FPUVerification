@@ -17,8 +17,10 @@ DEFAULT_TASKS_NONFIBRE = [
     "report",
 ]
 
-# a few parameters are defined globally because they are
+# A few parameters are defined globally because they are
 # used in many different places
+
+GRAPHICAL_DIAGNOSTICS = False
 
 ALPHA_DATUM_OFFSET = -180
 ALPHA_RANGE_MAX = 155.0  # maximum range of alpha arm
@@ -275,7 +277,9 @@ POS_REP_EVALUATION_PARS = Namespace(
     # applied, the order of the fit.
 )
 
+# FIXME: The alpha arm radius is averaging at 7.765mm which suggests the platescale should be 0.0242
 POS_REP_PLATESCALE = 0.0235  # millimeter per pixel
+#POS_REP_PLATESCALE = 0.0242  # millimeter per pixel
 
 # This is the fallback configuration, which is linear scaling.
 #
