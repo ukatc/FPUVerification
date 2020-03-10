@@ -33,8 +33,7 @@ PREREQUISITES
    git clone jnix@dalriada/MOONS/FPUVerification
    
 
-
-4) for the C++ driver and static library
+5) for the C++ driver and static library
 
  * gcc-4.9 (essentially, with support for C++11)
  * Linux-2.6 or newer (requiring support for eventfd)
@@ -104,6 +103,14 @@ sudo apt-get install git git-gui gitg gitk git-man
 # racket compiler and run-time environment:
 
 sudo apt-get install racket 
+
+EXTRAS
+------
+Alan O'Brien needed to add the following steps to the installation procedure:
+
+   * updated pygobject from 3.26.1 to 3.27.0
+   * manually installed pypylon 1.3.1
+   * removed ranger and zim, a file vieer and document creator.
 
 
 INSTALLING BOOST LIBRARIES
