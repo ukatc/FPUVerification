@@ -584,7 +584,6 @@ def get_angle_error(
                           xlabel='index', ylabel='angular_difference',
                           linefmt='b.', linestyle=' ' )
 
-
     # << Compute phase-wrapped real and nominal values. >>
     # Finally, the nominal and real input angles are converted
     # to a phase-wrapped representation.
@@ -676,6 +675,30 @@ def fit_gearbox_parameters(
         camera_offset_rad=camera_offset_rad,
         beta0_rad=beta0_rad,
     )
+    #print("fit_gearbox_parameters(): get_angle_error returns phi_real_rad=", phi_real_rad,
+    #      "phi_fitted_rad=", phi_fitted_rad,
+    #      "err_phi_1_rad=", err_phi_1_rad)
+
+    # Diagnostic plot
+    if plotting is not None:
+        #title = "fit_gearbox_parameters() for %s: phi_real_rad." % motor_axis
+        #plotting.plot_xy( None, phi_real_rad, title=title,
+        #                  xlabel='Index', ylabel='phi_real_rad (radians)',
+        #                  linefmt='b.', linestyle=' ' )
+        #title = "fit_gearbox_parameters() for %s: phi_fitted_rad." % motor_axis
+        #plotting.plot_xy( None, phi_fitted_rad, title=title,
+        #                  xlabel='Index', ylabel='phi_fitted_rad (radians)',
+        #                  linefmt='b.', linestyle=' ' )
+
+        title = "fit_gearbox_parameters() for %s: Difference between actual and demanded angle." % motor_axis
+        plotting.plot_xy(phi_fitted_rad, phi_real_rad-phi_fitted_rad, title=title,
+                          xlabel='phi_fitted_rad (radians)', ylabel='phi_real_rad-phi_fitted_rad (radians)',
+                          linefmt='b.', linestyle=' ' )
+        #title = "fit_gearbox_parameters() for %s: Error between actual and demanded angle (err_phi_1_rad)." % motor_axis
+        #plotting.plot_xy( phi_fitted_rad, err_phi_1_rad, title=title,
+        #                  xlabel='phi_fitted_rad (radians)', ylabel='err_phi_1_rad (radians)',
+        #                  linefmt='b.', linestyle=' ' )
+
 
     # << Compute support points for linear least squares fit. >>
     # Here the values phi_fitted_rad etc... represent the angles
@@ -693,6 +716,9 @@ def fit_gearbox_parameters(
     # The value of the map is a list of different error angles,
     # err_phi_1_rad, which represent the difference or "gearbox
     # error".
+    #
+    # *** NOTE: Is this code doing the right thing?
+    #
     support_points = {}
     for (fitted_angle, yp) in zip(phi_fitted_rad, err_phi_1_rad):
         if fitted_angle not in support_points:
@@ -701,6 +727,24 @@ def fit_gearbox_parameters(
 
     # Nominal angles are sorted.
     phi_fit_support_rad = np.array(sorted(support_points.keys()))
+    #print("fit_gearbox_parameters(): sorted nominal angles (phi_fit_support_rad)=", phi_fit_support_rad)
+
+    # Diagnostic plot
+    if plotting is not None:
+        title = "fit_gearbox_parameters() for %s: Sorted support indices ???." % motor_axis
+        plotting.plot_xy( None, phi_fit_support_rad, title=title,
+                          xlabel='Index', ylabel='phi_fit_support_rad (radians)',
+                          linefmt='b.', linestyle=' ' )
+
+#    # Diagnostic plots
+#    if plotting is not None:
+#        #print("Looping through", phi_fit_support_rad)
+#        for k in phi_fit_support_rad:
+#            temparray = np.array(support_points[k])
+#            title = "fit_gearbox_parameters() for %s: Mean of %f support points is %f" % (motor_axis, k, np.mean(temparray))
+#            plotting.plot_xy( None, temparray, title=title,
+#                          xlabel='Index', ylabel='support_points[k]',
+#                          linefmt='b.', linestyle=' ' )
 
     # Then we compute the mean value of the observed data.
     # The array phi_cor_support_rad is the input for the linear
@@ -711,6 +755,7 @@ def fit_gearbox_parameters(
     phi_corr_support_rad = [
         np.mean(np.array(support_points[k])) for k in phi_fit_support_rad
     ]
+
 
     # For the error, an additional computational step is needed to
     # compute a normalized error angle. The function ensures the
@@ -771,6 +816,14 @@ def fit_gearbox_parameters(
         )
     )
 
+    # Diagnostic plot
+    if plotting is not None:
+        title = "fit_gearbox_parameters() for %s: Correction vs demanded angle." % motor_axis
+        plotting.plot_xy(nominal_angle_rad, corrected_angle_rad-nominal_angle_rad, title=title,
+                          xlabel='nominal_angle_rad (radians)', ylabel='corrected_angle_rad-nominal_angle_rad (radians)',
+                          linefmt='gx', linestyle='-' )
+
+
     # Pad table support points with values for the ends of the range.
     # This is especially needed since the support points which are
     # used in the control plot, are outside the fitted range,
@@ -786,6 +839,14 @@ def fit_gearbox_parameters(
     phi_max = np.deg2rad(+185)
     nominal_angle_rad = np.hstack([[phi_min], nominal_angle_rad, [phi_max]])
     corrected_angle_rad = np.hstack([[phi_min], corrected_angle_rad, [phi_max]])
+
+    # Diagnostic plot
+    if plotting is not None:
+        title = "fit_gearbox_parameters() for %s: Padded correction vs demanded angle." % motor_axis
+        plotting.plot_xy(nominal_angle_rad, corrected_angle_rad-nominal_angle_rad, title=title,
+                          xlabel='nominal_angle_rad (radians)', ylabel='corrected_angle_rad-nominal_angle_rad (radians)',
+                          linefmt='gx', linestyle='-' )
+
 
     # << Assemble the results dictionary. >>
     results = {
