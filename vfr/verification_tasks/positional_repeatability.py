@@ -409,7 +409,8 @@ def measure_positional_repeatability(rig, dbe, pars=None):
             fpu_log.debug("Saving result record = %r" % (record,))
 
             save_positional_repeatability_images(dbe, fpu_id, record)
-            
+         
+        pos_rep_cam.close()
     # START No change mattter
     
     eval_positional_repeatability(dbe, POS_REP_ANALYSIS_PARS, POS_REP_EVALUATION_PARS )

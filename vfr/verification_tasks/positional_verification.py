@@ -328,6 +328,7 @@ def measure_positional_verification(rig, dbe, pars=None):
 
             fpu_log.debug("FPU %r: saving result record = %r" % (sn, record))
             save_positional_verification_images(dbe, fpu_id, record)
+        pos_rep_cam.close()
 
     logger.info("positional verification captured sucessfully")
 
