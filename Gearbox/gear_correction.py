@@ -173,6 +173,7 @@ def leastsq_circle(x, y):
         f, param_estimate, args=(x, y), ftol=1.5e-10, xtol=1.5e-10
     )
 
+    # BUG FIX: SMB 03-Mar-2020: Changed x,y to x2,x2 so as not to overwrite input parameters.
     if apply_elliptical_correction:
         xc, yc, psi, stretch = fitted_params
         # The fitted radius is the mean distance of the distorted
@@ -298,6 +299,7 @@ def fit_circle(analysis_results, motor_axis):
     )
 
     # << Retrieve angles relative to camera coordinates. >>
+    # BUG FIX: SMB 03-Mar-2020: Only call the elliptical_distortion function when needed.
     if POS_REP_EVALUATION_PARS.APPLY_ELLIPTICAL_CORRECTION:
         # Ellipse fitted. Apply the distortion correction to the points
         x_s2, y_s2 = elliptical_distortion(x_s, y_s, xc, yc, psi, stretch)
@@ -319,7 +321,7 @@ def fit_circle(analysis_results, motor_axis):
                           linefmt='b.', linestyle=' ', equal_aspect=True )
 
     # << Estimate the camera offset. >>
-    # 04-Feb-2020: Changed from mean to median. Angle wrapping can lead to a bi-modal distribution.
+    # BUG FIX: SMB 04-Mar-2020: Changed from mean to median. Angle wrapping can lead to a bi-modal distribution.
     # np.mean results in an estimate in between the two modes, whereas np.median chooses one of them.
     offset_estimate = np.median(phi_real_rad - phi_nominal_rad)
     #offset_estimate = np.mean(phi_real_rad - phi_nominal_rad)
@@ -366,18 +368,18 @@ def wrap_complex_vals(angles):
 
 
 def angle_to_point(
-    alpha_nom_rad,
-    beta_nom_rad,
-    P0=None,
-    R_alpha=None,
-    R_beta_midpoint=None,
-    camera_offset_rad=None,
-    beta0_rad=None,
-    inverse=False,
-    coeffs=None,
-    broadcast=True,
-    correct_axis=["alpha", "beta"],
-    correct_fixpoint=True,
+    alpha_nom_rad,           # Scalar or array of demanded alpha angles (rad)
+    beta_nom_rad,            # Scalar or array of demanded beta angles (rad)
+    P0=None,                 # Coordinates of centre of alpha circle (xc,yc)
+    R_alpha=None,            # Radius of alpha circle (mm)
+    R_beta_midpoint=None,    # Radius of beta circle (mm)
+    camera_offset_rad=None,  # Offset between alpha angle and camera axis (rad)
+    beta0_rad=None,          # Offset between beta angle and camera axis (rad)
+    inverse=False,           # Apply the inverse of the gearbox correction?
+    coeffs=None,             # Nested dictionary of gearbox correction coeffs. None means no correction.
+    broadcast=True,          # Adjust the P0 vector to broadcast onto all points?
+    correct_axis=["alpha", "beta"],    # Which axes to apply gearbox correction to.
+    correct_fixpoint=True,   # Apply gearbox correction to fixpoint angle as well as demanded angles?
 ):
     """
 
@@ -386,6 +388,11 @@ def angle_to_point(
     of a circle fit, transforming points back to Cartesian coordinates.
 
     alpha_nom_rad and beta_nom_rad can be arrays or scalars.
+
+    The camera offset is the difference between the alpha and beta angles
+    demanded by the fibre positioner electronics and the alpha and beta
+    angles measured on the image. It would be zero if the image rows and
+    columns lined up exactly with the fibre positioner zero angles.
 
     So, basically, angle_to_point() applies the camera offset to the angles,
     and computes the (x,y) point in the Cartesian plane which corresponds
@@ -420,7 +427,7 @@ def angle_to_point(
                 alpha_nom_rad,
                 wrap=True,
                 inverse_transform=inverse,
-                **coeffs["coeffs_alpha"]
+                **coeffs["coeffs_alpha"] # Pass the alpha coeffs dictionary
             )
 
             alpha_fixpoint_rad = coeffs["coeffs_beta"]["alpha_fixpoint_rad"]
@@ -428,7 +435,7 @@ def angle_to_point(
                 alpha_fixpoint_rad,
                 wrap=True,
                 inverse_transform=inverse,
-                **coeffs["coeffs_alpha"]
+                **coeffs["coeffs_alpha"] # Pass the alpha coeffs dictionary
             )
         else:
             delta_alpha = 0
@@ -441,7 +448,7 @@ def angle_to_point(
                 beta_nom_rad,
                 wrap=True,
                 inverse_transform=inverse,
-                **coeffs["coeffs_beta"]
+                **coeffs["coeffs_beta"] # Pass the beta coeffs dictionary
             )
 
             beta_fixpoint_rad = coeffs["coeffs_alpha"]["beta_fixpoint_rad"]
@@ -449,7 +456,7 @@ def angle_to_point(
                 beta_fixpoint_rad,
                 wrap=True,
                 inverse_transform=inverse,
-                **coeffs["coeffs_alpha"]
+                **coeffs["coeffs_alpha"] # Pass the beta coeffs dictionary
             )
         else:
             delta_beta = 0
@@ -468,11 +475,17 @@ def angle_to_point(
     # correction was measured (these angles add up
     # because when the alpha arm is turned (clockwise),
     # this turns the beta arm (clockwise) as well).
+    # NOTE: The delta* variables contain the corrections extracted from
+    # the gearbox calibration. They are zero when no correction is applied.
     gamma_rad = beta_rad + alpha_rad + (delta_alpha - delta_alpha_fixpoint)
 
+    # Determine the location of the end of the alpha arm (=beta axis)
+    # with respect to the alpha circle centre (P0)
     vec_alpha = np.array(
         polar2cartesian(alpha_rad + (delta_alpha - delta_alpha_fixpoint), R_alpha)
     )
+    # Determine the location of the target midpoint on the beta arm with respect to
+    # the beta axis.
     vec_beta = np.array(
         polar2cartesian(gamma_rad + (delta_beta - delta_beta_fixpoint), R_beta_midpoint)
     )
@@ -485,6 +498,8 @@ def angle_to_point(
         # adapt shape
         P0 = np.reshape(P0, P0.shape + (1,))
 
+    # The expected location of the point is
+    # alpha circle centre + vector to beta axis + vector to beta midpoint.
     expected_point = P0 + vec_alpha + vec_beta
 
     return expected_point
@@ -799,18 +814,22 @@ def fit_gearbox_parameters(
     # since this is purely a property of the measurement system, not the FPUs.
     # The resulting arrays, nominal_angle_rad (which keeps the nominal values)
     # and corrected_angle_rad (which holds the real value of the gearbox position)
-    # are the calibration tables. We need to subtract the camerqa offset to
+    # are the calibration tables. We need to subtract the camera offset to
     # make the tables independent of the camera orientation.
-    # FIXME: Correct the beta padding bug. What are the side effects if treated the same way as alpha?
     if motor_axis == "alpha":
         nominal_angle_rad = phi_fit_support_rad - camera_offset_rad
         corrected_angle_rad = corrected_shifted_angle_rad - camera_offset_rad
     else:
+        # BUG FIX: SMB 11-Mar-2020: beta0_rad was being double-counted, which took the
+        # lookup table out of the range +/- pi and spoiled the padding.
+        # FIXME: Check for side effects. Why was pi subtracted?
+        nominal_angle_rad = phi_fit_support_rad - camera_offset_rad
+        corrected_angle_rad = corrected_shifted_angle_rad - camera_offset_rad
         # FIXME: Why is beta0_rad subtracted? It takes the lookup table out of range and destroys the padding.
-        nominal_angle_rad = phi_fit_support_rad - beta0_rad - camera_offset_rad - pi
-        corrected_angle_rad = (
-            corrected_shifted_angle_rad - beta0_rad - camera_offset_rad - pi
-        )
+        #nominal_angle_rad = phi_fit_support_rad - beta0_rad - camera_offset_rad - pi
+        #corrected_angle_rad = (
+        #    corrected_shifted_angle_rad - beta0_rad - camera_offset_rad - pi
+        #)
 
     # TODO: logger.debug?
     print(
@@ -969,14 +988,14 @@ def fit_offsets(
         plotting.plot_xy( circle_points[0], circle_points[1], title=title,
                           xlabel='X (mm)', ylabel='Y (mm)',
                           linefmt='b.', linestyle=' ', equal_aspect=True )
-        title = "fit_offsets: Nominal alpha angles, ending with fixpoint (radians)."
-        plotting.plot_xy( None, alpha_nom_rad, title=title,
-                          xlabel='index', ylabel='alpha_nom_rad',
-                          linefmt='b.', linestyle=' ' )
-        title = "fit_offsets: Nominal beta angles, starting with fixpoint (radians)."
-        plotting.plot_xy( None, beta_nom_rad, title=title,
-                          xlabel='index', ylabel='beta_nom_rad',
-                          linefmt='b.', linestyle=' ' )
+        #title = "fit_offsets: Nominal alpha angles, ending with fixpoint (radians)."
+        #plotting.plot_xy( None, alpha_nom_rad, title=title,
+        #                  xlabel='index', ylabel='alpha_nom_rad',
+        #                  linefmt='b.', linestyle=' ' )
+        #title = "fit_offsets: Nominal beta angles, starting with fixpoint (radians)."
+        #plotting.plot_xy( None, beta_nom_rad, title=title,
+        #                  xlabel='index', ylabel='beta_nom_rad',
+        #                  linefmt='b.', linestyle=' ' )
 
         zpoints = angle_to_point(
             alpha_nom_rad,
@@ -1050,14 +1069,14 @@ def fit_offsets(
 
 
 def get_expected_points(
-    fpu_id,
-    coeffs,
-    R_alpha=None,
-    R_beta_midpoint=None,
-    camera_offset_rad=None,
-    beta0_rad=None,
-    P0=None,
-    return_points=False,
+    fpu_id,                 # FPU ID as found in the database
+    coeffs,                 # Nested dictionary of gearbox calibration coeffs.
+    R_alpha=None,           # Radius of alpha circle (mm)
+    R_beta_midpoint=None,   # Radius of beta circle to metrology target mid point (mm)
+    camera_offset_rad=None, # Offset between alpha angle and image angle (rad)
+    beta0_rad=None,         # Offset between beta angle and image angle (rad)
+    P0=None,                # Coordinates of alpha circle centre (xc,yc)
+    return_points=False,    # If True return extra points for plotting
 ):
     """
 
@@ -1079,6 +1098,7 @@ def get_expected_points(
 
     expected_vals = {}
 
+    # Unpack the coeffs dictionary
     for lcoeffs, motor_axis in [
         (coeffs["coeffs_alpha"], "alpha"),
         (coeffs["coeffs_beta"], "beta"),
@@ -1098,7 +1118,7 @@ def get_expected_points(
             alpha_nominal_rad,
             wrap=True,
             inverse_transform=True,
-            **coeffs["coeffs_alpha"]
+            **coeffs["coeffs_alpha"]  # Pass on the alpha coeffs dictionary (treated as function parameters)
         )
         beta_nom_corrected_rad = apply_gearbox_parameters(
             beta_nominal_rad, wrap=True, inverse_transform=True, **coeffs["coeffs_beta"]
@@ -1125,13 +1145,13 @@ def get_expected_points(
             alpha_fixpoint_rad,
             wrap=True,
             inverse_transform=True,
-            **coeffs["coeffs_alpha"]
+            **coeffs["coeffs_alpha"] # Pass on the alpha coeffs dictionary (treated as function parameters)
         )
         beta_fixpoint_corrected_rad = apply_gearbox_parameters(
             beta_fixpoint_rad,
             wrap=True,
             inverse_transform=True,
-            **coeffs["coeffs_beta"]
+            **coeffs["coeffs_beta"] # Pass on the beta coeffs dictionary (treated as function parameters)
         )
 
         logger.info(
@@ -1165,7 +1185,7 @@ def get_expected_points(
                 camera_offset_rad=camera_offset_rad,
                 beta0_rad=beta0_rad,
                 inverse=True,
-                coeffs=coeffs,
+                coeffs=coeffs, # Nested coeffs dictionary
                 # correct_axis=[motor_axis],
                 # correct_fixpoint=False,
                 broadcast=False,
@@ -1275,7 +1295,10 @@ def fit_gearbox_correction(
 
     # << Fit offsets of camera orientation >>
     camera_offset_start = circle_alpha["offset_estimate"]
-    beta0_start = circle_beta["offset_estimate"] + camera_offset_start
+    # BUG FIX: SMB 11-Mar-2020: camera_offset_start was being double-counted in fit_offsets
+    # and angle_to_point and does not need to be added here.
+    #beta0_start = circle_beta["offset_estimate"] + camera_offset_start
+    beta0_start = circle_beta["offset_estimate"]
 
     r2d = np.rad2deg
     # TODO: logger.debug?
@@ -1334,6 +1357,7 @@ def fit_gearbox_correction(
     )
     print("beta0_rad =", beta0_rad, "= {} degree".format(r2d(beta0_rad)))
 
+    # Construct the nested coeffs dictionary
     coeffs = {"coeffs_alpha": coeffs_alpha, "coeffs_beta": coeffs_beta}
     logger.debug("coeffs_alpha: %s" % str(coeffs_alpha))
     logger.debug("coeffs_beta: %s" % str(coeffs_beta))
@@ -1364,11 +1388,11 @@ def fit_gearbox_correction(
     # << Return resulting coefficients >>
     return {
         "version": GEARBOX_CORRECTION_VERSION,    # Algorithm version.
-        "coeffs": coeffs,                         # Looking tables for alpha and beta
+        "coeffs": coeffs,                         # Nested coeffs (including ooking tables) for alpha and beta
         "x_center": x_center,                     # Centre point of
         "y_center": y_center,                     # the alpha arm axis.
-        "camera_offset_rad": camera_offset_rad,
-        "beta0_rad": beta0_rad,
+        "camera_offset_rad": camera_offset_rad,   # Offset between alpha angle and camera axis
+        "beta0_rad": beta0_rad,                   # Offset between beta angle and camera axis
         "R_alpha": R_alpha,                       # The length of the alpha arm.
         "R_beta_midpoint": R_beta_midpoint,       # Distance from beta axis to target midpoint.
         "BLOB_WEIGHT_FACTOR": BLOB_WEIGHT_FACTOR, # Weighting between target blobs.
@@ -1378,13 +1402,13 @@ def fit_gearbox_correction(
 
 
 def apply_gearbox_parameters_fitted(
-    angle_rad,
-    phi_fit_support_rad=None,
-    corrected_shifted_angle_rad=None,
-    algorithm=None,
-    inverse_transform=False,
-    wrap=False,
-    **rest_coeffs
+    angle_rad,                        # Array of angles to be corrected (rad)
+    phi_fit_support_rad=None,         # ???
+    corrected_shifted_angle_rad=None, # ???
+    algorithm=None,                   # The name of the algorithm associated with the coefficients dictionary
+    inverse_transform=False,          # Set True to apply an inverse transformation
+    wrap=False,                       # Set True if the angles are to be wrapped
+    **rest_coeffs                     # The remaining coefficients from the dictionary.
 ):
     """
 
@@ -1392,7 +1416,7 @@ def apply_gearbox_parameters_fitted(
     (instead of the FPU coordinates).
     This function is used for both the alpha and beta coordinate.
 
-    * The function checks that the coecients match the algorithm it
+    * The function checks that the coefficients match the algorithm it
       implements.
 
     * It has a flag that allows to invert the transform - that is, convert
@@ -1417,6 +1441,9 @@ def apply_gearbox_parameters_fitted(
     phi_fit_support_rad = np.array(phi_fit_support_rad, dtype=float)
     corrected_shifted_angle_rad = np.array(corrected_shifted_angle_rad, dtype=float)
 
+    # If an inverse transformation is needed, swap the input and output arrays.
+    # NOTE: Confusing names: x and y are NOT Cartesian coordinates. They are
+    # the X and Y axes described in the np.interp documentation.
     if inverse_transform:
         x_points = phi_fit_support_rad
         y_points = corrected_shifted_angle_rad
@@ -1428,6 +1455,9 @@ def apply_gearbox_parameters_fitted(
     if wrap:
         angle_rad = wrap_complex_vals(np.log(np.exp(angle_rad*1j)).imag)
 
+    # Corrected points are obtained by interpolating the lookup table to
+    # find the values of y_points where x=alpha_rad.
+    # See https://docs.scipy.org/doc/numpy/reference/generated/numpy.interp.html
     # phi_corrected = np.interp(angle_rad, x_points, y_points, period=2 * pi)
     phi_corrected = np.interp(angle_rad, x_points, y_points)
 
@@ -1435,22 +1465,26 @@ def apply_gearbox_parameters_fitted(
 
 
 def apply_gearbox_parameters(
-    angle_rad,
-    nominal_angle_rad=None,
-    corrected_angle_rad=None,
-    algorithm=None,
-    inverse_transform=False,
-    wrap=False,
-    **rest_coeffs
+    angle_rad,                 # Array of angles to be corrected (rad)
+    nominal_angle_rad=None,    # Array of demanded angles (rad) extracted from coeffs dictionary
+    corrected_angle_rad=None,  # Array of corrected angles (rad) extracted from coeffs dictionary
+    algorithm=None,            # The name of the algorithm associated with the coefficients dictionary
+    inverse_transform=False,   # Set True to apply an inverse transformation
+    wrap=False,                # Parameter ignored. The angles are never wrapped.
+    **rest_coeffs              # The remaining coefficients from the dictionary.
 ):
 
     assert (
         algorithm == "linfit+piecewise_interpolation"
     ), "no matching algorithm -- repeat fitting"
 
+    # Ensure the demanded and corrected angles are contained in numpy arrays.
     nominal_angle_rad = np.array(nominal_angle_rad, dtype=float)
     corrected_angle_rad = np.array(corrected_angle_rad, dtype=float)
 
+    # If an inverse transformation is needed, swap the input and output arrays.
+    # NOTE: Confusing names: x and y are NOT Cartesian coordinates. They are
+    # the X and Y axes described in the np.interp documentation.
     if inverse_transform:
         x_points = nominal_angle_rad
         y_points = corrected_angle_rad
@@ -1461,6 +1495,9 @@ def apply_gearbox_parameters(
     # do not wrap, or shift by offset first!
     # (the nominal angle is not subject to camera rotation)
 
+    # Corrected points are obtained by interpolating the lookup table to
+    # find the values of y_points where x=alpha_rad.
+    # See https://docs.scipy.org/doc/numpy/reference/generated/numpy.interp.html
     phi_corrected = np.interp(angle_rad, x_points, y_points)
 
     return phi_corrected
@@ -1474,7 +1511,7 @@ def apply_gearbox_correction(incoords_rad, coeffs=None):
 
     incoords_rad is a 2-tuple with the desired real (actual) input coordinates.
 
-    The coeffs parameter holds the coefficients which define the correction
+    The coeffs parameter holds a nested disctionary of coefficients which define the correction
     function. These are produced by the fit_gearbox_correction function.
 
     """
@@ -1488,6 +1525,8 @@ def apply_gearbox_correction(incoords_rad, coeffs=None):
     coeffs_beta = coeffs["coeffs_beta"]
 
     # Transform from desired / real angle to required nominal (uncalibrated) angle
+    # Note that the coeffs dictionaries will appear to apply_gearbox_parameters
+    # as extra function parameters.
     if  POS_REP_EVALUATION_PARS.APPLY_GEARBOX_CORRECTION_ALPHA:
         alpha_corrected_rad = apply_gearbox_parameters(alpha_angle_rad, **coeffs_alpha)
     else:
