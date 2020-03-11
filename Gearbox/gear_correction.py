@@ -36,7 +36,7 @@ from vfr.conf import BLOB_WEIGHT_FACTOR, POS_REP_EVALUATION_PARS, PERCENTILE_ARG
 # Plotting library used for diagnostics.
 if GRAPHICAL_DIAGNOSTICS:
     try:
-        import plotting
+        import moc_plotting as plotting
     except ImportError:
         GRAPHICAL_DIAGNOSTICS = False
 
