@@ -75,7 +75,7 @@ def evaluate_positional_verification(
     
     xc, yc, _, psi, stretch, _ = leastsq_circle(x_s, y_s)
     
-    P0 = np.array([x, yc])
+    P0 = np.array([xc, yc])
 
 
     print("P0 = ", P0)
