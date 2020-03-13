@@ -25,6 +25,7 @@ import logging
 
 from scipy import optimize
 
+# Import constants from the FPU control software
 from fpu_constants import (
     ALPHA_DATUM_OFFSET_RAD,
     BETA_DATUM_OFFSET_RAD,
@@ -54,6 +55,13 @@ GEARBOX_CORRECTION_VERSION = (5, 0, 2)
 # Minimum version for which this code works
 # and yields a tolerable result
 GEARBOX_CORRECTION_MINIMUM_VERSION = (5, 0, 0)
+
+
+def dump_tree( data ):
+    # Display the contents of a heirarchical dictionary
+    # in JSON format
+    import json
+    print(json.dumps(data, indent=3))
 
 
 def cartesian2polar(x, y):
@@ -423,6 +431,7 @@ def angle_to_point(
 
             # Here the gearbox distortion function (the inverse of the correction
             # function) is applied to alpha.
+            #print("angle_to_point: Applying inverse of correction to alpha")
             delta_alpha = -alpha_nom_rad + apply_gearbox_parameters(
                 alpha_nom_rad,
                 wrap=True,
@@ -430,6 +439,7 @@ def angle_to_point(
                 **coeffs["coeffs_alpha"] # Pass the alpha coeffs dictionary
             )
 
+            #print("angle_to_point: Applying inverse of correction to alpha fixpoint")
             alpha_fixpoint_rad = coeffs["coeffs_beta"]["alpha_fixpoint_rad"]
             delta_alpha_fixpoint = -alpha_fixpoint_rad + apply_gearbox_parameters(
                 alpha_fixpoint_rad,
@@ -444,6 +454,7 @@ def angle_to_point(
         if "beta" in correct_axis:
             # Here the gearbox distortion function (the inverse of the correction
             # function) is applied to beta.
+            #print("angle_to_point: Applying inverse of correction to beta")
             delta_beta = -beta_nom_rad + apply_gearbox_parameters(
                 beta_nom_rad,
                 wrap=True,
@@ -451,6 +462,7 @@ def angle_to_point(
                 **coeffs["coeffs_beta"] # Pass the beta coeffs dictionary
             )
 
+            #print("angle_to_point: Applying inverse of correction to beta fixpoint")
             beta_fixpoint_rad = coeffs["coeffs_alpha"]["beta_fixpoint_rad"]
             delta_beta_fixpoint = -beta_fixpoint_rad + apply_gearbox_parameters(
                 beta_fixpoint_rad,
@@ -537,11 +549,11 @@ def get_angle_error(
     y_real = y_s2 - yc
 
     # Diagnostic plot
-    if GRAPHICAL_DIAGNOSTICS:
-        title = "get_angle_error: Measured points (from centre)."
-        plotting.plot_xy( x_real, y_real, title=title,
-                          xlabel='X (mm)', ylabel='Y (mm)',
-                          linefmt='b.', linestyle=' ', equal_aspect=True )
+    #if GRAPHICAL_DIAGNOSTICS:
+    #    title = "get_angle_error: Measured points (from centre)."
+    #    plotting.plot_xy( x_real, y_real, title=title,
+    #                      xlabel='X (mm)', ylabel='Y (mm)',
+    #                      linefmt='b.', linestyle=' ', equal_aspect=True )
 
     # << Compute expected points. >>
     # Compute expected Cartesian points from common fit parameters.
@@ -572,11 +584,11 @@ def get_angle_error(
     y_fitted = y_n - yc
 
     # Diagnostic plot
-    if GRAPHICAL_DIAGNOSTICS:
-        title = "get_angle_error: Expected nominal points (from centre)."
-        plotting.plot_xy( x_fitted, y_fitted, title=title,
-                          xlabel='X (mm)', ylabel='Y (mm)',
-                          linefmt='b.', linestyle=' ', equal_aspect=True )
+    #if GRAPHICAL_DIAGNOSTICS:
+    #    title = "get_angle_error: Expected nominal points (from centre)."
+    #    plotting.plot_xy( x_fitted, y_fitted, title=title,
+    #                      xlabel='X (mm)', ylabel='Y (mm)',
+    #                      linefmt='b.', linestyle=' ', equal_aspect=True )
 
     # << Compute angular difference. >>
     # Compute the remaining difference in the complex plane.
@@ -593,12 +605,12 @@ def get_angle_error(
     angular_difference = np.log(points_real / points_fitted).imag
 
     # Diagnostic plot
-    if GRAPHICAL_DIAGNOSTICS:
-        #print("angular_difference=", angular_difference )
-        title = "get_angle_error: Angular differences (radian)."
-        plotting.plot_xy( None, angular_difference, title=title,
-                          xlabel='index', ylabel='angular_difference',
-                          linefmt='b.', linestyle=' ' )
+    #if GRAPHICAL_DIAGNOSTICS:
+    #    #print("angular_difference=", angular_difference )
+    #    title = "get_angle_error: Angular differences (radian)."
+    #    plotting.plot_xy( None, angular_difference, title=title,
+    #                      xlabel='index', ylabel='angular_difference',
+    #                      linefmt='b.', linestyle=' ' )
 
     # << Compute phase-wrapped real and nominal values. >>
     # Finally, the nominal and real input angles are converted
@@ -746,11 +758,11 @@ def fit_gearbox_parameters(
     #print("fit_gearbox_parameters(): sorted nominal angles (phi_fit_support_rad)=", phi_fit_support_rad)
 
     # Diagnostic plot
-    if GRAPHICAL_DIAGNOSTICS:
-        title = "fit_gearbox_parameters() for %s: Sorted support indices ???." % motor_axis
-        plotting.plot_xy( None, phi_fit_support_rad, title=title,
-                          xlabel='Index', ylabel='phi_fit_support_rad (radians)',
-                          linefmt='b.', linestyle=' ' )
+    #if GRAPHICAL_DIAGNOSTICS:
+    #    title = "fit_gearbox_parameters() for %s: Sorted support indices ???." % motor_axis
+    #    plotting.plot_xy( None, phi_fit_support_rad, title=title,
+    #                      xlabel='Index', ylabel='phi_fit_support_rad (radians)',
+    #                      linefmt='b.', linestyle=' ' )
 
 #    # Diagnostic plots
 #    if GRAPHICAL_DIAGNOSTICS:
@@ -797,12 +809,12 @@ def fit_gearbox_parameters(
             beta0_rad, np.rad2deg(beta0_rad)
         )
     )
+    # FIXME: Explain why 360 is added to beta0_rad when converting to degrees.
     print(
-        "fit_gearbox_parameters(): beta0_rad - pi = {} rad = {} degree".format(
+        "fit_gearbox_parameters(): beta0_rad - pi = {} rad = {} degree (???)".format(
             beta0_rad - pi, 360 + np.rad2deg(beta0_rad - pi)
         )
     )
-
 
     # Using the mean error angles, we then define the interpolation tables.
     # To get an invertible function, the interpolation input must define a
@@ -822,9 +834,10 @@ def fit_gearbox_parameters(
     else:
         # BUG FIX: SMB 11-Mar-2020: beta0_rad was being double-counted, which took the
         # lookup table out of the range +/- pi and spoiled the padding.
-        # FIXME: Check for side effects. Why was pi subtracted?
+        # FIXME: Check for side effects. Why was pi subtracted? Should pi be added?
         nominal_angle_rad = phi_fit_support_rad - camera_offset_rad
         corrected_angle_rad = corrected_shifted_angle_rad - camera_offset_rad
+
         # FIXME: Why is beta0_rad subtracted? It takes the lookup table out of range and destroys the padding.
         #nominal_angle_rad = phi_fit_support_rad - beta0_rad - camera_offset_rad - pi
         #corrected_angle_rad = (
@@ -857,6 +870,7 @@ def fit_gearbox_parameters(
     # (towards the upper and lower end of the range of movement).
     # We extend the data by assuming the real value is equal to the
     # corresponding nominal value.
+    # See https://docs.scipy.org/doc/numpy/reference/generated/numpy.hstack.html
     phi_min = np.deg2rad(-185)
     phi_max = np.deg2rad(+185)
     nominal_angle_rad = np.hstack([[phi_min], nominal_angle_rad, [phi_max]])
@@ -1043,6 +1057,10 @@ def fit_offsets(
     offsets, ier = optimize.leastsq(g, offsets_estimate, ftol=1.5e-10, xtol=1.5e-10)
     camera_offset, beta0 = offsets
 
+    # BUG FIX: SMB 13-Mar-2020: Wrap the offsets to the range +/- pi
+    camera_offset = wrap_angle_radian(camera_offset)
+    beta0 = wrap_angle_radian(beta0)
+
     if GRAPHICAL_DIAGNOSTICS:
         points = angle_to_point(
             alpha_nom_rad,
@@ -1055,7 +1073,7 @@ def fit_offsets(
         )
         title = "fit_offsets: Circle points predicted from best fitting offsets."
         plotting.plot_xy( points[0], points[1], title=title,
-                          xlabel='X ?', ylabel='Y ?',
+                          xlabel='X (mm)', ylabel='Y (mm)',
                           linefmt='r.', linestyle=' ', equal_aspect=True )
 
 
@@ -1385,10 +1403,16 @@ def fit_gearbox_correction(
             for del_key in ["alpha_nominal_rad", "beta_nominal_rad", "x_s2", "y_s2"]:
                 del coeffs[axis][del_key]
 
+    # Dump the tree structure of the derived coefficients
+    #dump_tree( coeffs )
+    #print( "==========================================================" )
+    #print( str(coeffs) )
+    #print( "==========================================================" )
+
     # << Return resulting coefficients >>
     return {
         "version": GEARBOX_CORRECTION_VERSION,    # Algorithm version.
-        "coeffs": coeffs,                         # Nested coeffs (including ooking tables) for alpha and beta
+        "coeffs": coeffs,                         # Nested coeffs (including lookup tables) for alpha and beta
         "x_center": x_center,                     # Centre point of
         "y_center": y_center,                     # the alpha arm axis.
         "camera_offset_rad": camera_offset_rad,   # Offset between alpha angle and camera axis
@@ -1402,7 +1426,7 @@ def fit_gearbox_correction(
 
 
 def apply_gearbox_parameters_fitted(
-    angle_rad,                        # Array of angles to be corrected (rad)
+    angle_rad,                        # Scalar or array of angles to be corrected (rad)
     phi_fit_support_rad=None,         # ???
     corrected_shifted_angle_rad=None, # ???
     algorithm=None,                   # The name of the algorithm associated with the coefficients dictionary
@@ -1465,7 +1489,7 @@ def apply_gearbox_parameters_fitted(
 
 
 def apply_gearbox_parameters(
-    angle_rad,                 # Array of angles to be corrected (rad)
+    angle_rad,                 # Scalar or rray of angles to be corrected (rad)
     nominal_angle_rad=None,    # Array of demanded angles (rad) extracted from coeffs dictionary
     corrected_angle_rad=None,  # Array of corrected angles (rad) extracted from coeffs dictionary
     algorithm=None,            # The name of the algorithm associated with the coefficients dictionary
@@ -1488,17 +1512,51 @@ def apply_gearbox_parameters(
     if inverse_transform:
         x_points = nominal_angle_rad
         y_points = corrected_angle_rad
+        xlabel = "Looking up nominal angle (rad)"
+        ylabel = "Corrected-nominal angle (rad)"
     else:
         x_points = corrected_angle_rad
         y_points = nominal_angle_rad
+        xlabel = "Looking up corrected angle (rad)"
+        ylabel = "Nominal-corrected angle (rad)"
 
-    # do not wrap, or shift by offset first!
+    # Diagnostic plot
+    if GRAPHICAL_DIAGNOSTICS:
+        if isinstance(angle_rad, (list,tuple,np.ndarray)) and (len(angle_rad) > 1):
+            #title = "apply_gearbox_parameters: Angles to be corrected."
+            #plotting.plot_xy( None, angle_rad, title=title,
+            #              xlabel='Index', ylabel='angle_rad (rad)',
+            #              linefmt='g.', linestyle=' ', equal_aspect=False )
+            title = "apply_gearbox_parameters: Correction function. Inverse=%s" % str(inverse_transform)
+            plotting.plot_xy( x_points, y_points-x_points, title=title,
+                          xlabel=xlabel, ylabel=ylabel,
+                          linefmt='g.', linestyle='-', equal_aspect=False )
+        else:
+           pass
+           # Extremely verbose - used one point at a time.
+           #print("apply_gearbox_parameters: Angle to be corrected=%f (rad) =%f (deg)" % \
+           #      (angle_rad,np.rad2deg(angle_rad)) )
+
+    # Do not wrap, or shift by offset first!
     # (the nominal angle is not subject to camera rotation)
 
     # Corrected points are obtained by interpolating the lookup table to
     # find the values of y_points where x=alpha_rad.
     # See https://docs.scipy.org/doc/numpy/reference/generated/numpy.interp.html
     phi_corrected = np.interp(angle_rad, x_points, y_points)
+
+    # Diagnostic plot
+    if GRAPHICAL_DIAGNOSTICS:
+        if isinstance(angle_rad, (list,tuple,np.ndarray)) and (len(angle_rad) > 1):
+            title = "apply_gearbox_parameters: Corrected angle differences."
+            plotting.plot_xy( angle_rad, phi_corrected-angle_rad, title=title,
+                          xlabel='angle_rad (rad)', ylabel='phi_corrected-angle_rad (rad)',
+                          linefmt='b.', linestyle=' ', equal_aspect=False )
+        else:
+           pass
+           # Extremely verbose - used one point at a time.
+           #print("apply_gearbox_parameters: Corrected angle=%f (rad) =%f (deg)" % \
+           #      (phi_corrected, np.rad2deg(phi_corrected)) )
 
     return phi_corrected
 
@@ -1528,11 +1586,13 @@ def apply_gearbox_correction(incoords_rad, coeffs=None):
     # Note that the coeffs dictionaries will appear to apply_gearbox_parameters
     # as extra function parameters.
     if  POS_REP_EVALUATION_PARS.APPLY_GEARBOX_CORRECTION_ALPHA:
+        print("apply_gearbox_correction: Correcting alpha")
         alpha_corrected_rad = apply_gearbox_parameters(alpha_angle_rad, **coeffs_alpha)
     else:
         alpha_corrected_rad = alpha_angle_rad
 
     if  POS_REP_EVALUATION_PARS.APPLY_GEARBOX_CORRECTION_BETA:
+        print("apply_gearbox_correction: Correcting beta")
         beta_corrected_rad = apply_gearbox_parameters(beta_angle_rad, **coeffs_beta)
     else:
         beta_corrected_rad = beta_angle_rad

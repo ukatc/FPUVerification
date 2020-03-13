@@ -9,6 +9,7 @@ from ast import literal_eval
 from os import environ
 import logging
 
+# Import constants from the FPU control software
 from fpu_constants import (
     ALPHA_MIN_DEGREE,
     ALPHA_MAX_DEGREE,
