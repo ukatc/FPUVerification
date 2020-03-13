@@ -335,7 +335,7 @@ def fit_circle(analysis_results, motor_axis):
     #offset_estimate = np.mean(phi_real_rad - phi_nominal_rad)
     # TODO: logger.debug?
     print(
-        "axis {}: initial camera offset estimate = {} degrees".format(
+        "fit_circle: axis {}: initial camera offset estimate = {} degrees".format(
             motor_axis, np.rad2deg(offset_estimate)
         )
     )
@@ -343,9 +343,15 @@ def fit_circle(analysis_results, motor_axis):
     # Diagnostic plot
     if GRAPHICAL_DIAGNOSTICS:
         title =  "fit_circle: Comparison used to estimate %s axis camera offset." % motor_axis
-        plotting.plot_xy( phi_nominal_rad, phi_real_rad, title=title,
+        if motor_axis == "alpha":
+            plotting.plot_xy( phi_nominal_rad, phi_real_rad, title=title,
                           xlabel='Nominal phi (radians)', ylabel='Measured phi (radians)',
                           linefmt='b.', linestyle=' ' )
+        else:
+            plotting.plot_xy( phi_nominal_rad, phi_real_rad+pi, title=title,
+                          xlabel='Nominal phi (radians)', ylabel='Measured phi+pi (radians)',
+                          linefmt='b.', linestyle=' ' )
+
 
     # << Return the result. >>
     result = {
@@ -481,7 +487,7 @@ def angle_to_point(
     # Rotate (possibly corrected) angles to camera orientation,
     # and apply beta arm offset
     alpha_rad = alpha_nom_rad + camera_offset_rad
-    beta_rad = beta_nom_rad + beta0_rad
+    beta_rad = beta_nom_rad + pi - beta0_rad
 
     # Add difference to alpha when the beta
     # correction was measured (these angles add up
@@ -834,7 +840,6 @@ def fit_gearbox_parameters(
     else:
         # BUG FIX: SMB 11-Mar-2020: beta0_rad was being double-counted, which took the
         # lookup table out of the range +/- pi and spoiled the padding.
-        # FIXME: Check for side effects. Why was pi subtracted? Should pi be added?
         nominal_angle_rad = phi_fit_support_rad - camera_offset_rad
         corrected_angle_rad = corrected_shifted_angle_rad - camera_offset_rad
 
@@ -1315,8 +1320,11 @@ def fit_gearbox_correction(
     camera_offset_start = circle_alpha["offset_estimate"]
     # BUG FIX: SMB 11-Mar-2020: camera_offset_start was being double-counted in fit_offsets
     # and angle_to_point and does not need to be added here.
+    # SMB 13-Mar-2020: pi is subtracted because measured beta angle = beta_nominal + pi - beta0
+    # (see coordinate system plot).
     #beta0_start = circle_beta["offset_estimate"] + camera_offset_start
-    beta0_start = circle_beta["offset_estimate"]
+    #beta0_start = circle_beta["offset_estimate"]
+    beta0_start = circle_beta["offset_estimate"] - pi
 
     r2d = np.rad2deg
     # TODO: logger.debug?
