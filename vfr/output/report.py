@@ -604,6 +604,18 @@ def list_posrep_angle_errors(name, error_by_angle, error_arg_max, csv=False):
         tag = " <<<" if angle == error_arg_max else ""
         yield (fmt.format(angle=angle, val=val, tag=tag))
 
+def list_gearbox_correction(name, coeffs):
+    """ Coeffs should be gearbox_correction.coeffs.coeffs_alpha/beta data structure
+    """
+    
+    hdr = """"\n Gearbox correction {name} values,nomial values, corrected values"""
+    yield hdr.format(name=name)
+    fmt="""Gearbox correction {name} values,{nom:8.4f},{cor:8.4f}"""
+    
+    for nom, cor in zip(coeffs["nominal_angle_rad"],coeffs["corrected_angle_rad"]):
+        yield fmt.format(name=name,nom=nom,cor=cor)
+    
+
 
 def list_posver_err_by_coord(error_by_coords, error_argmax, csv=False):
     if csv:
@@ -1370,6 +1382,11 @@ def format_report_csv(
                         bsteps,
                         ipath,
                     )
+                    
+            for line in list_gearbox_correction("alpha",positional_repeatability_result["gearbox_correction"]["coeffs"]["coeffs_alpha"]):
+                yield line
+            for line in list_gearbox_correction("beta",positional_repeatability_result["gearbox_correction"]["coeffs"]["coeffs_beta"]):
+                yield line
 
         else:
             yield rfmt_pos_rep.POS_REP_ERRMSG.format(**positional_repeatability_result)
