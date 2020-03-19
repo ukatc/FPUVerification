@@ -59,16 +59,26 @@ from vfr.tests_common import (
 from vfr.conf import POS_REP_ANALYSIS_PARS
 
 
+def generate_calibration_positions(alpha_min, alpha_max, beta_min, number_positions=8):
+    """Generate a list of fixed positions to center the FPU within the frame
+    """
+
+    positions = []
+    
+    for k in range(number_positions):
+        positions.append(
+            (alpha_min + k * (alpha_max - alpha_min) / float(number_positions), beta_min + 10)
+        )
+    return positions
+
+
 def generate_tested_positions(
     niterations, alpha_min=NaN, alpha_max=NaN, beta_min=NaN, beta_max=NaN
 ):
+    """Generate a list of random FPU positions for testing
+    """
+    
     positions = []
-
-    N_FIX_POS = 8
-    for k in range(N_FIX_POS):
-        positions.append(
-            (alpha_min + k * (alpha_max - alpha_min) / float(N_FIX_POS), beta_min + 10)
-        )
 
     interval_alpha = (alpha_max - alpha_min) / float(niterations)
     interval_beta = (beta_max - beta_min) / float(niterations)
@@ -84,6 +94,16 @@ def generate_tested_positions(
         positions.append((alpha, beta))
 
     return positions
+
+
+def read_tested_positions(filename):
+    """Read a list of positions from a file
+    """
+    
+    with open(filename,'r') as position_file:
+        read_positions = [tuple(map(float, line.split(','))) for line in position_file]
+    
+    return read_positions
 
 
 def measure_positional_verification(rig, dbe, pars=None):
@@ -245,14 +265,26 @@ def measure_positional_verification(rig, dbe, pars=None):
                 return ipath
 
             tol = abs(pars.POS_VER_SAFETY_TOLERANCE)
-            tested_positions = generate_tested_positions(
-                pars.POS_VER_ITERATIONS,
-                alpha_min=alpha_min + tol,
-                alpha_max=alpha_max - tol,
-                beta_min=beta_min + tol,
-                beta_max=beta_max - tol,
-            )
+            
+            # Generate calibation points, make the alpha arm sweep a circle
+            calibration_positions = generate_calibration_positions(
+                                    alpha_min = alpha_min + tol,
+                                    alpha_max = alpha_max - tol,
+                                    beta_min = beta_min + tol)
+            # Generate positions to be tested, random or read from a file
+            if pars.POS_VER_MOTION_FILE:
+                test_positions = read_tested_positions(pars.POS_VER_MOTION_FILE)
+            else:
+                test_positions = generate_tested_positions(
+                    pars.POS_VER_ITERATIONS,
+                    alpha_min=alpha_min + tol,
+                    alpha_max=alpha_max - tol,
+                    beta_min=beta_min + tol,
+                    beta_max=beta_max - tol,
+                )
 
+            tested_positions = calibration_positions + test_positions
+        
             find_datum(gd, grid_state, opts)
 
             image_dict = {}
