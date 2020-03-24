@@ -608,7 +608,7 @@ def list_gearbox_correction(name, coeffs):
     """ Coeffs should be gearbox_correction.coeffs.coeffs_alpha/beta data structure
     """
     
-    hdr = """"\n Gearbox correction {name} values,nomial values, corrected values"""
+    hdr = """\n Gearbox correction {name} values,nomial values, corrected values"""
     yield hdr.format(name=name)
     fmt="""Gearbox correction {name} values,{nom:8.4f},{cor:8.4f}"""
     
@@ -1382,12 +1382,20 @@ def format_report_csv(
                         bsteps,
                         ipath,
                     )
+
                     
+            yield EMPTY_LINE
+                
             for line in list_gearbox_correction("alpha",positional_repeatability_result["gearbox_correction"]["coeffs"]["coeffs_alpha"]):
                 yield line
+
+            yield EMPTY_LINE
+                
             for line in list_gearbox_correction("beta",positional_repeatability_result["gearbox_correction"]["coeffs"]["coeffs_beta"]):
                 yield line
 
+            yield EMPTY_LINE
+                
         else:
             yield rfmt_pos_rep.POS_REP_ERRMSG.format(**positional_repeatability_result)
 
