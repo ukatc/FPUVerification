@@ -541,6 +541,7 @@ def angle_to_point(
 
 
 def get_angle_error(
+    motor_axis,                 # Motor axis being fitted ('alpha' or 'beta')
     x_s2,			# Input data after distortion correction.
     y_s2,			# (if elliptical distortion turned on).
     xc,				# Fitted coordinates of centre of circle
@@ -627,10 +628,10 @@ def get_angle_error(
     print("alpha_nominal_rad ranges from", np.min(alpha_nominal_rad), "to", np.max(alpha_nominal_rad))
     print("beta_nominal_rad ranges from", np.min(beta_nominal_rad), "to", np.max(beta_nominal_rad))
 
-    phi_fitted_before_wrap = np.log(points_fitted).imag
-    phi_real_before_wrap = np.log(points_real).imag
-    print("phi_fitted_before_wrap ranges from", np.min(phi_fitted_before_wrap), "to", np.max(phi_fitted_before_wrap))
-    print("phi_real_before_wrap ranges from", np.min(phi_real_before_wrap), "to", np.max(phi_real_before_wrap))
+    #phi_fitted_before_wrap = np.log(points_fitted).imag
+    #phi_real_before_wrap = np.log(points_real).imag
+    #print("phi_fitted_before_wrap ranges from", np.min(phi_fitted_before_wrap), "to", np.max(phi_fitted_before_wrap))
+    #print("phi_real_before_wrap ranges from", np.min(phi_real_before_wrap), "to", np.max(phi_real_before_wrap))
 
     # compute _residual_ offset of fitted - real
     # (no unwrapping needed because we use the complex domain)
@@ -654,12 +655,17 @@ def get_angle_error(
     # Finally, the nominal and real input angles are converted
     # to a phase-wrapped representation.
     # FIXME: There is no point in remembering these camera-specific angles.
-    phi_fitted_rad = wrap_complex_vals(np.log(points_fitted).imag)
-    phi_real_rad = wrap_complex_vals(np.log(points_real).imag)
+    #phi_fitted_rad = wrap_complex_vals(np.log(points_fitted).imag)
+    #phi_real_rad = wrap_complex_vals(np.log(points_real).imag)
+
+    if motor_axis == 'alpha':
+        phi_fitted_rad = alpha_nominal_rad
+    else:
+        phi_fitted_rad = beta_nominal_rad
+    phi_real_rad = phi_fitted_rad + angular_difference
     print("phi_fitted_rad after wrap ranges from", np.min(phi_fitted_rad), "to", np.max(phi_fitted_rad))
     print("phi_real_rad after wrap ranges from", np.min(phi_real_rad), "to", np.max(phi_real_rad))
 
-    # FIXME: Only angular difference is relevant
     return phi_real_rad, phi_fitted_rad, angular_difference
 
 
@@ -734,6 +740,7 @@ def fit_gearbox_parameters(
     # All angles are relative to a specific polar coordinate system.
     # FIXME: Only the angle error is relevant. The fitted angles are not needed.
     phi_real_rad, phi_fitted_rad, err_phi_1_rad = get_angle_error(
+        motor_axis,
         x_s2,
         y_s2,
         xc,
@@ -881,13 +888,19 @@ def fit_gearbox_parameters(
     # are the calibration tables. We need to subtract the camera offset to
     # make the tables independent of the camera orientation.
     if motor_axis == "alpha":
-        nominal_angle_rad = phi_fit_support_rad - camera_offset_rad
-        corrected_angle_rad = corrected_shifted_angle_rad - camera_offset_rad
+        # FIXED: Camera offset no longer needed if nominal angles used in the first place
+        nominal_angle_rad = phi_fit_support_rad
+        corrected_angle_rad = corrected_shifted_angle_rad
+        #nominal_angle_rad = phi_fit_support_rad - camera_offset_rad
+        #corrected_angle_rad = corrected_shifted_angle_rad - camera_offset_rad
     else:
         # BUG FIX: SMB 11-Mar-2020: beta0_rad was being double-counted, which took the
         # lookup table out of the range +/- pi and spoiled the padding.
-        nominal_angle_rad = phi_fit_support_rad - camera_offset_rad
-        corrected_angle_rad = corrected_shifted_angle_rad - camera_offset_rad
+        # FIXED: Camera offset no longer needed if nominal angles used in the first place
+        nominal_angle_rad = phi_fit_support_rad
+        corrected_angle_rad = corrected_shifted_angle_rad
+        #nominal_angle_rad = phi_fit_support_rad - camera_offset_rad
+        #corrected_angle_rad = corrected_shifted_angle_rad - camera_offset_rad
 
         # FIXME: Why is beta0_rad subtracted? It takes the lookup table out of range and destroys the padding.
         #nominal_angle_rad = phi_fit_support_rad - beta0_rad - camera_offset_rad - pi
