@@ -653,23 +653,25 @@ def get_angle_error(
     # << Compute phase-wrapped real and nominal values. >>
     # Finally, the nominal and real input angles are converted
     # to a phase-wrapped representation.
+    # FIXME: There is no point in remembering these camera-specific angles.
     phi_fitted_rad = wrap_complex_vals(np.log(points_fitted).imag)
     phi_real_rad = wrap_complex_vals(np.log(points_real).imag)
     print("phi_fitted_rad after wrap ranges from", np.min(phi_fitted_rad), "to", np.max(phi_fitted_rad))
     print("phi_real_rad after wrap ranges from", np.min(phi_real_rad), "to", np.max(phi_real_rad))
 
+    # FIXME: Only angular difference is relevant
     return phi_real_rad, phi_fitted_rad, angular_difference
 
 
 def fit_gearbox_parameters(
-    motor_axis,
-    circle_data,
-    P0=None,
-    R_alpha=None,
-    R_beta_midpoint=None,
-    camera_offset_rad=None,
-    beta0_rad=None,
-    return_intermediate_results=False,
+    motor_axis,				# Motor axis being fitted ('alpha' or 'beta')
+    circle_data,			# Data structure containing centroids of circle points
+    P0=None,				# The centre of the alpha axis
+    R_alpha=None,			# Radius of alpha circle (mm)
+    R_beta_midpoint=None,		# Radius of beta midlpoint circle (mm)
+    camera_offset_rad=None,		# Fitted camera offset angle (if known)
+    beta0_rad=None,			# Fitted beta offset angle (if known)
+    return_intermediate_results=False,	# Set True to return intermediate results for plottong.
 ):
     """
 
@@ -729,7 +731,8 @@ def fit_gearbox_parameters(
     #
     # err_phi_1_rad is the error between the real and nominal angle.
     #
-    # All angles are relative to a specific polar coordinate system/
+    # All angles are relative to a specific polar coordinate system.
+    # FIXME: Only the angle error is relevant. The fitted angles are not needed.
     phi_real_rad, phi_fitted_rad, err_phi_1_rad = get_angle_error(
         x_s2,
         y_s2,
@@ -790,6 +793,7 @@ def fit_gearbox_parameters(
     # error".
     #
     # *** NOTE: Is this code doing the right thing?
+    # FIXME: Use the nominal angles, not the fitted angles.
     #
     support_points = {}
     for (fitted_angle, yp) in zip(phi_fitted_rad, err_phi_1_rad):
@@ -1008,13 +1012,13 @@ def fit_gearbox_parameters(
 
 
 def fit_offsets(
-    circle_alpha,
-    circle_beta,
-    P0=None,
-    R_alpha=None,
-    R_beta_midpoint=None,
-    camera_offset_start=None,
-    beta0_start=None,
+    circle_alpha,		# Centroids of points on the alpha circle
+    circle_beta,		# Centroids of points on the beta circle
+    P0=None,			# Location of the alpha axis, if known.
+    R_alpha=None,		# Radius of the alpha circle, if known.
+    R_beta_midpoint=None,	# Radius of the beta midpoint circle, if known
+    camera_offset_start=None,	# Initial estimate of camera offset, if known.
+    beta0_start=None,		# Initial estimate for beta offset, if known.
 ):
     """
 
@@ -1303,10 +1307,10 @@ def get_expected_points(
 
 
 def fit_gearbox_correction(
-    fpu_id,
-    dict_of_coordinates_alpha,
-    dict_of_coordinates_beta,
-    return_intermediate_results=False,
+    fpu_id,				# ID of FPU being fitted,
+    dict_of_coordinates_alpha,		# Dictionary containing measured alpha centroids
+    dict_of_coordinates_beta,		# Dictionary containing measured beta centroids
+    return_intermediate_results=False,	# Set True to return intermediate results for plotting
 ):
     """Computes gearbox correction and returns correction coefficients
     as a dictionary.
@@ -1479,7 +1483,7 @@ def fit_gearbox_correction(
 
 def apply_gearbox_parameters_fitted(
     angle_rad,                        # Scalar or array of angles to be corrected (rad)
-    phi_fit_support_rad=None,         # ???
+    phi_fit_support_rad=None,         # FIXME: Gearbox parameters should be applied to nominal (demanded) angles, not fitted ones.
     corrected_shifted_angle_rad=None, # ???
     algorithm=None,                   # The name of the algorithm associated with the coefficients dictionary
     inverse_transform=False,          # Set True to apply an inverse transformation
