@@ -562,7 +562,7 @@ def get_angle_error(
 
     """
     # TODO: logger.debug?
-    print("get_angle_error: center (x,y) = ({},{}) millimeter. P0 = ({},{}) millimeter".format(xc, yc, P0[0], P0[1]))
+    print("\nget_angle_error: center (x,y) = ({},{}) millimeter. P0 = ({},{}) millimeter".format(xc, yc, P0[0], P0[1]))
 
     # << Get place vectors of measured points. >>
     # This computes the place vectors of the measured points relative
@@ -623,6 +623,15 @@ def get_angle_error(
     points_real = x_real + y_real*1j		# Collection of real measured points
     points_fitted = x_fitted + y_fitted*1j	# Collection of points resulting from fit
 
+
+    print("alpha_nominal_rad ranges from", np.min(alpha_nominal_rad), "to", np.max(alpha_nominal_rad))
+    print("beta_nominal_rad ranges from", np.min(beta_nominal_rad), "to", np.max(beta_nominal_rad))
+
+    phi_fitted_before_wrap = np.log(points_fitted).imag
+    phi_real_before_wrap = np.log(points_real).imag
+    print("phi_fitted_before_wrap ranges from", np.min(phi_fitted_before_wrap), "to", np.max(phi_fitted_before_wrap))
+    print("phi_real_before_wrap ranges from", np.min(phi_real_before_wrap), "to", np.max(phi_real_before_wrap))
+
     # compute _residual_ offset of fitted - real
     # (no unwrapping needed because we use the complex domain)
     #
@@ -646,6 +655,8 @@ def get_angle_error(
     # to a phase-wrapped representation.
     phi_fitted_rad = wrap_complex_vals(np.log(points_fitted).imag)
     phi_real_rad = wrap_complex_vals(np.log(points_real).imag)
+    print("phi_fitted_rad after wrap ranges from", np.min(phi_fitted_rad), "to", np.max(phi_fitted_rad))
+    print("phi_real_rad after wrap ranges from", np.min(phi_real_rad), "to", np.max(phi_real_rad))
 
     return phi_real_rad, phi_fitted_rad, angular_difference
 
@@ -788,6 +799,7 @@ def fit_gearbox_parameters(
 
     # Nominal angles are sorted.
     phi_fit_support_rad = np.array(sorted(support_points.keys()))
+    print("phi_fit_support_rad (sorted) ranges from", np.min(phi_fit_support_rad), "to", np.max(phi_fit_support_rad))
     #print("fit_gearbox_parameters(): sorted nominal angles (phi_fit_support_rad)=", phi_fit_support_rad)
 
     # Diagnostic plot
@@ -816,6 +828,7 @@ def fit_gearbox_parameters(
     phi_corr_support_rad = [
         np.mean(np.array(support_points[k])) for k in phi_fit_support_rad
     ]
+    print("phi_corr_support_rad (averaged) ranges from", np.min(phi_corr_support_rad), "to", np.max(phi_corr_support_rad))
 
 
     # For the error, an additional computational step is needed to
@@ -832,9 +845,11 @@ def fit_gearbox_parameters(
     phi_fitted_correction_rad = phi_fitted_rad + np.interp(
         phi_fitted_rad, phi_fit_support_rad, phi_corr_support_rad, period=2 * pi
     )
+    print("phi_fitted_correction_rad (calib) ranges from", np.min(phi_fitted_correction_rad), "to", np.max(phi_fitted_correction_rad))
 
     ## Combine first and second order fit, to get an invertible function
     corrected_shifted_angle_rad = np.array(phi_corr_support_rad) + phi_fit_support_rad
+    print("corrected_shifted_angle_rad (corr+fit) ranges from", np.min(corrected_shifted_angle_rad), "to", np.max(corrected_shifted_angle_rad))
 
     # TODO: logger.debug?
     print(
@@ -882,6 +897,8 @@ def fit_gearbox_parameters(
             motor_axis, np.rad2deg(np.mean(corrected_angle_rad - nominal_angle_rad))
         )
     )
+    print("new nominal_angle_rad ranges from", np.min(nominal_angle_rad), "to", np.max(nominal_angle_rad))
+    print("new corrected_angle_rad ranges from", np.min(corrected_angle_rad), "to", np.max(corrected_angle_rad))
 
     # Diagnostic plot
     if GRAPHICAL_DIAGNOSTICS:
