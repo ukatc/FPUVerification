@@ -293,6 +293,20 @@ def fit_circle(analysis_results, motor_axis):
     x_s, y_s = np.array(circle_points).T
     alpha_nominal_rad, beta_nominal_rad = np.array(nominal_coordinates_rad).T
 
+    # TODO: logger.debug?
+    print(
+        "axis {}: Nominal alpha ranges from {} radians ({} deg) to {} radians ({} deg).".format(
+            motor_axis, np.min(alpha_nominal_rad), np.rad2deg(np.min(alpha_nominal_rad)),
+            np.max(alpha_nominal_rad), np.rad2deg(np.max(alpha_nominal_rad))
+        )
+    )
+    print(
+        "axis {}: Nominal beta ranges from {} radians ({} deg) to {} radians ({} deg).".format(
+            motor_axis, np.min(beta_nominal_rad), np.rad2deg(np.min(beta_nominal_rad)),
+            np.max(beta_nominal_rad), np.rad2deg(np.max(beta_nominal_rad))
+        )
+    )
+
     # << Perform least-squares fit of circle to input data. >>
     xc, yc, R, psi, stretch, radius_RMS = leastsq_circle(x_s, y_s)
 
@@ -378,7 +392,10 @@ def wrap_complex_vals(angles):
     # Wrap the values in the array to prevent them going below -pi/4.0
     # Add 2*pi to elements smaller than -pi/4.0.
     # Leave other elements the same.
+    # FIXME: Why does it do this? Don't we need angles wrapped to +/- pi??
     return np.where(angles < -pi/4.0, angles + 2*pi, angles)
+#   This change does not work. LUTs are shifted by -0.75pi
+#    return np.where(angles < -pi, angles + 2*pi, angles)
 
 
 def angle_to_point(
@@ -524,17 +541,17 @@ def angle_to_point(
 
 
 def get_angle_error(
-    x_s2,
-    y_s2,
-    xc,
+    x_s2,			# Input data after distortion correction.
+    y_s2,			# (if elliptical distortion turned on).
+    xc,				# Fitted coordinates of centre of circle
     yc,
-    alpha_nominal_rad,
-    beta_nominal_rad,
-    P0=None,
-    R_alpha=None,
-    R_beta_midpoint=None,
-    camera_offset_rad=None,
-    beta0_rad=None,
+    alpha_nominal_rad,		# List of nominal (demanded) alpha angles
+    beta_nominal_rad,		# List of nominal (demanded) beta angles
+    P0=None,			# Coordinates of the centre of of alpha circle
+    R_alpha=None,		# Fitted radius of alpha circle
+    R_beta_midpoint=None,	# Fitted radius of beta circle
+    camera_offset_rad=None,	# Fitted camera offset
+    beta0_rad=None,		# Fitted beta angle offset
 ):
     """
 
@@ -545,7 +562,7 @@ def get_angle_error(
 
     """
     # TODO: logger.debug?
-    print("get_angle_error: center (x,y) = ({},{}) millimeter".format(xc, yc))
+    print("\nget_angle_error: center (x,y) = ({},{}) millimeter. P0 = ({},{}) millimeter".format(xc, yc, P0[0], P0[1]))
 
     # << Get place vectors of measured points. >>
     # This computes the place vectors of the measured points relative
@@ -572,6 +589,9 @@ def get_angle_error(
     # NOTE: angle_to_point takes a coeffs parameter which defaults to None.
     # Not specifying a coeffs parameter means no gearbox calibration
     # coefficients are applied when converting an angle to a point.
+    #
+    # NOTE: angle_to_point pivots around alpha centre P0 rather than
+    # the centre of the circle for the current axis (xc,yc). 
     x_n, y_n = angle_to_point(
         alpha_nominal_rad,
         beta_nominal_rad,
@@ -600,14 +620,26 @@ def get_angle_error(
     # Compute the remaining difference in the complex plane.
     # Now both sets of points are converted to polar coordinates.
     # Complex notation is used because it makes the next step easier.
-    points_real = x_real + y_real*1j
-    points_fitted = x_fitted + y_fitted*1j
+    points_real = x_real + y_real*1j		# Collection of real measured points
+    points_fitted = x_fitted + y_fitted*1j	# Collection of points resulting from fit
+
+
+    print("alpha_nominal_rad ranges from", np.min(alpha_nominal_rad), "to", np.max(alpha_nominal_rad))
+    print("beta_nominal_rad ranges from", np.min(beta_nominal_rad), "to", np.max(beta_nominal_rad))
+
+    phi_fitted_before_wrap = np.log(points_fitted).imag
+    phi_real_before_wrap = np.log(points_real).imag
+    print("phi_fitted_before_wrap ranges from", np.min(phi_fitted_before_wrap), "to", np.max(phi_fitted_before_wrap))
+    print("phi_real_before_wrap ranges from", np.min(phi_real_before_wrap), "to", np.max(phi_real_before_wrap))
 
     # compute _residual_ offset of fitted - real
     # (no unwrapping needed because we use the complex domain)
     #
     # note, the alpha0 / beta0 values are not included
     # (camera_offset is considered to be specific to the camera)
+    # NOTE: beta0 is the offset between the alpha and beta coordinate
+    # systems and a property of the FPU, not the camera, but still
+    # not part of the gearbox calibration.
     angular_difference = np.log(points_real / points_fitted).imag
 
     # Diagnostic plot
@@ -623,6 +655,8 @@ def get_angle_error(
     # to a phase-wrapped representation.
     phi_fitted_rad = wrap_complex_vals(np.log(points_fitted).imag)
     phi_real_rad = wrap_complex_vals(np.log(points_real).imag)
+    print("phi_fitted_rad after wrap ranges from", np.min(phi_fitted_rad), "to", np.max(phi_fitted_rad))
+    print("phi_real_rad after wrap ranges from", np.min(phi_real_rad), "to", np.max(phi_real_rad))
 
     return phi_real_rad, phi_fitted_rad, angular_difference
 
@@ -724,6 +758,10 @@ def fit_gearbox_parameters(
         #                  xlabel='Index', ylabel='phi_fitted_rad (radians)',
         #                  linefmt='b.', linestyle=' ' )
 
+        title = "fit_gearbox_parameters() for %s: Actual vs demanded angle." % motor_axis
+        plotting.plot_xy(phi_fitted_rad, phi_real_rad, title=title,
+                          xlabel='phi_fitted_rad (radians)', ylabel='phi_real_rad (radians)',
+                          linefmt='b.', linestyle=' ' )
         title = "fit_gearbox_parameters() for %s: Difference between actual and demanded angle." % motor_axis
         plotting.plot_xy(phi_fitted_rad, phi_real_rad-phi_fitted_rad, title=title,
                           xlabel='phi_fitted_rad (radians)', ylabel='phi_real_rad-phi_fitted_rad (radians)',
@@ -761,6 +799,7 @@ def fit_gearbox_parameters(
 
     # Nominal angles are sorted.
     phi_fit_support_rad = np.array(sorted(support_points.keys()))
+    print("phi_fit_support_rad (sorted) ranges from", np.min(phi_fit_support_rad), "to", np.max(phi_fit_support_rad))
     #print("fit_gearbox_parameters(): sorted nominal angles (phi_fit_support_rad)=", phi_fit_support_rad)
 
     # Diagnostic plot
@@ -789,6 +828,7 @@ def fit_gearbox_parameters(
     phi_corr_support_rad = [
         np.mean(np.array(support_points[k])) for k in phi_fit_support_rad
     ]
+    print("phi_corr_support_rad (averaged) ranges from", np.min(phi_corr_support_rad), "to", np.max(phi_corr_support_rad))
 
 
     # For the error, an additional computational step is needed to
@@ -805,9 +845,11 @@ def fit_gearbox_parameters(
     phi_fitted_correction_rad = phi_fitted_rad + np.interp(
         phi_fitted_rad, phi_fit_support_rad, phi_corr_support_rad, period=2 * pi
     )
+    print("phi_fitted_correction_rad (calib) ranges from", np.min(phi_fitted_correction_rad), "to", np.max(phi_fitted_correction_rad))
 
     ## Combine first and second order fit, to get an invertible function
     corrected_shifted_angle_rad = np.array(phi_corr_support_rad) + phi_fit_support_rad
+    print("corrected_shifted_angle_rad (corr+fit) ranges from", np.min(corrected_shifted_angle_rad), "to", np.max(corrected_shifted_angle_rad))
 
     # TODO: logger.debug?
     print(
@@ -855,6 +897,8 @@ def fit_gearbox_parameters(
             motor_axis, np.rad2deg(np.mean(corrected_angle_rad - nominal_angle_rad))
         )
     )
+    print("new nominal_angle_rad ranges from", np.min(nominal_angle_rad), "to", np.max(nominal_angle_rad))
+    print("new corrected_angle_rad ranges from", np.min(corrected_angle_rad), "to", np.max(corrected_angle_rad))
 
     # Diagnostic plot
     if GRAPHICAL_DIAGNOSTICS:
