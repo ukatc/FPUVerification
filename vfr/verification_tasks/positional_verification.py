@@ -4,6 +4,7 @@ import random
 import warnings
 import logging
 from os.path import abspath
+from os import path
 import numpy as np
 from vfr.auditlog import get_fpuLogger
 
@@ -99,8 +100,9 @@ def generate_tested_positions(
 def read_tested_positions(filename):
     """Read a list of positions from a file
     """
-    
-    with open(filename,'r') as position_file:
+    # Cwd is set for ease of access to moons data, so we have to work out where it should be with 
+    abs_filename = path.abspath(path.join(path.dirname(__file__),"../../{}".format(filename)))
+    with open(abs_filename,'r') as position_file:
         read_positions = [tuple(map(float, line.split(','))) for line in position_file]
     
     return read_positions

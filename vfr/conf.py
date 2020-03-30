@@ -326,7 +326,7 @@ POS_VER_MEASUREMENT_PARS = Namespace(
     POS_VER_EXPOSURE_MS=250,  # the exposure time in
     # milliseconds for a correctly
     # exposed image
-    POS_VER_MOTION_FILE = "pos_ver_motion_config", # Set to None for random positions
+    POS_VER_MOTION_FILE = "pos_ver_motion_config", # Set to None for random positions, file should be in the FPUVerification folder
     POS_VER_ITERATIONS=10,  # the number of extra random sample points
     POS_VER_SAFETY_TOLERANCE=1.5,  # safety distance towards range limits
     POS_VER_CALIBRATION_MAPFILE="calibration/mapping/pos-rep-2019-04-10.cfg",
