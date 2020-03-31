@@ -957,19 +957,19 @@ def fit_gearbox_parameters(
         "yc": yc,
         "R": circle_data["R"],
         "P0": P0,
-        "R_alpha": R_alpha,
+        "R_alpha": R_alpha,                                     # Important - fitted alpha radius
         "psi": psi,
         "stretch": stretch,
         "radius_RMS": circle_data["radius_RMS"],
-        "R_beta_midpoint": R_beta_midpoint,
+        "R_beta_midpoint": R_beta_midpoint,                     # Important - fitted beta radius
         "camera_offset_rad": camera_offset_rad,
-        "beta0_rad": beta0_rad,
+        "beta0_rad": beta0_rad,                                 # Important - fitted beta datum offset
         "alpha_fixpoint_rad": alpha_fixpoint_rad,
         "beta_fixpoint_rad": beta_fixpoint_rad,
         "num_support_points": len(phi_fit_support_rad),
         "num_data_points": len(x_s2),
-        "nominal_angle_rad": nominal_angle_rad,
-        "corrected_angle_rad": corrected_angle_rad,
+        "nominal_angle_rad": nominal_angle_rad,                 # Important - used for LUT
+        "corrected_angle_rad": corrected_angle_rad,             # Important - used for LUT
         "alpha_nominal_rad": circle_data["alpha_nominal_rad"],
         "beta_nominal_rad": circle_data["beta_nominal_rad"],
         "x_s2": x_s2,
