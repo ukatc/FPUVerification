@@ -109,7 +109,7 @@ def get_test_result(
                 # default value: last record
                 count = rcount
             else:
-                count = rcount - count
+                count = rcount + count
                 if count < 0:
                     return None
 
