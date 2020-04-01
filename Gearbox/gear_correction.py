@@ -541,6 +541,7 @@ def angle_to_point(
 
 
 def get_angle_error(
+    motor_axis,                 # Motor axis being fitted ('alpha' or 'beta')
     x_s2,			# Input data after distortion correction.
     y_s2,			# (if elliptical distortion turned on).
     xc,				# Fitted coordinates of centre of circle
@@ -627,10 +628,10 @@ def get_angle_error(
     print("alpha_nominal_rad ranges from", np.min(alpha_nominal_rad), "to", np.max(alpha_nominal_rad))
     print("beta_nominal_rad ranges from", np.min(beta_nominal_rad), "to", np.max(beta_nominal_rad))
 
-    phi_fitted_before_wrap = np.log(points_fitted).imag
-    phi_real_before_wrap = np.log(points_real).imag
-    print("phi_fitted_before_wrap ranges from", np.min(phi_fitted_before_wrap), "to", np.max(phi_fitted_before_wrap))
-    print("phi_real_before_wrap ranges from", np.min(phi_real_before_wrap), "to", np.max(phi_real_before_wrap))
+    #phi_fitted_before_wrap = np.log(points_fitted).imag
+    #phi_real_before_wrap = np.log(points_real).imag
+    #print("phi_fitted_before_wrap ranges from", np.min(phi_fitted_before_wrap), "to", np.max(phi_fitted_before_wrap))
+    #print("phi_real_before_wrap ranges from", np.min(phi_real_before_wrap), "to", np.max(phi_real_before_wrap))
 
     # compute _residual_ offset of fitted - real
     # (no unwrapping needed because we use the complex domain)
@@ -653,8 +654,15 @@ def get_angle_error(
     # << Compute phase-wrapped real and nominal values. >>
     # Finally, the nominal and real input angles are converted
     # to a phase-wrapped representation.
-    phi_fitted_rad = wrap_complex_vals(np.log(points_fitted).imag)
-    phi_real_rad = wrap_complex_vals(np.log(points_real).imag)
+    # FIXME: There is no point in remembering these camera-specific angles.
+    #phi_fitted_rad = wrap_complex_vals(np.log(points_fitted).imag)
+    #phi_real_rad = wrap_complex_vals(np.log(points_real).imag)
+
+    if motor_axis == 'alpha':
+        phi_fitted_rad = alpha_nominal_rad
+    else:
+        phi_fitted_rad = beta_nominal_rad
+    phi_real_rad = phi_fitted_rad + angular_difference
     print("phi_fitted_rad after wrap ranges from", np.min(phi_fitted_rad), "to", np.max(phi_fitted_rad))
     print("phi_real_rad after wrap ranges from", np.min(phi_real_rad), "to", np.max(phi_real_rad))
 
@@ -662,14 +670,14 @@ def get_angle_error(
 
 
 def fit_gearbox_parameters(
-    motor_axis,
-    circle_data,
-    P0=None,
-    R_alpha=None,
-    R_beta_midpoint=None,
-    camera_offset_rad=None,
-    beta0_rad=None,
-    return_intermediate_results=False,
+    motor_axis,				# Motor axis being fitted ('alpha' or 'beta')
+    circle_data,			# Data structure containing centroids of circle points
+    P0=None,				# The centre of the alpha axis
+    R_alpha=None,			# Radius of alpha circle (mm)
+    R_beta_midpoint=None,		# Radius of beta midlpoint circle (mm)
+    camera_offset_rad=None,		# Fitted camera offset angle (if known)
+    beta0_rad=None,			# Fitted beta offset angle (if known)
+    return_intermediate_results=False,	# Set True to return intermediate results for plottong.
 ):
     """
 
@@ -729,8 +737,10 @@ def fit_gearbox_parameters(
     #
     # err_phi_1_rad is the error between the real and nominal angle.
     #
-    # All angles are relative to a specific polar coordinate system/
+    # All angles are relative to a specific polar coordinate system.
+    # FIXME: Only the angle error is relevant. The fitted angles are not needed.
     phi_real_rad, phi_fitted_rad, err_phi_1_rad = get_angle_error(
+        motor_axis,
         x_s2,
         y_s2,
         xc,
@@ -790,6 +800,7 @@ def fit_gearbox_parameters(
     # error".
     #
     # *** NOTE: Is this code doing the right thing?
+    # FIXME: Use the nominal angles, not the fitted angles.
     #
     support_points = {}
     for (fitted_angle, yp) in zip(phi_fitted_rad, err_phi_1_rad):
@@ -877,13 +888,19 @@ def fit_gearbox_parameters(
     # are the calibration tables. We need to subtract the camera offset to
     # make the tables independent of the camera orientation.
     if motor_axis == "alpha":
-        nominal_angle_rad = phi_fit_support_rad - camera_offset_rad
-        corrected_angle_rad = corrected_shifted_angle_rad - camera_offset_rad
+        # FIXED: Camera offset no longer needed if nominal angles used in the first place
+        nominal_angle_rad = phi_fit_support_rad
+        corrected_angle_rad = corrected_shifted_angle_rad
+        #nominal_angle_rad = phi_fit_support_rad - camera_offset_rad
+        #corrected_angle_rad = corrected_shifted_angle_rad - camera_offset_rad
     else:
         # BUG FIX: SMB 11-Mar-2020: beta0_rad was being double-counted, which took the
         # lookup table out of the range +/- pi and spoiled the padding.
-        nominal_angle_rad = phi_fit_support_rad - camera_offset_rad
-        corrected_angle_rad = corrected_shifted_angle_rad - camera_offset_rad
+        # FIXED: Camera offset no longer needed if nominal angles used in the first place
+        nominal_angle_rad = phi_fit_support_rad
+        corrected_angle_rad = corrected_shifted_angle_rad
+        #nominal_angle_rad = phi_fit_support_rad - camera_offset_rad
+        #corrected_angle_rad = corrected_shifted_angle_rad - camera_offset_rad
 
         # FIXME: Why is beta0_rad subtracted? It takes the lookup table out of range and destroys the padding.
         #nominal_angle_rad = phi_fit_support_rad - beta0_rad - camera_offset_rad - pi
@@ -940,19 +957,19 @@ def fit_gearbox_parameters(
         "yc": yc,
         "R": circle_data["R"],
         "P0": P0,
-        "R_alpha": R_alpha,
+        "R_alpha": R_alpha,                                     # Important - fitted alpha radius
         "psi": psi,
         "stretch": stretch,
         "radius_RMS": circle_data["radius_RMS"],
-        "R_beta_midpoint": R_beta_midpoint,
+        "R_beta_midpoint": R_beta_midpoint,                     # Important - fitted beta radius
         "camera_offset_rad": camera_offset_rad,
-        "beta0_rad": beta0_rad,
+        "beta0_rad": beta0_rad,                                 # Important - fitted beta datum offset
         "alpha_fixpoint_rad": alpha_fixpoint_rad,
         "beta_fixpoint_rad": beta_fixpoint_rad,
         "num_support_points": len(phi_fit_support_rad),
         "num_data_points": len(x_s2),
-        "nominal_angle_rad": nominal_angle_rad,
-        "corrected_angle_rad": corrected_angle_rad,
+        "nominal_angle_rad": nominal_angle_rad,                 # Important - used for LUT
+        "corrected_angle_rad": corrected_angle_rad,             # Important - used for LUT
         "alpha_nominal_rad": circle_data["alpha_nominal_rad"],
         "beta_nominal_rad": circle_data["beta_nominal_rad"],
         "x_s2": x_s2,
@@ -1008,13 +1025,13 @@ def fit_gearbox_parameters(
 
 
 def fit_offsets(
-    circle_alpha,
-    circle_beta,
-    P0=None,
-    R_alpha=None,
-    R_beta_midpoint=None,
-    camera_offset_start=None,
-    beta0_start=None,
+    circle_alpha,		# Centroids of points on the alpha circle
+    circle_beta,		# Centroids of points on the beta circle
+    P0=None,			# Location of the alpha axis, if known.
+    R_alpha=None,		# Radius of the alpha circle, if known.
+    R_beta_midpoint=None,	# Radius of the beta midpoint circle, if known
+    camera_offset_start=None,	# Initial estimate of camera offset, if known.
+    beta0_start=None,		# Initial estimate for beta offset, if known.
 ):
     """
 
@@ -1303,10 +1320,10 @@ def get_expected_points(
 
 
 def fit_gearbox_correction(
-    fpu_id,
-    dict_of_coordinates_alpha,
-    dict_of_coordinates_beta,
-    return_intermediate_results=False,
+    fpu_id,				# ID of FPU being fitted,
+    dict_of_coordinates_alpha,		# Dictionary containing measured alpha centroids
+    dict_of_coordinates_beta,		# Dictionary containing measured beta centroids
+    return_intermediate_results=False,	# Set True to return intermediate results for plotting
 ):
     """Computes gearbox correction and returns correction coefficients
     as a dictionary.
@@ -1479,7 +1496,7 @@ def fit_gearbox_correction(
 
 def apply_gearbox_parameters_fitted(
     angle_rad,                        # Scalar or array of angles to be corrected (rad)
-    phi_fit_support_rad=None,         # ???
+    phi_fit_support_rad=None,         # FIXME: Gearbox parameters should be applied to nominal (demanded) angles, not fitted ones.
     corrected_shifted_angle_rad=None, # ???
     algorithm=None,                   # The name of the algorithm associated with the coefficients dictionary
     inverse_transform=False,          # Set True to apply an inverse transformation
