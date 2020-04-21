@@ -40,7 +40,11 @@ if GRAPHICAL_DIAGNOSTICS:
         import moc_plotting as plotting
     except ImportError:
         GRAPHICAL_DIAGNOSTICS = False
-
+# Some flags to control the level of graphics generated.
+PLOT_CIRCLE_FIT = False
+PLOT_CAMERA_FIT = False
+PLOT_GEARBOX_FIT = True
+PLOT_GEARBOX_VERIFICATION = False
 
 # Exceptions which are raised if image analysis functions fail
 class GearboxFitError(Exception):
@@ -337,7 +341,7 @@ def fit_circle(analysis_results, motor_axis):
         phi_nominal_rad = beta_nominal_rad
 
     # Diagnostic plot
-    if GRAPHICAL_DIAGNOSTICS:
+    if GRAPHICAL_DIAGNOSTICS and PLOT_CIRCLE_FIT:
         title = "fit_circle: Original points for %s axis circle fit." % motor_axis
         plotting.plot_xy( x_s, y_s, title=title, xlabel='x_s (mm)', ylabel='y_s (mm)',
                           linefmt='b.', linestyle=' ', equal_aspect=True )
@@ -355,7 +359,7 @@ def fit_circle(analysis_results, motor_axis):
     )
 
     # Diagnostic plot
-    if GRAPHICAL_DIAGNOSTICS:
+    if GRAPHICAL_DIAGNOSTICS and PLOT_CIRCLE_FIT:
         title =  "fit_circle: Comparison used to estimate %s axis camera offset." % motor_axis
         if motor_axis == "alpha":
             plotting.plot_xy( phi_nominal_rad, phi_real_rad, title=title,
@@ -758,7 +762,7 @@ def fit_gearbox_parameters(
     #      "err_phi_1_rad=", err_phi_1_rad)
 
     # Diagnostic plot
-    if GRAPHICAL_DIAGNOSTICS:
+    if GRAPHICAL_DIAGNOSTICS and PLOT_GEARBOX_FIT:
         #title = "fit_gearbox_parameters() for %s: phi_real_rad." % motor_axis
         #plotting.plot_xy( None, phi_real_rad, title=title,
         #                  xlabel='Index', ylabel='phi_real_rad (radians)',
@@ -768,10 +772,10 @@ def fit_gearbox_parameters(
         #                  xlabel='Index', ylabel='phi_fitted_rad (radians)',
         #                  linefmt='b.', linestyle=' ' )
 
-        title = "fit_gearbox_parameters() for %s: Actual vs demanded angle." % motor_axis
-        plotting.plot_xy(phi_fitted_rad, phi_real_rad, title=title,
-                          xlabel='phi_fitted_rad (radians)', ylabel='phi_real_rad (radians)',
-                          linefmt='b.', linestyle=' ' )
+        #title = "fit_gearbox_parameters() for %s: Actual vs demanded angle." % motor_axis
+        #plotting.plot_xy(phi_fitted_rad, phi_real_rad, title=title,
+        #                  xlabel='phi_fitted_rad (radians)', ylabel='phi_real_rad (radians)',
+        #                  linefmt='b.', linestyle=' ' )
         title = "fit_gearbox_parameters() for %s: Difference between actual and demanded angle." % motor_axis
         plotting.plot_xy(phi_fitted_rad, phi_real_rad-phi_fitted_rad, title=title,
                           xlabel='phi_fitted_rad (radians)', ylabel='phi_real_rad-phi_fitted_rad (radians)',
@@ -918,7 +922,7 @@ def fit_gearbox_parameters(
     print("new corrected_angle_rad ranges from", np.min(corrected_angle_rad), "to", np.max(corrected_angle_rad))
 
     # Diagnostic plot
-    if GRAPHICAL_DIAGNOSTICS:
+    if GRAPHICAL_DIAGNOSTICS and PLOT_GEARBOX_FIT:
         title = "fit_gearbox_parameters() for %s: Correction vs demanded angle." % motor_axis
         plotting.plot_xy(nominal_angle_rad, corrected_angle_rad-nominal_angle_rad, title=title,
                           xlabel='nominal_angle_rad (radians)', ylabel='corrected_angle_rad-nominal_angle_rad (radians)',
@@ -943,7 +947,7 @@ def fit_gearbox_parameters(
     corrected_angle_rad = np.hstack([[phi_min], corrected_angle_rad, [phi_max]])
 
     # Diagnostic plot
-    if GRAPHICAL_DIAGNOSTICS:
+    if GRAPHICAL_DIAGNOSTICS and PLOT_GEARBOX_FIT:
         title = "fit_gearbox_parameters() for %s: Padded correction vs demanded angle." % motor_axis
         plotting.plot_xy(nominal_angle_rad, corrected_angle_rad-nominal_angle_rad, title=title,
                           xlabel='nominal_angle_rad (radians)', ylabel='corrected_angle_rad-nominal_angle_rad (radians)',
@@ -1063,7 +1067,7 @@ def fit_offsets(
     alpha_nom_rad, beta_nom_rad = np.array(nominal_coordinates_rad).T
 
     # Diagnostic plot
-    if GRAPHICAL_DIAGNOSTICS:
+    if GRAPHICAL_DIAGNOSTICS and PLOT_CAMERA_FIT:
         title = "fit_offsets: Measured circle points."
         plotting.plot_xy( circle_points[0], circle_points[1], title=title,
                           xlabel='X (mm)', ylabel='Y (mm)',
@@ -1127,7 +1131,7 @@ def fit_offsets(
     camera_offset = wrap_angle_radian(camera_offset)
     beta0 = wrap_angle_radian(beta0)
 
-    if GRAPHICAL_DIAGNOSTICS:
+    if GRAPHICAL_DIAGNOSTICS and PLOT_CAMERA_FIT:
         points = angle_to_point(
             alpha_nom_rad,
             beta_nom_rad,
@@ -1590,7 +1594,7 @@ def apply_gearbox_parameters(
         ylabel = "Nominal-corrected angle (rad)"
 
     # Diagnostic plot
-    if GRAPHICAL_DIAGNOSTICS:
+    if GRAPHICAL_DIAGNOSTICS and PLOT_GEARBOX_VERIFICATION:
         if isinstance(angle_rad, (list,tuple,np.ndarray)) and (len(angle_rad) > 1):
             #title = "apply_gearbox_parameters: Angles to be corrected."
             #plotting.plot_xy( None, angle_rad, title=title,
@@ -1615,7 +1619,7 @@ def apply_gearbox_parameters(
     phi_corrected = np.interp(angle_rad, x_points, y_points)
 
     # Diagnostic plot
-    if GRAPHICAL_DIAGNOSTICS:
+    if GRAPHICAL_DIAGNOSTICS and PLOT_GEARBOX_VERIFICATION:
         if isinstance(angle_rad, (list,tuple,np.ndarray)) and (len(angle_rad) > 1):
             title = "apply_gearbox_parameters: Corrected angle differences."
             plotting.plot_xy( angle_rad, phi_corrected-angle_rad, title=title,
