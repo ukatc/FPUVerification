@@ -713,12 +713,14 @@ def fit_gearbox_parameters(
         # Common angle for beta measurements
         alpha_fixpoint_rad = np.mean(alpha_nominal_rad)
         beta_fixpoint_rad = np.NaN
+        datum_point = BETA_DATUM_OFFSET_RAD
         # TODO: logger.debug?
         print("fit_gearbox_parameters: alpha fixpoint = {} rad = {} degree".format(alpha_fixpoint_rad, np.rad2deg(alpha_fixpoint_rad)))
     else:
         alpha_fixpoint_rad = np.NaN
         # Common angle for alpha measurements
         beta_fixpoint_rad = np.mean(beta_nominal_rad)
+        datum_point = ALPHA_DATUM_OFFSET_RAD
         # TODO: logger.debug?
         print("fit_gearbox_parameters: beta fixpoint = {} rad = {} degree".format(beta_fixpoint_rad, np.rad2deg(beta_fixpoint_rad)))
     _, R_real = cartesian2polar(x_s2 - xc, y_s2 - yc)
@@ -776,14 +778,14 @@ def fit_gearbox_parameters(
         #plotting.plot_xy(phi_fitted_rad, phi_real_rad, title=title,
         #                  xlabel='phi_fitted_rad (radians)', ylabel='phi_real_rad (radians)',
         #                  linefmt='b.', linestyle=' ' )
-        title = "fit_gearbox_parameters() for %s: Difference between actual and demanded angle." % motor_axis
-        plotting.plot_xy(phi_fitted_rad, phi_real_rad-phi_fitted_rad, title=title,
-                          xlabel='phi_fitted_rad (radians)', ylabel='phi_real_rad-phi_fitted_rad (radians)',
-                          linefmt='b.', linestyle=' ' )
-        #title = "fit_gearbox_parameters() for %s: Error between actual and demanded angle (err_phi_1_rad)." % motor_axis
-        #plotting.plot_xy( phi_fitted_rad, err_phi_1_rad, title=title,
-        #                  xlabel='phi_fitted_rad (radians)', ylabel='err_phi_1_rad (radians)',
+        #title = "fit_gearbox_parameters() for %s: Difference between actual and demanded angle." % motor_axis
+        #plotting.plot_xy(phi_fitted_rad, phi_real_rad-phi_fitted_rad, title=title,
+        #                  xlabel='phi_fitted_rad (radians)', ylabel='phi_real_rad-phi_fitted_rad (radians)',
         #                  linefmt='b.', linestyle=' ' )
+        title = "fit_gearbox_parameters() for %s: Error between actual and demanded angle (err_phi_1_rad)." % motor_axis
+        plotting.plot_xy( phi_fitted_rad, err_phi_1_rad, title=title,
+                          xlabel='phi_fitted_rad (radians)', ylabel='err_phi_1_rad (radians)',
+                          linefmt='m.', linestyle=' ' )
 
 
     # << Compute support points for linear least squares fit. >>
@@ -814,7 +816,9 @@ def fit_gearbox_parameters(
 
     # Nominal angles are sorted.
     phi_fit_support_rad = np.array(sorted(support_points.keys()))
-    print("phi_fit_support_rad (sorted) ranges from", np.min(phi_fit_support_rad), "to", np.max(phi_fit_support_rad))
+    phi_fit_support_rad_min = np.min(phi_fit_support_rad)
+    phi_fit_support_rad_max = np.max(phi_fit_support_rad)
+    print("phi_fit_support_rad (sorted) ranges from", phi_fit_support_rad_min, "to", phi_fit_support_rad_max)
     #print("fit_gearbox_parameters(): sorted nominal angles (phi_fit_support_rad)=", phi_fit_support_rad)
 
     # Diagnostic plot
@@ -845,6 +849,23 @@ def fit_gearbox_parameters(
     ]
     print("phi_corr_support_rad (averaged) ranges from", np.min(phi_corr_support_rad), "to", np.max(phi_corr_support_rad))
 
+    # Calculate the fitted correction at datum. This should be zero.
+    phi_fit_toler = np.deg2rad(0.3)   # Measurements must be within this tolerance to benefit from datum
+    if (datum_point >= phi_fit_support_rad_min) and (datum_point <= phi_fit_support_rad_max):
+       datum_error = np.interp( datum_point, phi_fit_support_rad, phi_corr_support_rad, period=2 * pi )
+       print("%s datum error = %f" % (motor_axis, datum_error))
+    elif (datum_point >= phi_fit_support_rad_min-phi_fit_toler) and (datum_point <= phi_fit_support_rad_max):
+       # Assume datum error is the same as the error at the lower end
+       datum_error = np.interp( phi_fit_support_rad_min, phi_fit_support_rad, phi_corr_support_rad, period=2 * pi )
+       print("%s datum error assumed (at lower end) = %f" % (motor_axis, datum_error))
+    elif (datum_point >= phi_fit_support_rad_min) and (datum_point <= phi_fit_support_rad_max+phi_fit_toler):
+       # Assume datum error is the same as the error at the upper end
+       datum_error = np.interp( phi_fit_support_rad_max, phi_fit_support_rad, phi_corr_support_rad, period=2 * pi )
+       print("%s datum error assumed (at upper end) = %f" % (motor_axis, datum_error))
+    else:
+       print("%s datum point (%f) outside range of measurement (%f - %f). Datum error assumed zero." % \
+           (motor_axis, datum_point, phi_fit_support_rad_min, phi_fit_support_rad_max))
+       datum_error = 0.0
 
     # For the error, an additional computational step is needed to
     # compute a normalized error angle. The function ensures the
@@ -863,7 +884,7 @@ def fit_gearbox_parameters(
     print("phi_fitted_correction_rad (calib) ranges from", np.min(phi_fitted_correction_rad), "to", np.max(phi_fitted_correction_rad))
 
     ## Combine first and second order fit, to get an invertible function
-    corrected_shifted_angle_rad = np.array(phi_corr_support_rad) + phi_fit_support_rad
+    corrected_shifted_angle_rad = np.array(phi_corr_support_rad) + phi_fit_support_rad - datum_error
     print("corrected_shifted_angle_rad (corr+fit) ranges from", np.min(corrected_shifted_angle_rad), "to", np.max(corrected_shifted_angle_rad))
 
     # TODO: logger.debug?
@@ -927,7 +948,6 @@ def fit_gearbox_parameters(
         plotting.plot_xy(nominal_angle_rad, corrected_angle_rad-nominal_angle_rad, title=title,
                           xlabel='nominal_angle_rad (radians)', ylabel='corrected_angle_rad-nominal_angle_rad (radians)',
                           linefmt='gx', linestyle='-' )
-
 
     # Pad table support points with values for the ends of the range.
     # This is especially needed since the support points which are
