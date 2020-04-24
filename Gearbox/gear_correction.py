@@ -629,8 +629,8 @@ def get_angle_error(
     points_fitted = x_fitted + y_fitted*1j	# Collection of points resulting from fit
 
 
-    print("alpha_nominal_rad ranges from", np.min(alpha_nominal_rad), "to", np.max(alpha_nominal_rad))
-    print("beta_nominal_rad ranges from", np.min(beta_nominal_rad), "to", np.max(beta_nominal_rad))
+    #print("alpha_nominal_rad ranges from", np.min(alpha_nominal_rad), "to", np.max(alpha_nominal_rad))
+    #print("beta_nominal_rad ranges from", np.min(beta_nominal_rad), "to", np.max(beta_nominal_rad))
 
     #phi_fitted_before_wrap = np.log(points_fitted).imag
     #phi_real_before_wrap = np.log(points_real).imag
@@ -818,7 +818,7 @@ def fit_gearbox_parameters(
     phi_fit_support_rad = np.array(sorted(support_points.keys()))
     phi_fit_support_rad_min = np.min(phi_fit_support_rad)
     phi_fit_support_rad_max = np.max(phi_fit_support_rad)
-    print("phi_fit_support_rad (sorted) ranges from", phi_fit_support_rad_min, "to", phi_fit_support_rad_max)
+    #print("phi_fit_support_rad (sorted) ranges from", phi_fit_support_rad_min, "to", phi_fit_support_rad_max)
     #print("fit_gearbox_parameters(): sorted nominal angles (phi_fit_support_rad)=", phi_fit_support_rad)
 
     # Diagnostic plot
@@ -853,19 +853,23 @@ def fit_gearbox_parameters(
     phi_fit_toler = np.deg2rad(0.3)   # Measurements must be within this tolerance to benefit from datum
     if (datum_point >= phi_fit_support_rad_min) and (datum_point <= phi_fit_support_rad_max):
        datum_error = np.interp( datum_point, phi_fit_support_rad, phi_corr_support_rad, period=2 * pi )
-       print("%s datum error = %f" % (motor_axis, datum_error))
+       print("-> %s datum error = %f" % (motor_axis, datum_error))
     elif (datum_point >= phi_fit_support_rad_min-phi_fit_toler) and (datum_point <= phi_fit_support_rad_max):
-       # Assume datum error is the same as the error at the lower end
+       # Datum very close to lower end. Assume datum error is the same as the error at the lower end
        datum_error = np.interp( phi_fit_support_rad_min, phi_fit_support_rad, phi_corr_support_rad, period=2 * pi )
-       print("%s datum error assumed (at lower end) = %f" % (motor_axis, datum_error))
+       print("-> %s datum error assumed (at lower end) = %f" % (motor_axis, datum_error))
     elif (datum_point >= phi_fit_support_rad_min) and (datum_point <= phi_fit_support_rad_max+phi_fit_toler):
-       # Assume datum error is the same as the error at the upper end
+       # Datum very close to upper end. Assume datum error is the same as the error at the upper end
        datum_error = np.interp( phi_fit_support_rad_max, phi_fit_support_rad, phi_corr_support_rad, period=2 * pi )
-       print("%s datum error assumed (at upper end) = %f" % (motor_axis, datum_error))
+       print("-> %s datum error assumed (at upper end) = %f" % (motor_axis, datum_error))
     else:
-       print("%s datum point (%f) outside range of measurement (%f - %f). Datum error assumed zero." % \
+       print("-> %s datum point (%f) outside range of measurement (%f - %f). Datum error assumed zero." % \
            (motor_axis, datum_point, phi_fit_support_rad_min, phi_fit_support_rad_max))
        datum_error = 0.0
+
+    # Now calculate the mean correction across the measurement range. This should also be close to zero.
+    mean_error = np.mean(phi_corr_support_rad)
+    print("-> %s mean error = %f" % (motor_axis, mean_error))
 
     # For the error, an additional computational step is needed to
     # compute a normalized error angle. The function ensures the
@@ -884,7 +888,8 @@ def fit_gearbox_parameters(
     print("phi_fitted_correction_rad (calib) ranges from", np.min(phi_fitted_correction_rad), "to", np.max(phi_fitted_correction_rad))
 
     ## Combine first and second order fit, to get an invertible function
-    corrected_shifted_angle_rad = np.array(phi_corr_support_rad) + phi_fit_support_rad - datum_error
+#    corrected_shifted_angle_rad = np.array(phi_corr_support_rad) + phi_fit_support_rad - datum_error
+    corrected_shifted_angle_rad = np.array(phi_corr_support_rad) + phi_fit_support_rad - mean_error
     print("corrected_shifted_angle_rad (corr+fit) ranges from", np.min(corrected_shifted_angle_rad), "to", np.max(corrected_shifted_angle_rad))
 
     # TODO: logger.debug?
