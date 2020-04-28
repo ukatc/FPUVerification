@@ -19,6 +19,7 @@ described in Johannes' document.
 
 from __future__ import division, print_function
 
+import math
 from math import pi
 import numpy as np
 import logging
@@ -871,6 +872,26 @@ def fit_gearbox_parameters(
     mean_error = np.mean(phi_corr_support_rad)
     print("-> %s mean error = %f" % (motor_axis, mean_error))
 
+    # Now calculate the rms of the correction across the measurement range. This should also be close to zero.
+    # TODO: It would be more efficient to do this calculation using numpy functions.
+    rms_pos = 0.0
+    npos = 0
+    rms_neg = 0.0
+    nneg = 0
+    for deviation in phi_corr_support_rad:
+        if deviation >= 0.0:
+            rms_pos += deviation * deviation
+            npos += 1
+        else:
+            rms_neg += deviation * deviation
+            nneg += 1
+    if npos > 0:
+        rms_pos = math.sqrt(rms_pos / float(npos))        
+    if nneg > 0:
+        rms_neg = math.sqrt(rms_neg / float(nneg))
+    rms_error = rms_pos - rms_neg
+    print("-> %s rms error = %f" % (motor_axis, rms_error))
+
     # For the error, an additional computational step is needed to
     # compute a normalized error angle. The function ensures the
     # values remain within the range -pi to +pi.
@@ -889,7 +910,8 @@ def fit_gearbox_parameters(
 
     ## Combine first and second order fit, to get an invertible function
 #    corrected_shifted_angle_rad = np.array(phi_corr_support_rad) + phi_fit_support_rad - datum_error
-    corrected_shifted_angle_rad = np.array(phi_corr_support_rad) + phi_fit_support_rad - mean_error
+#    corrected_shifted_angle_rad = np.array(phi_corr_support_rad) + phi_fit_support_rad - mean_error
+    corrected_shifted_angle_rad = np.array(phi_corr_support_rad) + phi_fit_support_rad - rms_error
     print("corrected_shifted_angle_rad (corr+fit) ranges from", np.min(corrected_shifted_angle_rad), "to", np.max(corrected_shifted_angle_rad))
 
     # TODO: logger.debug?
@@ -899,11 +921,11 @@ def fit_gearbox_parameters(
         )
     )
     # FIXME: Explain why 360 is added to beta0_rad when converting to degrees.
-    print(
-        "fit_gearbox_parameters(): beta0_rad - pi = {} rad = {} degree (???)".format(
-            beta0_rad - pi, 360 + np.rad2deg(beta0_rad - pi)
-        )
-    )
+    #print(
+    #    "fit_gearbox_parameters(): beta0_rad - pi = {} rad = {} degree (???)".format(
+    #        beta0_rad - pi, 360 + np.rad2deg(beta0_rad - pi)
+    #    )
+    #)
 
     # Using the mean error angles, we then define the interpolation tables.
     # To get an invertible function, the interpolation input must define a
