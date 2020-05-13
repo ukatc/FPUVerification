@@ -4,14 +4,13 @@ INSTALLATION INSTRUCTIONS FOR VERIFICATION SOFTWARE
 This recipe describes a complete new install
 of the verification software. 
 
+
 PREREQUISITES
 =============
-
 
 1) A 64-bit Linux system with kernel 2.6 or newer.  (Debian >= 9,
    Ubuntu >= 17.10, Ubuntu 18.04.2 LTS, Scientific Linux >= 2017,
    Arch Linux are all supported). 
-
 
 2) To retrieve packages, both git and python-pip are needed:
 
@@ -22,17 +21,16 @@ PREREQUISITES
 
    * fpu_driver
 
-   git clone jnix@dalriada/MOONS/fpu_driver
+   git clone <username>@dalriada.roe.ac.uk:/sw/sw4/jnix/MOONS/fpu_driver
    cd fpu_driver
-   git checkout can1
+   git checkout master
 
 4) The FPU Verification software
 
    * FPUVerification verification software bundled with hardware interfaces
    
-   git clone jnix@dalriada/MOONS/FPUVerification
+   git clone <username>@moonspc-01:/moonsdataproto/git-repos/FPUVerification.git
    
-
 5) for the C++ driver and static library
 
  * gcc-4.9 (essentially, with support for C++11)
@@ -59,7 +57,6 @@ PREREQUISITES
 
   apt install libftdi-dev libftd1
 
-
 7) for accessing the lamp DAQ controller
 
  This requires libuldaq.
@@ -81,13 +78,11 @@ PREREQUISITES
  https://www.graftek.biz/system/files/5191/original/Basler_Dart_Installation_Guide_-_Pylon_for_Windows.pdf?1480778989
 
 
-
 INSTALLATION
 ============
 
 -- The following needs to be done as the system user,
 because it changes system-wide configuration.  --
-
 
 SYSTEM SETUP
 ------------
@@ -165,7 +160,6 @@ CPLUS_INCLUDE_PATH=/usr/local/include
 Logging out and logging in again activates these changes.
 
 
-
 INSTALLING UDEV RULES
 ----------------------
 
@@ -174,6 +168,7 @@ gets permission to access the USB devices.
 
 sudo cp FPUVerification/config/99-libftdi.rules /etc/udev/config.d
 sudo udevadm trigger
+
 
 NETWORKING
 ==========
@@ -197,12 +192,10 @@ If in doubt, ask an expert.
 USER ADMINISTRATION AND SYSTEMWIDE FILES
 ========================================
 
-
 As root user, create a user group moons.
 Assign this group to all users which are
 going to run the verification software,
 or the FPU driver.
-
 
 create the folders:
 
@@ -221,20 +214,14 @@ chmod g+s /moonsdata/verification
 chmod g+s /moonsdata/fpudb
 
 
-
-
 BUILDING THE DRIVER AND PYTHON MODULE
 ------------------------------------
 
 -- ONLY the following commands and installations should be done
 as a normal user --
 
-
 cd $HOME/fpu_driver
-
-Run
-
-# make wrapper
+make wrapper
 
 This builds the binary extension module fpu_driver.so
 and places it into the subdirectory /python.
@@ -248,12 +235,11 @@ export PATH=$PATH:${HOME}/FPUVerification:${HOME}/FPUVerification/bin
 export PYTHONPATH=$PYTHONPATH:${HOME}/fpu_driver/python:${HOME}/FPUVerification/:${HOME}/FPUVerification/camera-calibration
 
 
-
 INSTALLING PIP REQUIREMENTS FOR VERIFICATION SOFTWARE
 -----------------------------------------------------
 
+Note by SMB: gitbot detected some vulnerabilities in the versions of pyxdg,
+pillow, cryptography, pyyaml and psutil specified in requirements.txt.
+This has now been corrected.
+
 pip install -r FPUVerification/requirements.txt
-
-
-
-
