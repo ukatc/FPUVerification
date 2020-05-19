@@ -15,6 +15,8 @@ February 2020. Comments which look like this
 refer to the snippets of code which are named and
 described in Johannes' document.
 
+Code corrected by Steven Beard in March-May 2020.
+
 """
 
 from __future__ import division, print_function
@@ -25,6 +27,7 @@ import numpy as np
 import logging
 
 from scipy import optimize
+from scipy import stats
 
 # Import constants from the FPU control software
 from fpu_constants import (
@@ -46,6 +49,7 @@ PLOT_CIRCLE_FIT = False
 PLOT_CAMERA_FIT = False
 PLOT_GEARBOX_FIT = True
 PLOT_GEARBOX_VERIFICATION = False
+
 
 # Exceptions which are raised if image analysis functions fail
 class GearboxFitError(Exception):
@@ -86,9 +90,8 @@ def polar2cartesian(phi_rad, rho):
 
 
 def calc_R(x, y, xc, yc):
-    """ calculate the distance of each 2D points from the center (xc, yc)
-    x and y can be numpy arrays of coordinates.
-    """
+    # Calculate the distance of each 2D points from the center (xc, yc).
+    # x and y can be numpy arrays of coordinates.
     return np.sqrt((x - xc) ** 2 + (y - yc) ** 2)
 
 
@@ -135,7 +138,6 @@ def f(c, x, y):
     NOTE: Arguments x and y are numpy arrays of coordinates.
 
     """
-
     # Rotate coordinates, apply stretch, rotate back
     if len(c) == 4:
         # Ellipse. Apply an elliptical distortion to the x,y coordinates.
@@ -160,7 +162,6 @@ def leastsq_circle(x, y):
     Returns xc,yc of centre, radius, psi (ellipse), stretch (ellipse) and RMS radius error.
 
     """
-
     # The initial estimate of the location of the centre of the circle is
     # the coordinates of the barycenter.
     x_m = np.mean(x)
@@ -207,13 +208,17 @@ def leastsq_circle(x, y):
 
 
 def get_weighted_coordinates(blob_coordinates, weight_factor=BLOB_WEIGHT_FACTOR):
-    # Compute the weighted coordinates of the point
-    # between the big and small metrology blob
-    #
-    # This is also used to compute error measures
-    # from the datum repeatability / positional
-    # repeatability, it is called in the
-    # vfr.evaluation.measures module.
+    """
+
+    Compute the weighted coordinates of the point
+    between the big and small metrology blob
+    
+    This is also used to compute error measures
+    from the datum repeatability / positional
+    repeatability, it is called in the
+    vfr.evaluation.measures module.
+
+    """
     blob_coordinates = np.asarray(blob_coordinates)
     assert( blob_coordinates.ndim == 2)
 
@@ -229,8 +234,26 @@ def get_weighted_coordinates(blob_coordinates, weight_factor=BLOB_WEIGHT_FACTOR)
 
 
 def cartesian_blob_position(val, weight_factor=BLOB_WEIGHT_FACTOR):
+    # Call get_weighted_coordinates for a single point.
     x, y = get_weighted_coordinates([val], weight_factor=weight_factor)[0]
     return x, y
+
+
+#def wrap_complex_vals(angles):
+#    """
+#
+#    Wrap the values in the array to prevent them going below -pi/4.0
+#    Add 2*pi to elements smaller than -pi/4.0.
+#    Leave other elements the same.
+#
+#    FIXME: Why does it do this? Don't we need angles wrapped to +/- pi??
+#    Changing to np.where(angles < -pi, angles + 2*pi, angles) does not work.
+#    LUTs are shifted by -0.75pi
+#
+#    FUNCTION NO LONGER USED.
+#
+#    """
+#    return np.where(angles < -pi/4.0, angles + 2*pi, angles)
 
 
 def wrap_angle_radian(angle):
@@ -254,15 +277,14 @@ def normalize_difference_radian(x):
 
 
 def nominal_angle_radian(key):
-    # NOTE: Nominal angle means demanded angle.
     # Convert a pair of angular coordinates from degrees to radians.
+    # NOTE: Nominal angle means demanded angle.
     return np.deg2rad(key[0]), np.deg2rad(key[1])
 
 
 def extract_points(analysis_results):
-    """ Returns (x,y) positions from image analysis and
-    nominal (demanded) angles of alpha and beta arm, in radians.
-    """
+    # Returns (x,y) positions from image analysis and nominal
+    # (demanded) angles of alpha and beta arm, in radians.
     nominal_coordinates_rad = []
     circle_points = []
     pos_keys = []
@@ -351,7 +373,6 @@ def fit_circle(analysis_results, motor_axis):
     # BUG FIX: SMB 04-Mar-2020: Changed from mean to median. Angle wrapping can lead to a bi-modal distribution.
     # np.mean results in an estimate in between the two modes, whereas np.median chooses one of them.
     offset_estimate = np.median(phi_real_rad - phi_nominal_rad)
-    #offset_estimate = np.mean(phi_real_rad - phi_nominal_rad)
     # TODO: logger.debug?
     print(
         "fit_circle: axis {}: initial camera offset estimate = {} degrees".format(
@@ -371,7 +392,6 @@ def fit_circle(analysis_results, motor_axis):
                           xlabel='Nominal phi (radians)', ylabel='Measured phi+pi (radians)',
                           linefmt='b.', linestyle=' ' )
 
-
     # << Return the result. >>
     result = {
         "xc": xc,                               # Coordinates of the
@@ -390,17 +410,6 @@ def fit_circle(analysis_results, motor_axis):
         "offset_estimate": offset_estimate,     # Estimated camera rotation offset.
     }
     return result
-
-
-def wrap_complex_vals(angles):
-
-    # Wrap the values in the array to prevent them going below -pi/4.0
-    # Add 2*pi to elements smaller than -pi/4.0.
-    # Leave other elements the same.
-    # FIXME: Why does it do this? Don't we need angles wrapped to +/- pi??
-    return np.where(angles < -pi/4.0, angles + 2*pi, angles)
-#   This change does not work. LUTs are shifted by -0.75pi
-#    return np.where(angles < -pi, angles + 2*pi, angles)
 
 
 def angle_to_point(
@@ -440,7 +449,6 @@ def angle_to_point(
           Real coordinates are the actual, measured coordinates.
 
     """
-
     if coeffs is None:
         # Extremely verbose diagnostic.
         #print("angle_to_point: NO gearbox coefficients. Gearbox correction skipped.")
@@ -629,15 +637,6 @@ def get_angle_error(
     points_real = x_real + y_real*1j		# Collection of real measured points
     points_fitted = x_fitted + y_fitted*1j	# Collection of points resulting from fit
 
-
-    #print("alpha_nominal_rad ranges from", np.min(alpha_nominal_rad), "to", np.max(alpha_nominal_rad))
-    #print("beta_nominal_rad ranges from", np.min(beta_nominal_rad), "to", np.max(beta_nominal_rad))
-
-    #phi_fitted_before_wrap = np.log(points_fitted).imag
-    #phi_real_before_wrap = np.log(points_real).imag
-    #print("phi_fitted_before_wrap ranges from", np.min(phi_fitted_before_wrap), "to", np.max(phi_fitted_before_wrap))
-    #print("phi_real_before_wrap ranges from", np.min(phi_real_before_wrap), "to", np.max(phi_real_before_wrap))
-
     # compute _residual_ offset of fitted - real
     # (no unwrapping needed because we use the complex domain)
     #
@@ -655,13 +654,6 @@ def get_angle_error(
     #    plotting.plot_xy( None, angular_difference, title=title,
     #                      xlabel='index', ylabel='angular_difference',
     #                      linefmt='b.', linestyle=' ' )
-
-    # << Compute phase-wrapped real and nominal values. >>
-    # Finally, the nominal and real input angles are converted
-    # to a phase-wrapped representation.
-    # FIXME: There is no point in remembering these camera-specific angles.
-    #phi_fitted_rad = wrap_complex_vals(np.log(points_fitted).imag)
-    #phi_real_rad = wrap_complex_vals(np.log(points_real).imag)
 
     if motor_axis == 'alpha':
         phi_fitted_rad = alpha_nominal_rad
@@ -689,7 +681,6 @@ def fit_gearbox_parameters(
     Fit the gearbox parameters.
 
     """
-
     # << Retrieve constants from the circle fit data. >>
     x_s = circle_data["x_s"]
     y_s = circle_data["y_s"]
@@ -764,17 +755,13 @@ def fit_gearbox_parameters(
     #      "phi_fitted_rad=", phi_fitted_rad,
     #      "err_phi_1_rad=", err_phi_1_rad)
 
+    # Straight line fit. See https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.linregress.html
+    (slope, intercept, rvalue, pvalue, stderror) = stats.linregress( phi_fitted_rad, phi_real_rad )
+    print("Straight line fit for y vs x: slope=%f, intercept=%f, rvalue=%f, pvalue=%f, stderror=%f." % \
+        (slope, intercept, rvalue, pvalue, stderror) )
+
     # Diagnostic plot
     if GRAPHICAL_DIAGNOSTICS and PLOT_GEARBOX_FIT:
-        #title = "fit_gearbox_parameters() for %s: phi_real_rad." % motor_axis
-        #plotting.plot_xy( None, phi_real_rad, title=title,
-        #                  xlabel='Index', ylabel='phi_real_rad (radians)',
-        #                  linefmt='b.', linestyle=' ' )
-        #title = "fit_gearbox_parameters() for %s: phi_fitted_rad." % motor_axis
-        #plotting.plot_xy( None, phi_fitted_rad, title=title,
-        #                  xlabel='Index', ylabel='phi_fitted_rad (radians)',
-        #                  linefmt='b.', linestyle=' ' )
-
         #title = "fit_gearbox_parameters() for %s: Actual vs demanded angle." % motor_axis
         #plotting.plot_xy(phi_fitted_rad, phi_real_rad, title=title,
         #                  xlabel='phi_fitted_rad (radians)', ylabel='phi_real_rad (radians)',
@@ -787,7 +774,6 @@ def fit_gearbox_parameters(
         plotting.plot_xy( phi_fitted_rad, err_phi_1_rad, title=title,
                           xlabel='phi_fitted_rad (radians)', ylabel='err_phi_1_rad (radians)',
                           linefmt='m.', linestyle=' ' )
-
 
     # << Compute support points for linear least squares fit. >>
     # Here the values phi_fitted_rad etc... represent the angles
@@ -806,8 +792,9 @@ def fit_gearbox_parameters(
     # err_phi_1_rad, which represent the difference or "gearbox
     # error".
     #
-    # *** NOTE: Is this code doing the right thing?
-    # FIXME: Use the nominal angles, not the fitted angles.
+    # *** NOTE: Confusing terminology.
+    #     - "Fitted" angles are the nominal angles.
+    #     - "Real" angles are the measured angles.
     #
     support_points = {}
     for (fitted_angle, yp) in zip(phi_fitted_rad, err_phi_1_rad):
@@ -819,8 +806,6 @@ def fit_gearbox_parameters(
     phi_fit_support_rad = np.array(sorted(support_points.keys()))
     phi_fit_support_rad_min = np.min(phi_fit_support_rad)
     phi_fit_support_rad_max = np.max(phi_fit_support_rad)
-    #print("phi_fit_support_rad (sorted) ranges from", phi_fit_support_rad_min, "to", phi_fit_support_rad_max)
-    #print("fit_gearbox_parameters(): sorted nominal angles (phi_fit_support_rad)=", phi_fit_support_rad)
 
     # Diagnostic plot
     #if GRAPHICAL_DIAGNOSTICS:
@@ -828,16 +813,6 @@ def fit_gearbox_parameters(
     #    plotting.plot_xy( None, phi_fit_support_rad, title=title,
     #                      xlabel='Index', ylabel='phi_fit_support_rad (radians)',
     #                      linefmt='b.', linestyle=' ' )
-
-#    # Diagnostic plots
-#    if GRAPHICAL_DIAGNOSTICS:
-#        #print("Looping through", phi_fit_support_rad)
-#        for k in phi_fit_support_rad:
-#            temparray = np.array(support_points[k])
-#            title = "fit_gearbox_parameters() for %s: Mean of %f support points is %f" % (motor_axis, k, np.mean(temparray))
-#            plotting.plot_xy( None, temparray, title=title,
-#                          xlabel='Index', ylabel='support_points[k]',
-#                          linefmt='b.', linestyle=' ' )
 
     # Then we compute the mean value of the observed data.
     # The array phi_cor_support_rad is the input for the linear
@@ -850,23 +825,23 @@ def fit_gearbox_parameters(
     ]
     print("phi_corr_support_rad (averaged) ranges from", np.min(phi_corr_support_rad), "to", np.max(phi_corr_support_rad))
 
-    # Calculate the fitted correction at datum. This should be zero.
-    phi_fit_toler = np.deg2rad(0.3)   # Measurements must be within this tolerance to benefit from datum
-    if (datum_point >= phi_fit_support_rad_min) and (datum_point <= phi_fit_support_rad_max):
-       datum_error = np.interp( datum_point, phi_fit_support_rad, phi_corr_support_rad, period=2 * pi )
-       print("-> %s datum error = %f" % (motor_axis, datum_error))
-    elif (datum_point >= phi_fit_support_rad_min-phi_fit_toler) and (datum_point <= phi_fit_support_rad_max):
-       # Datum very close to lower end. Assume datum error is the same as the error at the lower end
-       datum_error = np.interp( phi_fit_support_rad_min, phi_fit_support_rad, phi_corr_support_rad, period=2 * pi )
-       print("-> %s datum error assumed (at lower end) = %f" % (motor_axis, datum_error))
-    elif (datum_point >= phi_fit_support_rad_min) and (datum_point <= phi_fit_support_rad_max+phi_fit_toler):
-       # Datum very close to upper end. Assume datum error is the same as the error at the upper end
-       datum_error = np.interp( phi_fit_support_rad_max, phi_fit_support_rad, phi_corr_support_rad, period=2 * pi )
-       print("-> %s datum error assumed (at upper end) = %f" % (motor_axis, datum_error))
-    else:
-       print("-> %s datum point (%f) outside range of measurement (%f - %f). Datum error assumed zero." % \
-           (motor_axis, datum_point, phi_fit_support_rad_min, phi_fit_support_rad_max))
-       datum_error = 0.0
+#    # Calculate the fitted correction at datum. This should be zero.
+#    phi_fit_toler = np.deg2rad(0.3)   # Measurements must be within this tolerance to benefit from datum
+#    if (datum_point >= phi_fit_support_rad_min) and (datum_point <= phi_fit_support_rad_max):
+#       datum_error = np.interp( datum_point, phi_fit_support_rad, phi_corr_support_rad, period=2 * pi )
+#       print("-> %s datum error = %f" % (motor_axis, datum_error))
+#    elif (datum_point >= phi_fit_support_rad_min-phi_fit_toler) and (datum_point <= phi_fit_support_rad_max):
+#       # Datum very close to lower end. Assume datum error is the same as the error at the lower end
+#       datum_error = np.interp( phi_fit_support_rad_min, phi_fit_support_rad, phi_corr_support_rad, period=2 * pi )
+#       print("-> %s datum error assumed (at lower end) = %f" % (motor_axis, datum_error))
+#    elif (datum_point >= phi_fit_support_rad_min) and (datum_point <= phi_fit_support_rad_max+phi_fit_toler):
+#       # Datum very close to upper end. Assume datum error is the same as the error at the upper end
+#       datum_error = np.interp( phi_fit_support_rad_max, phi_fit_support_rad, phi_corr_support_rad, period=2 * pi )
+#       print("-> %s datum error assumed (at upper end) = %f" % (motor_axis, datum_error))
+#    else:
+#       print("-> %s datum point (%f) outside range of measurement (%f - %f). Datum error assumed zero." % \
+#           (motor_axis, datum_point, phi_fit_support_rad_min, phi_fit_support_rad_max))
+#       datum_error = 0.0
 
     # Now calculate the mean correction across the measurement range. This should also be close to zero.
     mean_error = np.mean(phi_corr_support_rad)
@@ -886,7 +861,7 @@ def fit_gearbox_parameters(
             rms_neg += deviation * deviation
             nneg += 1
     if npos > 0:
-        rms_pos = math.sqrt(rms_pos / float(npos))        
+        rms_pos = math.sqrt(rms_pos / float(npos))
     if nneg > 0:
         rms_neg = math.sqrt(rms_neg / float(nneg))
     rms_error = rms_pos - rms_neg
@@ -909,8 +884,6 @@ def fit_gearbox_parameters(
     print("phi_fitted_correction_rad (calib) ranges from", np.min(phi_fitted_correction_rad), "to", np.max(phi_fitted_correction_rad))
 
     ## Combine first and second order fit, to get an invertible function
-#    corrected_shifted_angle_rad = np.array(phi_corr_support_rad) + phi_fit_support_rad - datum_error
-#    corrected_shifted_angle_rad = np.array(phi_corr_support_rad) + phi_fit_support_rad - mean_error
     corrected_shifted_angle_rad = np.array(phi_corr_support_rad) + phi_fit_support_rad - rms_error
     print("corrected_shifted_angle_rad (corr+fit) ranges from", np.min(corrected_shifted_angle_rad), "to", np.max(corrected_shifted_angle_rad))
 
@@ -920,12 +893,6 @@ def fit_gearbox_parameters(
             beta0_rad, np.rad2deg(beta0_rad)
         )
     )
-    # FIXME: Explain why 360 is added to beta0_rad when converting to degrees.
-    #print(
-    #    "fit_gearbox_parameters(): beta0_rad - pi = {} rad = {} degree (???)".format(
-    #        beta0_rad - pi, 360 + np.rad2deg(beta0_rad - pi)
-    #    )
-    #)
 
     # Using the mean error angles, we then define the interpolation tables.
     # To get an invertible function, the interpolation input must define a
@@ -943,22 +910,12 @@ def fit_gearbox_parameters(
         # FIXED: Camera offset no longer needed if nominal angles used in the first place
         nominal_angle_rad = phi_fit_support_rad
         corrected_angle_rad = corrected_shifted_angle_rad
-        #nominal_angle_rad = phi_fit_support_rad - camera_offset_rad
-        #corrected_angle_rad = corrected_shifted_angle_rad - camera_offset_rad
     else:
         # BUG FIX: SMB 11-Mar-2020: beta0_rad was being double-counted, which took the
         # lookup table out of the range +/- pi and spoiled the padding.
         # FIXED: Camera offset no longer needed if nominal angles used in the first place
         nominal_angle_rad = phi_fit_support_rad
         corrected_angle_rad = corrected_shifted_angle_rad
-        #nominal_angle_rad = phi_fit_support_rad - camera_offset_rad
-        #corrected_angle_rad = corrected_shifted_angle_rad - camera_offset_rad
-
-        # FIXME: Why is beta0_rad subtracted? It takes the lookup table out of range and destroys the padding.
-        #nominal_angle_rad = phi_fit_support_rad - beta0_rad - camera_offset_rad - pi
-        #corrected_angle_rad = (
-        #    corrected_shifted_angle_rad - beta0_rad - camera_offset_rad - pi
-        #)
 
     # TODO: logger.debug?
     print(
@@ -999,7 +956,6 @@ def fit_gearbox_parameters(
         plotting.plot_xy(nominal_angle_rad, corrected_angle_rad-nominal_angle_rad, title=title,
                           xlabel='nominal_angle_rad (radians)', ylabel='corrected_angle_rad-nominal_angle_rad (radians)',
                           linefmt='gx', linestyle='-' )
-
 
     # << Assemble the results dictionary. >>
     results = {
@@ -1119,14 +1075,6 @@ def fit_offsets(
         plotting.plot_xy( circle_points[0], circle_points[1], title=title,
                           xlabel='X (mm)', ylabel='Y (mm)',
                           linefmt='b.', linestyle=' ', equal_aspect=True )
-        #title = "fit_offsets: Nominal alpha angles, ending with fixpoint (radians)."
-        #plotting.plot_xy( None, alpha_nom_rad, title=title,
-        #                  xlabel='index', ylabel='alpha_nom_rad',
-        #                  linefmt='b.', linestyle=' ' )
-        #title = "fit_offsets: Nominal beta angles, starting with fixpoint (radians)."
-        #plotting.plot_xy( None, beta_nom_rad, title=title,
-        #                  xlabel='index', ylabel='beta_nom_rad',
-        #                  linefmt='b.', linestyle=' ' )
 
         zpoints = angle_to_point(
             alpha_nom_rad,
@@ -1141,7 +1089,6 @@ def fit_offsets(
         plotting.plot_xy( zpoints[0], zpoints[1], title=title,
                           xlabel='X (mm)', ylabel='Y (mm)',
                           linefmt='g.', linestyle=' ', equal_aspect=True )
-
 
     # << Fit offsets so that the difference between nominal (demanded) and
     # real (measured) points is minimal. >>
@@ -1192,7 +1139,6 @@ def fit_offsets(
         plotting.plot_xy( points[0], points[1], title=title,
                           xlabel='X (mm)', ylabel='Y (mm)',
                           linefmt='r.', linestyle=' ', equal_aspect=True )
-
 
     # TODO: logger.debug?
     print(
@@ -1376,9 +1322,10 @@ def fit_gearbox_correction(
     dict_of_coordinates_beta,		# Dictionary containing measured beta centroids
     return_intermediate_results=False,	# Set True to return intermediate results for plotting
 ):
-    """Computes gearbox correction and returns correction coefficients
-    as a dictionary.
+    """
 
+    Computes gearbox correction and returns correction coefficients
+    as a dictionary.
 
     Input is a dictionary. The keys of the dictionary
     are the i,j,k indices of the positional repeteability measurement.
@@ -1525,9 +1472,6 @@ def fit_gearbox_correction(
 
     # Dump the tree structure of the derived coefficients
     #dump_tree( coeffs )
-    #print( "==========================================================" )
-    #print( str(coeffs) )
-    #print( "==========================================================" )
 
     # << Return resulting coefficients >>
     return {
@@ -1560,6 +1504,8 @@ def apply_gearbox_parameters_fitted(
     (instead of the FPU coordinates).
     This function is used for both the alpha and beta coordinate.
 
+    NOTE: Only used by the plotting utilities.
+
     * The function checks that the coefficients match the algorithm it
       implements.
 
@@ -1577,7 +1523,6 @@ def apply_gearbox_parameters_fitted(
       implemented in the C++ interface.
 
     """
-
     assert (
         algorithm == "linfit+piecewise_interpolation"
     ), "no matching algorithm -- repeat fitting"
@@ -1597,7 +1542,8 @@ def apply_gearbox_parameters_fitted(
 
     # wrap in the same way as we did with the fit
     if wrap:
-        angle_rad = wrap_complex_vals(np.log(np.exp(angle_rad*1j)).imag)
+        angle_rad = normalize_difference_radian( angle_rad )
+        #angle_rad = wrap_complex_vals(np.log(np.exp(angle_rad*1j)).imag)
 
     # Corrected points are obtained by interpolating the lookup table to
     # find the values of y_points where x=alpha_rad.
@@ -1617,7 +1563,27 @@ def apply_gearbox_parameters(
     wrap=False,                # Parameter ignored. The angles are never wrapped.
     **rest_coeffs              # The remaining coefficients from the dictionary.
 ):
+    """
 
+    Applies gearbox parameters to the FPU coordinate.
+    This function is used for both the alpha and beta coordinate.
+
+    USED BY THE FPU VERIFICATION SOFTWARE.
+
+    * The function checks that the coefficients match the algorithm it
+      implements.
+
+    * It has a flag that allows to invert the transform - that is, convert
+      nominal coordinates to real coordinates. We will later see what this
+      is good for, it is used in producing and plotting the correction
+      coeffients.
+
+    * The core correction is performed by calling np.interp(), which
+      implements a piece-wise linear interpolation. This linear
+      interpolation is a core operation which also needs to be
+      implemented in the C++ interface.
+
+    """
     assert (
         algorithm == "linfit+piecewise_interpolation"
     ), "no matching algorithm -- repeat fitting"
@@ -1651,11 +1617,6 @@ def apply_gearbox_parameters(
             plotting.plot_xy( x_points, y_points-x_points, title=title,
                           xlabel=xlabel, ylabel=ylabel,
                           linefmt='g.', linestyle='-', equal_aspect=False )
-        else:
-           pass
-           # Extremely verbose - used one point at a time.
-           #print("apply_gearbox_parameters: Angle to be corrected=%f (rad) =%f (deg)" % \
-           #      (angle_rad,np.rad2deg(angle_rad)) )
 
     # Do not wrap, or shift by offset first!
     # (the nominal angle is not subject to camera rotation)
@@ -1672,11 +1633,6 @@ def apply_gearbox_parameters(
             plotting.plot_xy( angle_rad, phi_corrected-angle_rad, title=title,
                           xlabel='angle_rad (rad)', ylabel='phi_corrected-angle_rad (rad)',
                           linefmt='b.', linestyle=' ', equal_aspect=False )
-        else:
-           pass
-           # Extremely verbose - used one point at a time.
-           #print("apply_gearbox_parameters: Corrected angle=%f (rad) =%f (deg)" % \
-           #      (phi_corrected, np.rad2deg(phi_corrected)) )
 
     return phi_corrected
 
