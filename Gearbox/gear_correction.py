@@ -65,7 +65,11 @@ GEARBOX_CORRECTION_VERSION = (5, 0, 2)
 # and yields a tolerable result
 GEARBOX_CORRECTION_MINIMUM_VERSION = (5, 0, 0)
 
-
+#
+#----------------------------------------------------------------
+# Small utility functions
+#----------------------------------------------------------------
+#
 def dump_tree( data ):
     # Display the contents of a heirarchical dictionary
     # in JSON format
@@ -87,6 +91,48 @@ def polar2cartesian(phi_rad, rho):
     x = rho * np.cos(phi_rad)
     y = rho * np.sin(phi_rad)
     return (x, y)
+
+#def wrap_complex_vals(angles):
+#    """
+#
+#    Wrap the values in the array to prevent them going below -pi/4.0
+#    Add 2*pi to elements smaller than -pi/4.0.
+#    Leave other elements the same.
+#
+#    FIXME: Why does it do this? Don't we need angles wrapped to +/- pi??
+#    Changing to np.where(angles < -pi, angles + 2*pi, angles) does not work.
+#    LUTs are shifted by -0.75pi
+#
+#    FUNCTION NO LONGER USED.
+#
+#    """
+#    return np.where(angles < -pi/4.0, angles + 2*pi, angles)
+
+
+def wrap_angle_radian(angle):
+    # Wraps a scalar angle to prevent it going outside the range
+    # -pi to +pi.
+    while angle < -pi:
+       angle += 2*pi
+    while angle > pi:
+       angle -= 2*pi
+    return angle
+
+
+def normalize_difference_radian(x):
+    # Keep the values contained in the array x within the range -pi to +pi.
+    # Add 2*pi to elements smaller than -pi.
+    # Subtract 2*pi from elements larger than +pi.
+    # TODO: Should there be a while loop to account for larger deviations? 
+    x = np.where(x < -pi, x + 2*pi, x)
+    x = np.where(x > +pi, x - 2*pi, x)
+    return x
+
+
+def nominal_angle_radian(key):
+    # Convert a pair of angular coordinates from degrees to radians.
+    # NOTE: Nominal angle means demanded angle.
+    return np.deg2rad(key[0]), np.deg2rad(key[1])
 
 
 def calc_R(x, y, xc, yc):
@@ -127,7 +173,65 @@ def elliptical_distortion(x, y, xc, yc, psi, stretch):
 
     return x2 + xc, y2 + yc
 
+#
+#----------------------------------------------------------------
+# Image analysis interpretation functions
+#----------------------------------------------------------------
+#
+def get_weighted_coordinates(blob_coordinates, weight_factor=BLOB_WEIGHT_FACTOR):
+    """
 
+    Compute the weighted coordinates of the point
+    between the big and small metrology blob
+    
+    This is also used to compute error measures
+    from the datum repeatability / positional
+    repeatability, it is called in the
+    vfr.evaluation.measures module.
+
+    """
+    blob_coordinates = np.asarray(blob_coordinates)
+    assert( blob_coordinates.ndim == 2)
+
+    coords_big_blob = blob_coordinates[:, 3:5]
+    coords_small_blob = blob_coordinates[:, :2]
+    weighted_coordinates = ( ( 1.0 - weight_factor ) *
+                             coords_small_blob + (weight_factor *
+                                                  coords_big_blob))
+
+    # return Cartesian coordinates, by
+    # inverting y axis of OpenCV image coordinates
+    return weighted_coordinates * np.array([1, -1])
+
+
+def cartesian_blob_position(val, weight_factor=BLOB_WEIGHT_FACTOR):
+    # Call get_weighted_coordinates for a single point.
+    x, y = get_weighted_coordinates([val], weight_factor=weight_factor)[0]
+    return x, y
+
+def extract_points(analysis_results):
+    # Returns (x,y) positions from image analysis and nominal
+    # (demanded) angles of alpha and beta arm, in radians.
+    nominal_coordinates_rad = []
+    circle_points = []
+    pos_keys = []
+
+    for key, val in analysis_results.items():
+        alpha_nom_rad, beta_nom_rad = nominal_angle_radian(key)
+        x, y = cartesian_blob_position(val)
+
+        circle_points.append((x, y))
+        nominal_coordinates_rad.append((alpha_nom_rad, beta_nom_rad))
+        pos_keys.append(key)
+
+    return circle_points, nominal_coordinates_rad, pos_keys
+
+
+#
+#----------------------------------------------------------------
+# Fitting functions
+#----------------------------------------------------------------
+#
 def f(c, x, y):
     """
 
@@ -152,6 +256,7 @@ def f(c, x, y):
     return Ri - Ri.mean()
 
 
+# ----------------------------------------------------------------------------
 def leastsq_circle(x, y):
     """
 
@@ -207,99 +312,7 @@ def leastsq_circle(x, y):
     return xc, yc, R, psi, stretch, radius_RMS
 
 
-def get_weighted_coordinates(blob_coordinates, weight_factor=BLOB_WEIGHT_FACTOR):
-    """
-
-    Compute the weighted coordinates of the point
-    between the big and small metrology blob
-    
-    This is also used to compute error measures
-    from the datum repeatability / positional
-    repeatability, it is called in the
-    vfr.evaluation.measures module.
-
-    """
-    blob_coordinates = np.asarray(blob_coordinates)
-    assert( blob_coordinates.ndim == 2)
-
-    coords_big_blob = blob_coordinates[:, 3:5]
-    coords_small_blob = blob_coordinates[:, :2]
-    weighted_coordinates = ( ( 1.0 - weight_factor ) *
-                             coords_small_blob + (weight_factor *
-                                                  coords_big_blob))
-
-    # return Cartesian coordinates, by
-    # inverting y axis of OpenCV image coordinates
-    return weighted_coordinates * np.array([1, -1])
-
-
-def cartesian_blob_position(val, weight_factor=BLOB_WEIGHT_FACTOR):
-    # Call get_weighted_coordinates for a single point.
-    x, y = get_weighted_coordinates([val], weight_factor=weight_factor)[0]
-    return x, y
-
-
-#def wrap_complex_vals(angles):
-#    """
-#
-#    Wrap the values in the array to prevent them going below -pi/4.0
-#    Add 2*pi to elements smaller than -pi/4.0.
-#    Leave other elements the same.
-#
-#    FIXME: Why does it do this? Don't we need angles wrapped to +/- pi??
-#    Changing to np.where(angles < -pi, angles + 2*pi, angles) does not work.
-#    LUTs are shifted by -0.75pi
-#
-#    FUNCTION NO LONGER USED.
-#
-#    """
-#    return np.where(angles < -pi/4.0, angles + 2*pi, angles)
-
-
-def wrap_angle_radian(angle):
-    # Wraps a scalar angle to prevent it going outside the range
-    # -pi to +pi.
-    while angle < -pi:
-       angle += 2*pi
-    while angle > pi:
-       angle -= 2*pi
-    return angle
-
-
-def normalize_difference_radian(x):
-    # Keep the values contained in the array x within the range -pi to +pi.
-    # Add 2*pi to elements smaller than -pi.
-    # Subtract 2*pi from elements larger than +pi.
-    # TODO: Should there be a while loop to account for larger deviations? 
-    x = np.where(x < -pi, x + 2*pi, x)
-    x = np.where(x > +pi, x - 2*pi, x)
-    return x
-
-
-def nominal_angle_radian(key):
-    # Convert a pair of angular coordinates from degrees to radians.
-    # NOTE: Nominal angle means demanded angle.
-    return np.deg2rad(key[0]), np.deg2rad(key[1])
-
-
-def extract_points(analysis_results):
-    # Returns (x,y) positions from image analysis and nominal
-    # (demanded) angles of alpha and beta arm, in radians.
-    nominal_coordinates_rad = []
-    circle_points = []
-    pos_keys = []
-
-    for key, val in analysis_results.items():
-        alpha_nom_rad, beta_nom_rad = nominal_angle_radian(key)
-        x, y = cartesian_blob_position(val)
-
-        circle_points.append((x, y))
-        nominal_coordinates_rad.append((alpha_nom_rad, beta_nom_rad))
-        pos_keys.append(key)
-
-    return circle_points, nominal_coordinates_rad, pos_keys
-
-
+# ----------------------------------------------------------------------------
 def fit_circle(analysis_results, motor_axis):
     """
 
@@ -412,6 +425,7 @@ def fit_circle(analysis_results, motor_axis):
     return result
 
 
+# ----------------------------------------------------------------------------
 def angle_to_point(
     alpha_nom_rad,           # Scalar or array of demanded alpha angles (rad)
     beta_nom_rad,            # Scalar or array of demanded beta angles (rad)
@@ -553,6 +567,7 @@ def angle_to_point(
     return expected_point
 
 
+# ----------------------------------------------------------------------------
 def get_angle_error(
     motor_axis,                 # Motor axis being fitted ('alpha' or 'beta')
     x_s2,			# Input data after distortion correction.
@@ -576,7 +591,7 @@ def get_angle_error(
 
     """
     # TODO: logger.debug?
-    print("\nget_angle_error: center (x,y) = ({},{}) millimeter. P0 = ({},{}) millimeter".format(xc, yc, P0[0], P0[1]))
+    print("get_angle_error: center (x,y) = ({},{}) millimeter. P0 = ({},{}) millimeter".format(xc, yc, P0[0], P0[1]))
 
     # << Get place vectors of measured points. >>
     # This computes the place vectors of the measured points relative
@@ -660,11 +675,14 @@ def get_angle_error(
     else:
         phi_fitted_rad = beta_nominal_rad
     phi_real_rad = phi_fitted_rad + angular_difference
-    print("phi_fitted_rad after wrap ranges from", np.min(phi_fitted_rad), "to", np.max(phi_fitted_rad))
-    print("phi_real_rad after wrap ranges from", np.min(phi_real_rad), "to", np.max(phi_real_rad))
+    #print("phi_fitted_rad after wrap ranges from", np.min(phi_fitted_rad), "to", np.max(phi_fitted_rad))
+    #print("phi_real_rad after wrap ranges from", np.min(phi_real_rad), "to", np.max(phi_real_rad))
 
     return phi_real_rad, phi_fitted_rad, angular_difference
 
+#================================================================
+# Gearbox correction calibration functions
+#================================================================
 
 def fit_gearbox_parameters(
     motor_axis,				# Motor axis being fitted ('alpha' or 'beta')
@@ -719,7 +737,7 @@ def fit_gearbox_parameters(
 
     # TODO: logger.debug?
     print(
-        "fit_gearbox_parameters(): finding angular error for {} arm ".format(motor_axis)
+        "\nfit_gearbox_parameters(): finding angular error for {} arm.".format(motor_axis)
     )
 
     # << Get angular error between nominal and measured angles. >>
@@ -757,7 +775,7 @@ def fit_gearbox_parameters(
 
     # Straight line fit. See https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.linregress.html
     (slope, intercept, rvalue, pvalue, stderror) = stats.linregress( phi_fitted_rad, phi_real_rad )
-    print("Straight line fit for y vs x: slope=%f, intercept=%f, rvalue=%f, pvalue=%f, stderror=%f." % \
+    print("Straight line fit for phi_fitted_rad vs phi_real_rad: slope=%f, intercept=%f, rvalue=%f, pvalue=%f, stderror=%f." % \
         (slope, intercept, rvalue, pvalue, stderror) )
 
     # Diagnostic plot
@@ -823,7 +841,7 @@ def fit_gearbox_parameters(
     phi_corr_support_rad = [
         np.mean(np.array(support_points[k])) for k in phi_fit_support_rad
     ]
-    print("phi_corr_support_rad (averaged) ranges from", np.min(phi_corr_support_rad), "to", np.max(phi_corr_support_rad))
+    #print("phi_corr_support_rad (averaged) ranges from", np.min(phi_corr_support_rad), "to", np.max(phi_corr_support_rad))
 
 #    # Calculate the fitted correction at datum. This should be zero.
 #    phi_fit_toler = np.deg2rad(0.3)   # Measurements must be within this tolerance to benefit from datum
@@ -881,11 +899,11 @@ def fit_gearbox_parameters(
     phi_fitted_correction_rad = phi_fitted_rad + np.interp(
         phi_fitted_rad, phi_fit_support_rad, phi_corr_support_rad, period=2 * pi
     )
-    print("phi_fitted_correction_rad (calib) ranges from", np.min(phi_fitted_correction_rad), "to", np.max(phi_fitted_correction_rad))
+    #print("phi_fitted_correction_rad (calib) ranges from", np.min(phi_fitted_correction_rad), "to", np.max(phi_fitted_correction_rad))
 
     ## Combine first and second order fit, to get an invertible function
     corrected_shifted_angle_rad = np.array(phi_corr_support_rad) + phi_fit_support_rad - rms_error
-    print("corrected_shifted_angle_rad (corr+fit) ranges from", np.min(corrected_shifted_angle_rad), "to", np.max(corrected_shifted_angle_rad))
+    #print("corrected_shifted_angle_rad (corr+fit) ranges from", np.min(corrected_shifted_angle_rad), "to", np.max(corrected_shifted_angle_rad))
 
     # TODO: logger.debug?
     print(
@@ -923,8 +941,8 @@ def fit_gearbox_parameters(
             motor_axis, np.rad2deg(np.mean(corrected_angle_rad - nominal_angle_rad))
         )
     )
-    print("new nominal_angle_rad ranges from", np.min(nominal_angle_rad), "to", np.max(nominal_angle_rad))
-    print("new corrected_angle_rad ranges from", np.min(corrected_angle_rad), "to", np.max(corrected_angle_rad))
+    #print("new nominal_angle_rad ranges from", np.min(nominal_angle_rad), "to", np.max(nominal_angle_rad))
+    #print("new corrected_angle_rad ranges from", np.min(corrected_angle_rad), "to", np.max(corrected_angle_rad))
 
     # Diagnostic plot
     if GRAPHICAL_DIAGNOSTICS and PLOT_GEARBOX_FIT:
@@ -1031,6 +1049,7 @@ def fit_gearbox_parameters(
     return results
 
 
+# ----------------------------------------------------------------------------
 def fit_offsets(
     circle_alpha,		# Centroids of points on the alpha circle
     circle_beta,		# Centroids of points on the beta circle
@@ -1149,6 +1168,7 @@ def fit_offsets(
     return camera_offset, beta0
 
 
+# ----------------------------------------------------------------------------
 def get_expected_points(
     fpu_id,                 # FPU ID as found in the database
     coeffs,                 # Nested dictionary of gearbox calibration coeffs.
@@ -1316,6 +1336,7 @@ def get_expected_points(
     return expected_vals
 
 
+# ----------------------------------------------------------------------------
 def fit_gearbox_correction(
     fpu_id,				# ID of FPU being fitted,
     dict_of_coordinates_alpha,		# Dictionary containing measured alpha centroids
@@ -1489,6 +1510,10 @@ def fit_gearbox_correction(
     }
 
 
+#================================================================
+# Gearbox correction application functions
+#================================================================
+
 def apply_gearbox_parameters_fitted(
     angle_rad,                        # Scalar or array of angles to be corrected (rad)
     phi_fit_support_rad=None,         # FIXME: Gearbox parameters should be applied to nominal (demanded) angles, not fitted ones.
@@ -1554,6 +1579,7 @@ def apply_gearbox_parameters_fitted(
     return phi_corrected
 
 
+# ----------------------------------------------------------------------------
 def apply_gearbox_parameters(
     angle_rad,                 # Scalar or rray of angles to be corrected (rad)
     nominal_angle_rad=None,    # Array of demanded angles (rad) extracted from coeffs dictionary
