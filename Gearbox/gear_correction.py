@@ -73,8 +73,16 @@ GEARBOX_CORRECTION_MINIMUM_VERSION = (5, 0, 0)
 def dump_tree( data ):
     # Display the contents of a heirarchical dictionary
     # in JSON format
+    assert isinstance(data, dict)
     import json
     print(json.dumps(data, indent=3))
+
+
+def dump_dictionary( data ):
+    # Display the contents of a flat dictionary
+    assert isinstance(data, dict)
+    for key,val in data.items():
+        print("%s \t: %s" % (str(key), str(val)))
 
 
 def cartesian2polar(x, y):
@@ -212,14 +220,25 @@ def cartesian_blob_position(val, weight_factor=BLOB_WEIGHT_FACTOR):
 def extract_points(analysis_results):
     # Returns (x,y) positions from image analysis and nominal
     # (demanded) angles of alpha and beta arm, in radians.
+    #
+    # analysis_results is a dictionary of the form
+    # {[alpha, beta, i, j, k] : [xlarge, ylarge, rl, xsmall, ysmall, rs]}
+    # See the fit_gearbox_calibration function for details.
     nominal_coordinates_rad = []
     circle_points = []
     pos_keys = []
 
+    # Decode the results dictionary
     for key, val in analysis_results.items():
+        # Extract the alpha and beta angles from the first 2 elements of the key
+        # and convert from degrees to radians.
         alpha_nom_rad, beta_nom_rad = nominal_angle_radian(key)
+        # Extract the target centroids from the value and weight them to make
+        # a single average centroid
         x, y = cartesian_blob_position(val)
 
+        # Add the centroids and nominal coordinates to lists.
+        # Also keep a record of the full key in a pos_keys list.
         circle_points.append((x, y))
         nominal_coordinates_rad.append((alpha_nom_rad, beta_nom_rad))
         pos_keys.append(key)
@@ -680,6 +699,7 @@ def get_angle_error(
 
     return phi_real_rad, phi_fitted_rad, angular_difference
 
+
 #================================================================
 # Gearbox correction calibration functions
 #================================================================
@@ -899,11 +919,11 @@ def fit_gearbox_parameters(
     phi_fitted_correction_rad = phi_fitted_rad + np.interp(
         phi_fitted_rad, phi_fit_support_rad, phi_corr_support_rad, period=2 * pi
     )
-    #print("phi_fitted_correction_rad (calib) ranges from", np.min(phi_fitted_correction_rad), "to", np.max(phi_fitted_correction_rad))
+    print("phi_fitted_correction_rad (calib) ranges from", np.min(phi_fitted_correction_rad), "to", np.max(phi_fitted_correction_rad))
 
     ## Combine first and second order fit, to get an invertible function
     corrected_shifted_angle_rad = np.array(phi_corr_support_rad) + phi_fit_support_rad - rms_error
-    #print("corrected_shifted_angle_rad (corr+fit) ranges from", np.min(corrected_shifted_angle_rad), "to", np.max(corrected_shifted_angle_rad))
+    print("corrected_shifted_angle_rad (corr+fit) ranges from", np.min(corrected_shifted_angle_rad), "to", np.max(corrected_shifted_angle_rad))
 
     # TODO: logger.debug?
     print(
@@ -974,6 +994,11 @@ def fit_gearbox_parameters(
         plotting.plot_xy(nominal_angle_rad, corrected_angle_rad-nominal_angle_rad, title=title,
                           xlabel='nominal_angle_rad (radians)', ylabel='corrected_angle_rad-nominal_angle_rad (radians)',
                           linefmt='gx', linestyle='-' )
+
+    # Display selected points from the LUT (verbose debugging mode).
+    #print("%s LUT. [iii]: nominal <> corrected" % motor_axis)
+    #for ii in range(0, len(nominal_angle_rad), 10):
+    #    print("[%.3d]: %f <> %f" % (ii, nominal_angle_rad[ii], corrected_angle_rad[ii]))
 
     # << Assemble the results dictionary. >>
     results = {
@@ -1348,26 +1373,26 @@ def fit_gearbox_correction(
     Computes gearbox correction and returns correction coefficients
     as a dictionary.
 
-    Input is a dictionary. The keys of the dictionary
-    are the i,j,k indices of the positional repeteability measurement.
-    Equal i and k mean equal step counts, and j indicates
-    the arm and movement direction of the corresponding arm
-    during measurement.
+    Analysis results are input in the form of a dictionary.
 
-    The values of the dictionary are a 4-tuple
-    (alpha_steps, beta_steps, x_measured_1, y_measured_1, x_measured_2, y_measured_2).
+    The keys of each dictionary are 5-tuples of the form [alpha, beta, i, j, k]
+    where alpha and beta are the demanded (nominal) angle in degrees
+    and i,j,k are indices of the positional repeatability measurement.
+    Equal i and k mean equal step counts, and j indicates the arm and
+    movement direction of the corresponding arm during measurement.
 
-    Here, (alpha_steps, beta_steps) are the angle coordinates given by
-    the motor step counts (measured in degrees), and (alpha_measured,
-    beta_measured) are the cartesian values of the large (index 1) and
-    the small (index 2) target measured from the images taken.
-
-    The units are in degrees (for alpha_steps and beta_steps)
-    and millimeter (for x_measured and y_measured).
+    The values of each dictionary are a 6-tuples of the form
+    (x_centroid_large, y_centroid_large, r_large, x_centroid_small, y_centroid_small, r_small)
+    giving the Cartesian coordinates of the large and small metrology targets in mm.
 
     """
     logger = logging.getLogger(__name__)
     logger.info("Fitting gearbox correction for FPU %s." % str(fpu_id))
+
+    #print("dict_of_coordinates_alpha:")
+    #dump_dictionary( dict_of_coordinates_alpha )
+    #print("dict_of_coordinates_beta:")
+    #dump_dictionary( dict_of_coordinates_beta )
 
     # << Fit circles to the alpha and beta arm points >>
     logger.debug("Fitting alpha and beta circles...")
