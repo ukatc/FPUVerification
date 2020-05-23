@@ -46,7 +46,7 @@ if GRAPHICAL_DIAGNOSTICS:
         GRAPHICAL_DIAGNOSTICS = False
 # Some flags to control the level of graphics generated.
 PLOT_CIRCLE_FIT = False
-PLOT_CAMERA_FIT = False
+PLOT_CAMERA_FIT = True
 PLOT_GEARBOX_FIT = True
 PLOT_GEARBOX_VERIFICATION = False
 
@@ -800,10 +800,10 @@ def fit_gearbox_parameters(
 
     # Diagnostic plot
     if GRAPHICAL_DIAGNOSTICS and PLOT_GEARBOX_FIT:
-        #title = "fit_gearbox_parameters() for %s: Actual vs demanded angle." % motor_axis
-        #plotting.plot_xy(phi_fitted_rad, phi_real_rad, title=title,
-        #                  xlabel='phi_fitted_rad (radians)', ylabel='phi_real_rad (radians)',
-        #                  linefmt='b.', linestyle=' ' )
+        title = "fit_gearbox_parameters() for %s: Actual vs demanded angle." % motor_axis
+        plotting.plot_xy(phi_fitted_rad, phi_real_rad, title=title,
+                          xlabel='phi_fitted_rad (radians)', ylabel='phi_real_rad (radians)',
+                          linefmt='b.', linestyle=' ' )
         #title = "fit_gearbox_parameters() for %s: Difference between actual and demanded angle." % motor_axis
         #plotting.plot_xy(phi_fitted_rad, phi_real_rad-phi_fitted_rad, title=title,
         #                  xlabel='phi_fitted_rad (radians)', ylabel='phi_real_rad-phi_fitted_rad (radians)',
@@ -1183,6 +1183,15 @@ def fit_offsets(
         plotting.plot_xy( points[0], points[1], title=title,
                           xlabel='X (mm)', ylabel='Y (mm)',
                           linefmt='r.', linestyle=' ', equal_aspect=True )
+
+        title = "fit_offsets: Measured (blue) and fitted (red) circle points overlaid."
+        plotaxis = plotting.plot_xy( circle_points[0], circle_points[1], title=title,
+                          xlabel='X (mm)', ylabel='Y (mm)',
+                          linefmt='b.', linestyle=' ', equal_aspect=True, showplot=False )
+        plotting.plot_xy( points[0], points[1], title=None,
+                          xlabel=None, ylabel=None,
+                          linefmt='r.', linestyle=' ', equal_aspect=True,
+                          plotaxis=plotaxis, showplot=True )
 
     # TODO: logger.debug?
     print(
