@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
+# Import constants, interval class and database functions from the FPU control software
 from fpu_constants import (
     ALPHA_MAX_DEGREE,
     ALPHA_MIN_DEGREE,
@@ -11,6 +12,7 @@ from fpu_constants import (
 from interval import Interval
 from protectiondb import ProtectionDB as pdb
 from protectiondb import INIT_COUNTERS
+
 from vfr.conf import ALPHA_DATUM_OFFSET
 from vfr.tests_common import flush
 

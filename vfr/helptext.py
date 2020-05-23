@@ -192,11 +192,13 @@ summary = cleandoc(
     These evaluations operate on stored data and can be done
     without the hardware being present. They are provided
     so that it is possible to update and redo evaluations.
+    New measurement results are added to the database.
 
     {EVAL_DATUM_REP!r:<20}  - evaluate datum repeatability
     {EVAL_MET_CAL!r:<20}  - evaluate metrology calibration
     {EVAL_MET_HEIGHT!r:<20}  - evaluate metrology height
-    {EVAL_POS_REP!r:<20}  - evaluate positional repeatability
+    {EVAL_POS_REP!r:<20}  - evaluate positional repeatability and gearbox calibration
+    {EVAL_GEARBOX_CAL!r:<20}  - re-evaluate gearbox calibration only
     {EVAL_POS_VER!r:<20}  - evaluate positional verification
     {EVAL_PUP_ALGN!r:<20}  - evaluate pupil alignment
     {TASK_EVAL_ALL!r:<20}  - evaluate all measurements again (for example,
@@ -207,6 +209,8 @@ summary = cleandoc(
 
     4) RESULTS
     ----------
+    The reporting functions extract information from the database
+    but do not change it.
 
     {TASK_REPORT!r:<20}  - report results of all performed tests
     {TASK_DUMP!r:<20}  - dump content of last database entry for

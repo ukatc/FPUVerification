@@ -17,8 +17,10 @@ DEFAULT_TASKS_NONFIBRE = [
     "report",
 ]
 
-# a few parameters are defined globally because they are
+# A few parameters are defined globally because they are
 # used in many different places
+
+GRAPHICAL_DIAGNOSTICS = False
 
 ALPHA_DATUM_OFFSET = -180
 ALPHA_RANGE_MAX = 155.0  # maximum range of alpha arm
@@ -275,7 +277,9 @@ POS_REP_EVALUATION_PARS = Namespace(
     # applied, the order of the fit.
 )
 
+# FIXME: The alpha arm radius is averaging at 7.765mm which suggests the platescale should be 0.0242
 POS_REP_PLATESCALE = 0.0235  # millimeter per pixel
+#POS_REP_PLATESCALE = 0.0242  # millimeter per pixel
 
 # This is the fallback configuration, which is linear scaling.
 #
@@ -322,6 +326,7 @@ POS_VER_MEASUREMENT_PARS = Namespace(
     POS_VER_EXPOSURE_MS=250,  # the exposure time in
     # milliseconds for a correctly
     # exposed image
+    POS_VER_MOTION_FILE = "pos_ver_motion_config", # Set to None for random positions, file should be in the FPUVerification folder
     POS_VER_ITERATIONS=10,  # the number of extra random sample points
     POS_VER_SAFETY_TOLERANCE=1.5,  # safety distance towards range limits
     POS_VER_CALIBRATION_MAPFILE="calibration/mapping/pos-rep-2019-04-10.cfg",
