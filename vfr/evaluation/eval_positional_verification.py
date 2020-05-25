@@ -76,6 +76,9 @@ def evaluate_positional_verification(
     xc, yc, _, psi, stretch, _ = leastsq_circle(x_s, y_s)
     
     P0 = np.array([xc, yc])
+    
+    #if the turntable not move you don't need to determine the new center
+    P0 = np.array([x_center,y_center])
 
 
     print("P0 = ", P0)
