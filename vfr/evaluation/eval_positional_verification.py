@@ -4,26 +4,37 @@
 """
 from __future__ import division, print_function
 
-from Gearbox.gear_correction import angle_to_point, cartesian_blob_position, elliptical_distortion, leastsq_circle
+from Gearbox.gear_correction import angle_to_point, cartesian_blob_position, \
+                                    elliptical_distortion, leastsq_circle, fit_offsets
 from vfr.evaluation.measures import get_errors, get_measures, get_weighted_coordinates
+
+from vfr.conf import POS_REP_EVALUATION_PARS, GRAPHICAL_DIAGNOSTICS
+
+# Plotting library used for diagnostics.
+if GRAPHICAL_DIAGNOSTICS:
+    try:
+        import moc_plotting as plotting
+    except ImportError:
+        GRAPHICAL_DIAGNOSTICS = False
 
 import numpy as np
 import warnings
 
 POS_VER_ALGORITHM_VERSION = (1, 0, 0)
 
+
 def evaluate_positional_verification(
-    dict_of_coords,
-    pars=None,
-    x_center=None,
-    y_center=None,
-    R_alpha=None,
-    R_beta_midpoint=None,
-    camera_offset_rad=None,
-    beta0_rad=None,
-    coeffs=None,
-    BLOB_WEIGHT_FACTOR=None,
-    plot=True,
+    dict_of_coords,            # Dictionary of coordinates, as defined below.
+    pars=None,                 # Configuration parameters?
+    x_center=None,             # X centre of alpha axis
+    y_center=None,             # Y centre of alpha axis
+    R_alpha=None,              # Calibrated radius of alpha circle
+    R_beta_midpoint=None,      # Calibrated radius of beta circle
+    camera_offset_rad=None,    # Calibrated camera angle offset
+    beta0_rad=None,            # Calibrated beta angle offset
+    coeffs=None,               # Gearbox calibration coefficients
+    BLOB_WEIGHT_FACTOR=None,   # Weighting factor between large and small metrology blobs.
+    plot=True,                 # Not used
     **kwargs
 ):
     """Takes a dictionary. The keys of the dictionary are the idx, alpha_nom,
@@ -51,7 +62,6 @@ def evaluate_positional_verification(
     ImageAnalysisError, with a string member which describes the problem.
 
     """
-
     expected_points = {} # arm coordinates + index vs. expected Cartesian position
     measured_points = {} # arm coordinates + index vs. actual Cartesian position
     error_vectors = {} # arm coordinates + index vs. delta (expected - measured)
@@ -63,22 +73,67 @@ def evaluate_positional_verification(
     # FPU center has changesd so it needs to be rederived from the images taken
     # The first 8 images taken are explicitly for this purpose
     # This method is similar to Gearbox.gear_correction.fit_circle but has different inputs.
-    
-    
+    #
+    # FIXME: SMB 26-05-2020: This step rederives the location of the alpha axis but is does
+    # not redefine the camera offset, circle radii or beta0. If there is a dependency between
+    # turntable shift and rotation, all the calibration parameters need to be rederived.
+
     homeing_dict = {k[0]: blob_pair for k,blob_pair in dict_of_coords.items() if k[0] < 8}
     circle_points = []
     for idx in range(8):
         blob_pair = homeing_dict[idx]
         circle_points.append(cartesian_blob_position(blob_pair, weight_factor=BLOB_WEIGHT_FACTOR))
-    
+
     x_s, y_s = np.array(circle_points).T
-    
-    xc, yc, _, psi, stretch, _ = leastsq_circle(x_s, y_s)
-    
+    xc, yc, radius, psi, stretch, _ = leastsq_circle(x_s, y_s)
     P0 = np.array([xc, yc])
+    #P0 = np.array([x_center, y_center])
+    print("P0 = ", P0, " compared with (x_center,y_center) = ", x_center, y_center)
+    print("R = ", radius, " compared with R_alpha=", R_alpha, "R_beta_midpoint=", R_beta_midpoint)
 
+    # Extract the circle information from the first 8 points.
+    FIT_CAMERA_OFFSET = False
+    if FIT_CAMERA_OFFSET:
+        alpha_nom_rad_array = []
+        beta_nom_rad_array = []
+        for coords, blob_pair in dict_of_coords.items():
+            #print("-------------")
+            # get nominal coordinates for first 8 points
+            (idx, alpha_nom_deg, beta_nom_deg) = coords
+            if idx < 8:
+                #print("nominal: (alpha, beta) = ", (alpha_nom_deg, beta_nom_deg))
+                alpha_nom_rad, beta_nom_rad = np.deg2rad(alpha_nom_deg), np.deg2rad(beta_nom_deg)
+                alpha_nom_rad_array.append(alpha_nom_rad)
+                beta_nom_rad_array.append(beta_nom_rad)
+        alpha_nom_rad_array = np.asarray(alpha_nom_rad_array)
+        beta_nom_rad_array = np.asarray(beta_nom_rad_array)
 
-    print("P0 = ", P0)
+        circle_alpha = { 'x_s2': x_s,
+                         'y_s2': y_s,
+                         'xc': xc,
+                         'yc': yc,
+                         'psi': psi,
+                         'R': radius,
+                         'alpha_nominal_rad': alpha_nom_rad_array,
+                         'beta_nominal_rad' : beta_nom_rad_array
+                       }
+
+        # Find the best fit for the camera offset
+        print("circle_alpha=", circle_alpha)
+        camera_offset_new, beta0_new = fit_offsets(
+                               circle_alpha,
+                               circle_beta=None,
+                               P0=P0,
+                               R_alpha=R_alpha,                      # Calibrated radius of alpha circle
+                               R_beta_midpoint=R_beta_midpoint,      # Calibrated radius of beta circle
+                               camera_offset_start=camera_offset_rad,# Calibrated camera angle offset
+                               beta0_start=beta0_rad                 # Starting beta0
+                          )
+        print("New camera offset=", camera_offset_new, "compared with", camera_offset_rad)
+        print("New beta0=", beta0_new, "compared with", beta0_rad)
+    else:
+        camera_offset_new = camera_offset_rad
+
 
     for coords, blob_pair in dict_of_coords.items():
         print("-------------")
@@ -94,7 +149,7 @@ def evaluate_positional_verification(
             coeffs=None, # inactive because already corrected
             R_alpha=R_alpha,
             R_beta_midpoint=R_beta_midpoint,
-            camera_offset_rad=camera_offset_rad,
+            camera_offset_rad=camera_offset_new,
             beta0_rad=beta0_rad,
             broadcast=False,
         )
@@ -132,6 +187,26 @@ def evaluate_positional_verification(
 
         error_by_angle[coords] = error_vec_norm
 
+    if GRAPHICAL_DIAGNOSTICS:
+        expected_x =[]
+        expected_y = []
+        measured_x = []
+        measured_y = []
+        for key in measured_points.keys():
+           (mx, my) = measured_points[key]
+           (ex, ey) = expected_points[key]
+           expected_x.append(ex)
+           expected_y.append(ey)
+           measured_x.append(mx)
+           measured_y.append(my)
+        title = "evaluate_positional_verification: Measured (blue) and expected (red) points overlaid."
+        plotaxis = plotting.plot_xy( expected_x, expected_y, title=title,
+                          xlabel='X (mm)', ylabel='Y (mm)',
+                          linefmt='b.', linestyle=' ', equal_aspect=True, showplot=False )
+        plotting.plot_xy( measured_x, measured_y, title=None,
+                          xlabel=None, ylabel=None,
+                          linefmt='r.', linestyle=' ', equal_aspect=True,
+                          plotaxis=plotaxis, showplot=True )
 
     print("############ computing summary statistics")
     mean_error_vector = np.mean(error_vectors.values(), axis=0)
