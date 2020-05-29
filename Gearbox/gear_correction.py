@@ -581,6 +581,9 @@ def angle_to_point(
 
     # The expected location of the point is
     # alpha circle centre + vector to beta axis + vector to beta midpoint.
+    #print("P0=", P0)
+    #print("vec_alpha=", vec_alpha)
+    #print("vec_beta=", vec_beta)
     expected_point = P0 + vec_alpha + vec_beta
 
     return expected_point
@@ -1076,8 +1079,8 @@ def fit_gearbox_parameters(
 
 # ----------------------------------------------------------------------------
 def fit_offsets(
-    circle_alpha,		# Centroids of points on the alpha circle
-    circle_beta,		# Centroids of points on the beta circle
+    circle_alpha,		# Centroids of points on the alpha circle (hidden within a dictionary)
+    circle_beta,		# Centroids of points on the beta circle (hidden within a dictionary)
     P0=None,			# Location of the alpha axis, if known.
     R_alpha=None,		# Radius of the alpha circle, if known.
     R_beta_midpoint=None,	# Radius of the beta midpoint circle, if known
@@ -1104,14 +1107,26 @@ def fit_offsets(
     circle_points = []
     nominal_coordinates_rad = []
 
-    for c in circle_alpha, circle_beta:
-        for x_s2, y_s2 in zip(c["x_s2"], c["y_s2"]):
+    # Is is possible to fit the camera offset without any beta points.
+    if circle_beta is not None:
+        fitting_beta0 = True
+        for c in circle_alpha, circle_beta:
+            for x_s2, y_s2 in zip(c["x_s2"], c["y_s2"]):
+                circle_points.append((x_s2, y_s2))
+            for alpha_nom, beta_nom in zip(c["alpha_nominal_rad"], c["beta_nominal_rad"]):
+                nominal_coordinates_rad.append((alpha_nom, beta_nom))
+    else:
+        fitting_beta0 = False
+        for x_s2, y_s2 in zip(circle_alpha["x_s2"], circle_alpha["y_s2"]):
             circle_points.append((x_s2, y_s2))
-        for alpha_nom, beta_nom in zip(c["alpha_nominal_rad"], c["beta_nominal_rad"]):
+        for alpha_nom, beta_nom in zip(circle_alpha["alpha_nominal_rad"], circle_alpha["beta_nominal_rad"]):
             nominal_coordinates_rad.append((alpha_nom, beta_nom))
 
     circle_points = np.array(circle_points).T
     alpha_nom_rad, beta_nom_rad = np.array(nominal_coordinates_rad).T
+#    print("circle_points=", circle_points)
+#    print("alpha_nom_rad=", alpha_nom_rad)
+#    print("beta_nom_rad=", beta_nom_rad)
 
     # Diagnostic plot
     if GRAPHICAL_DIAGNOSTICS and PLOT_CAMERA_FIT:
@@ -1155,15 +1170,35 @@ def fit_offsets(
         # See https://docs.scipy.org/doc/numpy/reference/generated/numpy.linalg.norm.html
         return np.linalg.norm(points - circle_points, axis=0)
 
+    def h(offset):
+        # This function is used by the optimise.leastsq function.
+        points = angle_to_point(
+            alpha_nom_rad,
+            beta_nom_rad,
+            P0=P0,
+            R_alpha=R_alpha,
+            R_beta_midpoint=R_beta_midpoint,
+            camera_offset_rad=offset,
+            beta0_rad=beta0_start,
+        )
+        # See https://docs.scipy.org/doc/numpy/reference/generated/numpy.linalg.norm.html
+        return np.linalg.norm(points - circle_points, axis=0)
+
     # Coordinates of the barycenter
     # scipy.optimize.leastsq: See https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.leastsq.html
     # g: callable function
     # offsets_estimate: The starting estimate for the minimization
     # ftol: Relative error desired in the sum of squares
     # xtol: Relative error desired in the approximate solution.
-    offsets_estimate = np.array([camera_offset_start, beta0_start])
-    offsets, ier = optimize.leastsq(g, offsets_estimate, ftol=1.5e-10, xtol=1.5e-10)
-    camera_offset, beta0 = offsets
+    if fitting_beta0:
+        offsets_estimate = np.array([camera_offset_start, beta0_start])
+        offsets, ier = optimize.leastsq(g, offsets_estimate, ftol=1.5e-10, xtol=1.5e-10)
+        camera_offset, beta0 = offsets
+    else:
+        offset_estimate = camera_offset_start
+        offsets, ier = optimize.leastsq(h, offset_estimate, ftol=1.5e-10, xtol=1.5e-10)
+        camera_offset = offsets
+        beta0 = beta0_start
 
     # BUG FIX: SMB 13-Mar-2020: Wrap the offsets to the range +/- pi
     camera_offset = wrap_angle_radian(camera_offset)
@@ -1197,7 +1232,10 @@ def fit_offsets(
     print(
         "fit_offset: fitted camera offset = {} degree. beta0 = {} degree".format(np.rad2deg(camera_offset), np.rad2deg(beta0))
     )
-    print("fit_offset: mean norm from offset fitting = ", np.mean(g(offsets)))
+    if fitting_beta0:
+       print("fit_offset: mean norm from camera+beta0 offset fitting = ", np.mean(g(offsets)))
+    else:
+       print("fit_offset: mean norm from camera offset fitting = ", np.mean(h(camera_offset)))
 
     return camera_offset, beta0
 
