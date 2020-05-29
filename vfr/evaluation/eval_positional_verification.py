@@ -22,6 +22,16 @@ import warnings
 
 POS_VER_ALGORITHM_VERSION = (1, 0, 0)
 
+#
+# Modify these flags to control how the algorithm works.
+#
+# Fit a new camera offset as well as fitting a new alpha axis centre.
+# Set True to implement SMB change or False for old behaviour.
+FIT_CAMERA_OFFSET = False
+# Apply an elliptical distortion to the measured points.
+# Set False to implement the SMB change or True for old behaviour.
+APPLY_ELLIPTICAL_DISTORTION = False
+
 
 def evaluate_positional_verification(
     dict_of_coords,            # Dictionary of coordinates, as defined below.
@@ -91,9 +101,9 @@ def evaluate_positional_verification(
     print("P0 = ", P0, " compared with (x_center,y_center) = ", x_center, y_center)
     print("R = ", radius, " compared with R_alpha=", R_alpha, "R_beta_midpoint=", R_beta_midpoint)
 
-    # Extract the circle information from the first 8 points.
-    FIT_CAMERA_OFFSET = False
+    # Option to recalibrate the camera offset angle.
     if FIT_CAMERA_OFFSET:
+        # Extract the alpha circle information from the first 8 points.
         alpha_nom_rad_array = []
         beta_nom_rad_array = []
         for coords, blob_pair in dict_of_coords.items():
@@ -112,29 +122,34 @@ def evaluate_positional_verification(
                          'y_s2': y_s,
                          'xc': xc,
                          'yc': yc,
+                         'stretch': stretch,
                          'psi': psi,
                          'R': radius,
                          'alpha_nominal_rad': alpha_nom_rad_array,
                          'beta_nominal_rad' : beta_nom_rad_array
                        }
 
+        # Treat the remaining points as beta circle information (TBD)??
+
         # Find the best fit for the camera offset
         print("circle_alpha=", circle_alpha)
         camera_offset_new, beta0_new = fit_offsets(
-                               circle_alpha,
-                               circle_beta=None,
-                               P0=P0,
-                               R_alpha=R_alpha,                      # Calibrated radius of alpha circle
-                               R_beta_midpoint=R_beta_midpoint,      # Calibrated radius of beta circle
-                               camera_offset_start=camera_offset_rad,# Calibrated camera angle offset
-                               beta0_start=beta0_rad                 # Starting beta0
+                               circle_alpha,                         # Fit alpha circle only
+                               circle_beta=None,                     #
+                               P0=P0,                                # Use new alpha axis centre
+                               R_alpha=R_alpha,                      # Previous calibrated radius of alpha circle
+                               R_beta_midpoint=R_beta_midpoint,      # Previous calibrated radius of beta circle
+                               camera_offset_start=camera_offset_rad,# Start with previous camera angle offset
+                               beta0_start=beta0_rad                 # Fixed beta0
                           )
         print("New camera offset=", camera_offset_new, "compared with", camera_offset_rad)
-        print("New beta0=", beta0_new, "compared with", beta0_rad)
+        print("New beta0=", beta0_new, "(ignored) compared with", beta0_rad)
     else:
+        # No fit. The camera offset does not change.
         camera_offset_new = camera_offset_rad
 
 
+    # Now extract all the points from the disctionary.
     for coords, blob_pair in dict_of_coords.items():
         print("-------------")
         # get nominal coordinates
@@ -144,13 +159,13 @@ def evaluate_positional_verification(
         expected_pos = angle_to_point(
             alpha_nom_rad,
             beta_nom_rad,
-            P0=P0,
+            P0=P0,                               # Use the new alpha axis centre
             #coeffs=coeffs,
             coeffs=None, # inactive because already corrected
-            R_alpha=R_alpha,
-            R_beta_midpoint=R_beta_midpoint,
-            camera_offset_rad=camera_offset_new,
-            beta0_rad=beta0_rad,
+            R_alpha=R_alpha,                     # Use the previous calibrated alpha radius
+            R_beta_midpoint=R_beta_midpoint,     # Use the previous calibrated beta radius
+            camera_offset_rad=camera_offset_new, # Use the new camera offset
+            beta0_rad=beta0_rad,                 # Stick with the original beta0
             broadcast=False,
         )
 
@@ -172,7 +187,10 @@ def evaluate_positional_verification(
         # beta calibration measurements are just two subsets of that
         # sphere, but the verification measurement can select any
         # point on it.
-        xm, ym = elliptical_distortion(xmd, ymd, xc, yc, psi, stretch)
+        if APPLY_ELLIPTICAL_DISTORTION:
+           xm, ym = elliptical_distortion(xmd, ymd, xc, yc, psi, stretch)
+        else:
+           xm, ym = xmd, ymd
 
         measured_pos = np.array([xm, ym], dtype=float)
         measured_points[coords] = measured_pos
