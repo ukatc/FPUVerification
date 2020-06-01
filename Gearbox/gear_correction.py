@@ -1201,15 +1201,22 @@ def fit_offsets(
         offsets_estimate = np.array([camera_offset_start, beta0_start])
         offsets, ier = optimize.leastsq(g, offsets_estimate, ftol=1.5e-10, xtol=1.5e-10)
         camera_offset, beta0 = offsets
+        # BUG FIX: SMB 13-Mar-2020: Wrap the offsets to the range +/- pi
+        camera_offset = wrap_angle_radian(camera_offset)
+        beta0 = wrap_angle_radian(beta0)
     else:
         offset_estimate = camera_offset_start
         offsets, ier = optimize.leastsq(h, offset_estimate, ftol=1.5e-10, xtol=1.5e-10)
         camera_offset = offsets[0]
         beta0 = beta0_start
-
-    # BUG FIX: SMB 13-Mar-2020: Wrap the offsets to the range +/- pi
-    camera_offset = wrap_angle_radian(camera_offset)
-    beta0 = wrap_angle_radian(beta0)
+        # BUG FIX: SMB 13-Mar-2020: Wrap the offsets to the range +/- pi
+        camera_offset = wrap_angle_radian(camera_offset)
+        # Without including the beta points, the best-fitting camera rotation could be flipped by half
+        # a revolution. Flip the fit so it remains in the same half as the starting value.
+        if (camera_offset - camera_offset_start) > pi/2.0:
+            camera_offset =- pi
+        elif (camera_offset_start - camera_offset) > pi/2.0:
+            camera_offset += pi
 
     if GRAPHICAL_DIAGNOSTICS and PLOT_CAMERA_FIT:
         points = angle_to_point(

@@ -20,6 +20,7 @@ if GRAPHICAL_DIAGNOSTICS:
     except ImportError:
         GRAPHICAL_DIAGNOSTICS = False
 
+#from math import pi
 import numpy as np
 import warnings
 
@@ -177,12 +178,12 @@ def evaluate_positional_verification(
                                camera_offset_start=camera_offset_rad,# Start with previous camera angle offset
                                beta0_start=beta0_rad                 # Fixed beta0
                           )
-        print("New camera offset=", camera_offset_new, "compared with", camera_offset_rad, "(rad)")
-        print("New beta0=", beta0_new, "(ignored) compared with", beta0_rad, "(rad)")
+        print("New camera offset=", np.rad2deg(camera_offset_new), "compared with", np.rad2deg(camera_offset_rad), "(deg)")
+        print("New beta0=", np.rad2deg(beta0_new), "(ignored) compared with", np.rad2deg(beta0_rad), "(deg)")
     else:
         # No fit. The camera offset does not change.
         camera_offset_new = camera_offset_rad
-        print("Keeping camera offset=", camera_offset_rad, "(rad)")
+        print("Keeping camera offset=", np.rad2deg(camera_offset_rad), "(deg)")
 
     # Go back to the start
     expected_points = {} # arm coordinates + index vs. expected Cartesian position
@@ -193,7 +194,7 @@ def evaluate_positional_verification(
         print("-------------")
         # get nominal coordinates
         (idx, alpha_nom_deg, beta_nom_deg) = coords
-        print("idx:", idx, "nominal: (alpha, beta) = ", (alpha_nom_deg, beta_nom_deg), "(rad)")
+        print("idx:", idx, "nominal: (alpha, beta) = ", (alpha_nom_deg, beta_nom_deg), "(deg)")
         alpha_nom_rad, beta_nom_rad = np.deg2rad(alpha_nom_deg), np.deg2rad(beta_nom_deg)
         expected_pos = angle_to_point(
             alpha_nom_rad,
