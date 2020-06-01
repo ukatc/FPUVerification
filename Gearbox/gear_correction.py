@@ -482,6 +482,12 @@ def angle_to_point(
           Real coordinates are the actual, measured coordinates.
 
     """
+    # Extremely verbose diagnostic.
+    #print("angle_to_point: Called with alpha_nom_rad=", alpha_nom_rad,
+    #      "beta_nom_rad=", beta_nom_rad, "P0=", P0, "R_alpha=", R_alpha,
+    #      "R_beta_midpoint=", R_beta_midpoint, "camera_offset_rad=", camera_offset_rad,
+    #      "beta0_rad=", beta0_rad)
+
     if coeffs is None:
         # Extremely verbose diagnostic.
         #print("angle_to_point: NO gearbox coefficients. Gearbox correction skipped.")
@@ -559,6 +565,8 @@ def angle_to_point(
     # NOTE: The delta* variables contain the corrections extracted from
     # the gearbox calibration. They are zero when no correction is applied.
     gamma_rad = beta_rad + alpha_rad + (delta_alpha - delta_alpha_fixpoint)
+    # Extremely verbose diagnostic.
+    #print("alpha_rad=", alpha_rad, "beta_rad=", beta_rad, "gamma_rad=", gamma_rad)
 
     # Determine the location of the end of the alpha arm (=beta axis)
     # with respect to the alpha circle centre (P0)
@@ -581,10 +589,10 @@ def angle_to_point(
 
     # The expected location of the point is
     # alpha circle centre + vector to beta axis + vector to beta midpoint.
-    #print("P0=", P0)
-    #print("vec_alpha=", vec_alpha)
-    #print("vec_beta=", vec_beta)
     expected_point = P0 + vec_alpha + vec_beta
+    # Extremely verbose diagnostic.
+    #print("New P0=", P0, "vec_alpha=", vec_alpha, "vec_beta=", vec_beta)
+    #print("Returning expected_point=", expected_point)
 
     return expected_point
 
@@ -1130,11 +1138,6 @@ def fit_offsets(
 
     # Diagnostic plot
     if GRAPHICAL_DIAGNOSTICS and PLOT_CAMERA_FIT:
-        title = "fit_offsets: Measured circle points."
-        plotting.plot_xy( circle_points[0], circle_points[1], title=title,
-                          xlabel='X (mm)', ylabel='Y (mm)',
-                          linefmt='b.', linestyle=' ', equal_aspect=True )
-
         zpoints = angle_to_point(
             alpha_nom_rad,
             beta_nom_rad,
@@ -1144,10 +1147,14 @@ def fit_offsets(
             camera_offset_rad=camera_offset_start,
             beta0_rad=beta0_start
         )
-        title = "fit_offsets: Circle points predicted from starting offsets."
+        title = "fit_offsets: Measured circle points (blue) and starting (green) circle points overlaid."
+        plotaxis = plotting.plot_xy( circle_points[0], circle_points[1], title=title,
+                          xlabel='X (mm)', ylabel='Y (mm)',
+                          linefmt='b.', linestyle=' ', equal_aspect=True, showplot=False  )
         plotting.plot_xy( zpoints[0], zpoints[1], title=title,
                           xlabel='X (mm)', ylabel='Y (mm)',
-                          linefmt='g.', linestyle=' ', equal_aspect=True )
+                          linefmt='g.', linestyle=' ', equal_aspect=True,
+                          plotaxis=plotaxis, showplot=True )
 
     # << Fit offsets so that the difference between nominal (demanded) and
     # real (measured) points is minimal. >>
@@ -1197,7 +1204,7 @@ def fit_offsets(
     else:
         offset_estimate = camera_offset_start
         offsets, ier = optimize.leastsq(h, offset_estimate, ftol=1.5e-10, xtol=1.5e-10)
-        camera_offset = offsets
+        camera_offset = offsets[0]
         beta0 = beta0_start
 
     # BUG FIX: SMB 13-Mar-2020: Wrap the offsets to the range +/- pi
@@ -1214,11 +1221,10 @@ def fit_offsets(
             camera_offset_rad=camera_offset,
             beta0_rad=beta0
         )
-        title = "fit_offsets: Circle points predicted from best fitting offsets."
-        plotting.plot_xy( points[0], points[1], title=title,
-                          xlabel='X (mm)', ylabel='Y (mm)',
-                          linefmt='r.', linestyle=' ', equal_aspect=True )
-
+        #title = "fit_offsets: Circle points predicted from best fitting offsets."
+        #plotting.plot_xy( points[0], points[1], title=title,
+        #                  xlabel='X (mm)', ylabel='Y (mm)',
+        #                  linefmt='r.', linestyle=' ', equal_aspect=True )
         title = "fit_offsets: Measured (blue) and fitted (red) circle points overlaid."
         plotaxis = plotting.plot_xy( circle_points[0], circle_points[1], title=title,
                           xlabel='X (mm)', ylabel='Y (mm)',

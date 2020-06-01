@@ -10,6 +10,9 @@ from vfr.evaluation.measures import get_errors, get_measures, get_weighted_coord
 
 from vfr.conf import POS_REP_EVALUATION_PARS, GRAPHICAL_DIAGNOSTICS
 
+# FIXME: This constant should be a configuration parameter
+ALPHA_CIRCLE_POINTS_AT_START = 8
+
 # Plotting library used for diagnostics.
 if GRAPHICAL_DIAGNOSTICS:
     try:
@@ -25,12 +28,16 @@ POS_VER_ALGORITHM_VERSION = (1, 0, 0)
 #
 # Modify these flags to control how the algorithm works.
 #
-# Fit a new camera offset as well as fitting a new alpha axis centre.
+# Fit a alpha axis centre using the first ALPHA_CIRCLE_POINTS_AT_START points
+# to correct for turntable shift.
+# Set True to reproduce existing behaviour or False for experiment.
+FIT_ALPHA_CENTER = True               # Recommended setting True
+# Fit a new camera offset to correct for turntable rotation.
 # Set True to implement SMB change or False for old behaviour.
-FIT_CAMERA_OFFSET = False
-# Apply an elliptical distortion to the measured points.
+FIT_CAMERA_OFFSET = True              # Recommended setting True
+# Apply an elliptical distortion to the *measured* points!
 # Set False to implement the SMB change or True for old behaviour.
-APPLY_ELLIPTICAL_DISTORTION = False
+APPLY_ELLIPTICAL_DISTORTION = False   # Recommended setting False
 
 
 def evaluate_positional_verification(
@@ -81,45 +88,73 @@ def evaluate_positional_verification(
     # calibration
     #
     # FPU center has changesd so it needs to be rederived from the images taken
-    # The first 8 images taken are explicitly for this purpose
+    # The first ALPHA_CIRCLE_POINTS_AT_START images taken are explicitly for this purpose
     # This method is similar to Gearbox.gear_correction.fit_circle but has different inputs.
     #
     # FIXME: SMB 26-05-2020: This step rederives the location of the alpha axis but is does
     # not redefine the camera offset, circle radii or beta0. If there is a dependency between
     # turntable shift and rotation, all the calibration parameters need to be rederived.
 
-    homeing_dict = {k[0]: blob_pair for k,blob_pair in dict_of_coords.items() if k[0] < 8}
-    circle_points = []
-    for idx in range(8):
-        blob_pair = homeing_dict[idx]
-        circle_points.append(cartesian_blob_position(blob_pair, weight_factor=BLOB_WEIGHT_FACTOR))
+    if FIT_ALPHA_CENTER:
+        homeing_dict = {k[0]: blob_pair for k,blob_pair in dict_of_coords.items() if k[0] < ALPHA_CIRCLE_POINTS_AT_START}
+        circle_points = []
+        for idx in range(ALPHA_CIRCLE_POINTS_AT_START):
+            blob_pair = homeing_dict[idx]
+            circle_points.append(cartesian_blob_position(blob_pair, weight_factor=BLOB_WEIGHT_FACTOR))
 
-    x_s, y_s = np.array(circle_points).T
-    xc, yc, radius, psi, stretch, _ = leastsq_circle(x_s, y_s)
-    P0 = np.array([xc, yc])
-    #P0 = np.array([x_center, y_center])
-    print("P0 = ", P0, " compared with (x_center,y_center) = ", x_center, y_center)
-    print("R = ", radius, " compared with R_alpha=", R_alpha, "R_beta_midpoint=", R_beta_midpoint)
+        x_s, y_s = np.array(circle_points).T
+        xc, yc, radius, psi, stretch, _ = leastsq_circle(x_s, y_s)
+        P0 = np.array([xc, yc])
+        print("P0 = ", P0, " compared with (x_center,y_center) = ", (x_center, y_center), "(mm)")
+        print("R = ", radius, " compared with R_alpha=", R_alpha, "R_beta_midpoint=", R_beta_midpoint, "(mm)")
+
+        if GRAPHICAL_DIAGNOSTICS:
+            acx = []
+            acy = []
+            for cp in circle_points:
+                acx.append( cp[0] )
+                acy.append( cp[1] )
+            title = "evaluate_positional_verification: Alpha circle points for centre fitting."
+            plotaxis = plotting.plot_xy( acx, acy, title=title,
+                          xlabel='X (mm)', ylabel='Y (mm)',
+                          linefmt='b.', linestyle=' ', equal_aspect=True, showplot=False )
+            cen_x = [x_center, xc]
+            cen_y = [y_center, yc]
+            plotting.plot_xy( cen_x, cen_y, title=None,
+                          xlabel=None, ylabel=None,
+                          linefmt='r+', linestyle=' ', equal_aspect=True,
+                          plotaxis=plotaxis, showplot=True )
+    else:
+        xc, yc = x_center, y_center
+        P0 = np.array([x_center, y_center])
+        radius = R_alpha
+        psi = 0.0
+        stretch = 1.0
+        print("P0 = (x_center,y_center) = ", (x_center, y_center), "(mm)")
 
     # Option to recalibrate the camera offset angle.
     if FIT_CAMERA_OFFSET:
-        # Extract the alpha circle information from the first 8 points.
+        # Extract the alpha circle information from the first ALPHA_CIRCLE_POINTS_AT_START points.
+        new_circle_points = []
         alpha_nom_rad_array = []
         beta_nom_rad_array = []
         for coords, blob_pair in dict_of_coords.items():
             #print("-------------")
-            # get nominal coordinates for first 8 points
+            # get nominal coordinates for first ALPHA_CIRCLE_POINTS_AT_START points
             (idx, alpha_nom_deg, beta_nom_deg) = coords
-            if idx < 8:
-                #print("nominal: (alpha, beta) = ", (alpha_nom_deg, beta_nom_deg))
+            if idx < ALPHA_CIRCLE_POINTS_AT_START:
+                new_circle_points.append(cartesian_blob_position(blob_pair, weight_factor=BLOB_WEIGHT_FACTOR))
+                #print("idx:", idx, "nominal: (alpha, beta) = ", (alpha_nom_deg, beta_nom_deg), "(deg)")
                 alpha_nom_rad, beta_nom_rad = np.deg2rad(alpha_nom_deg), np.deg2rad(beta_nom_deg)
                 alpha_nom_rad_array.append(alpha_nom_rad)
                 beta_nom_rad_array.append(beta_nom_rad)
+        new_x_s, new_y_s = np.array(new_circle_points).T
+
         alpha_nom_rad_array = np.asarray(alpha_nom_rad_array)
         beta_nom_rad_array = np.asarray(beta_nom_rad_array)
 
-        circle_alpha = { 'x_s2': x_s,
-                         'y_s2': y_s,
+        circle_alpha = { 'x_s2': new_x_s,
+                         'y_s2': new_y_s,
                          'xc': xc,
                          'yc': yc,
                          'stretch': stretch,
@@ -129,10 +164,10 @@ def evaluate_positional_verification(
                          'beta_nominal_rad' : beta_nom_rad_array
                        }
 
-        # Treat the remaining points as beta circle information (TBD)??
+        # TODO: Treat the remaining points as beta circle information (TBD)??
 
         # Find the best fit for the camera offset
-        print("circle_alpha=", circle_alpha)
+        #print("circle_alpha=", circle_alpha)
         camera_offset_new, beta0_new = fit_offsets(
                                circle_alpha,                         # Fit alpha circle only
                                circle_beta=None,                     #
@@ -142,26 +177,30 @@ def evaluate_positional_verification(
                                camera_offset_start=camera_offset_rad,# Start with previous camera angle offset
                                beta0_start=beta0_rad                 # Fixed beta0
                           )
-        print("New camera offset=", camera_offset_new, "compared with", camera_offset_rad)
-        print("New beta0=", beta0_new, "(ignored) compared with", beta0_rad)
+        print("New camera offset=", camera_offset_new, "compared with", camera_offset_rad, "(rad)")
+        print("New beta0=", beta0_new, "(ignored) compared with", beta0_rad, "(rad)")
     else:
         # No fit. The camera offset does not change.
         camera_offset_new = camera_offset_rad
+        print("Keeping camera offset=", camera_offset_rad, "(rad)")
 
+    # Go back to the start
+    expected_points = {} # arm coordinates + index vs. expected Cartesian position
+    measured_points = {} # arm coordinates + index vs. actual Cartesian position
 
-    # Now extract all the points from the disctionary.
+    # Now extract all the points from the dictionary.
     for coords, blob_pair in dict_of_coords.items():
         print("-------------")
         # get nominal coordinates
         (idx, alpha_nom_deg, beta_nom_deg) = coords
-        print("nominal: (alpha, beta) = ", (alpha_nom_deg, beta_nom_deg))
+        print("idx:", idx, "nominal: (alpha, beta) = ", (alpha_nom_deg, beta_nom_deg), "(rad)")
         alpha_nom_rad, beta_nom_rad = np.deg2rad(alpha_nom_deg), np.deg2rad(beta_nom_deg)
         expected_pos = angle_to_point(
             alpha_nom_rad,
             beta_nom_rad,
             P0=P0,                               # Use the new alpha axis centre
             #coeffs=coeffs,
-            coeffs=None, # inactive because already corrected
+            coeffs=None,                         # inactive because already corrected
             R_alpha=R_alpha,                     # Use the previous calibrated alpha radius
             R_beta_midpoint=R_beta_midpoint,     # Use the previous calibrated beta radius
             camera_offset_rad=camera_offset_new, # Use the new camera offset
@@ -170,10 +209,10 @@ def evaluate_positional_verification(
         )
 
         expected_points[coords] = expected_pos
-
         print("expected_pos = ", expected_pos)
-        # convert blob pair image coordinates to
-        # Cartesian coordinates of mid point
+
+        # Convert blob pair image coordinates to
+        # Cartesian coordinates of mid point.
         #
         # Attention: This function flips the y axis, as in the gearbox calibration
         xmd, ymd = cartesian_blob_position(blob_pair, weight_factor=BLOB_WEIGHT_FACTOR)
@@ -200,9 +239,7 @@ def evaluate_positional_verification(
         error_vec = measured_pos - expected_pos
         error_vectors[coords] = error_vec
         error_vec_norm = np.linalg.norm(measured_pos - expected_pos)
-
-        print("error = ", error_vec, "magnitude = ", error_vec_norm)
-
+        print("error = %s, magnitude = %.5f (mm) = %.1f (um)" % (str(error_vec), error_vec_norm, 1000 * error_vec_norm ))
         error_by_angle[coords] = error_vec_norm
 
     if GRAPHICAL_DIAGNOSTICS:
@@ -211,8 +248,10 @@ def evaluate_positional_verification(
         measured_x = []
         measured_y = []
         for key in measured_points.keys():
+           #print("Looking up measured and expected points for", key)
            (mx, my) = measured_points[key]
            (ex, ey) = expected_points[key]
+           #print("   measured=", (mx, my), "expected=", (ex, ey))
            expected_x.append(ex)
            expected_y.append(ey)
            measured_x.append(mx)
