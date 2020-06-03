@@ -49,7 +49,7 @@ def get_correction_func(calibration_pars=None, platescale=1.0, loglevel=0):
     elif calibration_pars["algorithm"] == "al/201904/multistage":
         # Use Alexander Lay's multi-stage distortion correction.
         level = camera_calibration.Correction.lens_keystone_and_real_coordinates
-        config = camera_calibration.Config.from_dict(calibration_pars["config"])
+        config = camera_calibration.Config.load(calibration_pars["calibration_config_file"])
         x_0, y_0 = camera_calibration.correct_point((0.0, 0.0), config, level)
 
         def f(x, y):
