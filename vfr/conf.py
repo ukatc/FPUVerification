@@ -286,22 +286,7 @@ POS_REP_PLATESCALE = 0.0235  # millimeter per pixel
 # If available, it is replaced by the distortion-correcting
 # calibration which the map file points to.
 
-
-# Old simple calibration
-#POS_REP_CALIBRATION_PARS = {"algorithm": "scale", "scale_factor": POS_REP_PLATESCALE}
-#Updated Alex lay calibration
-POS_REP_CALIBRATION_PARS = {
-    'algorithm' : "al/201904/multistage",
-    'calibration_config_file' : "calibration/cal_al_201904_multistage.npz",
-    'dot_grid_image_path' : "calibration/images/distcor_04_cleaned.bmp",
-    'chessboard_image_path' : "calibration/images/002h.bmp",
-    'chess_grid_rows' : 6,
-    'chess_grid_cols' : 8,
-    'dot_grid_rows' : 116,
-    'dot_grid_cols' : 170,
-    'dot_spacing' : 0.5,
-}
-
+POS_REP_CALIBRATION_PARS = {"algorithm": "scale", "scale_factor": POS_REP_PLATESCALE}
 
 POS_REP_TARGET_DETECTION_OTSU_PARS = Namespace(
     CALIBRATION_PARS=POS_REP_CALIBRATION_PARS,
