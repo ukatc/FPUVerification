@@ -272,4 +272,4 @@ def evaluate_positional_verification(
     error_measures = get_measures(error_by_angle.values())
     print("pos ver error_measures=%r" % error_measures)
 
-    return error_by_angle, expected_points, measured_points, error_measures, mean_error_vector
+    return error_by_angle, expected_points, measured_points, error_measures, mean_error_vector, camera_offset_new, xc, yc

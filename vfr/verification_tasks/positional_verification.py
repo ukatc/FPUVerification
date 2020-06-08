@@ -441,7 +441,7 @@ def eval_positional_verification(dbe, pos_rep_analysis_pars, pos_ver_evaluation_
                         continue
 
             (posver_error_by_angle, expected_points, measured_points,
-             posver_error_measures, mean_error_vector) = evaluate_positional_verification(
+             posver_error_measures, mean_error_vector, camera_offset_new, xc, yc) = evaluate_positional_verification(
                  analysis_results, pars=pos_ver_evaluation_pars,
                  **gearbox_correction )
 
@@ -494,6 +494,9 @@ def eval_positional_verification(dbe, pos_rep_analysis_pars, pos_ver_evaluation_
             error_message=errmsg,
             algorithm_version=GEARBOX_CORRECTION_VERSION,
             evaluation_version=POS_VER_ALGORITHM_VERSION,
+            camera_offset=camera_offset_new,
+            x_center=xc,
+            y_center=yc,
         )
         logger.debug("FPU %r: saving result record = %r" % (sn, record))
         save_positional_verification_result(dbe, fpu_id, record)
