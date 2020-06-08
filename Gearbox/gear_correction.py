@@ -978,8 +978,8 @@ def fit_gearbox_parameters(
     # Diagnostic plot
     if GRAPHICAL_DIAGNOSTICS and PLOT_GEARBOX_FIT:
         title = "fit_gearbox_parameters() for %s: Correction vs demanded angle." % motor_axis
-        plotting.plot_xy(nominal_angle_rad, corrected_angle_rad-nominal_angle_rad, title=title,
-                          xlabel='nominal_angle_rad (radians)', ylabel='corrected_angle_rad-nominal_angle_rad (radians)',
+        plotting.plot_xy(np.rad2deg(nominal_angle_rad), np.rad2deg(corrected_angle_rad-nominal_angle_rad), title=title,
+                          xlabel='nominal_angle_rad (degrees)', ylabel='corrected_angle_rad-nominal_angle_rad (degrees)',
                           linefmt='gx', linestyle='-' )
 
     # Pad table support points with values for the ends of the range.
@@ -1002,8 +1002,8 @@ def fit_gearbox_parameters(
     # Diagnostic plot
     if GRAPHICAL_DIAGNOSTICS and PLOT_GEARBOX_FIT:
         title = "fit_gearbox_parameters() for %s: Padded correction vs demanded angle." % motor_axis
-        plotting.plot_xy(nominal_angle_rad, corrected_angle_rad-nominal_angle_rad, title=title,
-                          xlabel='nominal_angle_rad (radians)', ylabel='corrected_angle_rad-nominal_angle_rad (radians)',
+        plotting.plot_xy(np.rad2deg(nominal_angle_rad), np.rad2deg(corrected_angle_rad-nominal_angle_rad), title=title,
+                          xlabel='nominal_angle_rad (degrees)', ylabel='corrected_angle_rad-nominal_angle_rad (degrees)',
                           linefmt='gx', linestyle='-' )
 
     # Display selected points from the LUT (verbose debugging mode).
