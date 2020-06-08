@@ -2,7 +2,9 @@
 """Module to evaluate positional verification.
 
 """
-from __future__ import division, print_function
+from __future__ import division, 
+
+import logging
 
 from Gearbox.gear_correction import angle_to_point, cartesian_blob_position, \
                                     elliptical_distortion, leastsq_circle, fit_offsets
@@ -80,6 +82,9 @@ def evaluate_positional_verification(
     ImageAnalysisError, with a string member which describes the problem.
 
     """
+    
+    logger = logging.getLogger(__name__)
+    
     expected_points = {} # arm coordinates + index vs. expected Cartesian position
     measured_points = {} # arm coordinates + index vs. actual Cartesian position
     error_vectors = {} # arm coordinates + index vs. delta (expected - measured)
@@ -97,6 +102,7 @@ def evaluate_positional_verification(
     # turntable shift and rotation, all the calibration parameters need to be rederived.
 
     if FIT_ALPHA_CENTER:
+        logger.info("Fitting new Alpha center")
         homeing_dict = {k[0]: blob_pair for k,blob_pair in dict_of_coords.items() if k[0] < ALPHA_CIRCLE_POINTS_AT_START}
         circle_points = []
         for idx in range(ALPHA_CIRCLE_POINTS_AT_START):
@@ -106,8 +112,8 @@ def evaluate_positional_verification(
         x_s, y_s = np.array(circle_points).T
         xc, yc, radius, psi, stretch, _ = leastsq_circle(x_s, y_s)
         P0 = np.array([xc, yc])
-        print("P0 = ", P0, " compared with (x_center,y_center) = ", (x_center, y_center), "(mm)")
-        print("R = ", radius, " compared with R_alpha=", R_alpha, "R_beta_midpoint=", R_beta_midpoint, "(mm)")
+        logger.log("P0 = ", P0, " compared with (x_center,y_center) = ", (x_center, y_center), "(mm)")
+        logger.log("R = ", radius, " compared with R_alpha=", R_alpha, "R_beta_midpoint=", R_beta_midpoint, "(mm)")
 
         if GRAPHICAL_DIAGNOSTICS:
             acx = []
@@ -126,12 +132,13 @@ def evaluate_positional_verification(
                           linefmt='r+', linestyle=' ', equal_aspect=True,
                           plotaxis=plotaxis, showplot=True )
     else:
+        logger.log("Not fitting new Alpha center")
         xc, yc = x_center, y_center
         P0 = np.array([x_center, y_center])
         radius = R_alpha
         psi = 0.0
         stretch = 1.0
-        print("P0 = (x_center,y_center) = ", (x_center, y_center), "(mm)")
+        logger.info("P0 = (x_center,y_center) = ", (x_center, y_center), "(mm)")
 
     # Option to recalibrate the camera offset angle.
     if FIT_CAMERA_OFFSET:
@@ -178,12 +185,12 @@ def evaluate_positional_verification(
                                camera_offset_start=camera_offset_rad,# Start with previous camera angle offset
                                beta0_start=beta0_rad                 # Fixed beta0
                           )
-        print("New camera offset=", np.rad2deg(camera_offset_new), "compared with", np.rad2deg(camera_offset_rad), "(deg)")
-        print("New beta0=", np.rad2deg(beta0_new), "(ignored) compared with", np.rad2deg(beta0_rad), "(deg)")
+        logger.info("New camera offset=", np.rad2deg(camera_offset_new), "compared with", np.rad2deg(camera_offset_rad), "(deg)")
+        logger.info("New beta0=", np.rad2deg(beta0_new), "(ignored) compared with", np.rad2deg(beta0_rad), "(deg)")
     else:
         # No fit. The camera offset does not change.
         camera_offset_new = camera_offset_rad
-        print("Keeping camera offset=", np.rad2deg(camera_offset_rad), "(deg)")
+        logger.info("Keeping camera offset=", np.rad2deg(camera_offset_rad), "(deg)")
 
     # Go back to the start
     expected_points = {} # arm coordinates + index vs. expected Cartesian position
@@ -191,10 +198,9 @@ def evaluate_positional_verification(
 
     # Now extract all the points from the dictionary.
     for coords, blob_pair in dict_of_coords.items():
-        print("-------------")
         # get nominal coordinates
         (idx, alpha_nom_deg, beta_nom_deg) = coords
-        print("idx:", idx, "nominal: (alpha, beta) = ", (alpha_nom_deg, beta_nom_deg), "(deg)")
+        logger.debug("idx:", idx, "nominal: (alpha, beta) = ", (alpha_nom_deg, beta_nom_deg), "(deg)")
         alpha_nom_rad, beta_nom_rad = np.deg2rad(alpha_nom_deg), np.deg2rad(beta_nom_deg)
         expected_pos = angle_to_point(
             alpha_nom_rad,
@@ -210,7 +216,7 @@ def evaluate_positional_verification(
         )
 
         expected_points[coords] = expected_pos
-        print("expected_pos = ", expected_pos)
+        logger.debug("expected_pos = ", expected_pos)
 
         # Convert blob pair image coordinates to
         # Cartesian coordinates of mid point.
@@ -236,11 +242,11 @@ def evaluate_positional_verification(
         measured_points[coords] = measured_pos
         #measured_pos -= np.array([ 5.09616146, -3.28669922])
 
-        print("measured_pos = ", measured_pos)
+        logger.debug("measured_pos = ", measured_pos)
         error_vec = measured_pos - expected_pos
         error_vectors[coords] = error_vec
         error_vec_norm = np.linalg.norm(measured_pos - expected_pos)
-        print("error = %s, magnitude = %.5f (mm) = %.1f (um)" % (str(error_vec), error_vec_norm, 1000 * error_vec_norm ))
+        logger.debug("error = %s, magnitude = %.5f (mm) = %.1f (um)" % (str(error_vec), error_vec_norm, 1000 * error_vec_norm ))
         error_by_angle[coords] = error_vec_norm
 
     if GRAPHICAL_DIAGNOSTICS:
@@ -266,10 +272,9 @@ def evaluate_positional_verification(
                           linefmt='r.', linestyle=' ', equal_aspect=True,
                           plotaxis=plotaxis, showplot=True )
 
-    print("############ computing summary statistics")
     mean_error_vector = np.mean(error_vectors.values(), axis=0)
-    print("mean error vector =", mean_error_vector)
+    logger.log("mean error vector =", mean_error_vector)
     error_measures = get_measures(error_by_angle.values())
-    print("pos ver error_measures=%r" % error_measures)
+    logger.log("pos ver error_measures=%r" % error_measures)
 
     return error_by_angle, expected_points, measured_points, error_measures, mean_error_vector, camera_offset_new, xc, yc
