@@ -2,7 +2,7 @@
 """Module to evaluate positional verification.
 
 """
-from __future__ import division, 
+from __future__ import division, print_function
 
 import logging
 
@@ -112,8 +112,8 @@ def evaluate_positional_verification(
         x_s, y_s = np.array(circle_points).T
         xc, yc, radius, psi, stretch, _ = leastsq_circle(x_s, y_s)
         P0 = np.array([xc, yc])
-        logger.log("P0 = ", P0, " compared with (x_center,y_center) = ", (x_center, y_center), "(mm)")
-        logger.log("R = ", radius, " compared with R_alpha=", R_alpha, "R_beta_midpoint=", R_beta_midpoint, "(mm)")
+        logger.info("P0 = {} compared with (x_center,y_center) = {},{} (mm)".format(P0,x_center,y_center))
+        logger.info("R = {} compared with R_alpha={} R_beta_midpoint={} (mm)".format(radius, R_alpha,R_beta_midpoint))
 
         if GRAPHICAL_DIAGNOSTICS:
             acx = []
@@ -132,13 +132,13 @@ def evaluate_positional_verification(
                           linefmt='r+', linestyle=' ', equal_aspect=True,
                           plotaxis=plotaxis, showplot=True )
     else:
-        logger.log("Not fitting new Alpha center")
+        logger.info("Not fitting new Alpha center")
         xc, yc = x_center, y_center
         P0 = np.array([x_center, y_center])
         radius = R_alpha
         psi = 0.0
         stretch = 1.0
-        logger.info("P0 = (x_center,y_center) = ", (x_center, y_center), "(mm)")
+        logger.info("P0 = (x_center,y_center) = {}, {} (mm)".format(x_center,y_center))
 
     # Option to recalibrate the camera offset angle.
     if FIT_CAMERA_OFFSET:
@@ -185,12 +185,12 @@ def evaluate_positional_verification(
                                camera_offset_start=camera_offset_rad,# Start with previous camera angle offset
                                beta0_start=beta0_rad                 # Fixed beta0
                           )
-        logger.info("New camera offset=", np.rad2deg(camera_offset_new), "compared with", np.rad2deg(camera_offset_rad), "(deg)")
-        logger.info("New beta0=", np.rad2deg(beta0_new), "(ignored) compared with", np.rad2deg(beta0_rad), "(deg)")
+        logger.info("New camera offset= {} compared with {} (deg)".format(np.rad2deg(camera_offset_new),np.rad2deg(camera_offset_rad)))
+        logger.info("New beta0= {} (ignored) compared with {} (deg)".format(np.rad2deg(beta0_new), np.rad2deg(beta0_rad)))
     else:
         # No fit. The camera offset does not change.
         camera_offset_new = camera_offset_rad
-        logger.info("Keeping camera offset=", np.rad2deg(camera_offset_rad), "(deg)")
+        logger.info("Keeping camera offset= {} (deg)".format(np.rad2deg(camera_offset_rad)))
 
     # Go back to the start
     expected_points = {} # arm coordinates + index vs. expected Cartesian position
@@ -200,7 +200,7 @@ def evaluate_positional_verification(
     for coords, blob_pair in dict_of_coords.items():
         # get nominal coordinates
         (idx, alpha_nom_deg, beta_nom_deg) = coords
-        logger.debug("idx:", idx, "nominal: (alpha, beta) = ", (alpha_nom_deg, beta_nom_deg), "(deg)")
+        logger.debug("idx: {} nominal: (alpha, beta) = {},{} (deg)".format(idx, alpha_nom_deg, beta_nom_deg))
         alpha_nom_rad, beta_nom_rad = np.deg2rad(alpha_nom_deg), np.deg2rad(beta_nom_deg)
         expected_pos = angle_to_point(
             alpha_nom_rad,
@@ -216,7 +216,7 @@ def evaluate_positional_verification(
         )
 
         expected_points[coords] = expected_pos
-        logger.debug("expected_pos = ", expected_pos)
+        logger.debug("expected_pos = {}".format( expected_pos))
 
         # Convert blob pair image coordinates to
         # Cartesian coordinates of mid point.
@@ -242,7 +242,7 @@ def evaluate_positional_verification(
         measured_points[coords] = measured_pos
         #measured_pos -= np.array([ 5.09616146, -3.28669922])
 
-        logger.debug("measured_pos = ", measured_pos)
+        logger.debug("measured_pos = {}".format(measured_pos))
         error_vec = measured_pos - expected_pos
         error_vectors[coords] = error_vec
         error_vec_norm = np.linalg.norm(measured_pos - expected_pos)
@@ -273,8 +273,8 @@ def evaluate_positional_verification(
                           plotaxis=plotaxis, showplot=True )
 
     mean_error_vector = np.mean(error_vectors.values(), axis=0)
-    logger.log("mean error vector =", mean_error_vector)
+    logger.info("mean error vector = {}".format( mean_error_vector))
     error_measures = get_measures(error_by_angle.values())
-    logger.log("pos ver error_measures=%r" % error_measures)
+    logger.info("pos ver error_measures= {}".format( error_measures))
 
     return error_by_angle, expected_points, measured_points, error_measures, mean_error_vector, camera_offset_new, xc, yc

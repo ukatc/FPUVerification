@@ -495,8 +495,8 @@ def eval_positional_verification(dbe, pos_rep_analysis_pars, pos_ver_evaluation_
             algorithm_version=GEARBOX_CORRECTION_VERSION,
             evaluation_version=POS_VER_ALGORITHM_VERSION,
             camera_offset=camera_offset_new,
-            x_center=xc,
-            y_center=yc,
+            center_x=xc,
+            center_y=yc,
         )
         logger.debug("FPU %r: saving result record = %r" % (sn, record))
         save_positional_verification_result(dbe, fpu_id, record)
