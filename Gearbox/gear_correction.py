@@ -810,7 +810,7 @@ def fit_gearbox_parameters(
     # Straight line fit. See https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.linregress.html
     (slope, intercept, rvalue, pvalue, stderror) = stats.linregress( phi_fitted_rad, phi_real_rad )
     logger.debug(
-        "Straight line fit for phi_fitted_rad vs phi_real_rad: slope={}, intercept={}, rvalue={}, pvalue=%f, stderror={}.".format(
+        "Straight line fit for phi_fitted_rad vs phi_real_rad: slope={}, intercept={}, rvalue={}, pvalue={}, stderror={}.".format(
             slope, intercept, rvalue, pvalue, stderror)
     )
 
