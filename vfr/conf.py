@@ -90,11 +90,13 @@ DATUM_REP_MEASUREMENT_PARS = Namespace(
     DATUM_REP_POSITIONS=METROLOGY_CAL_POSITIONS,
 )
 
-
+#
+# NOTE: The following parameters define a default plate scale which
+# is only used if a camera calibration file is not found.
+#
 DAT_REP_PLATESCALE = (
     0.00693
 )  # millimeter per pixel, for the metrology calibration camera
-
 
 DAT_REP_CALIBRATION_PARS = {"algorithm": "scale", "scale_factor": DAT_REP_PLATESCALE}
 
@@ -163,6 +165,10 @@ MET_CAL_MEASUREMENT_PARS = Namespace(
     METROLOGY_CAL_LINPOSITIONS=LINPOSITIONS,  # linear stage positions
 )
 
+#
+# NOTE: The following parameters define a default plate scale which
+# is only used if a camera calibration file is not found.
+#
 MET_CAL_PLATESCALE = 0.00668  # millimeter per pixel
 MET_CAL_CALIBRATION_PARS = {"algorithm": "scale", "scale_factor": MET_CAL_PLATESCALE}
 
@@ -277,6 +283,10 @@ POS_REP_EVALUATION_PARS = Namespace(
     # applied, the order of the fit.
 )
 
+#
+# NOTE: The following parameters define a default plate scale which
+# is only used if a camera calibration file is not found.
+#
 # FIXME: The alpha arm radius is averaging at 7.765mm which suggests the platescale should be 0.0242
 POS_REP_PLATESCALE = 0.0235  # millimeter per pixel
 #POS_REP_PLATESCALE = 0.0242  # millimeter per pixel
@@ -355,8 +365,11 @@ PUP_ALGN_MEASUREMENT_PARS = Namespace(
     PUP_ALGN_CALIBRATION_MAPFILE="calibration/mapping/pup-aln-2019-04-10.cfg",
 )
 
+#
+# NOTE: The following parameters define a default plate scale which
+# is only used if a camera calibration file is not found.
+#
 PUP_ALGN_PLATESCALE = 0.76
-
 PUP_ALGN_CALIBRATION_PARS = {"algorithm": "scale", "scale_factor": PUP_ALGN_PLATESCALE}
 
 
