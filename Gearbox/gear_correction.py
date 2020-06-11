@@ -25,6 +25,7 @@ import math
 from math import pi
 import numpy as np
 import logging
+logger = logging.getLogger(__name__)
 
 from scipy import optimize
 from scipy import stats
@@ -342,6 +343,7 @@ def fit_circle(analysis_results, motor_axis):
           Real coordinates are the actual, measured coordinates.
 
     """
+    global logger
     # Get list of points to which circle is fitted. Note that extract_points
     # combines the coordinates of the large and the small metrology blobs into a
     # midpoint coordinate, so that the measurement is represented by a single point.
@@ -352,14 +354,13 @@ def fit_circle(analysis_results, motor_axis):
     x_s, y_s = np.array(circle_points).T
     alpha_nominal_rad, beta_nominal_rad = np.array(nominal_coordinates_rad).T
 
-    # TODO: logger.debug?
-    print(
+    logger.debug(
         "axis {}: Nominal alpha ranges from {} radians ({} deg) to {} radians ({} deg).".format(
             motor_axis, np.min(alpha_nominal_rad), np.rad2deg(np.min(alpha_nominal_rad)),
             np.max(alpha_nominal_rad), np.rad2deg(np.max(alpha_nominal_rad))
         )
     )
-    print(
+    logger.debug(
         "axis {}: Nominal beta ranges from {} radians ({} deg) to {} radians ({} deg).".format(
             motor_axis, np.min(beta_nominal_rad), np.rad2deg(np.min(beta_nominal_rad)),
             np.max(beta_nominal_rad), np.rad2deg(np.max(beta_nominal_rad))
@@ -372,8 +373,7 @@ def fit_circle(analysis_results, motor_axis):
     # Wrap the ellipse orientation to the range +/- pi.
     psi = wrap_angle_radian( psi )
 
-    # TODO: logger.debug?
-    print(
+    logger.debug(
         "axis {}: fitted elliptical params: psi = {} degrees, stretch = {}".format(
             motor_axis, np.rad2deg(psi), stretch
         )
@@ -405,9 +405,8 @@ def fit_circle(analysis_results, motor_axis):
     # BUG FIX: SMB 04-Mar-2020: Changed from mean to median. Angle wrapping can lead to a bi-modal distribution.
     # np.mean results in an estimate in between the two modes, whereas np.median chooses one of them.
     offset_estimate = np.median(phi_real_rad - phi_nominal_rad)
-    # TODO: logger.debug?
-    print(
-        "fit_circle: axis {}: initial camera offset estimate = {} degrees".format(
+    logger.debug(
+        "axis {}: initial camera offset estimate = {} degrees".format(
             motor_axis, np.rad2deg(offset_estimate)
         )
     )
@@ -620,8 +619,11 @@ def get_angle_error(
     and the difference between nominal and real polar coordinates is computed.
 
     """
-    # TODO: logger.debug?
-    print("get_angle_error: center (x,y) = ({},{}) millimeter. P0 = ({},{}) millimeter".format(xc, yc, P0[0], P0[1]))
+    global logger
+    logger.trace(
+        "get_angle_error: center (x,y) = ({},{}) millimeter. P0 = ({},{}) millimeter".format(
+            xc, yc, P0[0], P0[1])
+    )
 
     # << Get place vectors of measured points. >>
     # This computes the place vectors of the measured points relative
@@ -730,6 +732,7 @@ def fit_gearbox_parameters(
     Fit the gearbox parameters.
 
     """
+    global logger
     # << Retrieve constants from the circle fit data. >>
     x_s = circle_data["x_s"]
     y_s = circle_data["y_s"]
@@ -755,21 +758,21 @@ def fit_gearbox_parameters(
         alpha_fixpoint_rad = np.mean(alpha_nominal_rad)
         beta_fixpoint_rad = np.NaN
         datum_point = BETA_DATUM_OFFSET_RAD
-        # TODO: logger.debug?
-        print("fit_gearbox_parameters: alpha fixpoint = {} rad = {} degree".format(alpha_fixpoint_rad, np.rad2deg(alpha_fixpoint_rad)))
+        logger.debug("alpha fixpoint = {} rad = {} degree".format(
+            alpha_fixpoint_rad, np.rad2deg(alpha_fixpoint_rad))
+        )
     else:
         alpha_fixpoint_rad = np.NaN
         # Common angle for alpha measurements
         beta_fixpoint_rad = np.mean(beta_nominal_rad)
         datum_point = ALPHA_DATUM_OFFSET_RAD
-        # TODO: logger.debug?
-        print("fit_gearbox_parameters: beta fixpoint = {} rad = {} degree".format(beta_fixpoint_rad, np.rad2deg(beta_fixpoint_rad)))
+        logger.debug("beta fixpoint = {} rad = {} degree".format(
+            beta_fixpoint_rad, np.rad2deg(beta_fixpoint_rad))
+        )
+
     _, R_real = cartesian2polar(x_s2 - xc, y_s2 - yc)
 
-    # TODO: logger.debug?
-    print(
-        "\nfit_gearbox_parameters(): finding angular error for {} arm.".format(motor_axis)
-    )
+    logger.trace( "finding angular error for {} arm.".format(motor_axis) )
 
     # << Get angular error between nominal and measured angles. >>
     # get_angle_error returns the deviation between measured (real) and nominal
@@ -800,26 +803,28 @@ def fit_gearbox_parameters(
         camera_offset_rad=camera_offset_rad,
         beta0_rad=beta0_rad,
     )
-    #print("fit_gearbox_parameters(): get_angle_error returns phi_real_rad=", phi_real_rad,
+    #print("fit_gearbox_parameters: get_angle_error returns phi_real_rad=", phi_real_rad,
     #      "phi_fitted_rad=", phi_fitted_rad,
     #      "err_phi_1_rad=", err_phi_1_rad)
 
     # Straight line fit. See https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.linregress.html
     (slope, intercept, rvalue, pvalue, stderror) = stats.linregress( phi_fitted_rad, phi_real_rad )
-    print("Straight line fit for phi_fitted_rad vs phi_real_rad: slope=%f, intercept=%f, rvalue=%f, pvalue=%f, stderror=%f." % \
-        (slope, intercept, rvalue, pvalue, stderror) )
+    logger.debug(
+        "Straight line fit for phi_fitted_rad vs phi_real_rad: slope={}, intercept={}, rvalue={}, pvalue=%f, stderror={}.".format(
+            slope, intercept, rvalue, pvalue, stderror)
+    )
 
     # Diagnostic plot
     if GRAPHICAL_DIAGNOSTICS and PLOT_GEARBOX_FIT:
-        title = "fit_gearbox_parameters() for %s: Actual vs demanded angle." % motor_axis
+        title = "fit_gearbox_parameters for %s: Actual vs demanded angle." % motor_axis
         plotting.plot_xy(phi_fitted_rad, phi_real_rad, title=title,
                           xlabel='phi_fitted_rad (radians)', ylabel='phi_real_rad (radians)',
                           linefmt='b.', linestyle=' ' )
-        #title = "fit_gearbox_parameters() for %s: Difference between actual and demanded angle." % motor_axis
+        #title = "fit_gearbox_parameters for %s: Difference between actual and demanded angle." % motor_axis
         #plotting.plot_xy(phi_fitted_rad, phi_real_rad-phi_fitted_rad, title=title,
         #                  xlabel='phi_fitted_rad (radians)', ylabel='phi_real_rad-phi_fitted_rad (radians)',
         #                  linefmt='b.', linestyle=' ' )
-        title = "fit_gearbox_parameters() for %s: Error between actual and demanded angle (err_phi_1_rad)." % motor_axis
+        title = "fit_gearbox_parameters for %s: Error between actual and demanded angle (err_phi_1_rad)." % motor_axis
         plotting.plot_xy( phi_fitted_rad, err_phi_1_rad, title=title,
                           xlabel='phi_fitted_rad (radians)', ylabel='err_phi_1_rad (radians)',
                           linefmt='m.', linestyle=' ' )
@@ -858,7 +863,7 @@ def fit_gearbox_parameters(
 
     # Diagnostic plot
     #if GRAPHICAL_DIAGNOSTICS:
-    #    title = "fit_gearbox_parameters() for %s: Sorted support indices ???." % motor_axis
+    #    title = "fit_gearbox_parameters for %s: Sorted support indices ???." % motor_axis
     #    plotting.plot_xy( None, phi_fit_support_rad, title=title,
     #                      xlabel='Index', ylabel='phi_fit_support_rad (radians)',
     #                      linefmt='b.', linestyle=' ' )
@@ -894,7 +899,9 @@ def fit_gearbox_parameters(
 
     # Now calculate the mean correction across the measurement range. This should also be close to zero.
     mean_error = np.mean(phi_corr_support_rad)
-    print("-> %s mean error = %f" % (motor_axis, mean_error))
+    logger.info(
+         "{} mean correction across whole range = {} radians".format(motor_axis, mean_error)
+    )
 
     # Now calculate the rms of the correction across the measurement range. This should also be close to zero.
     # TODO: It would be more efficient to do this calculation using numpy functions.
@@ -914,7 +921,7 @@ def fit_gearbox_parameters(
     if nneg > 0:
         rms_neg = math.sqrt(rms_neg / float(nneg))
     rms_error = rms_pos - rms_neg
-    print("-> %s rms error = %f" % (motor_axis, rms_error))
+    logger.info("{} rms correction across whole range = {} radians".format(motor_axis, rms_error))
 
     # For the error, an additional computational step is needed to
     # compute a normalized error angle. The function ensures the
@@ -930,15 +937,20 @@ def fit_gearbox_parameters(
     phi_fitted_correction_rad = phi_fitted_rad + np.interp(
         phi_fitted_rad, phi_fit_support_rad, phi_corr_support_rad, period=2 * pi
     )
-    print("phi_fitted_correction_rad (calib) ranges from", np.min(phi_fitted_correction_rad), "to", np.max(phi_fitted_correction_rad))
+    logger.debug(
+        "phi_fitted_correction_rad (calib) ranges from {} to {}.".format(
+            np.min(phi_fitted_correction_rad), np.max(phi_fitted_correction_rad))
+    )
 
     ## Combine first and second order fit, to get an invertible function
     corrected_shifted_angle_rad = np.array(phi_corr_support_rad) + phi_fit_support_rad - rms_error
-    print("corrected_shifted_angle_rad (corr+fit) ranges from", np.min(corrected_shifted_angle_rad), "to", np.max(corrected_shifted_angle_rad))
+    logger.debug(
+        "corrected_shifted_angle_rad (corr+fit) ranges from {} to {}".format(
+           np.min(corrected_shifted_angle_rad), np.max(corrected_shifted_angle_rad))
+    )
 
-    # TODO: logger.debug?
-    print(
-        "fit_gearbox_parameters(): beta0_rad = {} rad = {} degree".format(
+    logger.debug(
+        "beta0_rad = {} rad = {} degree".format(
             beta0_rad, np.rad2deg(beta0_rad)
         )
     )
@@ -966,8 +978,7 @@ def fit_gearbox_parameters(
         nominal_angle_rad = phi_fit_support_rad
         corrected_angle_rad = corrected_shifted_angle_rad
 
-    # TODO: logger.debug?
-    print(
+    logger.debug(
         "for axis {}: mean(corrected - nominal) = {} degrees".format(
             motor_axis, np.rad2deg(np.mean(corrected_angle_rad - nominal_angle_rad))
         )
@@ -977,7 +988,7 @@ def fit_gearbox_parameters(
 
     # Diagnostic plot
     if GRAPHICAL_DIAGNOSTICS and PLOT_GEARBOX_FIT:
-        title = "fit_gearbox_parameters() for %s: Correction vs demanded angle." % motor_axis
+        title = "fit_gearbox_parameters for %s: Correction vs demanded angle." % motor_axis
         plotting.plot_xy(np.rad2deg(nominal_angle_rad), np.rad2deg(corrected_angle_rad-nominal_angle_rad), title=title,
                           xlabel='nominal_angle_rad (degrees)', ylabel='corrected_angle_rad-nominal_angle_rad (degrees)',
                           linefmt='gx', linestyle='-' )
@@ -1001,7 +1012,7 @@ def fit_gearbox_parameters(
 
     # Diagnostic plot
     if GRAPHICAL_DIAGNOSTICS and PLOT_GEARBOX_FIT:
-        title = "fit_gearbox_parameters() for %s: Padded correction vs demanded angle." % motor_axis
+        title = "fit_gearbox_parameters for %s: Padded correction vs demanded angle." % motor_axis
         plotting.plot_xy(np.rad2deg(nominal_angle_rad), np.rad2deg(corrected_angle_rad-nominal_angle_rad), title=title,
                           xlabel='nominal_angle_rad (degrees)', ylabel='corrected_angle_rad-nominal_angle_rad (degrees)',
                           linefmt='gx', linestyle='-' )
@@ -1241,14 +1252,16 @@ def fit_offsets(
                           linefmt='r.', linestyle=' ', equal_aspect=True,
                           plotaxis=plotaxis, showplot=True )
 
-    # TODO: logger.debug?
-    print(
-        "fit_offset: fitted camera offset = {} degree. beta0 = {} degree".format(np.rad2deg(camera_offset), np.rad2deg(beta0))
+    logger.info(
+        "fitted camera offset = {} degree. beta0 = {} degree".format(
+            np.rad2deg(camera_offset), np.rad2deg(beta0))
     )
     if fitting_beta0:
-       print("fit_offset: mean norm from camera+beta0 offset fitting = ", np.mean(g(offsets)))
+       logger.info("mean norm from camera+beta0 offset fitting = {}".format(
+           np.mean(g(offsets))))
     else:
-       print("fit_offset: mean norm from camera offset fitting = ", np.mean(h(camera_offset)))
+       logger.info("mean norm from camera offset fitting = {}".format(
+           np.mean(h(camera_offset))))
 
     return camera_offset, beta0
 
@@ -1279,8 +1292,9 @@ def get_expected_points(
     Used by plot_expected_vs_measured_points.
 
     """
-    logger = logging.getLogger(__name__)
-    logger.info("get_expected_points: Computing gearbox calibration error")
+    #logger = logging.getLogger(__name__)
+    global logger
+    logger.trace("get_expected_points: Computing gearbox calibration error")
 
     expected_vals = {}
 
@@ -1290,7 +1304,7 @@ def get_expected_points(
         (coeffs["coeffs_beta"], "beta"),
     ]:
         logger.info(
-            "FPU {}: evaluating correction for {} motor axis".format(fpu_id, motor_axis)
+            "FPU {}: evaluating gearbox correction for {} motor axis".format(fpu_id, motor_axis)
         )
         xc = lcoeffs["xc"]
         yc = lcoeffs["yc"]
@@ -1446,7 +1460,8 @@ def fit_gearbox_correction(
     giving the Cartesian coordinates of the large and small metrology targets in mm.
 
     """
-    logger = logging.getLogger(__name__)
+    #logger = logging.getLogger(__name__)
+    global logger
     logger.info("Fitting gearbox correction for FPU %s." % str(fpu_id))
 
     #print("dict_of_coordinates_alpha:")
@@ -1492,12 +1507,14 @@ def fit_gearbox_correction(
     beta0_start = circle_beta["offset_estimate"] - pi
 
     r2d = np.rad2deg
-    # TODO: logger.debug?
-    print(
-        "camera_offset_start =", camera_offset_start,
-        "radian = {} degree".format(r2d(camera_offset_start)),
+    logger.debug(
+        "camera_offset_start = {} radian = {} degree".format(
+            camera_offset_start, r2d(camera_offset_start))
     )
-    print("beta0_start =", beta0_start, "radian = {} degree".format(r2d(beta0_start)))
+    logger.debug(
+        "beta0_start = radian = {} degree".format(
+            beta0_start, r2d(beta0_start))
+    )
 
     camera_offset_rad, beta0_rad = fit_offsets(
         circle_alpha,
@@ -1541,17 +1558,18 @@ def fit_gearbox_correction(
             "coeffs": {"coeffs_alpha": coeffs_alpha, "coeffs_beta": coeffs_beta},
         }
 
-    # TODO: logger.debug?
-    print(
-        "camera_offset_rad =", camera_offset_rad,
-        "= {} degree".format(r2d(camera_offset_rad)),
+    logger.info(
+        "camera_offset_rad = {} = {} degree".format(
+            camera_offset_rad, r2d(camera_offset_rad))
     )
-    print("beta0_rad =", beta0_rad, "= {} degree".format(r2d(beta0_rad)))
+    logger.info(
+        "beta0_rad = {} = {} degree".format(beta0_rad, r2d(beta0_rad))
+    )
 
     # Construct the nested coeffs dictionary
     coeffs = {"coeffs_alpha": coeffs_alpha, "coeffs_beta": coeffs_beta}
-    logger.debug("coeffs_alpha: %s" % str(coeffs_alpha))
-    logger.debug("coeffs_beta: %s" % str(coeffs_beta))
+    logger.trace("coeffs_alpha: %s" % str(coeffs_alpha))
+    logger.trace("coeffs_beta: %s" % str(coeffs_beta))
 
     P0 = np.array([x_center, y_center])
 
@@ -1773,13 +1791,13 @@ def apply_gearbox_correction(incoords_rad, coeffs=None):
     # Note that the coeffs dictionaries will appear to apply_gearbox_parameters
     # as extra function parameters.
     if  POS_REP_EVALUATION_PARS.APPLY_GEARBOX_CORRECTION_ALPHA:
-        print("apply_gearbox_correction: Correcting alpha")
+        logger.debug("apply_gearbox_correction: Correcting alpha")
         alpha_corrected_rad = apply_gearbox_parameters(alpha_angle_rad, **coeffs_alpha)
     else:
         alpha_corrected_rad = alpha_angle_rad
 
     if  POS_REP_EVALUATION_PARS.APPLY_GEARBOX_CORRECTION_BETA:
-        print("apply_gearbox_correction: Correcting beta")
+        logger.debug("apply_gearbox_correction: Correcting beta")
         beta_corrected_rad = apply_gearbox_parameters(beta_angle_rad, **coeffs_beta)
     else:
         beta_corrected_rad = beta_angle_rad

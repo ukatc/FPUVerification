@@ -571,10 +571,10 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
             arg_max_alpha_error, _ = arg_max_dict(posrep_alpha_max_at_angle)
             arg_max_beta_error, _ = arg_max_dict(posrep_beta_max_at_angle)
 
-            logger.debug("Alpha coordinates: %s" % str(alpha_coords))
+            logger.trace("Alpha coordinates: %s" % str(alpha_coords))
             logger.debug("Min quality alpha: %s" % str(min_quality_alpha))
             logger.debug("Max alpha error: %s" % str(arg_max_alpha_error))
-            logger.debug("Beta coordinates: %s" % str(beta_coords))
+            logger.trace("Beta coordinates: %s" % str(beta_coords))
             logger.debug("Min quality beta: %s" % str(min_quality_beta))
             logger.debug("Max beta error: %s" % str(arg_max_beta_error))
 
@@ -659,10 +659,10 @@ def eval_gearbox_calibration(dbe, pos_rep_analysis_pars, pos_rep_evaluation_pars
             #arg_max_alpha_error, _ = arg_max_dict(posrep_alpha_max_at_angle)
             #arg_max_beta_error, _ = arg_max_dict(posrep_beta_max_at_angle)
 
-            logger.debug("Alpha coordinates: %s" % str(alpha_coords))
+            logger.trace("Alpha coordinates: %s" % str(alpha_coords))
             logger.debug("Min quality alpha: %s" % str(min_quality_alpha))
             #logger.debug("Max alpha error: %s" % str(arg_max_alpha_error))
-            logger.debug("Beta coordinates: %s" % str(beta_coords))
+            logger.trace("Beta coordinates: %s" % str(beta_coords))
             logger.debug("Min quality beta: %s" % str(min_quality_beta))
             #logger.debug("Max beta error: %s" % str(arg_max_beta_error))
 
