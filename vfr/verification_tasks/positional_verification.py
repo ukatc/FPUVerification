@@ -108,6 +108,15 @@ def read_tested_positions(filename):
     return read_positions
 
 
+def read_tested_positions_abs(abs_filename):
+    """Read a list of positions from the exact file given
+    """
+    with open(abs_filename,'r') as position_file:
+        read_positions = [tuple(map(float, line.split(','))) for line in position_file]
+    
+    return read_positions
+
+
 def measure_positional_verification(rig, dbe, pars=None):
 
     # home turntable
@@ -352,7 +361,7 @@ def measure_positional_verification(rig, dbe, pars=None):
                 calibration_mapfile=pars.POS_VER_CALIBRATION_MAPFILE,
             )
 
-            fpu_log.debug("FPU %r: saving result record = %r" % (sn, record))
+            fpu_log.trace("FPU %r: saving result record = %r" % (sn, record))
             save_positional_verification_images(dbe, fpu_id, record)
 
     logger.info("positional verification captured sucessfully")
@@ -498,5 +507,5 @@ def eval_positional_verification(dbe, pos_rep_analysis_pars, pos_ver_evaluation_
             center_x=xc,
             center_y=yc,
         )
-        logger.debug("FPU %r: saving result record = %r" % (sn, record))
+        logger.trace("FPU %r: saving result record = %r" % (sn, record))
         save_positional_verification_result(dbe, fpu_id, record)
