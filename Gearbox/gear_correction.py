@@ -457,6 +457,7 @@ def angle_to_point(
     broadcast=True,          # Adjust the P0 vector to broadcast onto all points?
     correct_axis=["alpha", "beta"],    # Which axes to apply gearbox correction to.
     correct_fixpoint=True,   # Apply gearbox correction to fixpoint angle as well as demanded angles?
+    verbose=False            # Display debugging info (can be extremely verbose)
 ):
     """
 
@@ -488,39 +489,47 @@ def angle_to_point(
     #      "beta0_rad=", beta0_rad)
 
     if coeffs is None:
-        # Extremely verbose diagnostic.
-        #print("angle_to_point: NO gearbox coefficients. Gearbox correction skipped.")
         delta_alpha = 0.0
         delta_beta = 0.0
         delta_alpha_fixpoint = 0.0
         delta_beta_fixpoint = 0.0
     else:
-        # Extremely verbose diagnostic.
-        #if inverse:
-        #    print("angle_to_point: INVERSE gearbox correction applied.")
-        #else:
-        #    print("angle_to_point: NORMAL gearbox correction applied.")
+        if inverse:
+            invstr = "Inverse"
+        else:
+            invstr = "Normal"
 
         if "alpha" in correct_axis:
 
             # Here the gearbox distortion function (the inverse of the correction
             # function) is applied to alpha.
-            #print("angle_to_point: Applying inverse of correction to alpha")
             delta_alpha = -alpha_nom_rad + apply_gearbox_parameters(
                 alpha_nom_rad,
                 wrap=True,
                 inverse_transform=inverse,
                 **coeffs["coeffs_alpha"] # Pass the alpha coeffs dictionary
             )
+            if verbose:
+                logger.debug(
+                    "{} correction applied to alpha={} to make delta_alpha={} (deg)".format(
+                        invstr, np.rad2deg(alpha_nom_rad), np.rad2deg(delta_alpha))
+                ) 
 
-            #print("angle_to_point: Applying inverse of correction to alpha fixpoint")
-            alpha_fixpoint_rad = coeffs["coeffs_beta"]["alpha_fixpoint_rad"]
-            delta_alpha_fixpoint = -alpha_fixpoint_rad + apply_gearbox_parameters(
-                alpha_fixpoint_rad,
-                wrap=True,
-                inverse_transform=inverse,
-                **coeffs["coeffs_alpha"] # Pass the alpha coeffs dictionary
-            )
+            if correct_fixpoint:
+                alpha_fixpoint_rad = coeffs["coeffs_beta"]["alpha_fixpoint_rad"]
+                delta_alpha_fixpoint = -alpha_fixpoint_rad + apply_gearbox_parameters(
+                    alpha_fixpoint_rad,
+                    wrap=True,
+                    inverse_transform=inverse,
+                    **coeffs["coeffs_alpha"] # Pass the alpha coeffs dictionary
+                )
+                if verbose:
+                    logger.debug(
+                        "{} correction applied to alpha_fixpoint={} to make delta_alpha_fixpoint={} (deg)".format(
+                            invstr, np.rad2deg(alpha_fixpoint_rad), np.rad2deg(delta_alpha_fixpoint))
+                    ) 
+            else:
+                delta_alpha_fixpoint = 0
         else:
             delta_alpha = 0
             delta_alpha_fixpoint = 0
@@ -528,28 +537,35 @@ def angle_to_point(
         if "beta" in correct_axis:
             # Here the gearbox distortion function (the inverse of the correction
             # function) is applied to beta.
-            #print("angle_to_point: Applying inverse of correction to beta")
             delta_beta = -beta_nom_rad + apply_gearbox_parameters(
                 beta_nom_rad,
                 wrap=True,
                 inverse_transform=inverse,
                 **coeffs["coeffs_beta"] # Pass the beta coeffs dictionary
             )
+            if verbose:
+                logger.debug(
+                    "{} correction applied to beta={} to make delta_beta={} (deg)".format(
+                        invstr, np.rad2deg(beta_nom_rad), np.rad2deg(delta_beta))
+                ) 
 
-            #print("angle_to_point: Applying inverse of correction to beta fixpoint")
-            beta_fixpoint_rad = coeffs["coeffs_alpha"]["beta_fixpoint_rad"]
-            delta_beta_fixpoint = -beta_fixpoint_rad + apply_gearbox_parameters(
-                beta_fixpoint_rad,
-                wrap=True,
-                inverse_transform=inverse,
-                **coeffs["coeffs_alpha"] # Pass the beta coeffs dictionary
-            )
+            if correct_fixpoint:
+                beta_fixpoint_rad = coeffs["coeffs_alpha"]["beta_fixpoint_rad"]
+                delta_beta_fixpoint = -beta_fixpoint_rad + apply_gearbox_parameters(
+                    beta_fixpoint_rad,
+                    wrap=True,
+                    inverse_transform=inverse,
+                    **coeffs["coeffs_beta"] # Pass the beta coeffs dictionary
+                )
+                if verbose:
+                    logger.debug(
+                        "{} correction applied to beta_fixpoint={} to make delta_beta_fixpoint={} (deg)".format(
+                            invstr, np.rad2deg(beta_fixpoint_rad), np.rad2deg(delta_beta_fixpoint))
+                    )
+            else:
+                delta_beta_fixpoint = 0
         else:
             delta_beta = 0
-            delta_beta_fixpoint = 0
-
-        if not correct_fixpoint:
-            delta_alpha_fixpoint = 0
             delta_beta_fixpoint = 0
 
     # Rotate (possibly corrected) angles to camera orientation,
@@ -1321,7 +1337,10 @@ def get_expected_points(
             **coeffs["coeffs_alpha"]  # Pass on the alpha coeffs dictionary (treated as function parameters)
         )
         beta_nom_corrected_rad = apply_gearbox_parameters(
-            beta_nominal_rad, wrap=True, inverse_transform=True, **coeffs["coeffs_beta"]
+            beta_nominal_rad,
+            wrap=True,
+            inverse_transform=True,
+            **coeffs["coeffs_beta"] # Pass on the beta coeffs dictionary (treated as function parameters)
         )
 
         logger.info(
@@ -1801,6 +1820,10 @@ def apply_gearbox_correction(incoords_rad, coeffs=None):
         beta_corrected_rad = apply_gearbox_parameters(beta_angle_rad, **coeffs_beta)
     else:
         beta_corrected_rad = beta_angle_rad
+
+    logger.debug("(alpha, beta) corrected from ({}, {}) to ({},{}) radians.".format(
+        alpha_angle_rad, beta_angle_rad, alpha_corrected_rad, beta_corrected_rad)
+        )
 
     # Transform from nominal (uncalibrated) angle to steps
     alpha_steps = int(

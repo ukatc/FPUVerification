@@ -193,6 +193,7 @@ def evaluate_positional_verification(
         logger.info("Keeping camera offset= {} (deg)".format(np.rad2deg(camera_offset_rad)))
 
     # Go back to the start
+    uncalibrated_points = {} # arm coordinates + index vs. uncalibrated Cartesian position
     expected_points = {} # arm coordinates + index vs. expected Cartesian position
     measured_points = {} # arm coordinates + index vs. actual Cartesian position
 
@@ -213,10 +214,28 @@ def evaluate_positional_verification(
             camera_offset_rad=camera_offset_new, # Use the new camera offset
             beta0_rad=beta0_rad,                 # Stick with the original beta0
             broadcast=False,
+            verbose=True
+        )
+        # Apply the inverse of the gearbox correction to determine where the uncalibrated points
+        # would be.
+        uncalibrated_pos = angle_to_point(
+            alpha_nom_rad,
+            beta_nom_rad,
+            P0=P0,                               # Use the new alpha axis centre
+            coeffs=coeffs,
+            inverse=True,                        # Apply inverse transform
+            R_alpha=R_alpha,                     # Use the previous calibrated alpha radius
+            R_beta_midpoint=R_beta_midpoint,     # Use the previous calibrated beta radius
+            camera_offset_rad=camera_offset_new, # Use the new camera offset
+            beta0_rad=beta0_rad,                 # Stick with the original beta0
+            broadcast=False,
+            verbose=True
         )
 
+        uncalibrated_points[coords] = uncalibrated_pos
         expected_points[coords] = expected_pos
-        logger.debug("expected_pos = {}".format( expected_pos))
+        logger.debug("uncalibrated_pos = {}".format( uncalibrated_pos ))
+        logger.debug("expected_pos = {}".format( expected_pos ))
 
         # Convert blob pair image coordinates to
         # Cartesian coordinates of mid point.
@@ -240,33 +259,65 @@ def evaluate_positional_verification(
 
         measured_pos = np.array([xm, ym], dtype=float)
         measured_points[coords] = measured_pos
-        #measured_pos -= np.array([ 5.09616146, -3.28669922])
 
         logger.debug("measured_pos = {}".format(measured_pos))
         error_vec = measured_pos - expected_pos
         error_vectors[coords] = error_vec
         error_vec_norm = np.linalg.norm(measured_pos - expected_pos)
-        logger.debug("error = %s, magnitude = %.5f (mm) = %.1f (um)" % (str(error_vec), error_vec_norm, 1000 * error_vec_norm ))
+        error_vec_norm_um = 1000 * error_vec_norm
+
+        if ( error_vec_norm_um > 100.0 ):
+           errlabel = "!!"
+        elif ( error_vec_norm_um > 50.0 ):
+           errlabel = "**"
+        else:
+           errlabel = ""
+        logger.debug("error = %s, magnitude = %.5f (mm) = %.1f (um) %s" % \
+            ( str(error_vec), error_vec_norm, error_vec_norm_um, errlabel ))
         error_by_angle[coords] = error_vec_norm
 
     if GRAPHICAL_DIAGNOSTICS:
+        EXAGGERATION = 20.0
+        uncalibrated_x =[]
+        uncalibrated_y = []
         expected_x =[]
         expected_y = []
         measured_x = []
         measured_y = []
+        vectors_x = []
+        vectors_y = []
         for key in measured_points.keys():
-           #print("Looking up measured and expected points for", key)
-           (mx, my) = measured_points[key]
+           #print("Looking up expected and measured points for", key)
+           (ux, uy) = uncalibrated_points[key]
            (ex, ey) = expected_points[key]
+           (mx, my) = measured_points[key]
+           if EXAGGERATION > 1.0:
+              ux = ex + (ux-ex) * EXAGGERATION
+              uy = ey + (uy-ey) * EXAGGERATION
+              mx = ex + (mx-ex) * EXAGGERATION
+              my = ey + (my-ey) * EXAGGERATION
            #print("   measured=", (mx, my), "expected=", (ex, ey))
+           uncalibrated_x.append(ux)
+           uncalibrated_y.append(uy)
            expected_x.append(ex)
            expected_y.append(ey)
            measured_x.append(mx)
            measured_y.append(my)
-        title = "evaluate_positional_verification: Measured (blue) and expected (red) points overlaid."
+           vectors_x.append( [ux, ex, mx] )
+           vectors_y.append( [uy, ey, my] )
+        title = "evaluate_positional_verification: Measured (blue), expected (red) and uncalibrated (green) points overlaid."
+        if EXAGGERATION > 1.0:
+            title += "\nErrors exaggerated by a factor of %f." % EXAGGERATION
         plotaxis = plotting.plot_xy( expected_x, expected_y, title=title,
                           xlabel='X (mm)', ylabel='Y (mm)',
-                          linefmt='b.', linestyle=' ', equal_aspect=True, showplot=False )
+                          linefmt='b.', linestyle='', equal_aspect=True, showplot=False )
+        for vec_x, vec_y in zip(vectors_x, vectors_y):
+            plotaxis = plotting.plot_xy( vec_x, vec_y,
+                              linefmt='k', linestyle='-', equal_aspect=True, showplot=False )
+        plotaxis = plotting.plot_xy( uncalibrated_x, uncalibrated_y, title=None,
+                          xlabel=None, ylabel=None,
+                          linefmt='g.', linestyle=' ', equal_aspect=True,
+                          plotaxis=plotaxis, showplot=False )
         plotting.plot_xy( measured_x, measured_y, title=None,
                           xlabel=None, ylabel=None,
                           linefmt='r.', linestyle=' ', equal_aspect=True,
