@@ -1439,6 +1439,14 @@ def format_report_csv(
             ].items():
                 yield "%i,%f,%f,%s" % (k, alpha, beta, ipath)
             yield EMPTY_LINE
+            
+            if positional_verification_images["datum_results"]:
+                yield "pos ver datum results"
+                yield "x, y, image"
+                for datum_image in zip(positional_verification_images["datum_results"], positional_verification_result["datum_images"]):
+                    yield "%f,%f,s" % datum_image
+            else:
+                yield "no pos ver datum data"
 
     if pupil_alignment_result is None:
         yield rfmt_pup_aln.PUP_ALN_NA_CSV
