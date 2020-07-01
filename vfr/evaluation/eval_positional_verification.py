@@ -15,6 +15,9 @@ from vfr.conf import POS_REP_EVALUATION_PARS, GRAPHICAL_DIAGNOSTICS
 # FIXME: This constant should be a configuration parameter
 ALPHA_CIRCLE_POINTS_AT_START = 8
 
+# FIXME: The location of the uncalibrated points seems to make no sense.
+SHOW_UNCALIBRATED_POINTS = False
+
 # Plotting library used for diagnostics.
 if GRAPHICAL_DIAGNOSTICS:
     try:
@@ -97,9 +100,9 @@ def evaluate_positional_verification(
     # The first ALPHA_CIRCLE_POINTS_AT_START images taken are explicitly for this purpose
     # This method is similar to Gearbox.gear_correction.fit_circle but has different inputs.
     #
-    # FIXME: SMB 26-05-2020: This step rederives the location of the alpha axis but is does
-    # not redefine the camera offset, circle radii or beta0. If there is a dependency between
-    # turntable shift and rotation, all the calibration parameters need to be rederived.
+    # NOTE: SMB 26-05-2020: This step rederives the location of the alpha axis and camera offset
+    # angle but is does not redefine the circle radii or beta0. It is assumed the latter
+    # parameters are properties of the fibre positioners and will not change.
 
     if FIT_ALPHA_CENTER:
         logger.info("Fitting new Alpha center")
@@ -172,7 +175,8 @@ def evaluate_positional_verification(
                          'beta_nominal_rad' : beta_nom_rad_array
                        }
 
-        # TODO: Treat the remaining points as beta circle information (TBD)??
+        # NOTE: If the remaining points are used to make a "circle_beta" data structure and all
+        # the points used to derive a new beta0 angle, the results get worse.
 
         # Find the best fit for the camera offset
         #print("circle_alpha=", circle_alpha)
@@ -216,25 +220,28 @@ def evaluate_positional_verification(
             broadcast=False,
             verbose=True
         )
-        # Apply the inverse of the gearbox correction to determine where the uncalibrated points
-        # would be.
-        uncalibrated_pos = angle_to_point(
-            alpha_nom_rad,
-            beta_nom_rad,
-            P0=P0,                               # Use the new alpha axis centre
-            coeffs=coeffs,
-            inverse=True,                        # Apply inverse transform
-            R_alpha=R_alpha,                     # Use the previous calibrated alpha radius
-            R_beta_midpoint=R_beta_midpoint,     # Use the previous calibrated beta radius
-            camera_offset_rad=camera_offset_new, # Use the new camera offset
-            beta0_rad=beta0_rad,                 # Stick with the original beta0
-            broadcast=False,
-            verbose=True
-        )
+        if SHOW_UNCALIBRATED_POINTS:
+            # Apply the gearbox correction to determine where the uncalibrated points
+            # would be.
+            uncalibrated_pos = angle_to_point(
+                alpha_nom_rad,
+                beta_nom_rad,
+                P0=P0,                               # Use the new alpha axis centre
+                coeffs=coeffs,
+                inverse=False,                       # Apply forwards transform
+                #inverse=True,                        # Apply inverse transform
+                R_alpha=R_alpha,                     # Use the previous calibrated alpha radius
+                R_beta_midpoint=R_beta_midpoint,     # Use the previous calibrated beta radius
+                camera_offset_rad=camera_offset_new, # Use the new camera offset
+                beta0_rad=beta0_rad,                 # Stick with the original beta0
+                broadcast=False,
+                verbose=True
+            )
 
-        uncalibrated_points[coords] = uncalibrated_pos
+            uncalibrated_points[coords] = uncalibrated_pos
+            logger.debug("uncalibrated_pos = {}".format( uncalibrated_pos ))
+
         expected_points[coords] = expected_pos
-        logger.debug("uncalibrated_pos = {}".format( uncalibrated_pos ))
         logger.debug("expected_pos = {}".format( expected_pos ))
 
         # Convert blob pair image coordinates to
@@ -288,36 +295,47 @@ def evaluate_positional_verification(
         vectors_y = []
         for key in measured_points.keys():
            #print("Looking up expected and measured points for", key)
-           (ux, uy) = uncalibrated_points[key]
+           if SHOW_UNCALIBRATED_POINTS:
+              (ux, uy) = uncalibrated_points[key]
            (ex, ey) = expected_points[key]
            (mx, my) = measured_points[key]
            if EXAGGERATION > 1.0:
-              ux = ex + (ux-ex) * EXAGGERATION
-              uy = ey + (uy-ey) * EXAGGERATION
+              if SHOW_UNCALIBRATED_POINTS:
+                  ux = ex + (ux-ex) * EXAGGERATION
+                  uy = ey + (uy-ey) * EXAGGERATION
               mx = ex + (mx-ex) * EXAGGERATION
               my = ey + (my-ey) * EXAGGERATION
            #print("   measured=", (mx, my), "expected=", (ex, ey))
-           uncalibrated_x.append(ux)
-           uncalibrated_y.append(uy)
+           if SHOW_UNCALIBRATED_POINTS:
+               uncalibrated_x.append(ux)
+               uncalibrated_y.append(uy)
            expected_x.append(ex)
            expected_y.append(ey)
            measured_x.append(mx)
            measured_y.append(my)
-           vectors_x.append( [ux, ex, mx] )
-           vectors_y.append( [uy, ey, my] )
-        title = "evaluate_positional_verification: Measured (blue), expected (red) and uncalibrated (green) points overlaid."
+           if SHOW_UNCALIBRATED_POINTS:
+              vectors_x.append( [ux, ex, mx] )
+              vectors_y.append( [uy, ey, my] )
+           else:
+              vectors_x.append( [ex, mx] )
+              vectors_y.append( [ey, my] )
+        title = "evaluate_positional_verification: Measured (blue), expected (red) "
+        if SHOW_UNCALIBRATED_POINTS:
+           title += "and uncalibrated (green) "
+        title += "points overlaid."
         if EXAGGERATION > 1.0:
-            title += "\nErrors exaggerated by a factor of %f." % EXAGGERATION
+           title += "\nErrors exaggerated by a factor of %f." % EXAGGERATION
         plotaxis = plotting.plot_xy( expected_x, expected_y, title=title,
                           xlabel='X (mm)', ylabel='Y (mm)',
                           linefmt='b.', linestyle='', equal_aspect=True, showplot=False )
         for vec_x, vec_y in zip(vectors_x, vectors_y):
             plotaxis = plotting.plot_xy( vec_x, vec_y,
                               linefmt='k', linestyle='-', equal_aspect=True, showplot=False )
-        plotaxis = plotting.plot_xy( uncalibrated_x, uncalibrated_y, title=None,
-                          xlabel=None, ylabel=None,
-                          linefmt='g.', linestyle=' ', equal_aspect=True,
-                          plotaxis=plotaxis, showplot=False )
+        if SHOW_UNCALIBRATED_POINTS:
+           plotaxis = plotting.plot_xy( uncalibrated_x, uncalibrated_y, title=None,
+                             xlabel=None, ylabel=None,
+                             linefmt='g.', linestyle=' ', equal_aspect=True,
+                             plotaxis=plotaxis, showplot=False )
         plotting.plot_xy( measured_x, measured_y, title=None,
                           xlabel=None, ylabel=None,
                           linefmt='r.', linestyle=' ', equal_aspect=True,
