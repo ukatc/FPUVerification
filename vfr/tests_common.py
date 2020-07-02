@@ -15,6 +15,7 @@ import signal
 import warnings
 import camera_calibration
 
+# Import functions and constants from the FPU control software
 from fpu_commands import gen_wf, list_states
 from fpu_constants import ALPHA_DATUM_OFFSET, BETA_DATUM_OFFSET
 import FpuGridDriver
@@ -29,6 +30,7 @@ from FpuGridDriver import (
     SEARCH_CLOCKWISE,
     DEFAULT_WAVEFORM_RULESET_VERSION,
 )
+
 from numpy import array, zeros
 from vfr.conf import (
     DB_TIME_FORMAT,

@@ -13,6 +13,7 @@ class T:
     EVAL_MET_CAL = "eval_met_cal"
     EVAL_MET_HEIGHT = "eval_met_height"
     EVAL_POS_REP = "eval_pos_rep"
+    EVAL_GEARBOX_CAL = "eval_gearbox_cal"
     EVAL_POS_VER = "eval_pos_ver"
     EVAL_PUP_ALGN = "eval_pup_aln"
     # measurements
@@ -87,6 +88,7 @@ USERTASKS = set(
         T.EVAL_MET_CAL,
         T.EVAL_MET_HEIGHT,
         T.EVAL_POS_REP,
+        T.EVAL_GEARBOX_CAL,
         T.EVAL_POS_VER,
         T.EVAL_PUP_ALGN,
         T.MEASURE_DATUM_REP,

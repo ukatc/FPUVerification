@@ -4,31 +4,29 @@ from inspect import cleandoc
 
 summary = cleandoc(
     """
-    Test FPUs in verification rig, and evaluate tests.
+    Test Fibre Positioner Units (FPUs) in verification rig, and evaluate tests.
 
-    The program performs a set of measurements and evaluations on
-    FPUs. Which measurements and evaluations are done, is defined by the
-    "tasks" command line arguments. Tasks can represent bundles of
-    activities, or can identify specific individual steps which can be
-    repeated.
+    The program performs a set of measurements and evaluations on FPUs.
+    Which measurements and evaluations are done, is defined by the "tasks"
+    command line arguments. Tasks can represent bundles of activities, or can
+    identify specific individual steps which can be repeated.
 
-    Measurements access the FPUs physically. For these, the serial
-    numbers of FPUs in relation to their logical ID in the EtherCAN
-    driver are defined in a configuration file. The logical id is one
-    less than the CAN ID configured by the DIP switch. The result of
-    each measurement is stored in the database, regardless whether its
-    evaluation is carried immediately now or later.
+    Measurements access the FPUs physically. For these, the serial numbers
+    of FPUs in relation to their logical ID in the EtherCAN driver are
+    defined in a configuration file. The logical ID is one less than the CAN ID
+    configured by the DIP switch. The result of each measurement is stored in
+    the database, regardless whether its evaluation is carried immediately now
+    or later.
 
-    By default, the evaluations are carried out on all measured FPUs, but
-    it is possible to define a subset of present FPUs, or to re-evaluate
-    previous measurements, by passing the desired serial numbers.
+    By default, the evaluations are carried out on all measured FPUs, but it is
+    possible to define a subset of present FPUs, or to re-evaluate previous
+    measurements, by passing the desired serial numbers.
 
-    It is important to understand that all measured data is associated
-    with an FPUs serial number. This means that losing the serial number
-    equals loss of the verification and calibration data. Care should
-    be taken that serial numbers are not accidentally overwritten.
-    Data in the database is never deleted, but always appended to. This
-    includes repeated measurements.
+    It is important to understand that all measured data is associated with an
+    FPUs serial number. This means that losing the serial number equals loss
+    of the verification and calibration data. Care should be taken that serial
+    numbers are not accidentally overwritten. Data in the database is never
+    deleted, but always appended to. This includes repeated measurements.
 
     A third type of task is the {TASK_REPORT!r} task, which by default prints a
     terse summary of the evaluated results.
@@ -37,17 +35,17 @@ summary = cleandoc(
 
     {DEFAULT_TASKS!r}
 
+
     CONFIGURATION FILE
     ==================
 
-    The configuration file is an ASCII file which associates
-    logical FPU IDs as used in the EtherCAN interface with
-    a serial number. On initialization, the serial number is
-    flashed on the FPU, and all captured data is associated with
-    the serial number. The configuration file also contains
-    the initial position of each FPU with which the protection
-    database is initialized. The file content is a Python data structure
-    which looks, for example, like this:
+    The configuration file is an ASCII file which associates logical FPU IDs
+    as used in the EtherCAN interface with a serial number. On initialization,
+    the serial number is flashed on the FPU, and all captured data is
+    associated with the serial number. The configuration file also contains
+    the initial position of each FPU with which the protection database is
+    initialized. The file content is a Python data structure which looks,
+    for example, like this:
 
         [
         {{ 'serialnumber' : 'MP010', 'can_id' : 1, 'pos' : (-180, 0) }}
@@ -58,18 +56,17 @@ summary = cleandoc(
         {{ 'serialnumber' : 'MP005', 'can_id' : 6, 'pos' : (-180, 0) }}
         ]
 
-    The structure is a list of dictionaries, one for each FPU. Each
-    entry has the serial number under the key "serialnumber", and the
-    configured FPU CAN id under the key "can_id". This is the number
-    configured in binary coding with the DIP switch on the PCB attached
-    to the FPU. It *ALWAYS* has to match the bay number on the turntable.
-    The initial (alpha, beta) coordinates under the key "pos".
+    The structure is a list of dictionaries, one for each FPU. Each entry has
+    the serial number under the key "serialnumber", and the configured FPU CAN
+    ID under the key "can_id". This is the number configured in binary coding
+    with the DIP switch on the PCB attached to the FPU. It *ALWAYS* has to
+    match the bay number on the turntable. The initial (alpha, beta)
+    coordinates under the key "pos".
 
-
-    As an alternative to the "can_id" field, it is also possible to
-    pass the identity of the FPU with its logital id, using
-    the "fpu_id" field name. For purposes of the verification software,
-    the fpu_id is always *exactly one less* than the CAN ID.
+    As an alternative to the "can_id" field, it is also possible to pass the
+    identity of the FPU with its logital ID, using the "fpu_id" field name.
+    For purposes of the verification software, the fpu_id is always
+    *exactly one less* than the CAN ID.
 
         [
         {{ 'serialnumber' : 'MP010', 'fpu_id' : 0, 'pos' : (-180, 0) }}
@@ -79,6 +76,7 @@ summary = cleandoc(
         {{ 'serialnumber' : 'MP004', 'fpu_id' : 4, 'pos' : (-180, 0) }}
         {{ 'serialnumber' : 'MP005', 'fpu_id' : 5, 'pos' : (-180, 0) }}
         ]
+
 
     OVERVIEW ON TASKS & OPERATIONS:
     ===============================
@@ -159,8 +157,8 @@ summary = cleandoc(
     3b) MEASUREMENT ALONE
     .....................
 
-    These tests perform measurements on the hardware, while
-    the image analysis and evaluation steps can be done later.
+    These tests perform measurements on the hardware, while the image analysis
+    and evaluation steps can be done later.
 
     {MEASURE_DATUM_REP!r:<20}  - measure, but don't evaluate datum
                             repeatability
@@ -186,17 +184,19 @@ summary = cleandoc(
 
     {TASK_HOME_TURNTABLE!r:<20}  - move turntable to home position
 
+
     3d) EVALUATION ALONE
     ....................
 
-    These evaluations operate on stored data and can be done
-    without the hardware being present. They are provided
-    so that it is possible to update and redo evaluations.
+    These evaluations operate on stored data and can be done without the hardware
+    being present. They are provided so that it is possible to update and redo
+    evaluations. New measurement results are added to the database.
 
     {EVAL_DATUM_REP!r:<20}  - evaluate datum repeatability
     {EVAL_MET_CAL!r:<20}  - evaluate metrology calibration
     {EVAL_MET_HEIGHT!r:<20}  - evaluate metrology height
-    {EVAL_POS_REP!r:<20}  - evaluate positional repeatability
+    {EVAL_POS_REP!r:<20}  - evaluate positional repeatability and gearbox calibration
+    {EVAL_GEARBOX_CAL!r:<20}  - re-evaluate gearbox calibration only
     {EVAL_POS_VER!r:<20}  - evaluate positional verification
     {EVAL_PUP_ALGN!r:<20}  - evaluate pupil alignment
     {TASK_EVAL_ALL!r:<20}  - evaluate all measurements again (for example,
@@ -207,6 +207,8 @@ summary = cleandoc(
 
     4) RESULTS
     ----------
+    The reporting functions extract information from the database but do not
+    change it.
 
     {TASK_REPORT!r:<20}  - report results of all performed tests
     {TASK_DUMP!r:<20}  - dump content of last database entry for
@@ -217,10 +219,10 @@ summary = cleandoc(
     5) PLOTTING
     -----------
 
-    Plots of measurement data can be generated using the {TASK_PLOT}
-    task. Plots can be selected with the "--plot-selection" or "-sel"
-    option, which is a string of letters. Each letter indicates
-    a plot type. The available plot types are:
+    Plots of measurement data can be generated using the {TASK_PLOT} task.
+    Plots can be selected with the "--plot-selection" or "-sel" option, which
+    is a string of letters. Each letter indicates a plot type. The available
+    plot types are:
 
     {plot_selection_help}
 

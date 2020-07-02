@@ -92,6 +92,9 @@ POS_VER_RESULT_CSV = cleandoc(
     positional verification,posver_error max       ,{posver_error_measures.max:8.4f}
     positional verification,mean error vector,{mean_error_vector[0]:8.4f},{mean_error_vector[0]:8.4f})
     positional verification,arg_max_error,count,{arg_max_error[0]},α,{arg_max_error[1]},β,{arg_max_error[2]}
+    positional verification,center x,{center_x}
+    positional verification,center y, {center_y}
+    positional verification,camera_offset,{camera_offset}
     positional verification,min image quality,{min_quality:5.3f}
     positional verification,time,{time:.16},record,{record-count}
     positional verification,calibration algorithm version,{algorithm_version}

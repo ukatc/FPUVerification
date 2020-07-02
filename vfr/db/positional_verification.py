@@ -33,7 +33,10 @@ PositionalVerificationResult = namedtuple(
     " expected_points"
     " mean_error_vector"
     " algorithm_version"
-    " evaluation_version",
+    " evaluation_version"
+    " center_x"
+    " center_y"
+    " camera_offset",
 )
 
 
@@ -54,6 +57,9 @@ DEFAULT_RECORD = {
     "measured_points" : [],
     "mean_error_vector" : [np.NaN, np.NaN],
     "evaluation_version" : (0, 1, 0),
+    "center_x" : np.NaN,
+    "center_y" : np.NaN,
+    "camera_offset" : np.NaN,
 }
 
 get_positional_verification_result = partial(

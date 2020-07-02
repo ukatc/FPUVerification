@@ -38,7 +38,7 @@ def get_correction_func(calibration_pars=None, platescale=1.0, loglevel=0):
         def f(x, y):
             if loglevel > 0:
                 log(
-                    "Distortion correction: (%7.2f, %7.2f) --> (%6.3f, %6.3f), platescale = %f"
+                    "Distortion correction (scale): (%7.2f, %7.2f) --> (%6.3f, %6.3f), platescale = %f"
                     % (x, y, x * platescale, y * platescale, platescale)
                 )
 
@@ -64,7 +64,7 @@ def get_correction_func(calibration_pars=None, platescale=1.0, loglevel=0):
                     x_scale = float("NaN")
                     y_scale = float("NaN")
                 log(
-                    "Distortion correction: (%7.2f, %7.2f) --> (%6.3f, %6.3f), platescale = %f/%f"
+                    "Distortion correction (multistage): (%7.2f, %7.2f) --> (%6.3f, %6.3f), platescale = %f/%f"
                     % (x, y, x_corr, y_corr, x_scale, y_scale)
                 )
             return x_corr, y_corr
@@ -91,7 +91,7 @@ def get_correction_func(calibration_pars=None, platescale=1.0, loglevel=0):
                     x_scale = float("NaN")
                     y_scale = float("NaN")
                 log(
-                    "Distortion correction: (%7.2f, %7.2f) --> (%6.3f, %6.3f), platescale = %f/%f"
+                    "Distortion correction (chessboard): (%7.2f, %7.2f) --> (%6.3f, %6.3f), platescale = %f/%f"
                     % (x, y, x_corr, y_corr, x_scale, y_scale)
                 )
             return x_corr, y_corr

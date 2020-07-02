@@ -25,6 +25,7 @@ from vfr.evaluation.eval_positional_repeatability import (
 from vfr.evaluation.measures import arg_max_dict
 from numpy import NaN
 from vfr.conf import POS_REP_CAMERA_IP_ADDRESS
+from vfr.db.retrieval import get_data
 from vfr.db.base import TestResult
 from vfr.db.colldect_limits import get_range_limits
 from vfr.db.positional_repeatability import (
@@ -336,7 +337,7 @@ def measure_positional_repeatability(rig, dbe, pars=None):
 
     tstamp = timestamp()
     logger = logging.getLogger(__name__)
-    logger.info("capturing positional repeatability")
+    logger.info("Capturing positional repeatability")
 
     initialize_rig(rig)
 
@@ -392,10 +393,10 @@ def measure_positional_repeatability(rig, dbe, pars=None):
             turntable_safe_goto(rig, rig.grid_state, stage_position)
 
             record = get_images_for_fpu(rig, fpu_id, range_limits, pars, capture_image)
-            fpu_log.debug("saving result record = %r" % (record,))
+            fpu_log.debug("Saving result record = %r" % (record,))
 
             save_positional_repeatability_images(dbe, fpu_id, record)
-    logger.info("positional repeatability captured successfully")
+    logger.info("Positional repeatability captured successfully")
 
 
 def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation_pars):
@@ -411,12 +412,15 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
             )
             continue
 
-        logger.info("evaluating positional repeatability for FPU %s" % sn)
+        logger.info("Evaluating positional repeatability for FPU %s" % sn)
 
         images_alpha = measurement["images_alpha"]
         images_beta = measurement["images_beta"]
 
         mapfile = measurement["calibration_mapfile"]
+
+        #logger.debug("Alpha images: %s" % str(images_alpha))
+        #logger.debug("Beta images: %s" % str(images_beta))
 
         if pos_rep_analysis_pars.TARGET_DETECTION_ALGORITHM == "otsu":
             pars = pos_rep_analysis_pars.TARGET_DETECTION_OTSU_PARS
@@ -426,6 +430,7 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
         pars.PLATESCALE = pos_rep_analysis_pars.PLATESCALE
 
         if mapfile:
+            logger.debug("Using mapfile: %s" % str(mapfile))
             pars.CALIBRATION_PARS = get_config_from_mapfile(mapfile)
 
         correct = get_correction_func(
@@ -445,8 +450,13 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
 
             count_failures = 0
             count_images = len(images_alpha) + len(images_beta)
+            image_num = 1
+            logger.info("There are %d images to be analysed." % count_images)
+
             for k, v in images_alpha.items():
                 alpha_steps, beta_steps, ipath = v
+                logger.debug("(%d/%d) Analysing alpha axis at step count alpha=%d, beta=%d.\n File: \'%s\'" % \
+                    (image_num, count_images, alpha_steps, beta_steps, ipath) )
                 try:
                     analysis_results_alpha[k] = analysis_func(ipath)
                 except ImageAnalysisError as err:
@@ -458,7 +468,7 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
                         raise
                     else:
                         logger.warning(
-                            "image analysis failed for image %s, "
+                            "Image analysis failed for image %s, "
                             "message = %s (continuing)" % (ipath, str(err))
                         )
                         continue
@@ -478,12 +488,16 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
                     x_measured_big,
                     y_measured_big,
                 )
+                image_num += 1
+
             analysis_results_beta = {}
             analysis_results_beta_short = {}
 
             for k, v in images_beta.items():
                 alpha_steps, beta_steps, ipath = v
                 try:
+                    logger.debug("(%d/%d) Analysing beta axis at step count alpha=%d, beta=%d.\n File: \'%s\'" % \
+                        (image_num, count_images, alpha_steps, beta_steps, ipath) )
                     analysis_results_beta[k] = analysis_func(ipath)
                 except ImageAnalysisError as err:
                     count_failures += 1
@@ -494,7 +508,7 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
                         raise
                     else:
                         logger.warning(
-                            "image analysis failed for image %s, "
+                            "Image analysis failed for image %s, "
                             "message = %s (continuing)" % (ipath, str(err))
                         )
                         continue
@@ -525,6 +539,7 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
                     analysis_results_beta,
                     pars=pos_rep_evaluation_pars,
                 )
+                image_num += 1
 
             positional_repeatability_has_passed = (
                 TestResult.OK
@@ -541,6 +556,7 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
                 else TestResult.FAILED
             )
 
+            logger.info("Fitting gearbox correction for FPU %s." % fpu_id)
             gearbox_correction = fit_gearbox_correction(
                 fpu_id, analysis_results_alpha, analysis_results_beta
             )
@@ -554,6 +570,13 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
 
             arg_max_alpha_error, _ = arg_max_dict(posrep_alpha_max_at_angle)
             arg_max_beta_error, _ = arg_max_dict(posrep_beta_max_at_angle)
+
+            logger.trace("Alpha coordinates: %s" % str(alpha_coords))
+            logger.debug("Min quality alpha: %s" % str(min_quality_alpha))
+            logger.debug("Max alpha error: %s" % str(arg_max_alpha_error))
+            logger.trace("Beta coordinates: %s" % str(beta_coords))
+            logger.debug("Min quality beta: %s" % str(min_quality_beta))
+            logger.debug("Max beta error: %s" % str(arg_max_beta_error))
 
         except (ImageAnalysisError, GearboxFitError) as e:
             errmsg = str(e)
@@ -572,7 +595,7 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
             arg_max_alpha_error = NaN
             arg_max_beta_error = NaN
             logger.exception(
-                "image analysis for FPU %s failed with message %s" % (sn, errmsg)
+                "Image analysis for FPU %s failed with message %s" % (sn, errmsg)
             )
 
         record = PositionalRepeatabilityResults(
@@ -597,3 +620,72 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
 
         logger.debug("FPU %r: saving result record = %r" % (sn, record))
         save_positional_repeatability_result(dbe, fpu_id, record)
+
+
+def eval_gearbox_calibration(dbe, pos_rep_analysis_pars, pos_rep_evaluation_pars):
+
+    logger = logging.getLogger(__name__)
+    for fpu_id in dbe.eval_fpuset:
+        measurement = get_positional_repeatability_images(dbe, fpu_id)
+        sn = dbe.fpu_config[fpu_id]["serialnumber"]
+
+        if measurement is None:
+            logger.info(
+                "FPU %s: no positional repeatability measurement data found" % sn
+            )
+            continue
+
+        logger.info("(Re)evaluating gearbox calibration for FPU %s" % sn)
+
+        ddict = vars(get_data(dbe,fpu_id))
+        pos_rep = ddict["positional_repeatability_result"]
+        analysis_results_alpha = pos_rep["analysis_results_alpha"]
+        analysis_results_beta = pos_rep["analysis_results_beta"]
+        # TODO: Extract additional repeatability data.
+
+        if analysis_results_alpha and analysis_results_beta:
+            logger.info("Fitting gearbox correction for FPU %s." % fpu_id)
+            gearbox_correction = fit_gearbox_correction(
+                fpu_id, analysis_results_alpha, analysis_results_beta
+            )
+            errmsg = ""
+
+            alpha_coords = list(analysis_results_alpha.values())
+            min_quality_alpha = get_min_quality(alpha_coords)
+
+            beta_coords = list(analysis_results_beta.values())
+            min_quality_beta = get_min_quality(beta_coords)
+
+            #arg_max_alpha_error, _ = arg_max_dict(posrep_alpha_max_at_angle)
+            #arg_max_beta_error, _ = arg_max_dict(posrep_beta_max_at_angle)
+
+            logger.trace("Alpha coordinates: %s" % str(alpha_coords))
+            logger.debug("Min quality alpha: %s" % str(min_quality_alpha))
+            #logger.debug("Max alpha error: %s" % str(arg_max_alpha_error))
+            logger.trace("Beta coordinates: %s" % str(beta_coords))
+            logger.debug("Min quality beta: %s" % str(min_quality_beta))
+            #logger.debug("Max beta error: %s" % str(arg_max_beta_error))
+
+        # TODO: Update the positional_repeatability data in the database.
+        #record = PositionalRepeatabilityResults(
+        #    calibration_pars=pars.CALIBRATION_PARS,
+        #    analysis_results_alpha=analysis_results_alpha,
+        #    analysis_results_beta=analysis_results_beta,
+        #    posrep_alpha_max_at_angle=posrep_alpha_max_at_angle,
+        #    posrep_beta_max_at_angle=posrep_beta_max_at_angle,
+        #    arg_max_alpha_error=arg_max_alpha_error,
+        #    arg_max_beta_error=arg_max_beta_error,
+        #    min_quality_alpha=min_quality_alpha,
+        #    min_quality_beta=min_quality_beta,
+        #    posrep_alpha_measures=posrep_alpha_measures,
+        #    posrep_beta_measures=posrep_beta_measures,
+        #    result=positional_repeatability_has_passed,
+        #    pass_threshold_mm=pos_rep_evaluation_pars.POS_REP_PASS,
+        #    gearbox_correction=gearbox_correction,
+        #    error_message=errmsg,
+        #    algorithm_version=POSITIONAL_REPEATABILITY_ALGORITHM_VERSION,
+        #    gearbox_correction_version=GEARBOX_CORRECTION_VERSION,
+        #)
+
+        #logger.debug("FPU %r: saving result record = %r" % (sn, record))
+        #save_positional_repeatability_result(dbe, fpu_id, record)

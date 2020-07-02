@@ -1,0 +1,45 @@
+coeffs:
+	coeffs_beta:
+		alpha_fixpoint_rad:	# Fixed alpha angle during beta measurement
+		beta_fixpoint_rad:	# Fixed beta angle during alpha measurement
+		num_data_points:	# Number of measured data points
+		r_alpha:		# Fitted radius of alpha circle
+		r_beta_midpoint:	# Fitted radius of beta circle
+		xc:			# Centre of alpha circle
+		yc:			# Centre of beta circle
+		stretch:		# Stretch factor of best fitting ellipse
+		psi:			# Orientation of best-fitting ellipse
+		radius_RMS:		# Accuracy of circle fit
+		R:			# ??
+		camera_offset_rad:	# Camera offset angle for alpha
+		beta0_rad:		# Camera offset angle for beta
+		P0:			# Zeropoint coordinate for gearbox correction
+			Cartesian (X,Y)
+		algorithm:		# Name of gearbox correction algorithm
+		num_support_points:	# Number of lookup table points
+		nominal_angle_rad:	# Demanded angles for lookup table
+			array of angles
+		corrected_angle_rad:	# Corrected angles for lookup table
+			array of angles
+	coeffs_alpha:
+		alpha_fixpoint_rad:	# Fixed alpha angle during beta measurement
+		beta_fixpoint_rad:	# Fixed beta angle during alpha measurement
+		num_data_points:	# Number of measured data points
+		r_alpha:		# Fitted radius of alpha circle
+		r_beta_midpoint:	# Fitted radius of beta circle
+		xc:			# Centre of alpha circle
+		yc:			# Centre of beta circle
+		stretch:		# Stretch factor of best fitting ellipse
+		psi:			# Orientation of best-fitting ellipse
+		radius_RMS:		# Accuracy of circle fit
+		R:			# ??
+		camera_offset_rad:	# Camera offset angle for alpha
+		beta0_rad:		# Camera offset angle for beta
+		P0:			# Zeropoint coordinate for gearbox correction
+			Cartesian (X,Y)
+		algorithm:		# Name of gearbox correction algorithm
+		num_support_points:	# Number of lookup table points
+		nominal_angle_rad:	# Demanded angles for lookup table
+			array of angles
+		corrected_angle_rad:	# Corrected angles for lookup table
+			array of angles

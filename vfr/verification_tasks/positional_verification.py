@@ -4,6 +4,7 @@ import random
 import warnings
 import logging
 from os.path import abspath
+from os import path
 import numpy as np
 from vfr.auditlog import get_fpuLogger
 
@@ -59,16 +60,26 @@ from vfr.tests_common import (
 from vfr.conf import POS_REP_ANALYSIS_PARS
 
 
+def generate_calibration_positions(alpha_min, alpha_max, beta_min, number_positions=8):
+    """Generate a list of fixed positions to center the FPU within the frame
+    """
+
+    positions = []
+    
+    for k in range(number_positions):
+        positions.append(
+            (alpha_min + k * (alpha_max - alpha_min) / float(number_positions), beta_min + 10)
+        )
+    return positions
+
+
 def generate_tested_positions(
     niterations, alpha_min=NaN, alpha_max=NaN, beta_min=NaN, beta_max=NaN
 ):
+    """Generate a list of random FPU positions for testing
+    """
+    
     positions = []
-
-    N_FIX_POS = 8
-    for k in range(N_FIX_POS):
-        positions.append(
-            (alpha_min + k * (alpha_max - alpha_min) / float(N_FIX_POS), beta_min + 10)
-        )
 
     interval_alpha = (alpha_max - alpha_min) / float(niterations)
     interval_beta = (beta_max - beta_min) / float(niterations)
@@ -84,6 +95,26 @@ def generate_tested_positions(
         positions.append((alpha, beta))
 
     return positions
+
+
+def read_tested_positions(filename):
+    """Read a list of positions from a file
+    """
+    # Cwd is set for ease of access to moons data, so we have to work out where it should be with 
+    abs_filename = path.abspath(path.join(path.dirname(__file__),"../../{}".format(filename)))
+    with open(abs_filename,'r') as position_file:
+        read_positions = [tuple(map(float, line.split(','))) for line in position_file]
+    
+    return read_positions
+
+
+def read_tested_positions_abs(abs_filename):
+    """Read a list of positions from the exact file given
+    """
+    with open(abs_filename,'r') as position_file:
+        read_positions = [tuple(map(float, line.split(','))) for line in position_file]
+    
+    return read_positions
 
 
 def measure_positional_verification(rig, dbe, pars=None):
@@ -245,14 +276,26 @@ def measure_positional_verification(rig, dbe, pars=None):
                 return ipath
 
             tol = abs(pars.POS_VER_SAFETY_TOLERANCE)
-            tested_positions = generate_tested_positions(
-                pars.POS_VER_ITERATIONS,
-                alpha_min=alpha_min + tol,
-                alpha_max=alpha_max - tol,
-                beta_min=beta_min + tol,
-                beta_max=beta_max - tol,
-            )
+            
+            # Generate calibation points, make the alpha arm sweep a circle
+            calibration_positions = generate_calibration_positions(
+                                    alpha_min = alpha_min + tol,
+                                    alpha_max = alpha_max - tol,
+                                    beta_min = beta_min + tol)
+            # Generate positions to be tested, random or read from a file
+            if pars.POS_VER_MOTION_FILE:
+                test_positions = read_tested_positions(pars.POS_VER_MOTION_FILE)
+            else:
+                test_positions = generate_tested_positions(
+                    pars.POS_VER_ITERATIONS,
+                    alpha_min=alpha_min + tol,
+                    alpha_max=alpha_max - tol,
+                    beta_min=beta_min + tol,
+                    beta_max=beta_max - tol,
+                )
 
+            tested_positions = calibration_positions + test_positions
+        
             find_datum(gd, grid_state, opts)
 
             image_dict = {}
@@ -318,7 +361,7 @@ def measure_positional_verification(rig, dbe, pars=None):
                 calibration_mapfile=pars.POS_VER_CALIBRATION_MAPFILE,
             )
 
-            fpu_log.debug("FPU %r: saving result record = %r" % (sn, record))
+            fpu_log.trace("FPU %r: saving result record = %r" % (sn, record))
             save_positional_verification_images(dbe, fpu_id, record)
 
     logger.info("positional verification captured sucessfully")
@@ -407,7 +450,7 @@ def eval_positional_verification(dbe, pos_rep_analysis_pars, pos_ver_evaluation_
                         continue
 
             (posver_error_by_angle, expected_points, measured_points,
-             posver_error_measures, mean_error_vector) = evaluate_positional_verification(
+             posver_error_measures, mean_error_vector, camera_offset_new, xc, yc) = evaluate_positional_verification(
                  analysis_results, pars=pos_ver_evaluation_pars,
                  **gearbox_correction )
 
@@ -460,6 +503,9 @@ def eval_positional_verification(dbe, pos_rep_analysis_pars, pos_ver_evaluation_
             error_message=errmsg,
             algorithm_version=GEARBOX_CORRECTION_VERSION,
             evaluation_version=POS_VER_ALGORITHM_VERSION,
+            camera_offset=camera_offset_new,
+            center_x=xc,
+            center_y=yc,
         )
-        logger.debug("FPU %r: saving result record = %r" % (sn, record))
+        logger.trace("FPU %r: saving result record = %r" % (sn, record))
         save_positional_verification_result(dbe, fpu_id, record)

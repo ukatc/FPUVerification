@@ -17,8 +17,10 @@ DEFAULT_TASKS_NONFIBRE = [
     "report",
 ]
 
-# a few parameters are defined globally because they are
+# A few parameters are defined globally because they are
 # used in many different places
+
+GRAPHICAL_DIAGNOSTICS = False
 
 ALPHA_DATUM_OFFSET = -180
 ALPHA_RANGE_MAX = 155.0  # maximum range of alpha arm
@@ -88,11 +90,13 @@ DATUM_REP_MEASUREMENT_PARS = Namespace(
     DATUM_REP_POSITIONS=METROLOGY_CAL_POSITIONS,
 )
 
-
+#
+# NOTE: The following parameters define a default plate scale which
+# is only used if a camera calibration file is not found.
+#
 DAT_REP_PLATESCALE = (
     0.00693
 )  # millimeter per pixel, for the metrology calibration camera
-
 
 DAT_REP_CALIBRATION_PARS = {"algorithm": "scale", "scale_factor": DAT_REP_PLATESCALE}
 
@@ -161,6 +165,10 @@ MET_CAL_MEASUREMENT_PARS = Namespace(
     METROLOGY_CAL_LINPOSITIONS=LINPOSITIONS,  # linear stage positions
 )
 
+#
+# NOTE: The following parameters define a default plate scale which
+# is only used if a camera calibration file is not found.
+#
 MET_CAL_PLATESCALE = 0.00668  # millimeter per pixel
 MET_CAL_CALIBRATION_PARS = {"algorithm": "scale", "scale_factor": MET_CAL_PLATESCALE}
 
@@ -269,9 +277,19 @@ POS_REP_EVALUATION_PARS = Namespace(
     # before a position is added to the overall statistical measure
     APPLY_ELLIPTICAL_CORRECTION=True,
     # APPLY_ELLIPTICAL_CORRECTION=False,
+    APPLY_GEARBOX_CORRECTION_ALPHA=True,
+    APPLY_GEARBOX_CORRECTION_BETA=True,
+    # TODO: Add parameters to control whether a turntable offset is
+    # applied, the order of the fit.
 )
 
+#
+# NOTE: The following parameters define a default plate scale which
+# is only used if a camera calibration file is not found.
+#
+# FIXME: The alpha arm radius is averaging at 7.765mm which suggests the platescale should be 0.0242
 POS_REP_PLATESCALE = 0.0235  # millimeter per pixel
+#POS_REP_PLATESCALE = 0.0242  # millimeter per pixel
 
 # This is the fallback configuration, which is linear scaling.
 #
@@ -318,6 +336,7 @@ POS_VER_MEASUREMENT_PARS = Namespace(
     POS_VER_EXPOSURE_MS=250,  # the exposure time in
     # milliseconds for a correctly
     # exposed image
+    POS_VER_MOTION_FILE = "pos_ver_motion_config", # Set to None for random positions, file should be in the FPUVerification folder
     POS_VER_ITERATIONS=10,  # the number of extra random sample points
     POS_VER_SAFETY_TOLERANCE=1.5,  # safety distance towards range limits
     POS_VER_CALIBRATION_MAPFILE="calibration/mapping/pos-rep-2019-04-10.cfg",
@@ -346,8 +365,11 @@ PUP_ALGN_MEASUREMENT_PARS = Namespace(
     PUP_ALGN_CALIBRATION_MAPFILE="calibration/mapping/pup-aln-2019-04-10.cfg",
 )
 
+#
+# NOTE: The following parameters define a default plate scale which
+# is only used if a camera calibration file is not found.
+#
 PUP_ALGN_PLATESCALE = 0.76
-
 PUP_ALGN_CALIBRATION_PARS = {"algorithm": "scale", "scale_factor": PUP_ALGN_PLATESCALE}
 
 
