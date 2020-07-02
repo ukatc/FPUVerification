@@ -142,12 +142,20 @@ def get_range_limits(dbe, rig, fpu_id):
         or (_beta_min is None)
         or (_beta_max is None)
     ):
-        return None
+        return None # Limit test was never measured
 
     alpha_min = _alpha_min["val"]
     alpha_max = _alpha_max["val"]
     beta_min = _beta_min["val"]
     beta_max = _beta_max["val"]
+
+    if (
+        (isnan(alpha_min))
+        or (isnan(alpha_max))
+        or (isnan(beta_max))
+        or (isnan(beta_min))
+    ):
+        return None # Limit measurement failed
 
     # Get protection intervals from protection database
     fpu = rig.grid_state.FPU[fpu_id]
