@@ -1121,6 +1121,8 @@ def fit_offsets(
     R_beta_midpoint=None,	# Radius of the beta midpoint circle, if known
     camera_offset_start=None,	# Initial estimate of camera offset, if known.
     beta0_start=None,		# Initial estimate for beta offset, if known.
+    verbose=True,               # Describe the fit
+    plot=False                  # Plot the fit
 ):
     """
 
@@ -1164,7 +1166,7 @@ def fit_offsets(
 #    print("beta_nom_rad=", beta_nom_rad)
 
     # Diagnostic plot
-    if GRAPHICAL_DIAGNOSTICS and PLOT_CAMERA_FIT:
+    if GRAPHICAL_DIAGNOSTICS and plot:
         zpoints = angle_to_point(
             alpha_nom_rad,
             beta_nom_rad,
@@ -1245,7 +1247,7 @@ def fit_offsets(
         elif (camera_offset_start - camera_offset) > pi/2.0:
             camera_offset += pi
 
-    if GRAPHICAL_DIAGNOSTICS and PLOT_CAMERA_FIT:
+    if GRAPHICAL_DIAGNOSTICS and plot:
         points = angle_to_point(
             alpha_nom_rad,
             beta_nom_rad,
@@ -1268,16 +1270,17 @@ def fit_offsets(
                           linefmt='r.', linestyle=' ', equal_aspect=True,
                           plotaxis=plotaxis, showplot=True )
 
-    logger.info(
-        "fitted camera offset = {} degree. beta0 = {} degree".format(
-            np.rad2deg(camera_offset), np.rad2deg(beta0))
-    )
-    if fitting_beta0:
-       logger.info("mean norm from camera+beta0 offset fitting = {}".format(
-           np.mean(g(offsets))))
-    else:
-       logger.info("mean norm from camera offset fitting = {}".format(
-           np.mean(h(camera_offset))))
+    if verbose:
+        logger.info(
+            "fitted camera offset = {} degree. beta0 = {} degree".format(
+                np.rad2deg(camera_offset), np.rad2deg(beta0))
+        )
+        if fitting_beta0:
+           logger.info("mean norm from camera+beta0 offset fitting = {}".format(
+               np.mean(g(offsets))))
+        else:
+           logger.info("mean norm from camera offset fitting = {}".format(
+              np.mean(h(camera_offset))))
 
     return camera_offset, beta0
 
@@ -1543,6 +1546,7 @@ def fit_gearbox_correction(
         R_beta_midpoint=R_beta_midpoint,
         camera_offset_start=camera_offset_start,
         beta0_start=beta0_start,
+        plot=PLOT_CAMERA_FIT
     )
 
     # << Fit calibration tables for alpha and beta arm >>

@@ -12,19 +12,21 @@ from vfr.evaluation.measures import get_errors, get_measures, get_weighted_coord
 
 from vfr.conf import POS_REP_EVALUATION_PARS, GRAPHICAL_DIAGNOSTICS
 
-# FIXME: These constants should be configuration parameters
-ALPHA_CIRCLE_POINTS_AT_START = 8
+# TODO: Add the following  parameters to the configuration file?
 
 # The minimum number of points for a good circle fit.
 MIN_POINTS_FOR_CIRCLE_FIT = 6
 
-# The maximum tolerable shift between the centre of mass of the points fitted
-# to a circle and the fitted centre. A larger shift indicates the points are
-# too skewed to make a reliable fit.
+# The maximum tolerable shift (in mm) between the centre of mass of the points
+# fitted to a circle and the fitted centre. A larger shift indicates the
+# points are too skewed to make a reliable fit.
 MAX_CENTRE_SHIFT = 2.0
 
+# Plot the alpha circles used to calibrate FPU centre
+PLOT_ALPHA_CIRCLES = False
+PLOT_OFFSET_CIRCLES = False
 
-# FIXME: The location of the uncalibrated points seems to make no sense.
+# Show the location of uncalibrated points on the diagnostic plots?
 SHOW_UNCALIBRATED_POINTS = False
 
 # Plotting library used for diagnostics.
@@ -33,6 +35,7 @@ if GRAPHICAL_DIAGNOSTICS:
         import moc_plotting as plotting
     except ImportError:
         GRAPHICAL_DIAGNOSTICS = False
+
 
 from math import pi
 import numpy as np
@@ -43,15 +46,9 @@ POS_VER_ALGORITHM_VERSION = (1, 0, 0)
 #
 # Modify these flags to control how the algorithm works.
 #
-# Fit a alpha axis centre using the first ALPHA_CIRCLE_POINTS_AT_START points
-# to correct for turntable shift.
-# Set True to reproduce existing behaviour or False for experiment.
-FIT_ALPHA_CENTER = True               # Recommended setting True
-# Fit a new camera offset to correct for turntable rotation.
-# Set True to implement SMB change or False for old behaviour.
-FIT_CAMERA_OFFSET = True              # Recommended setting True
 # Apply an elliptical distortion to the *measured* points!
 # Set False to implement the SMB change or True for old behaviour.
+# TODO: Eventually remove this option altogether.
 APPLY_ELLIPTICAL_DISTORTION = False   # Recommended setting False
 
 
@@ -105,171 +102,165 @@ def evaluate_positional_verification(
     # get measured circle center point from alpha arm
     # calibration
     #
-    # FPU center has changesd so it needs to be rederived from the images taken
-    # The first ALPHA_CIRCLE_POINTS_AT_START images taken are explicitly for this purpose
-    # This method is similar to Gearbox.gear_correction.fit_circle but has different inputs.
-    #
-    # NOTE: SMB 26-05-2020: This step rederives the location of the alpha axis and camera offset
-    # angle but is does not redefine the circle radii or beta0. It is assumed the latter
-    # parameters are properties of the fibre positioners and will not change.
+    # FPU centre and orientation has changed because of the turntable movement, so it
+    # needs to be rederived from the images taken. The data set is searched for
+    # circles where the alpha angle varies and the beta angle remains fixed.
+    # The average of the centres of these circles is defined to be the FPU centre.
 
-    if FIT_ALPHA_CENTER:
-        logger.info("Fitting new Alpha center")
-        circle_points = {}
-        for coords, blob_pair in dict_of_coords.items():
-            #print("-------------")
-            # get nominal coordinates for first ALPHA_CIRCLE_POINTS_AT_START points
-            (idx, alpha_nom_deg, beta_nom_deg) = coords
-            xcirc, ycirc = cartesian_blob_position(blob_pair, weight_factor=BLOB_WEIGHT_FACTOR)
-            #print("(alpha centre) ixd=%d, beta=%f (deg), blob_pair=%s, circle_point=(%f,%f)." % \
-            #    (idx, beta_nom_deg, str(blob_pair), xcirc, ycirc))
-            if beta_nom_deg in circle_points:
-                circle_points[beta_nom_deg].append((xcirc, ycirc))
-            else:
-                circle_points[beta_nom_deg] = [(xcirc, ycirc)]
+    logger.debug("Locating alpha circles within the data.")
+    circle_points = {}
+    alpha_nom_rad_array = {}
+    beta_nom_rad_array = {}
+    for coords, blob_pair in dict_of_coords.items():
+        #print("-------------")
+        (idx, alpha_nom_deg, beta_nom_deg) = coords
+        xcirc, ycirc = cartesian_blob_position(blob_pair, weight_factor=BLOB_WEIGHT_FACTOR)
+        alpha_nom_rad, beta_nom_rad = np.deg2rad(alpha_nom_deg), np.deg2rad(beta_nom_deg)
+        #print("idx:", idx, "nominal: (alpha, beta) = ", (alpha_nom_deg, beta_nom_deg), "(deg)")
+        #print("ixd=%d, beta=%f (deg), blob_pair=%s, circle_point=(%f,%f)." % \
+        #    (idx, beta_nom_deg, str(blob_pair), xcirc, ycirc))
+        if beta_nom_deg in circle_points:
+            circle_points[beta_nom_deg].append((xcirc, ycirc))
+            alpha_nom_rad_array[beta_nom_deg].append(alpha_nom_rad)
+            beta_nom_rad_array[beta_nom_deg].append(beta_nom_rad)
+        else:
+            circle_points[beta_nom_deg] = [(xcirc, ycirc)]
+            alpha_nom_rad_array[beta_nom_deg] = [alpha_nom_rad]
+            beta_nom_rad_array[beta_nom_deg] = [beta_nom_rad]
 
-        for bkey in list(circle_points.keys()):
-            # Only fit circles with a suficient number of points
-            npoints = len(circle_points[bkey])
-            if npoints < MIN_POINTS_FOR_CIRCLE_FIT:
-               #print("Only %d points for beta=%s. Deleting." % (npoints, str(bkey)))
-               del circle_points[bkey]
-            #else:
-            #   print("%d points for beta=%s. Keeping." % (npoints, str(bkey)))
+    for bkey in list(circle_points.keys()):
+        # Only fit circles with a sufficient number of points
+        npoints = len(circle_points[bkey])
+        if npoints < MIN_POINTS_FOR_CIRCLE_FIT:
+           #print("Only %d points for beta=%s. Deleting." % (npoints, str(bkey)))
+           del circle_points[bkey]
+           del alpha_nom_rad_array[bkey]
+           del beta_nom_rad_array[bkey]
+        #else:
+        #   print("%d points for beta=%s. Keeping." % (npoints, str(bkey)))
 
-        P0B = {}
-        xpts = []
-        ypts = []
-        npts = 0
-        for bkey in list(circle_points.keys()):
-            x_s, y_s = np.array(circle_points[bkey]).T
-            xc, yc, radius, psi, stretch, _ = leastsq_circle(x_s, y_s)
-            P0B[bkey] = np.array([xc, yc])
-            if stretch > 1.0:
-                stretch = 1.0/stretch
-                psi += pi/2.0
-            logger.info("Fitted centre for beta {:.3f} is {:.5f},{:.5f} (mm)".format(bkey, xc, yc))
-            logger.info("Radius = {:.5f} (mm), psi={:.4f} (deg), stretch={}".format(radius, np.rad2deg(psi), stretch))
+    logger.info("Deriving new Alpha axis center.")
+    circles_alpha = {}
+    xpts = []
+    ypts = []
+    npts = 0
+    for bkey in list(circle_points.keys()):
+        x_s, y_s = np.array(circle_points[bkey]).T
+        xc, yc, radius, psi, stretch, _ = leastsq_circle(x_s, y_s)
+        if stretch > 1.0:
+            stretch = 1.0/stretch
+            psi += pi/2.0
+        logger.debug("Fitted centre for beta {:.3f} is {:.5f},{:.5f} (mm)".format(bkey, xc, yc))
+        logger.debug("Radius = {:.5f} (mm), psi={:.4f} (deg), stretch={}".format(radius, np.rad2deg(psi), stretch))
 
-            xcom = np.mean(x_s)
-            ycom = np.mean(y_s)
-            logger.debug("Centre of mass for for beta {:.3f} is {:.5f},{:.5f} (mm). Difference {:.5f},{:.5f}.".format(
-                bkey, xcom, ycom, xcom-xc, ycom-yc))
+        xcom = np.mean(x_s)
+        ycom = np.mean(y_s)
+        logger.debug("Centre of mass for for beta {:.3f} is {:.5f},{:.5f} (mm). Difference {:.5f},{:.5f}.".format(
+            bkey, xcom, ycom, xcom-xc, ycom-yc))
 
-            # Only accept the fit if the points sample the circle well and are
-            # not skewed to one side.
-            if (abs(xcom-xc) < MAX_CENTRE_SHIFT) and (abs(ycom-yc) < MAX_CENTRE_SHIFT):
-                # Circle accepted
-                xpts.append(xc)
-                ypts.append(yc)
-                npts += 1
-                #print("Circle fit accepted.")
-            #else:
-            #    print("Circle fit rejected.")
+        # Only accept the fit if the points sample the circle well and are
+        # not skewed to one side.
+        if (abs(xcom-xc) < MAX_CENTRE_SHIFT) and (abs(ycom-yc) < MAX_CENTRE_SHIFT):
+            # Circle accepted
+            #print("Circle fit accepted.")
+            xpts.append(xc)
+            ypts.append(yc)
+            npts += 1
+            
+            # Create a Circle object
+            circles_alpha[bkey] = {
+                     'x_s2': x_s,
+                     'y_s2': y_s,
+                     'xc': xc,
+                     'yc': yc,
+                     'stretch': stretch,
+                     'psi': psi,
+                     'R': radius,
+                     'alpha_nominal_rad': alpha_nom_rad_array[bkey],
+                     'beta_nominal_rad' : beta_nom_rad_array[bkey]
+                   }            
+        #else:
+        #    print("Circle fit rejected.")
 
-        if npts > 0:
+    # Find the mean centre
+    if npts > 0:
+        if npts == 1:
+            xmean = xpts[0]
+            ymean = ypts[0]
+        else:
             xpts = np.asarray(xpts)
             ypts = np.asarray(ypts)
             xmean = np.mean(xpts)
             ymean = np.mean(ypts)
-            P0 = np.array([xmean, ymean])
-            logger.info("P0 = {:.5f},{:.5f} (from {} circles) compared with (x_center,y_center) = {:.5f},{:.5f} (mm)".format(
-                xmean, ymean, npts, x_center, y_center))
-            logger.info("R = {:.4f} compared with R_alpha={:.4f} R_beta_midpoint={:.4f} (mm)".format(
-                radius, R_alpha, R_beta_midpoint))
-            if npts > 2:
-               logger.info("Standard deviation of circle centres = {:.5f},{:.5f} (mm)".format(
-                   np.std(xpts), np.std(ypts)))
-        else:
-            logger.warning("Unsufficient circle points to fit the alpha centre! Original centre assumed.")
-            P0 = np.array([x_center, y_center])
-            logger.info("P0 = (x_center,y_center) = {:.5f}, {:.5f} (mm)".format(x_center, y_center))
-
-        if GRAPHICAL_DIAGNOSTICS:
-            for bkey in list(circle_points.keys()):
-                acx = []
-                acy = []
-                for cp in circle_points[bkey]:
-                    acx.append( cp[0] )
-                    acy.append( cp[1] )
-                title = "evaluate_positional_verification: Alpha circle points with beta=%s for centre fitting." % str(bkey)
-                plotaxis = plotting.plot_xy( acx, acy, title=title,
-                              xlabel='X (mm)', ylabel='Y (mm)',
-                              linefmt='b.', linestyle=' ', equal_aspect=True, showplot=False )
-                cen_x = [x_center, xmean]
-                cen_y = [y_center, ymean]
-                plotting.plot_xy( cen_x, cen_y, title=None,
-                          xlabel=None, ylabel=None,
-                          linefmt='r+', linestyle=' ', equal_aspect=True,
-                          plotaxis=plotaxis, showplot=True )
+        P0 = np.array([xmean, ymean])
+        logger.info("P0 = {:.5f},{:.5f} (from {} circles) compared with (x_center,y_center) = {:.5f},{:.5f} (mm)".format(
+            xmean, ymean, npts, x_center, y_center))
+        logger.info("R = {:.4f} compared with R_alpha={:.4f} R_beta_midpoint={:.4f} (mm)".format(
+            radius, R_alpha, R_beta_midpoint))
+        if npts > 2:
+           logger.info("Standard deviation of circle centres = {:.5f},{:.5f} (mm)".format(
+               np.std(xpts), np.std(ypts)))
     else:
-        logger.info("Not fitting new Alpha center")
-        xc, yc = x_center, y_center
+        logger.warning("Unsufficient circle points to fit the alpha centre! Original centre assumed.")
         P0 = np.array([x_center, y_center])
-        radius = R_alpha
-        psi = 0.0
-        stretch = 1.0
-        logger.info("P0 = (x_center,y_center) = {:.4f}, {:.4f} (mm)".format(x_center,y_center))
+        logger.info("P0 = (x_center,y_center) = {:.5f}, {:.5f} (mm)".format(x_center, y_center))
 
-    # Option to recalibrate the camera offset angle.
-    if FIT_CAMERA_OFFSET:
-        # Extract the alpha circle information from the first ALPHA_CIRCLE_POINTS_AT_START points.
-        new_circle_points = []
-        alpha_nom_rad_array = []
-        beta_nom_rad_array = []
-        for coords, blob_pair in dict_of_coords.items():
-            #print("-------------")
-            # get nominal coordinates for first ALPHA_CIRCLE_POINTS_AT_START points
-            (idx, alpha_nom_deg, beta_nom_deg) = coords
-            if idx < ALPHA_CIRCLE_POINTS_AT_START:
-                xcirc, ycirc = cartesian_blob_position(blob_pair, weight_factor=BLOB_WEIGHT_FACTOR)
-                new_circle_points.append([xcirc, ycirc])
-                print("(camera offset) idx:", idx, "nominal: (alpha, beta) = ", (alpha_nom_deg, beta_nom_deg), "(deg)")
-                print("(camera offset) ixd=%d, blob_pair=%s, circle_point=(%f,%f)." % \
-                    (idx, str(blob_pair), xcirc, ycirc))
-                alpha_nom_rad, beta_nom_rad = np.deg2rad(alpha_nom_deg), np.deg2rad(beta_nom_deg)
-                alpha_nom_rad_array.append(alpha_nom_rad)
-                beta_nom_rad_array.append(beta_nom_rad)
-        new_x_s, new_y_s = np.array(new_circle_points).T
+    if GRAPHICAL_DIAGNOSTICS and PLOT_ALPHA_CIRCLES:
+        # Plot the alpha circles.
+        title = "evaluate_positional_verification: Alpha circle points for centre fitting"
+        title += "\n(each colour represents different beta angle)"
+        linefmts = ['b.', 'y.', 'm.', 'c.', 'r.', 'g.',  'k.']
+        ifmt = 0
+        for bkey in list(circle_points.keys()):
+            acx = []
+            acy = []
+            for cp in circle_points[bkey]:
+                acx.append( cp[0] )
+                acy.append( cp[1] )
+            linefmt = linefmts[ifmt]
+            ifmt = (ifmt + 1) % len(linefmts)
+            plotaxis = plotting.plot_xy( acx, acy, title=title,
+                          xlabel='X (mm)', ylabel='Y (mm)',
+                          linefmt=linefmt, linestyle=' ', equal_aspect=True, showplot=False )
+            cen_x = [x_center, xmean]
+            cen_y = [y_center, ymean]
+        plotting.plot_xy( cen_x, cen_y, title=None,
+                  xlabel=None, ylabel=None,
+                  linefmt='r+', linestyle=' ', equal_aspect=True,
+                  plotaxis=plotaxis, showplot=True )
 
-        alpha_nom_rad_array = np.asarray(alpha_nom_rad_array)
-        beta_nom_rad_array = np.asarray(beta_nom_rad_array)
+    # NOTE: If the remaining points are used to make a "circle_beta" data structure and all
+    # the points used to derive a new beta0 angle, the results get worse.
 
-        circle_alpha = { 'x_s2': new_x_s,
-                         'y_s2': new_y_s,
-                         'xc': xc,
-                         'yc': yc,
-                         'stretch': stretch,
-                         'psi': psi,
-                         'R': radius,
-                         'alpha_nominal_rad': alpha_nom_rad_array,
-                         'beta_nominal_rad' : beta_nom_rad_array
-                       }
-
-        # NOTE: If the remaining points are used to make a "circle_beta" data structure and all
-        # the points used to derive a new beta0 angle, the results get worse.
-
-        # Find the best fit for the camera offset
+    # Find the best fit for the camera offset
+    logger.info("Deriving new camera offset (to correct turntable tilt).")
+    camera_offset_total = 0.0
+    ncams = 0
+    for bkey in list(circles_alpha.keys()):
         #print("circle_alpha=", circle_alpha)
-        camera_offset_new, beta0_new = fit_offsets(
-                               circle_alpha,                         # Fit alpha circle only
+        camera_offset_this, beta0_new = fit_offsets(
+                               circles_alpha[bkey],                  # Fit alpha circle only
                                circle_beta=None,                     #
                                P0=P0,                                # Use new alpha axis centre
                                R_alpha=R_alpha,                      # Previous calibrated radius of alpha circle
                                R_beta_midpoint=R_beta_midpoint,      # Previous calibrated radius of beta circle
                                camera_offset_start=camera_offset_rad,# Start with previous camera angle offset
-                               beta0_start=beta0_rad                 # Fixed beta0
+                               beta0_start=beta0_rad,                # Fixed beta0
+                               verbose=False,
+                               plot=PLOT_OFFSET_CIRCLES
                           )
-        logger.info("New camera offset= {:.4f} compared with {:.4f} (deg)".format(
-            np.rad2deg(camera_offset_new), np.rad2deg(camera_offset_rad)))
-        logger.info("New beta0= {:.4f} (ignored) compared with {:.4f} (deg)".format(
+        logger.debug("beta={}. Fitted camera offset= {:.4f} compared with {:.4f} (deg)".format(
+            bkey, np.rad2deg(camera_offset_this), np.rad2deg(camera_offset_rad)))
+        logger.debug("New beta0= {:.4f} (ignored) compared with {:.4f} (deg)".format(
             np.rad2deg(beta0_new), np.rad2deg(beta0_rad)))
-    else:
-        # No fit. The camera offset does not change.
-        camera_offset_new = camera_offset_rad
-        logger.info("Keeping camera offset= {:.4f} (deg)".format(np.rad2deg(camera_offset_rad)))
+        camera_offset_total += camera_offset_this
+        ncams += 1
+    camera_offset_new = camera_offset_total / float(ncams)
+    logger.info("New mean camera offset= {:.4f} compared with {:.4f} (deg)".format(
+        np.rad2deg(camera_offset_new), np.rad2deg(camera_offset_rad)))
 
-    # Go back to the start
+
+    # Go back to the start and read the input data from the beginning.
     uncalibrated_points = {} # arm coordinates + index vs. uncalibrated Cartesian position
     expected_points = {} # arm coordinates + index vs. expected Cartesian position
     measured_points = {} # arm coordinates + index vs. actual Cartesian position
@@ -278,7 +269,8 @@ def evaluate_positional_verification(
     for coords, blob_pair in dict_of_coords.items():
         # get nominal coordinates
         (idx, alpha_nom_deg, beta_nom_deg) = coords
-        logger.debug("idx: {} nominal: (alpha, beta) = {},{} (deg)".format(idx, alpha_nom_deg, beta_nom_deg))
+        logger.debug("idx: {} nominal: (alpha, beta) = {},{} (deg)".format(
+            idx, alpha_nom_deg, beta_nom_deg))
         alpha_nom_rad, beta_nom_rad = np.deg2rad(alpha_nom_deg), np.deg2rad(beta_nom_deg)
         expected_pos = angle_to_point(
             alpha_nom_rad,
@@ -326,7 +318,7 @@ def evaluate_positional_verification(
         # apply (small) elliptical distortion correction as in the
         # gearbox calibration computation for the alpha arm.
         #
-        # FIXME: This is sloppy and only a stop-gap: we probably need
+        # NOTE FROM JN: This is sloppy and only a stop-gap: we probably need
         # to model that the FPU metrology targets are really moving on
         # a sphere, not on a tilted plane. The circles for alpha and
         # beta calibration measurements are just two subsets of that

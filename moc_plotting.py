@@ -149,6 +149,7 @@ def new_figure(page, figsize=(10,8), equal_aspect=False,
         The figure object just created.
     
     """
+    assert pyplt is not None
     fig = pyplt.figure(page, figsize=figsize, **kwargs)
     if equal_aspect:
         plt.gca().set_aspect('equal', adjustable='box')
@@ -202,6 +203,7 @@ def show_plot(pyplt=plt, prompt=''):
         window is closed.)
     
     """
+    assert pyplt is not None
     if prompt:
         print( prompt )
     # Display the current plot and then clear and close the current figure.
@@ -221,6 +223,7 @@ def close(pyplt=plt):
         Defaults to the pyplot object imported by the plotting module.
         
     """
+    assert pyplt is not None
     # Close all open figure windows
     pyplt.close('all')
 
@@ -311,6 +314,7 @@ def plot_text(text, xpos=0.05, ypos=0.95, pyplt=plt, plotfig=None,
     matplotlib.pyplot
 
     """
+    assert pyplt is not None
     newaxis = False
     if plotfig is None:
         plotfig = pyplt.figure(1, figsize=figsize)
@@ -433,6 +437,7 @@ def plot_xy(xdata, ydata, yerr=None, pyplt=plt, plotfig=None, plotaxis=None,
     matplotlib.pyplot
 
     """
+    assert pyplt is not None
     # Check whether matplotlib figure and axis objects have been provided.
     # If not then create new ones. By default, the plot will completely
     # fill the figure. Set a flag to remember that a new figure and/or axis
@@ -600,6 +605,7 @@ def plot_circles(xdata, ydata, radii, pyplt=plt, plotfig=None, plotaxis=None,
     matplotlib.pyplot
 
     """
+    assert pyplt is not None
     # Check whether matplotlib figure and axis objects have been provided.
     # If not then create new ones. By default, the plot will completely
     # fill the figure. Set a flag to remember that a new figure and/or axis
@@ -789,6 +795,7 @@ def plot_ellipses(xdata, ydata, majors, minors, tilts, pyplt=plt, plotfig=None,
     matplotlib.pyplot
 
     """
+    assert pyplt is not None
     # Check whether matplotlib figure and axis objects have been provided.
     # If not then create new ones. By default, the plot will completely
     # fill the figure. Set a flag to remember that a new figure and/or axis
@@ -959,6 +966,7 @@ def plot_xycolumn(xdata, ylist, ylevels=None, yerrlist=None, pyplt=plt, figsize=
     matplotlib.pyplot
 
     """
+    assert pyplt is not None
     try:
         firsty = np.asarray(ylist[0])
         if firsty.ndim > 1:
@@ -1176,6 +1184,7 @@ def plot_hist(data, bins=30, equalwidths=True, pyplt=plt, plotfig=None,
     matplotlib.pyplot
 
     """
+    assert pyplt is not None
     # Ensure the Y data array is converted to a numpy ndarray object,
     # which has .ndim and .shape() method. The data can only be 1-D or 2-D.
     plotdata = np.asarray(data)
@@ -1376,6 +1385,7 @@ def plot_image(data, pyplt=plt, plotfig=None, plotaxis=None, figsize=(10,10),
     matplotlib.pyplot
     
     """
+    assert pyplt is not None
     # Ensure the data array is converted to a numpy ndarray object,
     # which has an .ndim attribute.
     plotdata = np.asarray(data)
@@ -1532,6 +1542,7 @@ def plot_images(datalist, pyplt=plt, figsize=(10,10), equal_aspect=False,
     matplotlib.pyplot
     
     """
+    assert pyplt is not None
     # Subdivide the figure into a grid of subplots, one for each
     # data array supplied.
     (subrows, subcols, nfigs) = subdivide(len(datalist))
@@ -1671,6 +1682,7 @@ def plot_image2D(data, pyplt=plt, plotfig=None, plotaxis=None, figsize=(10,10),
     matplotlib.pyplot
             
     """
+    assert pyplt is not None
     # Ensure the plot data is converted to a numpy ndarray and
     # has the dimensionality expected.
     plotdata = np.asarray(data)
@@ -1863,6 +1875,7 @@ def plot_image3D(data, pyplt=plt, plotfig=None, figsize=(10,10),
     matplotlib.pyplot
             
     """
+    assert pyplt is not None
     # Ensure the plot data is converted to a numpy ndarray and
     # has the dimensionality expected.
     plotdata = np.asarray(data)
