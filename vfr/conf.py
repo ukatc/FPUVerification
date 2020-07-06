@@ -240,6 +240,10 @@ POS_REP_MEASUREMENT_PARS = Namespace(
     # measurements made within an
     # extra sweep from the
     # starting position
+    
+    ALPHA_FIXED = 10, #index of the alpha fixed point position, should be a number float/int between 1 and POS_REP_NUM_INCREMENTS
+    BETA_FIXED = 10, #index of the beta fixed point position, should be a number float/int between 1 and POS_REP_NUM_INCREMENTS
+    
     POS_REP_SAFETY_MARGIN=1.0,  # safety margin, in degree, for
     # distance to range limits when testing
     POS_REP_WAVEFORM_PARS={

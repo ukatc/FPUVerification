@@ -155,15 +155,15 @@ def index_positions(pars):
             for k_increment in range(MAX_INCREMENT):
                 if j_direction == 0:
                     idx_alpha = k_increment
-                    idx_beta = FIXPOINT
+                    idx_beta = pars.BETA_FIXPOINT
                 elif j_direction == 1:
                     idx_alpha = MAX_INCREMENT - k_increment - 1
-                    idx_beta = FIXPOINT
+                    idx_beta = pars.BETA_FIXPOINT
                 elif j_direction == 2:
-                    idx_alpha = FIXPOINT
+                    idx_alpha = pars.ALPHA_FIXPOINT
                     idx_beta = k_increment
                 elif j_direction == 3:
-                    idx_alpha = FIXPOINT
+                    idx_alpha = pars.ALPHA_FIXPOINT
                     idx_beta = MAX_INCREMENT - k_increment - 1
 
                 yield MeasurementIndex(
