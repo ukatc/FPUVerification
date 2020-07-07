@@ -1440,10 +1440,10 @@ def format_report_csv(
                 yield "%i,%f,%f,%s" % (k, alpha, beta, ipath)
             yield EMPTY_LINE
             
-            if positional_verification_images["datum_results"]:
+            if positional_verification_images["datum_images"]:
                 yield "pos ver datum results"
                 yield "x, y, image"
-                for datum_image in zip(positional_verification_images["datum_results"], positional_verification_result["datum_images"]):
+                for datum_image in zip(positional_verification_images["datum_images"], positional_verification_result["datum_results"]):
                     yield "%f,%f,s" % datum_image
             else:
                 yield "no pos ver datum data"
