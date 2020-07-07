@@ -1444,7 +1444,7 @@ def format_report_csv(
                 yield "pos ver datum results"
                 yield "image, x, y"
                 for datum_image in zip(positional_verification_images["datum_images"], positional_verification_result["datum_results"]):
-                    yield "%s,%f,%f" % datum_image
+                    yield "%s,%f,%f" % (datum_image[0], datum_image[1][0], datum_image[1][1])
             else:
                 yield "no pos ver datum data"
 
