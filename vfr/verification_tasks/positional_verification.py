@@ -282,6 +282,7 @@ def measure_positional_verification(rig, dbe, pars=None):
                     pos_rep_cam,
                     "{sn}/{tn}/{ts}/datum-{timing}.bmp",
                     sn=sn,
+                    ts=tstamp,
                     tn="positional-verification",
                     timing=timing
                 )
