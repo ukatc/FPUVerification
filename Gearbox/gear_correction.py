@@ -729,9 +729,9 @@ def get_angle_error(
     return phi_real_rad, phi_fitted_rad, angular_difference
 
 
-#================================================================
+# ================================================================
 # Gearbox correction calibration functions
-#================================================================
+# ================================================================
 
 def fit_gearbox_parameters(
     motor_axis,				# Motor axis being fitted ('alpha' or 'beta')
@@ -1458,10 +1458,38 @@ def get_expected_points(
 
 
 # ----------------------------------------------------------------------------
+def split_analysis_results(
+    analysis_results,     # Dictionary containing measured centroids
+    fixed_index           # Index of the fixed angle for this measurement
+                          # 0=fixed alpha, variable beta
+                          # 1=fixed beta, variable alpha
+):
+    """
+    
+    If the analysis results contain measurements made at more than one fixpoint
+    angle, this function separates the measurements.
+    
+    See below for definition of analysis_results
+    
+    """
+    print("Split analysis results with fixed_index=", fixed_index)
+    analysis_circles = {}
+    for abtuple in (analysis_results.keys()):
+        print("abtuple=", abtuple, "\n\tanalysis_results=", analysis_results[abtuple])
+        fixpoint = abtuple[fixed_index]
+        if fixpoint in analysis_circles:
+            print("Adding results to existing fixpoint angle", fixpoint)
+            analysis_circles[fixpoint][abtuple] = analysis_results[abtuple]
+        else:
+            print("New fixpoint angle", fixpoint)
+            analysis_circles[fixpoint] = {abtuple:analysis_results[abtuple]}
+    return analysis_circles
+
+# ----------------------------------------------------------------------------
 def fit_gearbox_correction(
     fpu_id,				# ID of FPU being fitted,
-    dict_of_coordinates_alpha,		# Dictionary containing measured alpha centroids
-    dict_of_coordinates_beta,		# Dictionary containing measured beta centroids
+    analysis_results_alpha,		# Dictionary containing measured alpha centroids
+    analysis_results_beta,		# Dictionary containing measured beta centroids
     return_intermediate_results=False,	# Set True to return intermediate results for plotting
 ):
     """
@@ -1486,15 +1514,28 @@ def fit_gearbox_correction(
     global logger
     logger.info("Fitting gearbox correction for FPU %s." % str(fpu_id))
 
-    #print("dict_of_coordinates_alpha:")
-    #dump_dictionary( dict_of_coordinates_alpha )
-    #print("dict_of_coordinates_beta:")
-    #dump_dictionary( dict_of_coordinates_beta )
+    #print("analysis_results_alpha:")
+    #dump_dictionary( analysis_results_alpha )
+    #print("analysis_results_beta:")
+    #dump_dictionary( analysis_results_beta )
+
+    # Search the analysis results for separate alpha and beta circles
+    alpha_circles = split_analysis_results( analysis_results_alpha, 1 )
+    beta_circles = split_analysis_results( analysis_results_beta, 0 )
+    
+    for bkey in list(alpha_circles.keys()):
+        print("Alpha data with beta fixpoint=", bkey)
+        for coords, thing in alpha_circles[bkey].items():
+            print("alpha_circle[", coords, "]=", thing)
+    for akey in list(beta_circles.keys()):
+        print("Beta data with alpha fixpoint=", akey)
+        for coords, thing in beta_circles[akey].items():
+            print("beta_circle[", coords, "]=", thing)
 
     # << Fit circles to the alpha and beta arm points >>
     logger.debug("Fitting alpha and beta circles...")
-    circle_alpha = fit_circle(dict_of_coordinates_alpha, "alpha")
-    circle_beta = fit_circle(dict_of_coordinates_beta, "beta")
+    circle_alpha = fit_circle(analysis_results_alpha, "alpha")
+    circle_beta = fit_circle(analysis_results_beta, "beta")
 
     # Find centers of alpha circle
     x_center = circle_alpha["xc"]
@@ -1636,9 +1677,9 @@ def fit_gearbox_correction(
     }
 
 
-#================================================================
+# ================================================================
 # Gearbox correction application functions
-#================================================================
+# ================================================================
 
 def apply_gearbox_parameters_fitted(
     angle_rad,                        # Scalar or array of angles to be corrected (rad)
