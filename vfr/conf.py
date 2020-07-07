@@ -67,7 +67,7 @@ LARGE_TARGET_RADIUS = 1.25 # mm
 SMALL_TARGET_RADIUS = 0.75 # mm
 TARGET_SEPERATION = 2.37 # mm - The distance between the centers
 THRESHOLD_LIMIT = 60 # pixel values for Pos_rep camera
-DAT_REP_THRESHOLD_LIMIT = 1000 # pixel threshold values for dat rep camera
+DAT_REP_THRESHOLD_LIMIT = 100 # pixel threshold values for dat rep camera
 
 COLLDECT_MEASUREMENT_PARS = Namespace(
     COLDECT_ALPHA=-180,
