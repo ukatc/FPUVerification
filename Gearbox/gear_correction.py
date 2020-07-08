@@ -15,7 +15,7 @@ February 2020. Comments which look like this
 refer to the snippets of code which are named and
 described in Johannes' document.
 
-Code corrected by Steven Beard in March-May 2020.
+Code corrected by Steven Beard in March-July 2020.
 
 """
 
@@ -38,6 +38,9 @@ from fpu_constants import (
     StepsPerRadianBeta,
 )
 from vfr.conf import BLOB_WEIGHT_FACTOR, POS_REP_EVALUATION_PARS, PERCENTILE_ARGS, GRAPHICAL_DIAGNOSTICS
+
+# The minimum number of points for a good circle fit.
+MIN_POINTS_FOR_CIRCLE_FIT = 8
 
 # Plotting library used for diagnostics.
 if GRAPHICAL_DIAGNOSTICS:
@@ -200,7 +203,8 @@ def get_weighted_coordinates(blob_coordinates, weight_factor=BLOB_WEIGHT_FACTOR)
 
     """
     blob_coordinates = np.asarray(blob_coordinates)
-    assert( blob_coordinates.ndim == 2)
+    assert (blob_coordinates.ndim == 2), \
+        "get_weighted_coordinates: blob_coordinates array is {}-D. Must be 2-D".format(blob_coordinates.ndim)
 
     coords_big_blob = blob_coordinates[:, 3:5]
     coords_small_blob = blob_coordinates[:, :2]
@@ -343,6 +347,8 @@ def fit_circle(analysis_results, motor_axis):
           Real coordinates are the actual, measured coordinates.
 
     """
+    assert (motor_axis == "alpha" or motor_axis == "beta"), \
+        "fit_circle called with motor_axis={}. Must be alpha or beta".format(motor_axis)
     global logger
     # Get list of points to which circle is fitted. Note that extract_points
     # combines the coordinates of the large and the small metrology blobs into a
@@ -635,6 +641,8 @@ def get_angle_error(
     and the difference between nominal and real polar coordinates is computed.
 
     """
+    assert (motor_axis == "alpha" or motor_axis == "beta"), \
+        "get_angle_error called with motor_axis={}. Must be alpha or beta".format(motor_axis)
     global logger
     logger.trace(
         "get_angle_error: center (x,y) = ({},{}) millimeter. P0 = ({},{}) millimeter".format(
@@ -722,6 +730,7 @@ def get_angle_error(
         phi_fitted_rad = alpha_nominal_rad
     else:
         phi_fitted_rad = beta_nominal_rad
+
     phi_real_rad = phi_fitted_rad + angular_difference
     #print("phi_fitted_rad after wrap ranges from", np.min(phi_fitted_rad), "to", np.max(phi_fitted_rad))
     #print("phi_real_rad after wrap ranges from", np.min(phi_real_rad), "to", np.max(phi_real_rad))
@@ -748,6 +757,9 @@ def fit_gearbox_parameters(
     Fit the gearbox parameters.
 
     """
+    assert (motor_axis == "alpha" or motor_axis == "beta"), \
+        "fit_gearbox_parameters called with motor_axis={}. Must be alpha or beta".format(motor_axis)
+
     global logger
     # << Retrieve constants from the circle fit data. >>
     x_s = circle_data["x_s"]
@@ -804,7 +816,7 @@ def fit_gearbox_parameters(
     # err_phi_1_rad is the error between the real and nominal angle.
     #
     # All angles are relative to a specific polar coordinate system.
-    # FIXME: Only the angle error is relevant. The fitted angles are not needed.
+    # NOTE: Only the angle error is relevant. The fitted angles are not needed.
     phi_real_rad, phi_fitted_rad, err_phi_1_rad = get_angle_error(
         motor_axis,
         x_s2,
@@ -1003,11 +1015,11 @@ def fit_gearbox_parameters(
     #print("new corrected_angle_rad ranges from", np.min(corrected_angle_rad), "to", np.max(corrected_angle_rad))
 
     # Diagnostic plot
-    if GRAPHICAL_DIAGNOSTICS and PLOT_GEARBOX_FIT:
-        title = "fit_gearbox_parameters for %s: Correction vs demanded angle." % motor_axis
-        plotting.plot_xy(np.rad2deg(nominal_angle_rad), np.rad2deg(corrected_angle_rad-nominal_angle_rad), title=title,
-                          xlabel='nominal_angle_rad (degrees)', ylabel='corrected_angle_rad-nominal_angle_rad (degrees)',
-                          linefmt='gx', linestyle='-' )
+    #if GRAPHICAL_DIAGNOSTICS and PLOT_GEARBOX_FIT:
+    #    title = "fit_gearbox_parameters for %s: Correction vs demanded angle." % motor_axis
+    #    plotting.plot_xy(np.rad2deg(nominal_angle_rad), np.rad2deg(corrected_angle_rad-nominal_angle_rad), title=title,
+    #                      xlabel='nominal_angle_rad (degrees)', ylabel='corrected_angle_rad-nominal_angle_rad (degrees)',
+    #                      linefmt='gx', linestyle='-' )
 
     # Pad table support points with values for the ends of the range.
     # This is especially needed since the support points which are
@@ -1472,16 +1484,15 @@ def split_analysis_results(
     See below for definition of analysis_results
     
     """
-    print("Split analysis results with fixed_index=", fixed_index)
     analysis_circles = {}
     for abtuple in (analysis_results.keys()):
-        print("abtuple=", abtuple, "\n\tanalysis_results=", analysis_results[abtuple])
+        #print("abtuple=", abtuple, "\n\tanalysis_results=", analysis_results[abtuple])
         fixpoint = abtuple[fixed_index]
         if fixpoint in analysis_circles:
-            print("Adding results to existing fixpoint angle", fixpoint)
+            #print("Adding results to existing fixpoint angle", fixpoint)
             analysis_circles[fixpoint][abtuple] = analysis_results[abtuple]
         else:
-            print("New fixpoint angle", fixpoint)
+            #print("New fixpoint angle", fixpoint)
             analysis_circles[fixpoint] = {abtuple:analysis_results[abtuple]}
     return analysis_circles
 
@@ -1520,100 +1531,195 @@ def fit_gearbox_correction(
     #dump_dictionary( analysis_results_beta )
 
     # Search the analysis results for separate alpha and beta circles
-    alpha_circles = split_analysis_results( analysis_results_alpha, 1 )
-    beta_circles = split_analysis_results( analysis_results_beta, 0 )
+    alpha_analyses = split_analysis_results( analysis_results_alpha, 1 )
+    beta_analyses = split_analysis_results( analysis_results_beta, 0 )
     
-    for bkey in list(alpha_circles.keys()):
-        print("Alpha data with beta fixpoint=", bkey)
-        for coords, thing in alpha_circles[bkey].items():
-            print("alpha_circle[", coords, "]=", thing)
-    for akey in list(beta_circles.keys()):
-        print("Beta data with alpha fixpoint=", akey)
-        for coords, thing in beta_circles[akey].items():
-            print("beta_circle[", coords, "]=", thing)
+#     for bkey in list(alpha_analyses.keys()):
+#         print("Alpha data with beta fixpoint=", bkey)
+#         for coords, thing in alpha_analyses[bkey].items():
+#             print("alpha_circle[", coords, "]=", thing)
+#     for akey in list(beta_analyses.keys()):
+#         print("Beta data with alpha fixpoint=", akey)
+#         for coords, thing in beta_analyses[akey].items():
+#             print("beta_circle[", coords, "]=", thing)
 
-    # << Fit circles to the alpha and beta arm points >>
-    logger.debug("Fitting alpha and beta circles...")
-    circle_alpha = fit_circle(analysis_results_alpha, "alpha")
-    circle_beta = fit_circle(analysis_results_beta, "beta")
+    # Fit a circle to each set of circle points and dtermine the mean centre of all the alpha circles.
+    circles_alpha = {}
+    xpts = []
+    ypts = []
+    napts = 0
+    logger.debug("Fitting alpha circles and finding the mean axis centre...")
+    for bkey in list(alpha_analyses.keys()):
+        if len(alpha_analyses[bkey]) >= MIN_POINTS_FOR_CIRCLE_FIT:
+            logger.debug("beta fixpoint %f: Fitting alpha circle with %d points" % (bkey, len(alpha_analyses[bkey])))
+            circles_alpha[bkey] = fit_circle(alpha_analyses[bkey], "alpha")
+            x_center = circles_alpha[bkey]["xc"]
+            y_center = circles_alpha[bkey]["yc"]
+            logger.debug("beta fixpoint %f: Alpha circle centre (%f, %f)." % (bkey, x_center, y_center))
+            logger.debug("Alpha circle distortion: psi=%f (rad), stretch=%f." % (circles_alpha[bkey]["psi"], circles_alpha[bkey]["stretch"]))
+            xpts.append(x_center)
+            ypts.append(y_center)
+            napts += 1
+        else:
+            logger.warn("beta fixpoint %f: Too few points (%d) for a alpha circle fit" % (bkey, len(alpha_analyses[bkey])))
 
-    # Find centers of alpha circle
-    x_center = circle_alpha["xc"]
-    y_center = circle_alpha["yc"]
-    P0 = np.array([x_center, y_center])
-    logger.debug("Alpha circle centre (%f, %f)." % (x_center, y_center))
-    logger.debug("Alpha circle distortion: psi=%f (rad), stretch=%f." % (circle_alpha["psi"], circle_alpha["stretch"]))
+    # Find the mean alpha centre
+    if napts > 0:
+        if napts == 1:
+            xmean = xpts[0]
+            ymean = ypts[0]
+        else:
+            xpts = np.asarray(xpts)
+            ypts = np.asarray(ypts)
+            xmean = np.mean(xpts)
+            ymean = np.mean(ypts)
+            logger.info("Mean alpha circle centre, P0 = {:.5f},{:.5f} (mm), from {} circles.".format(
+                xmean, ymean, napts))
+            if napts > 2:
+                logger.info("Standard deviation of circle centres = {:.5f},{:.5f} (mm)".format(
+                    np.std(xpts), np.std(ypts)))
 
-    # Find center of beta circles
-    x_center_beta = circle_beta["xc"]
-    y_center_beta = circle_beta["yc"]
-    Pcb = np.array([x_center_beta, y_center_beta])
-    logger.debug("Beta circle centre (%f, %f)." % (x_center_beta, y_center_beta))
-    logger.debug("Beta circle distortion: psi=%f (rad), stretch=%f." % (circle_beta["psi"], circle_beta["stretch"]))
+    else:
+        raise GearboxFitError(
+            "Unsufficient alpha circle points ({}) for gearbox calibration.".format(napts)
+        )
 
-    # Radius of alpha arm is distance from P0 to Pcb
-    # See https://docs.scipy.org/doc/numpy/reference/generated/numpy.linalg.norm.html
-    R_alpha = np.linalg.norm(Pcb - P0)
-    # radius from beta center to weighted midpoint between metrology targets
-    R_beta_midpoint = circle_beta["R"]
-    logger.debug("Radius of alpha arm: %f (mm)" % R_alpha)
-    logger.debug("Radius to beta metrology mid-point: %f (mm)" % R_beta_midpoint)
+    # Define the zeropoint to the mean alpha circle centre.
+    P0 = np.array([xmean, ymean])
 
-    # << Fit offsets of camera orientation >>
-    camera_offset_start = circle_alpha["offset_estimate"]
-    # BUG FIX: SMB 11-Mar-2020: camera_offset_start was being double-counted in fit_offsets
-    # and angle_to_point and does not need to be added here.
-    # SMB 13-Mar-2020: pi is subtracted because measured beta angle = beta_nominal + pi - beta0
-    # (see coordinate system plot).
-    #beta0_start = circle_beta["offset_estimate"] + camera_offset_start
-    #beta0_start = circle_beta["offset_estimate"]
-    beta0_start = circle_beta["offset_estimate"] - pi
+    circles_beta = {}
+    r_alpha_total = 0.0
+    r_beta_total = 0.0
+    nbpts = 0
+    logger.debug("Fitting beta circles and finding mean length of alpha arm...")
+    for akey in list(beta_analyses.keys()):
+        if len(beta_analyses[akey]) >= MIN_POINTS_FOR_CIRCLE_FIT:
+            logger.debug("alpha fixpoint %f: Fitting beta circle with %d points" % (akey, len(beta_analyses[akey])))
+            circles_beta[akey] = fit_circle(beta_analyses[akey], "beta")
+            x_center_beta = circles_beta[akey]["xc"]
+            y_center_beta = circles_beta[akey]["yc"]
+            logger.debug("alpha fixpoint %f: Beta circle centre (%f, %f)." % (akey, x_center_beta, y_center_beta))
+            logger.debug("Beta circle distortion: psi=%f (rad), stretch=%f." % (circles_beta[akey]["psi"], circles_beta[akey]["stretch"]))
+            # Radius of alpha arm is distance from P0 to Pcb
+            # See https://docs.scipy.org/doc/numpy/reference/generated/numpy.linalg.norm.html
+            Pcb = np.array([x_center_beta, y_center_beta])
+            r_alpha_total += np.linalg.norm(Pcb - P0)
+            r_beta_total += circles_beta[akey]["R"]
+            nbpts += 1
+        else:
+            logger.warn("alpha fixpoint %f: Too few points (%d) for a beta circle fit" % (akey, len(beta_analyses[akey])))
 
-    r2d = np.rad2deg
-    logger.debug(
-        "camera_offset_start = {} radian = {} degree".format(
-            camera_offset_start, r2d(camera_offset_start))
-    )
-    logger.debug(
-        "beta0_start = radian = {} degree".format(
-            beta0_start, r2d(beta0_start))
-    )
+    # Find the mean alpha arm length and mean beta radius to target midpoint
+    if nbpts > 0:
+        R_alpha = r_alpha_total/float(nbpts)
+        # radius from beta center to weighted midpoint between metrology targets
+        R_beta_midpoint = r_beta_total/float(nbpts)
+        logger.info("Mean radius of alpha arm: %f (mm)" % R_alpha)
+        logger.info("Mean radius to beta metrology mid-point: %f (mm)" % R_beta_midpoint)
+    else:
+        raise GearboxFitError(
+            "Unsufficient beta circle points ({}) for gearbox calibration.".format(nbpts)
+        )
 
-    camera_offset_rad, beta0_rad = fit_offsets(
-        circle_alpha,
-        circle_beta,
-        P0=P0,
-        R_alpha=R_alpha,
-        R_beta_midpoint=R_beta_midpoint,
-        camera_offset_start=camera_offset_start,
-        beta0_start=beta0_start,
-        plot=PLOT_CAMERA_FIT
-    )
+#     # << Fit circles to the alpha and beta arm points >>
+#     logger.debug("Fitting alpha and beta circles...")
+#     circle_alpha = fit_circle(analysis_results_alpha, "alpha")
+#     circle_beta = fit_circle(analysis_results_beta, "beta")
+# 
+#     # Find centers of alpha circle
+#     x_center = circle_alpha["xc"]
+#     y_center = circle_alpha["yc"]
+#     P0 = np.array([x_center, y_center])
+#     logger.debug("Alpha circle centre (%f, %f)." % (x_center, y_center))
+#     logger.debug("Alpha circle distortion: psi=%f (rad), stretch=%f." % (circle_alpha["psi"], circle_alpha["stretch"]))
+# 
+#     # Find center of beta circles
+#     x_center_beta = circle_beta["xc"]
+#     y_center_beta = circle_beta["yc"]
+#     Pcb = np.array([x_center_beta, y_center_beta])
+#     logger.debug("Beta circle centre (%f, %f)." % (x_center_beta, y_center_beta))
+#     logger.debug("Beta circle distortion: psi=%f (rad), stretch=%f." % (circle_beta["psi"], circle_beta["stretch"]))
+# 
+#     # Radius of alpha arm is distance from P0 to Pcb
+#     # See https://docs.scipy.org/doc/numpy/reference/generated/numpy.linalg.norm.html
+#     R_alpha = np.linalg.norm(Pcb - P0)
+#     # radius from beta center to weighted midpoint between metrology targets
+#     R_beta_midpoint = circle_beta["R"]
+#     logger.debug("Radius of alpha arm: %f (mm)" % R_alpha)
+#     logger.debug("Radius to beta metrology mid-point: %f (mm)" % R_beta_midpoint)
 
-    # << Fit calibration tables for alpha and beta arm >>
-    logger.debug("Fitting gearbox parameters to alpha points.")
-    coeffs_alpha = fit_gearbox_parameters(
-        "alpha",
-        circle_alpha,
-        P0=P0,
-        R_alpha=R_alpha,
-        R_beta_midpoint=R_beta_midpoint,
-        camera_offset_rad=camera_offset_rad,
-        beta0_rad=beta0_rad,
-        return_intermediate_results=return_intermediate_results,
-    )
+    # Find a camera offset for every pair of alpha circle and beta circle.
+    # TODO: Investigate how the camera offset and beta0 vary with fixpoint.
+    camera_offsets = {}
+    beta0s = {}
+    for bkey, circle_alpha in circles_alpha.items():
+        for akey, circle_beta in circles_beta.items():
+            logger.info("--- Camera offset fit for {} {}".format(bkey, akey))
 
-    logger.debug("Fitting gearbox parameters to beta points.")
-    coeffs_beta = fit_gearbox_parameters(
-        "beta",
-        circle_beta,
-        P0=P0,
-        R_alpha=R_alpha,
-        R_beta_midpoint=R_beta_midpoint,
-        camera_offset_rad=camera_offset_rad,
-        beta0_rad=beta0_rad,
-        return_intermediate_results=return_intermediate_results,
-    )
+            # << Fit offsets of camera orientation >>
+            camera_offset_start = circle_alpha["offset_estimate"]
+            # BUG FIX: SMB 11-Mar-2020: camera_offset_start was being double-counted in fit_offsets
+            # and angle_to_point and does not need to be added here.
+            # SMB 13-Mar-2020: pi is subtracted because measured beta angle = beta_nominal + pi - beta0
+            # (see coordinate system plot).
+            #beta0_start = circle_beta["offset_estimate"] + camera_offset_start
+            #beta0_start = circle_beta["offset_estimate"]
+            beta0_start = circle_beta["offset_estimate"] - pi
+        
+            r2d = np.rad2deg
+            logger.debug(
+                "camera_offset_start = {} radian = {} degree".format(
+                    camera_offset_start, r2d(camera_offset_start))
+            )
+            logger.debug(
+                "beta0_start = radian = {} degree".format(
+                    beta0_start, r2d(beta0_start))
+            )
+        
+            camera_offset_rad, beta0_rad = fit_offsets(
+                circle_alpha,
+                circle_beta,
+                P0=P0,
+                R_alpha=R_alpha,
+                R_beta_midpoint=R_beta_midpoint,
+                camera_offset_start=camera_offset_start,
+                beta0_start=beta0_start,
+                plot=PLOT_CAMERA_FIT
+            )
+            camera_offsets[(akey,bkey)] = camera_offset_rad
+            beta0s[(akey,bkey)] = beta0_rad
+            
+    # Fit a gearbox LUT for every pair of alpha circle and beta circle.
+    # TODO: Is this necessary? If the camera offset has revealed the zero-point shift
+    # this step could be done just with the circles containing the largest points
+    for bkey, circle_alpha in circles_alpha.items():
+        for akey, circle_beta in circles_beta.items():
+            logger.info("--- Gearbox fit for {} {}".format(bkey, akey))
+        
+            # << Fit calibration tables for alpha and beta arm >>
+            logger.debug("Fitting gearbox parameters to alpha points.")
+            coeffs_alpha = fit_gearbox_parameters(
+                "alpha",
+                circle_alpha,
+                P0=P0,
+                R_alpha=R_alpha,
+                R_beta_midpoint=R_beta_midpoint,
+                camera_offset_rad=camera_offsets[(akey,bkey)],  # Specific or mean?
+                beta0_rad=beta0s[(akey,bkey)],  # Specific or mean?
+                return_intermediate_results=return_intermediate_results,
+            )
+        
+            logger.debug("Fitting gearbox parameters to beta points.")
+            coeffs_beta = fit_gearbox_parameters(
+                "beta",
+                circle_beta,
+                P0=P0,
+                R_alpha=R_alpha,
+                R_beta_midpoint=R_beta_midpoint,
+                camera_offset_rad=camera_offsets[(akey,bkey)],  # Specific or mean?
+                beta0_rad=beta0s[(akey,bkey)],  # Specific or mean?
+                return_intermediate_results=return_intermediate_results,
+            )
 
     # << Check for missing result and return early in that case >>
     if (coeffs_alpha is None) or (coeffs_beta is None):
@@ -1838,7 +1944,7 @@ def apply_gearbox_correction(incoords_rad, coeffs=None):
 
     incoords_rad is a 2-tuple with the desired real (actual) input coordinates.
 
-    The coeffs parameter holds a nested disctionary of coefficients which define the correction
+    The coeffs parameter holds a nested dictionary of coefficients which define the correction
     function. These are produced by the fit_gearbox_correction function.
 
     """
