@@ -844,10 +844,10 @@ def fit_gearbox_parameters(
 
     # Diagnostic plot
     if GRAPHICAL_DIAGNOSTICS and PLOT_GEARBOX_FIT:
-        title = "fit_gearbox_parameters for %s: Actual vs demanded angle." % motor_axis
-        plotting.plot_xy(phi_fitted_rad, phi_real_rad, title=title,
-                          xlabel='phi_fitted_rad (radians)', ylabel='phi_real_rad (radians)',
-                          linefmt='b.', linestyle=' ' )
+        #title = "fit_gearbox_parameters for %s: Actual vs demanded angle." % motor_axis
+        #plotting.plot_xy(phi_fitted_rad, phi_real_rad, title=title,
+        #                  xlabel='phi_fitted_rad (radians)', ylabel='phi_real_rad (radians)',
+        #                  linefmt='b.', linestyle=' ' )
         #title = "fit_gearbox_parameters for %s: Difference between actual and demanded angle." % motor_axis
         #plotting.plot_xy(phi_fitted_rad, phi_real_rad-phi_fitted_rad, title=title,
         #                  xlabel='phi_fitted_rad (radians)', ylabel='phi_real_rad-phi_fitted_rad (radians)',
@@ -1654,7 +1654,7 @@ def fit_gearbox_correction(
     beta0s = {}
     for bkey, circle_alpha in circles_alpha.items():
         for akey, circle_beta in circles_beta.items():
-            logger.info("--- Camera offset fit for {} {}".format(bkey, akey))
+            logger.info("--- Camera offset fit for betafix={} alphafix={}".format(bkey, akey))
 
             # << Fit offsets of camera orientation >>
             camera_offset_start = circle_alpha["offset_estimate"]
@@ -1694,7 +1694,7 @@ def fit_gearbox_correction(
     # this step could be done just with the circles containing the largest points
     for bkey, circle_alpha in circles_alpha.items():
         for akey, circle_beta in circles_beta.items():
-            logger.info("--- Gearbox fit for {} {}".format(bkey, akey))
+            logger.info("--- Gearbox fit for betafix={} alphafix={}".format(bkey, akey))
         
             # << Fit calibration tables for alpha and beta arm >>
             logger.debug("Fitting gearbox parameters to alpha points.")

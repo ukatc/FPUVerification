@@ -639,6 +639,11 @@ def eval_gearbox_calibration(dbe, pos_rep_analysis_pars, pos_rep_evaluation_pars
 
         ddict = vars(get_data(dbe,fpu_id))
         pos_rep = ddict["positional_repeatability_result"]
+        if pos_rep is None:
+           logger.info("No positional repeatabiity data found for FPU %s with count %s." % \
+              (sn, str(dbe.opts.record_count)))
+           continue
+
         analysis_results_alpha = pos_rep["analysis_results_alpha"]
         analysis_results_beta = pos_rep["analysis_results_beta"]
         # TODO: Extract additional repeatability data.
