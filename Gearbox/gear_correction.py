@@ -1459,6 +1459,7 @@ def fit_gearbox_correction(
     fpu_id,				# ID of FPU being fitted,
     dict_of_coordinates_alpha,		# Dictionary containing measured alpha centroids
     dict_of_coordinates_beta,		# Dictionary containing measured beta centroids
+    list_of_datum_result,           # List of datum positions (x,y) in chronological order
     return_intermediate_results=False,	# Set True to return intermediate results for plotting
 ):
     """

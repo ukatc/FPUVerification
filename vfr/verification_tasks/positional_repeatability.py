@@ -594,7 +594,7 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
 
             logger.info("Fitting gearbox correction for FPU %s." % fpu_id)
             gearbox_correction = fit_gearbox_correction(
-                fpu_id, analysis_results_alpha, analysis_results_beta
+                fpu_id, analysis_results_alpha, analysis_results_beta, list_of_datum_result= datum_results
             )
             errmsg = ""
 
