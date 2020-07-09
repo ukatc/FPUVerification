@@ -1382,8 +1382,15 @@ def format_report_csv(
                         bsteps,
                         ipath,
                     )
-
-                    
+                
+                if positional_repeatability_images["datum_images"]:
+                    yield "pos rep datum results"
+                    yield "image, x, y"
+                    for datum_image in zip(positional_repeatability_images["datum_images"], positional_repeatability_result["datum_results"]):
+                        yield "%s,%f,%f" % (datum_image[0], datum_image[1][0], datum_image[1][0])
+                else:
+                    yield "no pos rep datum data"
+            
             yield EMPTY_LINE
                 
             for line in list_gearbox_correction("alpha",positional_repeatability_result["gearbox_correction"]["coeffs"]["coeffs_alpha"]):
