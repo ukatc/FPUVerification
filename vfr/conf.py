@@ -25,8 +25,8 @@ GRAPHICAL_DIAGNOSTICS = False
 ALPHA_DATUM_OFFSET = -180
 ALPHA_RANGE_MAX = 155.0  # maximum range of alpha arm
 
-PROTECTION_TOLERANCE = 0.15  # degrees of protection between measured
-# limit and soft protection range
+# Distance between measured limit and soft protection limit in degrees.
+PROTECTION_TOLERANCE = 0.15
 
 DB_TIME_FORMAT = "%Y-%m-%dT%H.%M.%S.~%Z"  # "~" means number of milliseconds
 
@@ -239,8 +239,8 @@ POS_REP_MEASUREMENT_PARS = Namespace(
     # measurements made within an
     # extra sweep from the
     # starting position
-    POS_REP_SAFETY_MARGIN=1.0,  # safety margin, in degree, for
-    # distance to range limits when testing
+    POS_REP_SAFETY_MARGIN=1.5,  # safety margin, in degree, for
+    # distance to range limits when testing (c.f. POS_VER_SAFETY_TOLERANCE)
     POS_REP_WAVEFORM_PARS={
         "mode": "limacc",
         "max_change": 1.2,
@@ -338,7 +338,7 @@ POS_VER_MEASUREMENT_PARS = Namespace(
     # exposed image
     POS_VER_MOTION_FILE = "pos_ver_motion_config", # Set to None for random positions, file should be in the FPUVerification folder
     POS_VER_ITERATIONS=10,  # the number of extra random sample points
-    POS_VER_SAFETY_TOLERANCE=1.5,  # safety distance towards range limits
+    POS_VER_SAFETY_TOLERANCE=1.5,  # safety distance towards range limits (c.f. POS_REP_SAFETY_MARGIN)
     POS_VER_CALIBRATION_MAPFILE="calibration/mapping/pos-rep-2019-04-10.cfg",
 )
 
