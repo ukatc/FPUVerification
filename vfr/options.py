@@ -555,7 +555,7 @@ def get_sets(all_serial_numbers, fpu_config, opts):
 
         if N < opts.N:
             warnings.warn(
-                "Subset selected. Adjusting number of addressed FPUs to %i." % N
+                "Subset of %i selected. Adjusting number of addressed FPUs to %i." % (opts.N, N)
             )
             opts.N = N
 

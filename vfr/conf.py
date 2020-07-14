@@ -268,13 +268,14 @@ POS_REP_MEASUREMENT_PARS = Namespace(
 
 
 POS_REP_EVALUATION_PARS = Namespace(
-    POS_REP_PASS=0.030,  # the maximum angular deviation, in
-    # degrees, from an average position of
-    # a grouping of measured points at a
-    # given nominal position which
-    # represents an acceptable FPU
-    MIN_NUMBER_POINTS=5,  # number of measurements which are requied
-    # before a position is added to the overall statistical measure
+    POS_REP_PASS=0.030,  # The maximum angular deviation, in degrees,
+    # from an average position of a grouping of measured points at a
+    # given nominal position which represents an acceptable FPU.
+    MIN_NUMBER_POINTS=5,  # Minimum number of samples required
+    # before a position is added to the overall statistical measure.
+    # A high number restricts statistics to low resolution points only.
+    # A low number includes more high resolution points with fewer repeats.
+    # A value less than 3 is not recommended.
     APPLY_ELLIPTICAL_CORRECTION=True,
     # APPLY_ELLIPTICAL_CORRECTION=False,
     APPLY_GEARBOX_CORRECTION_ALPHA=True,

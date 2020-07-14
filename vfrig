@@ -118,7 +118,7 @@ if __name__ == "__main__":
 
             if not rig_params.measure_fpuset:  # pylint: disable=no-member
                 # no measurements, we remove all related tasks
-                info("No FPUs in measurement set, removing all measurement tasks")
+                info("No FPUs in measurement set. Removing all measurement tasks.")
                 tasks -= MEASUREMENT_TASKS
 
             if tasks & MEASUREMENT_TASKS:
