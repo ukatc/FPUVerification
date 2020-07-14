@@ -311,7 +311,7 @@ def get_images_for_fpu(rig, fpu_id, range_limits, pars, capture_image, capture_d
     image_dict_beta = {}
     
     datum_image_list=[]
-    find_datum(gd, grid_state, opts)
+    find_datum(rig.gd, rig.grid_state, rig.opts)
     datipath = capture_datum_image("START")
     datum_image_list.append(datipath)
 
@@ -333,7 +333,7 @@ def get_images_for_fpu(rig, fpu_id, range_limits, pars, capture_image, capture_d
             image_dict_beta[key] = val
             
     
-    find_datum(gd, grid_state, opts)
+    find_datum(rig.gd, rig.grid_state, rig.opts)
     datipath = capture_datum_image("END")
     datum_image_list.append(datipath)
 
@@ -404,8 +404,7 @@ def measure_positional_repeatability(rig, dbe, pars=None):
 
                 return ipath
                 
-                def capture_datum_image(timing):
-
+            def capture_datum_image(timing):
                 ipath = store_image(
                     pos_rep_cam,
                     "{sn}/{tn}/{ts}/datum-{timing}.bmp",
@@ -415,7 +414,7 @@ def measure_positional_repeatability(rig, dbe, pars=None):
                     timing=timing
                 )
 
-                return ipath
+            return ipath
 
             # move rotary stage to POS_REP_POSN_N
             turntable_safe_goto(rig, rig.grid_state, stage_position)
