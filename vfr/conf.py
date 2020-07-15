@@ -53,10 +53,11 @@ MET_HEIGHT_CAMERA_IP_ADDRESS = "169.254.190.121"
 
 PUP_ALGN_CAMERA_IP_ADDRESS = "169.254.108.113"
 
+
 BLOB_WEIGHT_FACTOR = 0.75  # relative weight of large vs small metrology target position
 
-
 PERCENTILE_ARGS = [50, 90, 95, 97.5]
+
 
 REWIND_POS_ALPHA = -175.0  # alpha start position before initial datum search
 REWIND_POS_BETA = 1.0  # alpha start position before initial datum search
@@ -266,7 +267,6 @@ POS_REP_MEASUREMENT_PARS = Namespace(
     POS_REP_CALIBRATION_MAPFILE="calibration/mapping/pos-rep-2019-04-10.cfg",
 )
 
-
 POS_REP_EVALUATION_PARS = Namespace(
     POS_REP_PASS=0.030,  # The maximum angular deviation, in degrees,
     # from an average position of a grouping of measured points at a
@@ -275,7 +275,11 @@ POS_REP_EVALUATION_PARS = Namespace(
     # before a position is added to the overall statistical measure.
     # A high number restricts statistics to low resolution points only.
     # A low number includes more high resolution points with fewer repeats.
-    # A value less than 3 is not recommended.
+    # If reduced below 5, the WEIGHTED_MEASURES flag can be set True
+    # to weight the measures according to number of samples.
+    # A value less than 2 is not recommended.
+    WEIGHTED_MEASURES=False,  # Weight the mean and percentiles by
+    # the sample sizes.
     APPLY_ELLIPTICAL_CORRECTION=True,
     # APPLY_ELLIPTICAL_CORRECTION=False,
     APPLY_GEARBOX_CORRECTION_ALPHA=True,

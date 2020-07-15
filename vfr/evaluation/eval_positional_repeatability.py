@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
-"""Module to evaluate datum repeatability.
+"""
+
+Module to evaluate positional repeatability.
 
 """
 from __future__ import division, print_function
 from vfr.evaluation.measures import get_errors, get_grouped_errors, group_by_subkeys
 
 
-def get_angular_error(dict_of_coords, idx, min_number_points=0):
+def get_angular_error(dict_of_coords, idx, min_number_points=0, weighted_measures=False):
     """
     
     Calculate statistics for a given dictionary of coordinates.
@@ -36,7 +38,7 @@ def get_angular_error(dict_of_coords, idx, min_number_points=0):
     #skipped = 0
     #for key,item in coords_per_angvec.items():
     #    nitems = len(list(item))
-    #    if nitems > min_number_points:
+    #    if nitems >= min_number_points:
     #        print("  %s : %s" % (str(key), str(item)))
     #    else:
     #        skipped += 1
@@ -47,7 +49,8 @@ def get_angular_error(dict_of_coords, idx, min_number_points=0):
         max_err_at_angle[angvec[idx]] = get_errors(coords).max
 
     poserr_measures = get_grouped_errors(
-        coords_per_angvec.values(), min_number_points=min_number_points
+        coords_per_angvec.values(), min_number_points=min_number_points,
+        weighted_measures=weighted_measures
     )
 
     return max_err_at_angle, poserr_measures
@@ -72,6 +75,7 @@ def evaluate_positional_repeatability(
     
     pars is a data structure containing configurable parameters, such as
     pars.MIN_NUMBER_POINTS: the minimum number of points per data set.
+    pars.WEIGHTED_MEASURES: weight measures by number of samples.
 
     The returned value are the specified values in millimeter:
 
@@ -91,13 +95,16 @@ def evaluate_positional_repeatability(
     ImageAnalysisError, with a string member which describes the problem.
 
     """
+    # Parameters must be provided
+    assert pars is not None
 
     # Transform to lists of measurements for the same coordinates
     #print("\n######")
     #print("dict_of_coordinates_alpha=", dict_of_coordinates_alpha)
     #print("dict_of_coordinates_beta=", dict_of_coordinates_beta)
     posrep_alpha_max_at_angle, posrep_alpha_measures = get_angular_error(
-        dict_of_coordinates_alpha, 0, min_number_points=pars.MIN_NUMBER_POINTS
+        dict_of_coordinates_alpha, 0, min_number_points=pars.MIN_NUMBER_POINTS,
+        weighted_measures=pars.WEIGHTED_MEASURES
     )
     #print("alpha: get_angular_error returns\n  " + \
     #      "posrep_alpha_max_at_angle=")
@@ -107,7 +114,8 @@ def evaluate_positional_repeatability(
         
     #print("\n######")
     posrep_beta_max_at_angle, posrep_beta_measures = get_angular_error(
-        dict_of_coordinates_beta, 1, min_number_points=pars.MIN_NUMBER_POINTS
+        dict_of_coordinates_beta, 1, min_number_points=pars.MIN_NUMBER_POINTS,
+        weighted_measures=pars.WEIGHTED_MEASURES
     )
     #print("beta: get_angular_error returns\n  " + \
     #      "posrep_beta_max_at_angle=")

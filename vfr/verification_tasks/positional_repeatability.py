@@ -24,7 +24,7 @@ from vfr.evaluation.eval_positional_repeatability import (
 )
 from vfr.evaluation.measures import arg_max_dict
 from numpy import NaN
-from vfr.conf import POS_REP_CAMERA_IP_ADDRESS
+from vfr.conf import POS_REP_CAMERA_IP_ADDRESS, PERCENTILE_ARGS
 from vfr.db.retrieval import get_data
 from vfr.db.base import TestResult
 from vfr.db.colldect_limits import get_range_limits
@@ -412,7 +412,7 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
             )
             continue
 
-        logger.info("Evaluating positional repeatability for FPU %s" % sn)
+        logger.info("--- Evaluating positional repeatability for FPU %s." % sn)
 
         images_alpha = measurement["images_alpha"]
         images_beta = measurement["images_beta"]
@@ -540,6 +540,23 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
                     pars=pos_rep_evaluation_pars,
                 )
                 image_num += 1
+                
+            logger.info("FPU %s: Minimum number of samples=%d, weighted_measures=%r" % \
+                        (sn, pos_rep_evaluation_pars.MIN_NUMBER_POINTS, pos_rep_evaluation_pars.WEIGHTED_MEASURES))
+            
+            strg = "FPU %s: alpha repeatability: N=%d; max=%.2f; mean=%.2f; percentiles= " % \
+                (sn, posrep_alpha_measures.N, posrep_alpha_measures.max*1000, posrep_alpha_measures.mean*1000)
+            for pct in PERCENTILE_ARGS:
+                strg += "P[%s]: %.2f, " % (str(pct), posrep_alpha_measures.percentiles[pct]*1000)
+            strg += " micron."
+            logger.info(strg)
+            
+            strg = "FPU %s: beta repeatability: N=%d; max=%.2f; mean=%.2f; percentiles= " % \
+                (sn, posrep_beta_measures.N, posrep_beta_measures.max*1000, posrep_beta_measures.mean*1000)
+            for pct in PERCENTILE_ARGS:
+                strg += "P[%s]: %.2f, " % (str(pct), posrep_beta_measures.percentiles[pct]*1000)
+            strg += " micron."
+            logger.info(strg)
 
             positional_repeatability_has_passed = (
                 TestResult.OK
@@ -556,7 +573,7 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
                 else TestResult.FAILED
             )
 
-            logger.info("Fitting gearbox correction for FPU %s." % fpu_id)
+            logger.info("--- Fitting gearbox correction for FPU %s." % fpu_id)
             gearbox_correction = fit_gearbox_correction(
                 fpu_id, analysis_results_alpha, analysis_results_beta
             )
@@ -618,7 +635,7 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
             gearbox_correction_version=GEARBOX_CORRECTION_VERSION,
         )
 
-        logger.debug("FPU %r: saving result record = %r" % (sn, record))
+        logger.trace("FPU %r: saving result record = %r" % (sn, record))
         save_positional_repeatability_result(dbe, fpu_id, record)
 
 

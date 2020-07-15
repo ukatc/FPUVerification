@@ -181,6 +181,7 @@ def get_grouped_errors(
     list_of_centroids=None,
     weight_factor=BLOB_WEIGHT_FACTOR,
     min_number_points=0,
+    weighted_measures=False
 ):
     """
     
@@ -211,9 +212,11 @@ def get_grouped_errors(
             centroid = list_of_centroids[idx]
         #print("get_grouped_errors[%d]: centroid=%s, coordinate_sequence=%s" % \
         #      (idx, str(centroid), str(coordinate_sequence)))
-        # skip points which have less than required number of measurements
-        # (this is relevant for the posiitonal repeatability)
-        if len(coordinate_sequence) < min_number_points:
+
+        # Skip points which have less than required number of measurements
+        # (this is relevant for the positional repeatability)
+        num_samples = len(coordinate_sequence)
+        if num_samples < min_number_points:
             #print("get_grouped_errors[%d]: fewer than min of %d points" % \
             #      (idx, min_number_points))
             continue
@@ -222,6 +225,10 @@ def get_grouped_errors(
                 coordinate_sequence, centroid=centroid, weight_factor=weight_factor
             )
         error_magnitudes.extend( err_mags )
+        if weighted_measures and num_samples > 2:
+            for ii in range(2, num_samples):
+                # Append multiple copies of the vectors to increase their weight.
+                error_magnitudes.extend( err_mags )
         #print("get_grouped_errors[%d]:: error_magnitudes=%s" % \
         #       (idx, str(err_mags)))
 
