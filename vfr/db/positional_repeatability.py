@@ -33,7 +33,7 @@ PositionalRepeatabilityResults = namedtuple(
     " gearbox_correction"
     " error_message"
     " algorithm_version"
-    " gearbox_correction_version",
+    " gearbox_correction_version"
     " datum_results",
 )
 
