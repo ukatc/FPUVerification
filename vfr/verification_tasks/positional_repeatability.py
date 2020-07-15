@@ -414,7 +414,7 @@ def measure_positional_repeatability(rig, dbe, pars=None):
                     timing=timing
                 )
 
-            return ipath
+                return ipath
 
             # move rotary stage to POS_REP_POSN_N
             turntable_safe_goto(rig, rig.grid_state, stage_position)
