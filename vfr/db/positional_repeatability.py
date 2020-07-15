@@ -8,7 +8,10 @@ RECORD_TYPE = "positional-repeatability"
 
 PositionalRepeatabilityImages = namedtuple(
     "PositionalRepeatabilityImages",
-    " images_alpha" " images_beta" " waveform_pars" " calibration_mapfile",
+    " images_alpha"
+    " images_beta"
+    " waveform_pars"
+    " calibration_mapfile"
     " datum_images",
 )
 
