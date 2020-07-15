@@ -446,13 +446,6 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
 
         mapfile = measurement["calibration_mapfile"]
         datum_image_list = measurement["datum_images"]
-        
-        
-        datum_results = []
-        for datum_image in datum_image_list:
-            datum_blobs = analysis_func(datum_image)
-            datum_point = cartesian_blob_position(datum_blobs)
-            datum_results.append(datum_point)
 
         #logger.debug("Alpha images: %s" % str(images_alpha))
         #logger.debug("Beta images: %s" % str(images_beta))
@@ -478,6 +471,12 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
             return posrepCoordinates(
                 fixup_ipath(ipath), pars=pos_rep_analysis_pars, correct=correct
             )
+            
+        datum_results = []
+        for datum_image in datum_image_list:
+            datum_blobs = analysis_func(datum_image)
+            datum_point = cartesian_blob_position(datum_blobs)
+            datum_results.append(datum_point)
 
         try:
             analysis_results_alpha = {}
