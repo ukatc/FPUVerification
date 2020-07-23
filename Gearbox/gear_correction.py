@@ -412,8 +412,8 @@ def fit_circle(analysis_results, motor_axis):
     # np.mean results in an estimate in between the two modes, whereas np.median chooses one of them.
     offset_estimate = np.median(phi_real_rad - phi_nominal_rad)
     logger.debug(
-        "axis {}: initial camera offset estimate = {} degrees".format(
-            motor_axis, np.rad2deg(offset_estimate)
+        "axis {}: initial camera offset estimate = {} rad = {} degrees".format(
+            motor_axis, offset_estimate, np.rad2deg(offset_estimate)
         )
     )
 
@@ -447,6 +447,124 @@ def fit_circle(analysis_results, motor_axis):
         "offset_estimate": offset_estimate,     # Estimated camera rotation offset.
     }
     return result
+
+
+# ----------------------------------------------------------------------------
+def angle_to_centre(
+    alpha_nom_rad,           # Scalar or array of demanded alpha angles (rad)
+    P0=None,                 # Coordinates of centre of alpha circle (xc,yc)
+    R_alpha=None,            # Radius of alpha circle (mm)
+    camera_offset_rad=None,  # Offset between alpha angle and camera axis (rad)
+    inverse=False,           # Apply the inverse of the gearbox correction?
+    coeffs=None,             # Nested dictionary of gearbox correction coeffs. None means no correction.
+    broadcast=True,          # Adjust the P0 vector to broadcast onto all points?
+    correct_fixpoint=True,   # Apply gearbox correction to fixpoint angle as well as demanded angles?
+    verbose=False            # Display debugging info (can be extremely verbose)
+):
+    """
+
+    Convert nominal alpha angle to the expected location of the centre of
+    the beta axis. A similar function to angle_to_point, except the beta axis
+    centre depends only on the alpha angle and camera offset.
+    
+    alpha_nom_rad can be an array or scalar.
+
+    NOTE: In Johannes' terminology, nominal coordinates are demanded coordinates.
+          Real coordinates are the actual, measured coordinates.
+
+    """
+    # Extremely verbose diagnostic.
+    #print("angle_to_centre: Called with alpha_nom_rad=", alpha_nom_rad,
+    #      "P0=", P0, "R_alpha=", R_alpha,
+    #      "camera_offset_rad=", camera_offset_rad)
+
+    if coeffs is None:
+        delta_alpha = 0.0
+        delta_alpha_fixpoint = 0.0
+    else:
+        if inverse:
+            invstr = "Inverse"
+        else:
+            invstr = "Normal"
+
+        # Here the gearbox distortion function (the inverse of the correction
+        # function) is applied to alpha.
+        delta_alpha = -alpha_nom_rad + apply_gearbox_parameters(
+            alpha_nom_rad,
+            wrap=True,
+            inverse_transform=inverse,
+            **coeffs["coeffs_alpha"] # Pass the alpha coeffs dictionary
+        )
+        if verbose:
+            logger.debug(
+                "{} correction applied to alpha={} to make delta_alpha={} (deg)".format(
+                    invstr, np.rad2deg(alpha_nom_rad), np.rad2deg(delta_alpha))
+            ) 
+
+        if correct_fixpoint:
+            alpha_fixpoint_rad = coeffs["coeffs_beta"]["alpha_fixpoint_rad"]
+            delta_alpha_fixpoint = -alpha_fixpoint_rad + apply_gearbox_parameters(
+                alpha_fixpoint_rad,
+                wrap=True,
+                inverse_transform=inverse,
+                **coeffs["coeffs_alpha"] # Pass the alpha coeffs dictionary
+            )
+            if verbose:
+                logger.debug(
+                    "{} correction applied to alpha_fixpoint={} to make delta_alpha_fixpoint={} (deg)".format(
+                        invstr, np.rad2deg(alpha_fixpoint_rad), np.rad2deg(delta_alpha_fixpoint))
+                ) 
+        else:
+            delta_alpha_fixpoint = 0
+
+    # Rotate (possibly corrected) alpha angle to camera orientation
+    alpha_rad = alpha_nom_rad + camera_offset_rad
+
+    # Determine the location of the end of the alpha arm (=beta axis)
+    # with respect to the alpha circle centre (P0)
+    vec_alpha = np.array(
+        polar2cartesian(alpha_rad + (delta_alpha - delta_alpha_fixpoint), R_alpha)
+    )
+
+    # << Bring P0 into broadcastable form. >>
+    # The angle_to_point function can be called with both vector and scalar
+    # arguments. The shape of the constant P0 is adapted automatically so
+    # it can be added without a broadcasting error.
+    if broadcast and (len(P0.shape) < len(vec_alpha.shape)):
+        # adapt shape
+        P0 = np.reshape(P0, P0.shape + (1,))
+
+    # The expected location of the point is alpha circle centre + vector to beta axis
+    expected_point = P0 + vec_alpha
+    # Extremely verbose diagnostic.
+    #print("New P0=", P0, "vec_alpha=", vec_alpha)
+    #print("Returning expected_point=", expected_point)
+
+    return expected_point
+
+# ----------------------------------------------------------------------------
+def points_to_offset(
+    alpha_nom_rad,           # Demanded alpha angle (rad)
+    P0,                      # Coordinates of centre of alpha circle (xc,yc)
+    Pcb                      # Coordinates of centre of beta circle (xb,yb)
+):
+    """
+    
+    Use a measurement of the centre of the alpha circle and a measurement of
+    the centre of the beta circle at a particular alpha angle to derive the
+    camera offset angle.
+    
+    """
+    print("*** points_to_offset: called with alpha_nom_rad=", alpha_nom_rad,
+          "P0=", P0, "Pcb=", Pcb)
+    dy = Pcb[1] - P0[1]
+    dx = Pcb[0] - P0[0]
+    alpha_rad = np.arctan2(dy, dx)
+    print("alpha_rad = arctan(%f/%f) = %f (rad) = %f (deg)" % (dy, dx, alpha_rad, np.rad2deg(alpha_rad)))
+    camera_offset = alpha_rad - alpha_nom_rad
+    print("camera_offset = %f - %f = %f (rad) = %f (deg)" % (alpha_rad, alpha_nom_rad, camera_offset, np.rad2deg(camera_offset)))
+    
+    return camera_offset
 
 
 # ----------------------------------------------------------------------------
@@ -836,6 +954,7 @@ def fit_gearbox_parameters(
     #      "err_phi_1_rad=", err_phi_1_rad)
 
     # Straight line fit. See https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.linregress.html
+    # NOTE: This fit is done for information only.
     (slope, intercept, rvalue, pvalue, stderror) = stats.linregress( phi_fitted_rad, phi_real_rad )
     logger.debug(
         "Straight line fit for phi_fitted_rad vs phi_real_rad: slope={}, intercept={}, rvalue={}, pvalue={}, stderror={}.".format(
@@ -971,7 +1090,10 @@ def fit_gearbox_parameters(
     )
 
     ## Combine first and second order fit, to get an invertible function
-    corrected_shifted_angle_rad = np.array(phi_corr_support_rad) + phi_fit_support_rad - rms_error
+    # NOTE: Subtracting rms_error gives a zero-point shift which improves the fit for this particular
+    # set of data but may make the fit worse for other alpha and beta angles. 
+    #corrected_shifted_angle_rad = np.array(phi_corr_support_rad) + phi_fit_support_rad - rms_error
+    corrected_shifted_angle_rad = np.array(phi_corr_support_rad) + phi_fit_support_rad
     logger.debug(
         "corrected_shifted_angle_rad (corr+fit) ranges from {} to {}".format(
            np.min(corrected_shifted_angle_rad), np.max(corrected_shifted_angle_rad))
@@ -1133,6 +1255,7 @@ def fit_offsets(
     R_beta_midpoint=None,	# Radius of the beta midpoint circle, if known
     camera_offset_start=None,	# Initial estimate of camera offset, if known.
     beta0_start=None,		# Initial estimate for beta offset, if known.
+    beta_only=False,        # Fit the beta offset only
     verbose=True,               # Describe the fit
     plot=False                  # Plot the fit
 ):
@@ -1232,6 +1355,20 @@ def fit_offsets(
         # See https://docs.scipy.org/doc/numpy/reference/generated/numpy.linalg.norm.html
         return np.linalg.norm(points - circle_points, axis=0)
 
+    def k(offset):
+        # This function is used by the optimise.leastsq function.
+        points = angle_to_point(
+            alpha_nom_rad,
+            beta_nom_rad,
+            P0=P0,
+            R_alpha=R_alpha,
+            R_beta_midpoint=R_beta_midpoint,
+            camera_offset_rad=camera_offset_start,
+            beta0_rad=offset,
+        )
+        # See https://docs.scipy.org/doc/numpy/reference/generated/numpy.linalg.norm.html
+        return np.linalg.norm(points - circle_points, axis=0)
+    
     # Coordinates of the barycenter
     # scipy.optimize.leastsq: See https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.leastsq.html
     # g: callable function
@@ -1239,13 +1376,24 @@ def fit_offsets(
     # ftol: Relative error desired in the sum of squares
     # xtol: Relative error desired in the approximate solution.
     if fitting_beta0:
-        offsets_estimate = np.array([camera_offset_start, beta0_start])
-        offsets, ier = optimize.leastsq(g, offsets_estimate, ftol=1.5e-10, xtol=1.5e-10)
-        camera_offset, beta0 = offsets
-        # BUG FIX: SMB 13-Mar-2020: Wrap the offsets to the range +/- pi
-        camera_offset = wrap_angle_radian(camera_offset)
-        beta0 = wrap_angle_radian(beta0)
+        if beta_only:
+            # Fitting only beta
+            offset_estimate = beta0_start
+            offsets, ier = optimize.leastsq(k, offset_estimate, ftol=1.5e-10, xtol=1.5e-10)
+            camera_offset = camera_offset_start
+            beta0 = offsets[0]
+            # BUG FIX: SMB 13-Mar-2020: Wrap the offsets to the range +/- pi
+            beta0 = wrap_angle_radian(beta0)
+        else:
+            # Fitting alpha and beta together
+            offsets_estimate = np.array([camera_offset_start, beta0_start])
+            offsets, ier = optimize.leastsq(g, offsets_estimate, ftol=1.5e-10, xtol=1.5e-10)
+            camera_offset, beta0 = offsets
+            # BUG FIX: SMB 13-Mar-2020: Wrap the offsets to the range +/- pi
+            camera_offset = wrap_angle_radian(camera_offset)
+            beta0 = wrap_angle_radian(beta0)
     else:
+        # Fitting only alpha
         offset_estimate = camera_offset_start
         offsets, ier = optimize.leastsq(h, offset_estimate, ftol=1.5e-10, xtol=1.5e-10)
         camera_offset = offsets[0]
@@ -1288,8 +1436,12 @@ def fit_offsets(
                 np.rad2deg(camera_offset), np.rad2deg(beta0))
         )
         if fitting_beta0:
-           logger.info("mean norm from camera+beta0 offset fitting = {}".format(
-               np.mean(g(offsets))))
+            if beta_only:
+                logger.info("mean norm from beta0 offset fitting = {}".format(
+                   np.mean(k(offsets))))
+            else:
+                logger.info("mean norm from camera+beta0 offset fitting = {}".format(
+                   np.mean(g(offsets))))
         else:
            logger.info("mean norm from camera offset fitting = {}".format(
               np.mean(h(camera_offset))))
@@ -1588,8 +1740,10 @@ def fit_gearbox_correction(
     P0 = np.array([xmean, ymean])
 
     circles_beta = {}
+    offsets_beta = {}
     r_alpha_total = 0.0
     r_beta_total = 0.0
+    co_total = 0.0
     nbpts = 0
     logger.debug("Fitting beta circles and finding mean length of alpha arm...")
     for akey in list(beta_analyses.keys()):
@@ -1605,6 +1759,14 @@ def fit_gearbox_correction(
             Pcb = np.array([x_center_beta, y_center_beta])
             r_alpha_total += np.linalg.norm(Pcb - P0)
             r_beta_total += circles_beta[akey]["R"]
+            
+            # Estimate the camera offset from the location of the beta circle centre.
+            alpha_mean_rad = np.mean(circles_beta[akey]["alpha_nominal_rad"]) # float(akey)?
+            offset_estimate = points_to_offset( alpha_mean_rad, P0, Pcb )
+            logger.debug("alpha fixpoint %f: mean alpha=%f. camera offset estimate from beta centre=%f" % (akey, alpha_mean_rad, offset_estimate))
+            offsets_beta[akey] = offset_estimate
+            co_total += offset_estimate
+
             nbpts += 1
         else:
             logger.warn("alpha fixpoint %f: Too few points (%d) for a beta circle fit" % (akey, len(beta_analyses[akey])))
@@ -1616,6 +1778,8 @@ def fit_gearbox_correction(
         R_beta_midpoint = r_beta_total/float(nbpts)
         logger.info("Mean radius of alpha arm: %f (mm)" % R_alpha)
         logger.info("Mean radius to beta metrology mid-point: %f (mm)" % R_beta_midpoint)
+        mean_camera_offset = co_total/float(nbpts)
+        logger.info("Mean camera offset: %f (rad) = %f (deg)" % (mean_camera_offset, np.rad2deg(mean_camera_offset)))
     else:
         raise GearboxFitError(
             "Unsufficient beta circle points ({}) for gearbox calibration.".format(nbpts)
@@ -1657,7 +1821,9 @@ def fit_gearbox_correction(
             logger.info("--- Camera offset fit for betafix={} alphafix={}".format(bkey, akey))
 
             # << Fit offsets of camera orientation >>
-            camera_offset_start = circle_alpha["offset_estimate"]
+            #camera_offset_start = circle_alpha["offset_estimate"] # Old estimate from angle differences
+            #camera_offset_start = offsets_beta[akey]              # New estimate from beta circle centre
+            camera_offset_start = mean_camera_offset              # Estimate based on all beta circles.
             # BUG FIX: SMB 11-Mar-2020: camera_offset_start was being double-counted in fit_offsets
             # and angle_to_point and does not need to be added here.
             # SMB 13-Mar-2020: pi is subtracted because measured beta angle = beta_nominal + pi - beta0
@@ -1684,6 +1850,7 @@ def fit_gearbox_correction(
                 R_beta_midpoint=R_beta_midpoint,
                 camera_offset_start=camera_offset_start,
                 beta0_start=beta0_start,
+                beta_only=True,          # Try fixing camera offset and only fitting beta offset.
                 plot=PLOT_CAMERA_FIT
             )
             camera_offsets[(akey,bkey)] = camera_offset_rad
