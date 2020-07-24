@@ -1890,20 +1890,34 @@ def fit_gearbox_correction(
             rdiff = math.sqrt( xdiff*xdiff + ydiff*ydiff)
         logger.info("NOTE: Datum measurements shifted by an RMS of %f mm (%.1f micron)." %
                     (rdiff, rdiff*1000.0))
-                        
-        beta0_total = 0.0
-        for Pdatum in list_of_datum_result:
-            beta0_estimate = datum_to_beta0( Pdatum, P0, R_alpha, R_beta_midpoint,
-                                             mean_camera_offset )
-            beta0_total += beta0_estimate
-            logger.debug("Datum measurement at %s suggests beta0 = %f (rad) = %f (deg)" % \
-                        (str(Pdatum), beta0_estimate, np.rad2deg(beta0_estimate)))
-        mean_beta0_rad = beta0_total/float(ndatum)
-        logger.info("Mean beta0 from datum (1): %f (rad) = %f (deg)" % (mean_beta0_rad, np.rad2deg(mean_beta0_rad)))
+        
+        if FIX_BETA0:
+            beta0_total = 0.0
+            for Pdatum in list_of_datum_result:
+                beta0_estimate = datum_to_beta0( Pdatum, P0, R_alpha, R_beta_midpoint,
+                                                 mean_camera_offset )
+                beta0_total += beta0_estimate
+                logger.debug("Datum measurement at %s suggests beta0 = %f (rad) = %f (deg)" % \
+                            (str(Pdatum), beta0_estimate, np.rad2deg(beta0_estimate)))
+            mean_beta0_rad = beta0_total/float(ndatum)
+            logger.info("Mean beta0 from datum (1): %f (rad) = %f (deg)" % \
+                        (mean_beta0_rad, np.rad2deg(mean_beta0_rad)))
+        else:
+            beta0_total = 0.0
+            for akey, circle_beta in circles_beta.items():
+                beta0_total += circle_beta["offset_estimate"]
+            mean_beta0_rad = beta0_total/float(len(circles_beta))
+            logger.info("Estimated mean beta0 from circle fit (1): %f (rad) = %f (deg)" % \
+                        (mean_beta0_rad, np.rad2deg(mean_beta0_rad)))
     else:
         logger.info("No datum measurements available.")
         datum_available = False
-        mean_beta0_rad = 0.0
+        beta0_total = 0.0
+        for akey, circle_beta in circles_beta.items():
+            beta0_total += circle_beta["offset_estimate"]
+        mean_beta0_rad = beta0_total/float(len(circles_beta))
+        logger.info("Mean beta0 from circle fit (1): %f (rad) = %f (deg)" % \
+                    (mean_beta0_rad, np.rad2deg(mean_beta0_rad)))
 
     # --- If necessary, find the best-fitting camera offset and/or beta0
     if FIX_CAMERA_OFFSET and FIX_BETA0 and datum_available:
@@ -1939,7 +1953,7 @@ def fit_gearbox_correction(
                 #beta0_start = circle_beta["offset_estimate"]
                 # If a datum measmrent is available, use if to estimate the beta0; otherwise use the circle fit data.
                 if datum_available:
-                    beta0_start = mean_beta0
+                    beta0_start = mean_beta0_rad
                 else:
                     beta0_start = circle_beta["offset_estimate"] - pi
             
@@ -1948,7 +1962,7 @@ def fit_gearbox_correction(
                         camera_offset_start, np.rad2deg(camera_offset_start))
                 )
                 logger.debug(
-                    "beta0_start = radian = {} degree".format(
+                    "beta0_start = {} radian = {} degree".format(
                         beta0_start, np.rad2deg(beta0_start))
                 )
             
@@ -1974,8 +1988,10 @@ def fit_gearbox_correction(
             if not FIX_CAMERA_OFFSET:
                 mean_camera_offset = camera_offset_total/float(npts)
             mean_beta0_rad = beta0_total/float(npts)
-            logger.info("Mean camera offset from fit (2): %f (rad) = %f (deg)" % (mean_camera_offset, np.rad2deg(mean_camera_offset)))
-            logger.info("Mean beta0 from fit (2): %f (rad) = %f (deg)" % (mean_beta0_rad, np.rad2deg(mean_beta0_rad)))
+            logger.info("Mean camera offset from offset fit (2): %f (rad) = %f (deg)" % \
+                        (mean_camera_offset, np.rad2deg(mean_camera_offset)))
+            logger.info("Mean beta0 from offset fit (2): %f (rad) = %f (deg)" % \
+                        (mean_beta0_rad, np.rad2deg(mean_beta0_rad)))
         else:
             MEAN_BETA0 = False
             mean_beta0_rad = 0.0

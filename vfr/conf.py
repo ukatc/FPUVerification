@@ -29,18 +29,32 @@ MIN_POINTS_FOR_GEARBOX_FIT = 360
 
 # Flags to modify how the gearbox calibration determines zeropoints.
 #
-# If FIX_CAMERA_OFFSET=True, the camera offset angle is determined
-# from the centres of the beta circles and then fixed. If set to
-# False, the camera offset is determined by fitting the data.
+# If FIX_CAMERA_OFFSET=True (recommended), the camera offset angle
+# is determined from the centres of the beta circles and then fixed.
+# If set to False, the camera offset is determined by fitting the
+# circle data.
 #
-# If FIX_BETA0=True, the beta0 offset angle is derived from a datum
-# measurement (if available). If set to False the beta0 is determined
-# by fitting the data.
+# If FIX_BETA0=True (recommended if sufficient data measurements),
+# the beta0 offset angle is derived from datum measurements (if
+# available). If set to False, the beta0 is determined by fitting
+# the circle data.
+#
+# If USE_MEAN_CAMERA_OFFSET=True, the mean camera offset for all sets
+# of measurements is used for all alpha and beta fixpoints. If set to
+# False, every gearbox fit has a camera offset unique to that
+# particular combination of alpha and beta fixpoint.
+# (Only relevant when FIX_CAMERA_OFFSET is False.)
+#
+# If FIX_BETA0=True, the mean beta0 for all sets
+# of measurements is used for all alpha and beta fixpoints. If set to
+# False, every gearbox fit has a beta0 unique to that
+# particular combination of alpha and beta fixpoint.
+# (Only relevant when FIX_BETA0 is False.)
 #
 FIX_CAMERA_OFFSET = True
 FIX_BETA0 = True
-USE_MEAN_CAMERA_OFFSET = True # Fit all fixpoint combinations with one mean offset
-USE_MEAN_BETA0 = True   # Fit all fixpoint combinations with one mean offset
+USE_MEAN_CAMERA_OFFSET = True
+USE_MEAN_BETA0 = True
 
 # NOTE: ALPHA_DATUM_OFFSET is also defined in fpu_commands.py.
 #       Why is it repeated here? Be aware of the two values getting out of step.
@@ -48,7 +62,7 @@ USE_MEAN_BETA0 = True   # Fit all fixpoint combinations with one mean offset
 ALPHA_DATUM_OFFSET = -180
 ALPHA_RANGE_MAX = 155.0  # maximum range of alpha arm
 
-PROTECTION_TOLERANCE = 0.15  # degrees of protection between measured
+PROTECTION_TOLERANCE = 0.15  # Angle of protection (deg) between measured
 # limit and soft protection range
 
 DB_TIME_FORMAT = "%Y-%m-%dT%H.%M.%S.~%Z"  # "~" means number of milliseconds
