@@ -22,6 +22,21 @@ DEFAULT_TASKS_NONFIBRE = [
 
 GRAPHICAL_DIAGNOSTICS = False
 
+# Flags to modify how the gearbox calibration determines zeropoints.
+#
+# If FIX_CAMERA_OFFSET=True, the camera offset angle is determined
+# from the centres of the beta circles and then fixed. If set to
+# False, the camera offset is determined by fitting the data.
+#
+# If FIX_BETA0=True, the beta0 offset angle is derived from a datum
+# measurement (if available). If set to False the beta0 is determined
+# by fitting the data.
+#
+FIX_CAMERA_OFFSET = True
+FIX_BETA0 = True
+USE_MEAN_CAMERA_OFFSET = True # Fit all fixpoint combinations with one mean offset
+USE_MEAN_BETA0 = True   # Fit all fixpoint combinations with one mean offset
+
 ALPHA_DATUM_OFFSET = -180
 ALPHA_RANGE_MAX = 155.0  # maximum range of alpha arm
 
