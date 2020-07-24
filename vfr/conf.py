@@ -22,6 +22,11 @@ DEFAULT_TASKS_NONFIBRE = [
 
 GRAPHICAL_DIAGNOSTICS = False
 
+# The minimum number of points for a good circle fit and
+# the minimum number of alpha and beta points for a good gearbox calibration.
+MIN_POINTS_FOR_CIRCLE_FIT = 8
+MIN_POINTS_FOR_GEARBOX_FIT = 360
+
 # Flags to modify how the gearbox calibration determines zeropoints.
 #
 # If FIX_CAMERA_OFFSET=True, the camera offset angle is determined
@@ -37,6 +42,9 @@ FIX_BETA0 = True
 USE_MEAN_CAMERA_OFFSET = True # Fit all fixpoint combinations with one mean offset
 USE_MEAN_BETA0 = True   # Fit all fixpoint combinations with one mean offset
 
+# NOTE: ALPHA_DATUM_OFFSET is also defined in fpu_commands.py.
+#       Why is it repeated here? Be aware of the two values getting out of step.
+#       This version is not used by the gearbox calibration.
 ALPHA_DATUM_OFFSET = -180
 ALPHA_RANGE_MAX = 155.0  # maximum range of alpha arm
 

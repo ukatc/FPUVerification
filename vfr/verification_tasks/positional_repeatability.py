@@ -592,7 +592,7 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
 
             logger.info("Fitting gearbox correction for FPU %s." % fpu_id)
             gearbox_correction = fit_gearbox_correction(
-                fpu_id, analysis_results_alpha, analysis_results_beta, list_of_datum_result= datum_results
+                fpu_id, analysis_results_alpha, analysis_results_beta, list_of_datum_result=datum_results
             )
             errmsg = ""
 
@@ -681,12 +681,13 @@ def eval_gearbox_calibration(dbe, pos_rep_analysis_pars, pos_rep_evaluation_pars
 
         analysis_results_alpha = pos_rep["analysis_results_alpha"]
         analysis_results_beta = pos_rep["analysis_results_beta"]
+        datum_results = pos_rep["datum_results"]
         # TODO: Extract additional repeatability data.
 
         if analysis_results_alpha and analysis_results_beta:
             logger.info("Fitting gearbox correction for FPU %s." % fpu_id)
             gearbox_correction = fit_gearbox_correction(
-                fpu_id, analysis_results_alpha, analysis_results_beta
+                fpu_id, analysis_results_alpha, analysis_results_beta, list_of_datum_result=datum_results
             )
             errmsg = ""
 

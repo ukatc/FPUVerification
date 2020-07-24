@@ -38,11 +38,7 @@ from fpu_constants import (
     StepsPerRadianBeta,
 )
 from vfr.conf import BLOB_WEIGHT_FACTOR, POS_REP_EVALUATION_PARS, PERCENTILE_ARGS, GRAPHICAL_DIAGNOSTICS, \
-    FIX_CAMERA_OFFSET, FIX_BETA0, USE_MEAN_CAMERA_OFFSET, USE_MEAN_BETA0
-
-# The minimum number of points for a good circle fit and for a good gearbox calibration.
-MIN_POINTS_FOR_CIRCLE_FIT = 8
-MIN_POINTS_FOR_GEARBOX_FIT = 360
+    MIN_POINTS_FOR_CIRCLE_FIT, MIN_POINTS_FOR_GEARBOX_FIT, FIX_CAMERA_OFFSET, FIX_BETA0, USE_MEAN_CAMERA_OFFSET, USE_MEAN_BETA0
 
 # Plotting library used for diagnostics.
 if GRAPHICAL_DIAGNOSTICS:
@@ -588,9 +584,9 @@ def datum_to_beta0(
 
     """
     # Extremely verbose diagnostic.
-    print("datum_to_beta0: Called with Pdatum=", Pdatum,
-          "P0=", P0, "R_alpha=", R_alpha, "R_beta_midpoint=", R_beta_midpoint,
-          "camera_offset_rad=", camera_offset_rad )
+    #print("datum_to_beta0: Called with Pdatum=", Pdatum,
+    #      "P0=", P0, "R_alpha=", R_alpha, "R_beta_midpoint=", R_beta_midpoint,
+    #      "camera_offset_rad=", camera_offset_rad )
 
     # Rotate alpha angle to camera orientation,
     alpha_rad = ALPHA_DATUM_OFFSET_RAD + camera_offset_rad
@@ -608,7 +604,7 @@ def datum_to_beta0(
     beta_rad = gamma_rad - alpha_rad
     beta0_rad = BETA_DATUM_OFFSET_RAD + pi - beta_rad    
 
-    print("beta0 = pi - (%f - %f) = %f (rad) = %f (deg)" % (gamma_rad, alpha_rad, beta0_rad, np.rad2deg(beta0_rad)))
+    #print("beta0 = pi - (%f - %f) = %f (rad) = %f (deg)" % (gamma_rad, alpha_rad, beta0_rad, np.rad2deg(beta0_rad)))
 
     return beta0_rad
 
@@ -1771,7 +1767,7 @@ def fit_gearbox_correction(
 #         for coords, thing in beta_analyses[akey].items():
 #             print("beta_circle[", coords, "]=", thing)
 
-    # Fit a circle to each set of circle points and determine the mean centre of all the alpha circles.
+    # --- Fit a circle to each set of circle points and determine the mean centre of all the alpha circles.
     circles_alpha = {}
     xpts = []
     ypts = []
@@ -1779,18 +1775,21 @@ def fit_gearbox_correction(
     logger.debug("Fitting alpha circles and finding the mean axis centre...")
     for bkey in list(alpha_analyses.keys()):
         if len(alpha_analyses[bkey]) >= MIN_POINTS_FOR_CIRCLE_FIT:
-            logger.debug("beta fixpoint %f (deg): Fitting alpha circle with %d points" % (bkey, len(alpha_analyses[bkey])))
+            logger.debug("beta fixpoint %f (deg): Fitting alpha circle with %d points" % \
+                         (bkey, len(alpha_analyses[bkey])))
             circles_alpha[bkey] = fit_circle(alpha_analyses[bkey], "alpha")
             x_center = circles_alpha[bkey]["xc"]
             y_center = circles_alpha[bkey]["yc"]
-            logger.debug("beta fixpoint %f (deg): Alpha circle centre (%f, %f)." % (bkey, x_center, y_center))
+            logger.debug("beta fixpoint %f (deg): Alpha circle centre (%f, %f)." % \
+                         (bkey, x_center, y_center))
             logger.debug("Alpha circle distortion: psi=%f (rad), stretch=%f." % \
                          (circles_alpha[bkey]["psi"], circles_alpha[bkey]["stretch"]))
             xpts.append(x_center)
             ypts.append(y_center)
             napts += 1
         else:
-            logger.warn("beta fixpoint %f (deg): Too few points (%d) for a alpha circle fit" % (bkey, len(alpha_analyses[bkey])))
+            logger.warn("beta fixpoint %f (deg): Too few points (%d) for a alpha circle fit" % \
+                        (bkey, len(alpha_analyses[bkey])))
 
     # Find the mean alpha centre
     if napts > 0:
@@ -1810,12 +1809,13 @@ def fit_gearbox_correction(
 
     else:
         raise GearboxFitError(
-            "Unsufficient alpha circle points ({}) for gearbox calibration.".format(napts)
+            "Unsufficient alpha circle points ({}) to find alpha axis centre.".format(napts)
         )
 
     # Define the zeropoint to the mean alpha circle centre.
     P0 = np.array([xmean, ymean])
 
+    # --- Fit circles to the beta points to determine length of alpha arm and estimate camera offset.
     circles_beta = {}
     offsets_beta = {}
     r_alpha_total = 0.0
@@ -1825,11 +1825,13 @@ def fit_gearbox_correction(
     logger.debug("Fitting beta circles and finding mean length of alpha arm...")
     for akey in list(beta_analyses.keys()):
         if len(beta_analyses[akey]) >= MIN_POINTS_FOR_CIRCLE_FIT:
-            logger.debug("alpha fixpoint %f (deg): Fitting beta circle with %d points" % (akey, len(beta_analyses[akey])))
+            logger.debug("alpha fixpoint %f (deg): Fitting beta circle with %d points" % \
+                         (akey, len(beta_analyses[akey])))
             circles_beta[akey] = fit_circle(beta_analyses[akey], "beta")
             x_center_beta = circles_beta[akey]["xc"]
             y_center_beta = circles_beta[akey]["yc"]
-            logger.debug("alpha fixpoint %f (deg): Beta circle centre (%f, %f)." % (akey, x_center_beta, y_center_beta))
+            logger.debug("alpha fixpoint %f (deg): Beta circle centre (%f, %f)." % \
+                         (akey, x_center_beta, y_center_beta))
             logger.debug("Beta circle distortion: psi=%f (rad), stretch=%f." % \
                          (circles_beta[akey]["psi"], circles_beta[akey]["stretch"]))
             # Radius of alpha arm is distance from P0 to Pcb
@@ -1841,13 +1843,16 @@ def fit_gearbox_correction(
             # Estimate the camera offset from the location of the beta circle centre.
             alpha_mean_rad = np.mean(circles_beta[akey]["alpha_nominal_rad"]) # float(akey)?
             offset_estimate = points_to_offset( alpha_mean_rad, P0, Pcb )
-            logger.debug("alpha fixpoint %f (deg): mean alpha=%f (rad). camera offset estimate from beta centre=%f (rad)" % (akey, alpha_mean_rad, offset_estimate))
+            strg = "alpha fixpoint %f (deg): mean alpha=%f (rad) ." % (akey, alpha_mean_rad)
+            strg += "camera offset estimate from beta centre=%f (rad)" % offset_estimate
+            logger.debug(strg)
             offsets_beta[akey] = offset_estimate
             co_total += offset_estimate
 
             nbpts += 1
         else:
-            logger.warn("alpha fixpoint %f (deg): Too few points (%d) for a beta circle fit" % (akey, len(beta_analyses[akey])))
+            logger.warn("alpha fixpoint %f (deg): Too few points (%d) for a beta circle fit" % \
+                        (akey, len(beta_analyses[akey])))
 
     # Find the mean alpha arm length and mean beta radius to target midpoint
     if nbpts > 0:
@@ -1857,43 +1862,35 @@ def fit_gearbox_correction(
         logger.info("Mean radius of alpha arm: %f (mm)" % R_alpha)
         logger.info("Mean radius to beta metrology mid-point: %f (mm)" % R_beta_midpoint)
         mean_camera_offset = co_total/float(nbpts)
-        logger.info("Mean camera offset (1): %f (rad) = %f (deg)" % (mean_camera_offset, np.rad2deg(mean_camera_offset)))
+        logger.info("Mean camera offset (1): %f (rad) = %f (deg)" % \
+                    (mean_camera_offset, np.rad2deg(mean_camera_offset)))
     else:
         raise GearboxFitError(
-            "Unsufficient beta circle points ({}) for gearbox calibration.".format(nbpts)
+            "Unsufficient beta circle points ({}) for camera offset fit.".format(nbpts)
         )
 
-#     # << Fit circles to the alpha and beta arm points >>
-#     logger.debug("Fitting alpha and beta circles...")
-#     circle_alpha = fit_circle(analysis_results_alpha, "alpha")
-#     circle_beta = fit_circle(analysis_results_beta, "beta")
-# 
-#     # Find centers of alpha circle
-#     x_center = circle_alpha["xc"]
-#     y_center = circle_alpha["yc"]
-#     P0 = np.array([x_center, y_center])
-#     logger.debug("Alpha circle centre (%f, %f)." % (x_center, y_center))
-#     logger.debug("Alpha circle distortion: psi=%f (rad), stretch=%f." % (circle_alpha["psi"], circle_alpha["stretch"]))
-# 
-#     # Find center of beta circles
-#     x_center_beta = circle_beta["xc"]
-#     y_center_beta = circle_beta["yc"]
-#     Pcb = np.array([x_center_beta, y_center_beta])
-#     logger.debug("Beta circle centre (%f, %f)." % (x_center_beta, y_center_beta))
-#     logger.debug("Beta circle distortion: psi=%f (rad), stretch=%f." % (circle_beta["psi"], circle_beta["stretch"]))
-# 
-#     # Radius of alpha arm is distance from P0 to Pcb
-#     # See https://docs.scipy.org/doc/numpy/reference/generated/numpy.linalg.norm.html
-#     R_alpha = np.linalg.norm(Pcb - P0)
-#     # radius from beta center to weighted midpoint between metrology targets
-#     R_beta_midpoint = circle_beta["R"]
-#     logger.debug("Radius of alpha arm: %f (mm)" % R_alpha)
-#     logger.debug("Radius to beta metrology mid-point: %f (mm)" % R_beta_midpoint)
-
-    # If datum measurements have been provided, estimate the beta0 offset from the datum measurements.
+    # --- If datum measurements have been provided, estimate the beta0 offset from the datum measurements.
     if list_of_datum_result is not None and len(list_of_datum_result) > 0:
         logger.info("%d datum measurements available." % len(list_of_datum_result))
         datum_available = True
+        
+        # Report the variation in the datum results
+        ndatum = len(list_of_datum_result)
+        rdiff = 0.0
+        if ndatum > 1:
+            rdiffsq = 0.0
+            for ii in range(1, ndatum):
+                xdiff = list_of_datum_result[ii][0] - list_of_datum_result[ii-1][0]
+                ydiff = list_of_datum_result[ii][1] - list_of_datum_result[ii-1][1]
+                rdiffsq += xdiff*xdiff + xdiff*ydiff
+            rdiff = math.sqrt(rdiffsq/float(ndatum-1))
+        else:
+            xdiff = list_of_datum_result[1][0] - list_of_datum_result[0][0]
+            ydiff = list_of_datum_result[1][1] - list_of_datum_result[0][1]
+            rdiff = math.sqrt( xdiff*xdiff + ydiff*ydiff)
+        logger.info("NOTE: Datum measurements shifted by an RMS of %f mm (%.1f micron)." %
+                    (rdiff, rdiff*1000.0))
+                        
         beta0_total = 0.0
         for Pdatum in list_of_datum_result:
             beta0_estimate = datum_to_beta0( Pdatum, P0, R_alpha, R_beta_midpoint,
@@ -1901,13 +1898,14 @@ def fit_gearbox_correction(
             beta0_total += beta0_estimate
             logger.debug("Datum measurement at %s suggests beta0 = %f (rad) = %f (deg)" % \
                         (str(Pdatum), beta0_estimate, np.rad2deg(beta0_estimate)))
-        mean_beta0_rad = beta0_total/float(len(list_of_datum_result))
+        mean_beta0_rad = beta0_total/float(ndatum)
         logger.info("Mean beta0 from datum (1): %f (rad) = %f (deg)" % (mean_beta0_rad, np.rad2deg(mean_beta0_rad)))
     else:
         logger.info("No datum measurements available.")
         datum_available = False
         mean_beta0_rad = 0.0
 
+    # --- If necessary, find the best-fitting camera offset and/or beta0
     if FIX_CAMERA_OFFSET and FIX_BETA0 and datum_available:
         
         # The camera offset and beta0 zeropoints are fixed at values derived from independent reference points.
@@ -1945,14 +1943,13 @@ def fit_gearbox_correction(
                 else:
                     beta0_start = circle_beta["offset_estimate"] - pi
             
-                r2d = np.rad2deg
                 logger.debug(
                     "camera_offset_start = {} radian = {} degree".format(
-                        camera_offset_start, r2d(camera_offset_start))
+                        camera_offset_start, np.rad2deg(camera_offset_start))
                 )
                 logger.debug(
                     "beta0_start = radian = {} degree".format(
-                        beta0_start, r2d(beta0_start))
+                        beta0_start, np.rad2deg(beta0_start))
                 )
             
                 camera_offset_rad, beta0_rad = fit_offsets(
@@ -1983,53 +1980,71 @@ def fit_gearbox_correction(
             MEAN_BETA0 = False
             mean_beta0_rad = 0.0
 
-    # Fit a gearbox LUT for every pair of alpha circle and beta circle.
-    # TODO: Is this necessary? If the camera offset has revealed the zero-point shift
-    # this step could be done just with the circles containing the largest points
+    # --- Fit a gearbox LUT for every pair of alpha circle and beta circle.
+    # TODO: Is this necessary? If the camera offset has revealed the zero-point shift.
+    # this step could be done just with the circles containing the largest points.
+    ngearbox = 0
     for bkey, circle_alpha in circles_alpha.items():
         for akey, circle_beta in circles_beta.items():
-            logger.info("--- Gearbox fit for betafix={} alphafix={}.".format(bkey, akey))
-        
-            if use_fixed_mean_offsets or USE_MEAN_CAMERA_OFFSET:
-                logger.debug("Using mean camera_offset.")
-                apply_camera_offset = mean_camera_offset           # Mean
-            else:
-                logger.debug("Using camera_offset specific for [%r,%r]." % (akey,bkey))
-                apply_camera_offset = camera_offsets[(akey,bkey)]  # Specific to this combination
+            
+            # Only measurements with a sufficiently high resolution are fitted.
+            nalpha = len(circle_alpha["alpha_nominal_rad"])
+            nbeta = len(circle_beta["beta_nominal_rad"])
+            #print("+++ nalpha=", nalpha, "nbeta=", nbeta, "compared with", MIN_POINTS_FOR_GEARBOX_FIT)
+            if (nalpha >= MIN_POINTS_FOR_GEARBOX_FIT) and (nbeta >= MIN_POINTS_FOR_GEARBOX_FIT):
+                logger.info("--- Gearbox fit for betafix={} alphafix={}.".format(bkey, akey))
+            
+                if use_fixed_mean_offsets or USE_MEAN_CAMERA_OFFSET:
+                    logger.debug("Using mean camera_offset.")
+                    apply_camera_offset = mean_camera_offset           # Mean
+                else:
+                    logger.debug("Using camera_offset specific for [%r,%r]." % (akey,bkey))
+                    apply_camera_offset = camera_offsets[(akey,bkey)]  # Specific to this combination
+    
+                if use_fixed_mean_offsets or USE_MEAN_BETA0:
+                    logger.debug("Using mean beta0.")
+                    apply_beta0 = mean_beta0_rad                       # Mean
+                else:
+                    logger.debug("Using beta0 specific for [%r,%r]." % (akey,bkey))
+                    apply_beta0 = beta0s[(akey,bkey)]                  # Specific to this combination
+            
+                # << Fit calibration tables for alpha and beta arm >>
+                logger.debug("Fitting gearbox parameters to alpha points (camera_offset=%f deg, beta0=%f deg)." %
+                             (np.rad2deg(apply_camera_offset), np.rad2deg(apply_beta0)))
+                coeffs_alpha = fit_gearbox_parameters(
+                    "alpha",
+                    circle_alpha,
+                    P0=P0,
+                    R_alpha=R_alpha,
+                    R_beta_midpoint=R_beta_midpoint,
+                    camera_offset_rad=apply_camera_offset,  # Specific or mean?
+                    beta0_rad=apply_beta0,  # Specific or mean?
+                    return_intermediate_results=return_intermediate_results,
+                )
+            
+                logger.debug("Fitting gearbox parameters to beta points (camera_offset=%f deg, beta0=%f deg)." %
+                             (np.rad2deg(apply_camera_offset), np.rad2deg(apply_beta0)))
+                coeffs_beta = fit_gearbox_parameters(
+                    "beta",
+                    circle_beta,
+                    P0=P0,
+                    R_alpha=R_alpha,
+                    R_beta_midpoint=R_beta_midpoint,
+                    camera_offset_rad=apply_camera_offset,  # Specific or mean?
+                    beta0_rad=apply_beta0,  # Specific or mean?
+                    return_intermediate_results=return_intermediate_results,
+                )
+                ngearbox += 1
 
-            if use_fixed_mean_offsets or USE_MEAN_BETA0:
-                logger.debug("Using mean beta0.")
-                apply_beta0 = mean_beta0_rad                       # Mean
             else:
-                logger.debug("Using beta0 specific for [%r,%r]." % (akey,bkey))
-                apply_beta0 = beta0s[(akey,bkey)]                  # Specific to this combination
-        
-            # << Fit calibration tables for alpha and beta arm >>
-            logger.debug("Fitting gearbox parameters to alpha points (camera_offset=%f deg, beta0=%f deg)." %
-                         (np.rad2deg(apply_camera_offset), np.rad2deg(apply_beta0)))
-            coeffs_alpha = fit_gearbox_parameters(
-                "alpha",
-                circle_alpha,
-                P0=P0,
-                R_alpha=R_alpha,
-                R_beta_midpoint=R_beta_midpoint,
-                camera_offset_rad=apply_camera_offset,  # Specific or mean?
-                beta0_rad=apply_beta0,  # Specific or mean?
-                return_intermediate_results=return_intermediate_results,
-            )
-        
-            logger.debug("Fitting gearbox parameters to beta points (camera_offset=%f deg, beta0=%f deg)." %
-                         (np.rad2deg(apply_camera_offset), np.rad2deg(apply_beta0)))
-            coeffs_beta = fit_gearbox_parameters(
-                "beta",
-                circle_beta,
-                P0=P0,
-                R_alpha=R_alpha,
-                R_beta_midpoint=R_beta_midpoint,
-                camera_offset_rad=apply_camera_offset,  # Specific or mean?
-                beta0_rad=apply_beta0,  # Specific or mean?
-                return_intermediate_results=return_intermediate_results,
-            )
+                logger.info("--- Not enough points (nalpha={},nbeta={}) for gearbox fit with betafix={} alphafix={}.".format(
+                    nalpha, nbeta, bkey, akey)
+                )
+                
+    if ngearbox < 1:
+        logger.error("There are no gearbox calibrations! Empty LUTs will be saved.") 
+    elif ngearbox > 1:
+        logger.warn("There are {} gearbox calibrations but only the last one will be saved.".format(ngearbox)) 
 
     # << Check for missing result and return early in that case >>
     if (coeffs_alpha is None) or (coeffs_beta is None):
@@ -2038,12 +2053,14 @@ def fit_gearbox_correction(
             "coeffs": {"coeffs_alpha": coeffs_alpha, "coeffs_beta": coeffs_beta},
         }
 
+    camera_offset_rad_final = apply_camera_offset
+    beta0_rad_final = apply_beta0
     logger.info(
         "camera_offset_rad = {} = {} degree".format(
-            camera_offset_rad, r2d(camera_offset_rad))
+            camera_offset_rad_final, np.rad2deg(camera_offset_rad_final))
     )
     logger.info(
-        "beta0_rad = {} = {} degree".format(beta0_rad, r2d(beta0_rad))
+        "beta0_rad = {} = {} degree".format(beta0_rad_final, np.rad2deg(beta0_rad_final))
     )
 
     # Construct the nested coeffs dictionary
@@ -2059,8 +2076,8 @@ def fit_gearbox_correction(
         coeffs,
         R_alpha=R_alpha,
         R_beta_midpoint=R_beta_midpoint,
-        camera_offset_rad=camera_offset_rad,
-        beta0_rad=beta0_rad,
+        camera_offset_rad=camera_offset_rad_final,
+        beta0_rad=beta0_rad_final,
         P0=P0,
     )
 
@@ -2083,8 +2100,8 @@ def fit_gearbox_correction(
         "coeffs": coeffs,                         # Nested coeffs (including lookup tables) for alpha and beta
         "x_center": x_center,                     # Centre point of
         "y_center": y_center,                     # the alpha arm axis.
-        "camera_offset_rad": camera_offset_rad,   # Offset between alpha angle and camera axis
-        "beta0_rad": beta0_rad,                   # Offset between beta angle and camera axis
+        "camera_offset_rad": camera_offset_rad_final, # Offset between alpha angle and camera axis
+        "beta0_rad": beta0_rad_final,             # Offset between beta angle and camera axis
         "R_alpha": R_alpha,                       # The length of the alpha arm.
         "R_beta_midpoint": R_beta_midpoint,       # Distance from beta axis to target midpoint.
         "BLOB_WEIGHT_FACTOR": BLOB_WEIGHT_FACTOR, # Weighting between target blobs.
