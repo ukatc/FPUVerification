@@ -1928,7 +1928,7 @@ def fit_gearbox_correction(
         logger.info("--- Using fixed camera offset and beta0 based on datum measurements.")
     else:
 
-        use_fixed_mean_offsets = True
+        use_fixed_mean_offsets = False
         # The camera offset and/or beta zeropoint are derived by fitting the measurements.
         # Find a camera offset for every pair of alpha circle and beta circle.
         # TODO: Investigate how the camera offset and beta0 vary with fixpoint.
