@@ -81,7 +81,8 @@ METROLOGY_CAL_POSITIONS = [254.0, 314.5, 13.0, 73.0, 133.5]
 LARGE_TARGET_RADIUS = 1.25 # mm
 SMALL_TARGET_RADIUS = 0.75 # mm
 TARGET_SEPERATION = 2.37 # mm - The distance between the centers
-THRESHOLD_LIMIT = 60 # pixel values
+THRESHOLD_LIMIT = 60 # pixel values for Pos_rep camera
+DAT_REP_THRESHOLD_LIMIT = 100 # pixel threshold values for dat rep camera
 
 COLLDECT_MEASUREMENT_PARS = Namespace(
     COLDECT_ALPHA=-180,
@@ -120,7 +121,7 @@ DAT_REP_TARGET_DETECTION_OTSU_PARS = Namespace(
     SMALL_RADIUS=SMALL_TARGET_RADIUS,  # in mm
     LARGE_RADIUS=LARGE_TARGET_RADIUS,  # in mm
     GROUP_RANGE=TARGET_SEPERATION,  # in mm
-    THRESHOLD_LIMIT=THRESHOLD_LIMIT,
+    THRESHOLD_LIMIT=DAT_REP_THRESHOLD_LIMIT,
     QUALITY_METRIC=0.4,  # dimensionless
     BLOB_SIZE_TOLERANCE=0.2, # dimensionless
     GROUP_RANGE_TOLERANCE=0.2 # dimensionless
@@ -254,6 +255,10 @@ POS_REP_MEASUREMENT_PARS = Namespace(
     # measurements made within an
     # extra sweep from the
     # starting position
+    
+    ALPHA_FIXPOINT = 10, #index of the alpha fixed point position, should be a number float/int between 1 and POS_REP_NUM_INCREMENTS
+    BETA_FIXPOINT = 10, #index of the beta fixed point position, should be a number float/int between 1 and POS_REP_NUM_INCREMENTS
+    
     POS_REP_SAFETY_MARGIN=1.0,  # safety margin, in degree, for
     # distance to range limits when testing
     POS_REP_WAVEFORM_PARS={

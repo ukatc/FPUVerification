@@ -8,7 +8,11 @@ RECORD_TYPE = "positional-repeatability"
 
 PositionalRepeatabilityImages = namedtuple(
     "PositionalRepeatabilityImages",
-    " images_alpha" " images_beta" " waveform_pars" " calibration_mapfile",
+    " images_alpha"
+    " images_beta"
+    " waveform_pars"
+    " calibration_mapfile"
+    " datum_images",
 )
 
 PositionalRepeatabilityResults = namedtuple(
@@ -29,7 +33,8 @@ PositionalRepeatabilityResults = namedtuple(
     " gearbox_correction"
     " error_message"
     " algorithm_version"
-    " gearbox_correction_version",
+    " gearbox_correction_version"
+    " datum_results",
 )
 
 
@@ -37,7 +42,11 @@ save_positional_repeatability_images = partial(
     save_named_record, (RECORD_TYPE, "images"), include_fpu_id=True
 )
 
-get_positional_repeatability_images = partial(get_named_record, (RECORD_TYPE, "images"))
+DEFAULT_IMAGES_RECORD = {
+    "datum_images" : []
+}
+
+get_positional_repeatability_images = partial(get_named_record, (RECORD_TYPE, "images"), default_vals=DEFAULT_IMAGES_RECORD)
 
 save_positional_repeatability_result = partial(
     save_named_record, (RECORD_TYPE, "result")
@@ -52,7 +61,10 @@ def upgrade_func(x):
     return upgrade_func2(upgrade_func1(x))
 
 
-default_vals = {"gearbox_correction_version": (0, 1, 0)}
+default_vals = {
+    "gearbox_correction_version": (0, 1, 0),
+    "datum_results": []
+}
 
 get_positional_repeatability_result = partial(
     get_named_record,

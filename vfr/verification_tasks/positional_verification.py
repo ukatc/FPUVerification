@@ -14,6 +14,7 @@ from Gearbox.gear_correction import (
     apply_gearbox_correction,
     GEARBOX_CORRECTION_VERSION,
     GEARBOX_CORRECTION_MINIMUM_VERSION,
+    cartesian_blob_position
 )
 from GigE.GigECamera import BASLER_DEVICE_CLASS, DEVICE_CLASS, IP_ADDRESS
 from DistortionCorrection import get_correction_func
@@ -274,6 +275,19 @@ def measure_positional_verification(rig, dbe, pars=None):
                 )
 
                 return ipath
+                
+            def capture_datum_image(timing):
+
+                ipath = store_image(
+                    pos_rep_cam,
+                    "{sn}/{tn}/{ts}/datum-{timing}.bmp",
+                    sn=sn,
+                    ts=tstamp,
+                    tn="positional-verification",
+                    timing=timing
+                )
+
+                return ipath
 
             tol = abs(pars.POS_VER_SAFETY_TOLERANCE)
             
@@ -296,8 +310,11 @@ def measure_positional_verification(rig, dbe, pars=None):
 
             tested_positions = calibration_positions + test_positions
         
+            datum_image_list=[]
             find_datum(gd, grid_state, opts)
-
+            datipath = capture_datum_image("START")
+            datum_image_list.append(datipath)
+            
             image_dict = {}
             deg2rad = np.deg2rad
 
@@ -350,6 +367,11 @@ def measure_positional_verification(rig, dbe, pars=None):
 
                 image_dict[(k, alpha_deg, beta_deg)] = ipath
 
+            
+            find_datum(gd, grid_state, opts)
+            datipath = capture_datum_image("END")
+            datum_image_list.append(datipath)
+            
             # store dict of image paths, together with all data and algorithms
             # which are relevant to assess result later
             record = PositionalVerificationImages(
@@ -359,6 +381,7 @@ def measure_positional_verification(rig, dbe, pars=None):
                 gearbox_git_version=gearbox_git_version,
                 gearbox_record_count=gearbox_record_count,
                 calibration_mapfile=pars.POS_VER_CALIBRATION_MAPFILE,
+                datum_images=datum_image_list,
             )
 
             fpu_log.trace("FPU %r: saving result record = %r" % (sn, record))
@@ -398,6 +421,7 @@ def eval_positional_verification(dbe, pos_rep_analysis_pars, pos_ver_evaluation_
         images = measurement["images"]
         gearbox_correction = measurement["gearbox_correction"]
         mapfile = measurement["calibration_mapfile"]
+        datum_image_list = measurement["datum_images"]
 
 
         ####
@@ -420,6 +444,13 @@ def eval_positional_verification(dbe, pos_rep_analysis_pars, pos_ver_evaluation_
         ####
         def analysis_func(ipath):
             return posrepCoordinates(fixup_ipath(ipath), pars=pos_rep_analysis_pars, correct=correct)
+            
+            
+        datum_results = []
+        for datum_image in datum_image_list:
+            datum_blobs = analysis_func(datum_image)
+            datum_point = cartesian_blob_position(datum_blobs)
+            datum_results.append(datum_point)
 
         try:
             analysis_results = {}
@@ -506,6 +537,7 @@ def eval_positional_verification(dbe, pos_rep_analysis_pars, pos_ver_evaluation_
             camera_offset=camera_offset_new,
             center_x=xc,
             center_y=yc,
+            datum_results=datum_results,
         )
         logger.trace("FPU %r: saving result record = %r" % (sn, record))
         save_positional_verification_result(dbe, fpu_id, record)
