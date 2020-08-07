@@ -22,39 +22,8 @@ DEFAULT_TASKS_NONFIBRE = [
 
 GRAPHICAL_DIAGNOSTICS = False
 
-# The minimum number of points for a good circle fit and
-# the minimum number of alpha and beta points for a good gearbox calibration.
-MIN_POINTS_FOR_CIRCLE_FIT = 8
-MIN_POINTS_FOR_GEARBOX_FIT = 360
-
-# Flags to modify how the gearbox calibration determines zeropoints.
-#
-# If FIX_CAMERA_OFFSET=True (recommended), the camera offset angle
-# is determined from the centres of the beta circles and then fixed.
-# If set to False, the camera offset is determined by fitting the
-# circle data.
-#
-# If FIX_BETA0=True (recommended if sufficient data measurements),
-# the beta0 offset angle is derived from datum measurements (if
-# available). If set to False, the beta0 is determined by fitting
-# the circle data.
-#
-# If USE_MEAN_CAMERA_OFFSET=True, the mean camera offset for all sets
-# of measurements is used for all alpha and beta fixpoints. If set to
-# False, every gearbox fit has a camera offset unique to that
-# particular combination of alpha and beta fixpoint.
-# (Only relevant when FIX_CAMERA_OFFSET is False.)
-#
-# If FIX_BETA0=True, the mean beta0 for all sets
-# of measurements is used for all alpha and beta fixpoints. If set to
-# False, every gearbox fit has a beta0 unique to that
-# particular combination of alpha and beta fixpoint.
-# (Only relevant when FIX_BETA0 is False.)
-#
-FIX_CAMERA_OFFSET = True
-FIX_BETA0 = True
-USE_MEAN_CAMERA_OFFSET = True
-USE_MEAN_BETA0 = True
+# The minimum number of points for a good circle fit
+MIN_POINTS_FOR_CIRCLE_FIT = 6
 
 # NOTE: ALPHA_DATUM_OFFSET is also defined in fpu_commands.py.
 #       Why is it repeated here? Be aware of the two values getting out of step.
@@ -325,6 +294,39 @@ POS_REP_EVALUATION_PARS = Namespace(
     # applied, the order of the fit.
 )
 
+GEARBOX_CALIBRATION_PARS = Namespace(
+    # The minimum number of alpha and beta points for a good gearbox calibration.
+    MIN_POINTS_FOR_GEARBOX_FIT = 360,
+    # Flags to modify how the gearbox calibration determines zeropoints.
+    #
+    # If FIX_CAMERA_OFFSET=True (recommended), the camera offset angle
+    # is determined from the centres of the beta circles and then fixed.
+    # If set to False, the camera offset is determined by fitting the
+    # circle data.
+    #
+    # If FIX_BETA0=True (recommended if sufficient data measurements),
+    # the beta0 offset angle is derived from datum measurements (if
+    # available). If set to False, the beta0 is determined by fitting
+    # the circle data.
+    #
+    # If USE_MEAN_CAMERA_OFFSET=True, the mean camera offset for all sets
+    # of measurements is used for all alpha and beta fixpoints. If set to
+    # False, every gearbox fit has a camera offset unique to that
+    # particular combination of alpha and beta fixpoint.
+    # (Only relevant when FIX_CAMERA_OFFSET is False.)
+    #
+    # If FIX_BETA0=True, the mean beta0 for all sets
+    # of measurements is used for all alpha and beta fixpoints. If set to
+    # False, every gearbox fit has a beta0 unique to that
+    # particular combination of alpha and beta fixpoint.
+    # (Only relevant when FIX_BETA0 is False.)
+    #
+    FIX_CAMERA_OFFSET = True,
+    FIX_BETA0 = True,
+    USE_MEAN_CAMERA_OFFSET = True,
+    USE_MEAN_BETA0 = True,
+)
+
 #
 # NOTE: The following parameters define a default plate scale which
 # is only used if a camera calibration file is not found.
@@ -386,11 +388,20 @@ POS_VER_MEASUREMENT_PARS = Namespace(
 
 
 POS_VER_EVALUATION_PARS = Namespace(
-    POS_VER_PASS=0.030,  # the maximum angular deviation, in
+    # The maximum angular deviation, in
     # degrees, from an average position of
     # a grouping of measured points at a
     # given nominal position which
     # represents an acceptable FPU
+    POS_VER_PASS=0.030,
+    
+    # The following parameters define how the positional verification
+    # software recalibrates the orientation of the turntable and camera
+    # to derive a new camera offset
+    CAMERA_OFFSET_CHOICES = ("DATUM", "ALPHA", "BETA"),
+    #CAMERA_OFFSET_FROM = "DATUM",   # Derive camera offset from datum measurements
+    #CAMERA_OFFSET_FROM = "ALPHA",   # Derive camera offset from target location on alpha circles
+    CAMERA_OFFSET_FROM = "BETA",    # Derive camera offset from beta axis location as a function of alpha
 )
 
 

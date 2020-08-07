@@ -37,8 +37,10 @@ from fpu_constants import (
     StepsPerRadianAlpha,
     StepsPerRadianBeta,
 )
-from vfr.conf import BLOB_WEIGHT_FACTOR, POS_REP_EVALUATION_PARS, PERCENTILE_ARGS, GRAPHICAL_DIAGNOSTICS, \
-    MIN_POINTS_FOR_CIRCLE_FIT, MIN_POINTS_FOR_GEARBOX_FIT, FIX_CAMERA_OFFSET, FIX_BETA0, USE_MEAN_CAMERA_OFFSET, USE_MEAN_BETA0
+from vfr.conf import BLOB_WEIGHT_FACTOR, PERCENTILE_ARGS, GRAPHICAL_DIAGNOSTICS, \
+    MIN_POINTS_FOR_CIRCLE_FIT
+from vfr.conf import POS_REP_EVALUATION_PARS
+from vfr.conf import GEARBOX_CALIBRATION_PARS
 
 # Plotting library used for diagnostics.
 if GRAPHICAL_DIAGNOSTICS:
@@ -1897,8 +1899,9 @@ def fit_gearbox_correction(
             # Estimate the camera offset from the location of the beta circle centre.
             alpha_mean_rad = np.mean(circles_beta[akey]["alpha_nominal_rad"]) # float(akey)?
             offset_estimate = points_to_offset( alpha_mean_rad, P0, Pcb )
-            strg = "alpha fixpoint %f (deg): mean alpha=%f (rad) ." % (akey, alpha_mean_rad)
-            strg += "camera offset estimate from beta centre=%f (rad)" % offset_estimate
+            strg = "alpha fixpoint %f (deg): mean alpha=%f (deg) ." % (akey, np.rad2deg(alpha_mean_rad))
+            strg += "camera offset estimate from beta centre = %f (rad) = %f (deg)" % \
+                (offset_estimate, np.rad2deg(offset_estimate))
             logger.debug(strg)
             offsets_beta[akey] = offset_estimate
             co_total += offset_estimate
@@ -1945,7 +1948,7 @@ def fit_gearbox_correction(
         logger.info("NOTE: Datum measurements shifted by an RMS of %f mm (%.1f micron)." %
                     (rdiff, rdiff*1000.0))
         
-        if FIX_BETA0:
+        if GEARBOX_CALIBRATION_PARS.FIX_BETA0:
             beta0_total = 0.0
             for Pdatum in list_of_datum_result:
                 beta0_estimate = datum_to_beta0( Pdatum, P0, R_alpha, R_beta_midpoint,
@@ -1974,7 +1977,7 @@ def fit_gearbox_correction(
                     (mean_beta0_rad, np.rad2deg(mean_beta0_rad)))
 
     # --- If necessary, find the best-fitting camera offset and/or beta0
-    if FIX_CAMERA_OFFSET and FIX_BETA0 and datum_available:
+    if GEARBOX_CALIBRATION_PARS.FIX_CAMERA_OFFSET and GEARBOX_CALIBRATION_PARS.FIX_BETA0 and datum_available:
         
         # The camera offset and beta0 zeropoints are fixed at values derived from independent reference points.
         # A fit to the measurement data is not needed. Ensure these single values are used.
@@ -2028,7 +2031,7 @@ def fit_gearbox_correction(
                     R_beta_midpoint=R_beta_midpoint,
                     camera_offset_start=camera_offset_start,
                     beta0_start=beta0_start,
-                    beta_only=FIX_CAMERA_OFFSET,          # Try fixing camera offset and only fitting beta offset.
+                    beta_only=GEARBOX_CALIBRATION_PARS.FIX_CAMERA_OFFSET,          # Try fixing camera offset and only fitting beta offset.
                     plot=PLOT_CAMERA_FIT
                 )
                 camera_offsets[(akey,bkey)] = camera_offset_rad
@@ -2039,7 +2042,7 @@ def fit_gearbox_correction(
     
         # Take the mean of the camera offset and beta0 angles measured above
         if npts > 0:
-            if not FIX_CAMERA_OFFSET:
+            if not GEARBOX_CALIBRATION_PARS.FIX_CAMERA_OFFSET:
                 mean_camera_offset = camera_offset_total/float(npts)
             mean_beta0_rad = beta0_total/float(npts)
             logger.info("Mean camera offset from offset fit (2): %f (rad) = %f (deg)" % \
@@ -2061,17 +2064,18 @@ def fit_gearbox_correction(
             nalpha = len(circle_alpha["alpha_nominal_rad"])
             nbeta = len(circle_beta["beta_nominal_rad"])
             #print("+++ nalpha=", nalpha, "nbeta=", nbeta, "compared with", MIN_POINTS_FOR_GEARBOX_FIT)
-            if (nalpha >= MIN_POINTS_FOR_GEARBOX_FIT) and (nbeta >= MIN_POINTS_FOR_GEARBOX_FIT):
+            if (nalpha >= GEARBOX_CALIBRATION_PARS.MIN_POINTS_FOR_GEARBOX_FIT) and \
+               (nbeta >= GEARBOX_CALIBRATION_PARS.MIN_POINTS_FOR_GEARBOX_FIT):
                 logger.info("--- Gearbox fit for betafix={} alphafix={}.".format(bkey, akey))
             
-                if use_fixed_mean_offsets or USE_MEAN_CAMERA_OFFSET:
+                if use_fixed_mean_offsets or GEARBOX_CALIBRATION_PARS.USE_MEAN_CAMERA_OFFSET:
                     logger.debug("Using mean camera_offset.")
                     apply_camera_offset = mean_camera_offset           # Mean
                 else:
                     logger.debug("Using camera_offset specific for [%r,%r]." % (akey,bkey))
                     apply_camera_offset = camera_offsets[(akey,bkey)]  # Specific to this combination
     
-                if use_fixed_mean_offsets or USE_MEAN_BETA0:
+                if use_fixed_mean_offsets or GEARBOX_CALIBRATION_PARS.USE_MEAN_BETA0:
                     logger.debug("Using mean beta0.")
                     apply_beta0 = mean_beta0_rad                       # Mean
                 else:
