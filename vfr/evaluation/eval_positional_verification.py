@@ -4,6 +4,10 @@
 """
 from __future__ import division, print_function
 
+import math
+from math import pi
+import numpy as np
+import warnings
 import logging
 
 from Gearbox.gear_correction import angle_to_point, cartesian_blob_position, \
@@ -37,9 +41,7 @@ if GRAPHICAL_DIAGNOSTICS:
         GRAPHICAL_DIAGNOSTICS = False
 
 
-from math import pi
-import numpy as np
-import warnings
+
 
 POS_VER_ALGORITHM_VERSION = (1, 0, 0)
 
@@ -54,6 +56,7 @@ APPLY_ELLIPTICAL_DISTORTION = False   # Recommended setting False
 
 def evaluate_positional_verification(
     dict_of_coords,            # Dictionary of coordinates, as defined below.
+    list_of_datum_result=None,          # List of datum positions (x,y) in chronological order (optional)    
     pars=None,                 # Configuration parameters?
     x_center=None,             # X centre of alpha axis
     y_center=None,             # Y centre of alpha axis
@@ -231,6 +234,28 @@ def evaluate_positional_verification(
 
     # NOTE: If the remaining points are used to make a "circle_beta" data structure and all
     # the points used to derive a new beta0 angle, the results get worse.
+
+    if list_of_datum_result is not None and len(list_of_datum_result) > 0:
+        logger.info("%d datum measurements available." % len(list_of_datum_result))
+        datum_available = True
+        
+        # Report the variation in the datum results
+        ndatum = len(list_of_datum_result)
+        rdiff = 0.0
+        if ndatum > 1:
+            rdiffsq = 0.0
+            for ii in range(1, ndatum):
+                xdiff = list_of_datum_result[ii][0] - list_of_datum_result[ii-1][0]
+                ydiff = list_of_datum_result[ii][1] - list_of_datum_result[ii-1][1]
+                rdiffsq += xdiff*xdiff + xdiff*ydiff
+            rdiff = math.sqrt(rdiffsq/float(ndatum-1))
+        else:
+            xdiff = list_of_datum_result[1][0] - list_of_datum_result[0][0]
+            ydiff = list_of_datum_result[1][1] - list_of_datum_result[0][1]
+            rdiff = math.sqrt( xdiff*xdiff + ydiff*ydiff)
+        logger.info("NOTE: Datum measurements shifted by an RMS of %f mm (%.1f micron)." %
+                    (rdiff, rdiff*1000.0))
+
 
     # Find the best fit for the camera offset
     logger.info("Deriving new camera offset (to correct turntable tilt).")

@@ -482,7 +482,7 @@ def eval_positional_verification(dbe, pos_rep_analysis_pars, pos_ver_evaluation_
 
             (posver_error_by_angle, expected_points, measured_points,
              posver_error_measures, mean_error_vector, camera_offset_new, xc, yc) = evaluate_positional_verification(
-                 analysis_results, pars=pos_ver_evaluation_pars,
+                 analysis_results, list_of_datum_result=datum_results, pars=pos_ver_evaluation_pars,
                  **gearbox_correction )
 
             if (95 not in posver_error_measures.percentiles) or np.isnan(
