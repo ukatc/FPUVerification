@@ -565,6 +565,61 @@ def points_to_offset(
     return camera_offset
 
 
+# ----------------------------------------------------------------------------
+def datum_to_camera_offset(
+    Pdatum,                  # Coordinates of the datum point (xd, yd)
+    P0=None,                 # Coordinates of centre of alpha circle (xc,yc)
+    R_alpha=None,            # Radius of alpha circle (mm)
+    R_beta_midpoint=None,    # Radius of beta circle (mm)
+    beta0_rad=None,              # Offset between beta angle and alpha angle zeropoint (rad)
+    verbose=False            # Display debugging info (can be extremely verbose)
+):
+    """
+
+    Given a datum measurement, the location of the alpha axis, the radii
+    of the arms and the known beta0, derive the camera offset angle
+    that fits the datum measurement.
+
+    """
+    # Extremely verbose diagnostic.
+    #print("datum_to_camera_offset: Called with Pdatum=", Pdatum,
+    #      "P0=", P0, "R_alpha=", R_alpha, "R_beta_midpoint=", R_beta_midpoint,
+    #      "beta0=", beta0 )
+
+    # First determine the nominal location of the datum point with no camera offset applied.
+    alpha_rad = ALPHA_DATUM_OFFSET_RAD
+    beta_rad = BETA_DATUM_OFFSET_RAD + pi - beta0_rad
+
+    # Combine the alpha and beta angles (they both turn clockwise when angles increase).
+    gamma_rad = beta_rad + alpha_rad
+    # Extremely verbose diagnostic.
+    #print("alpha_rad=", alpha_rad, "beta_rad=", beta_rad, "gamma_rad=", gamma_rad)
+
+    # Determine the location of the end of the alpha arm (=beta axis)
+    # with respect to the alpha circle centre (P0)
+    vec_alpha = np.array(
+        polar2cartesian(alpha_rad, R_alpha)
+    )
+    # Determine the location of the target midpoint on the beta arm with respect to
+    # the beta axis.
+    vec_beta = np.array(
+        polar2cartesian(gamma_rad, R_beta_midpoint)
+    )
+    vec_nominal = vec_alpha + vec_beta
+    
+    # The camera offset angle is the different between the orientation of this
+    # nominal point from the alpha axis centre and the orientation of the
+    # measured datum point.
+    nominal_angle = np.arctan2(vec_nominal[1], vec_nominal[0])
+
+    dym = Pdatum[1] - P0[1]
+    dxm = Pdatum[0] - P0[0]
+    measured_angle = np.arctan2(dym, dxm)
+
+    camera_offset_rad = measured_angle - nominal_angle
+
+    return camera_offset_rad
+
 
 # ----------------------------------------------------------------------------
 def datum_to_beta0(
@@ -573,7 +628,6 @@ def datum_to_beta0(
     R_alpha=None,            # Radius of alpha circle (mm)
     R_beta_midpoint=None,    # Radius of beta circle (mm)
     camera_offset_rad=None,  # Offset between alpha angle and camera axis (rad)
-    broadcast=True,          # Adjust the P0 vector to broadcast onto all points?
     verbose=False            # Display debugging info (can be extremely verbose)
 ):
     """
@@ -616,7 +670,7 @@ def angle_to_point(
     R_alpha=None,            # Radius of alpha circle (mm)
     R_beta_midpoint=None,    # Radius of beta circle (mm)
     camera_offset_rad=None,  # Offset between alpha angle and camera axis (rad)
-    beta0_rad=None,          # Offset between beta angle and camera axis (rad)
+    beta0_rad=None,          # Offset between beta angle and alpha angle zeropoint (rad)
     inverse=False,           # Apply the inverse of the gearbox correction?
     coeffs=None,             # Nested dictionary of gearbox correction coeffs. None means no correction.
     broadcast=True,          # Adjust the P0 vector to broadcast onto all points?
@@ -783,7 +837,7 @@ def datum_to_point(
     R_alpha=None,            # Radius of alpha circle (mm)
     R_beta_midpoint=None,    # Radius of beta circle (mm)
     camera_offset_rad=None,  # Offset between alpha angle and camera axis (rad)
-    beta0_rad=None,          # Offset between beta angle and camera axis (rad)
+    beta0_rad=None,          # Offset between beta angle and alpha angle zeropoint (rad)
     verbose=False            # Display debugging info (can be extremely verbose)
 ):
     """
@@ -2117,7 +2171,7 @@ def fit_gearbox_correction(
         "x_center": x_center,                     # Centre point of
         "y_center": y_center,                     # the alpha arm axis.
         "camera_offset_rad": camera_offset_rad_final, # Offset between alpha angle and camera axis
-        "beta0_rad": beta0_rad_final,             # Offset between beta angle and camera axis
+        "beta0_rad": beta0_rad_final,             # Offset between beta angle and alpha angle zeropoint
         "R_alpha": R_alpha,                       # The length of the alpha arm.
         "R_beta_midpoint": R_beta_midpoint,       # Distance from beta axis to target midpoint.
         "BLOB_WEIGHT_FACTOR": BLOB_WEIGHT_FACTOR, # Weighting between target blobs.

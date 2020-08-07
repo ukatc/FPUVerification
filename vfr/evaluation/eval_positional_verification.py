@@ -11,10 +11,11 @@ import warnings
 import logging
 
 from Gearbox.gear_correction import angle_to_point, cartesian_blob_position, \
-                                    elliptical_distortion, leastsq_circle, fit_offsets
+                                    elliptical_distortion, leastsq_circle, fit_offsets, \
+                                    datum_to_camera_offset
 from vfr.evaluation.measures import get_errors, get_measures, get_weighted_coordinates
 
-from vfr.conf import POS_REP_EVALUATION_PARS, GRAPHICAL_DIAGNOSTICS
+from vfr.conf import POS_REP_EVALUATION_PARS, FIX_CAMERA_OFFSET, GRAPHICAL_DIAGNOSTICS
 
 # TODO: Add the following  parameters to the configuration file?
 
@@ -256,34 +257,47 @@ def evaluate_positional_verification(
         logger.info("NOTE: Datum measurements shifted by an RMS of %f mm (%.1f micron)." %
                     (rdiff, rdiff*1000.0))
 
+    if FIX_CAMERA_OFFSET and datum_available:
+        # Estimate the camera offset from the datum measurement.
+        logger.info("Deriving new camera offset (to correct turntable tilt) from datum measurements.")
+        camera_offset_total = 0.0
+        for Pdatum in list_of_datum_result:
+            camera_offset_estimate = datum_to_camera_offset( Pdatum, P0, R_alpha, R_beta_midpoint,
+                                             beta0_rad )
+            camera_offset_total += camera_offset_estimate
+            logger.debug("Datum measurement at %s suggests camera_offset {:.4f} compared with {:.4f} (deg)".format(
+                np.rad2deg(camera_offset_estimate), np.rad2deg(camera_offset_rad)))
+            camera_offset_new = camera_offset_total/float(ndatum)
+        logger.info("New mean camera offset from datum= {:.4f} compared with {:.4f} (deg)".format(
+            np.rad2deg(camera_offset_new), np.rad2deg(camera_offset_rad)))            
 
-    # Find the best fit for the camera offset
-    logger.info("Deriving new camera offset (to correct turntable tilt).")
-    camera_offset_total = 0.0
-    ncams = 0
-    for bkey in list(circles_alpha.keys()):
-        #print("circle_alpha=", circle_alpha)
-        camera_offset_this, beta0_new = fit_offsets(
-                               circles_alpha[bkey],                  # Fit alpha circle only
-                               circle_beta=None,                     #
-                               P0=P0,                                # Use new alpha axis centre
-                               R_alpha=R_alpha,                      # Previous calibrated radius of alpha circle
-                               R_beta_midpoint=R_beta_midpoint,      # Previous calibrated radius of beta circle
-                               camera_offset_start=camera_offset_rad,# Start with previous camera angle offset
-                               beta0_start=beta0_rad,                # Fixed beta0
-                               verbose=False,
-                               plot=PLOT_OFFSET_CIRCLES
-                          )
-        logger.debug("beta={}. Fitted camera offset= {:.4f} compared with {:.4f} (deg)".format(
-            bkey, np.rad2deg(camera_offset_this), np.rad2deg(camera_offset_rad)))
-        logger.debug("New beta0= {:.4f} (ignored) compared with {:.4f} (deg)".format(
-            np.rad2deg(beta0_new), np.rad2deg(beta0_rad)))
-        camera_offset_total += camera_offset_this
-        ncams += 1
-    camera_offset_new = camera_offset_total / float(ncams)
-    logger.info("New mean camera offset= {:.4f} compared with {:.4f} (deg)".format(
-        np.rad2deg(camera_offset_new), np.rad2deg(camera_offset_rad)))
-
+    else:    
+        # Find the best fit for the camera offset
+        logger.info("Deriving new camera offset (to correct turntable tilt) by fitting.")
+        camera_offset_total = 0.0
+        ncams = 0
+        for bkey in list(circles_alpha.keys()):
+            #print("circle_alpha=", circle_alpha)
+            camera_offset_this, beta0_new = fit_offsets(
+                                   circles_alpha[bkey],                  # Fit alpha circle only
+                                   circle_beta=None,                     #
+                                   P0=P0,                                # Use new alpha axis centre
+                                   R_alpha=R_alpha,                      # Previous calibrated radius of alpha circle
+                                   R_beta_midpoint=R_beta_midpoint,      # Previous calibrated radius of beta circle
+                                   camera_offset_start=camera_offset_rad,# Start with previous camera angle offset
+                                   beta0_start=beta0_rad,                # Fixed beta0
+                                   verbose=False,
+                                   plot=PLOT_OFFSET_CIRCLES
+                              )
+            logger.debug("beta={}. Fitted camera offset= {:.4f} compared with {:.4f} (deg)".format(
+                bkey, np.rad2deg(camera_offset_this), np.rad2deg(camera_offset_rad)))
+            logger.debug("New beta0= {:.4f} (ignored) compared with {:.4f} (deg)".format(
+                np.rad2deg(beta0_new), np.rad2deg(beta0_rad)))
+            camera_offset_total += camera_offset_this
+            ncams += 1
+        camera_offset_new = camera_offset_total / float(ncams)
+        logger.info("New mean camera offset from fit= {:.4f} compared with {:.4f} (deg)".format(
+            np.rad2deg(camera_offset_new), np.rad2deg(camera_offset_rad)))
 
     # Go back to the start and read the input data from the beginning.
     uncalibrated_points = {} # arm coordinates + index vs. uncalibrated Cartesian position
