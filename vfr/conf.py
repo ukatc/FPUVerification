@@ -400,8 +400,8 @@ POS_VER_EVALUATION_PARS = Namespace(
     # to derive a new camera offset
     CAMERA_OFFSET_CHOICES = ("DATUM", "ALPHA", "BETA"),
     #CAMERA_OFFSET_FROM = "DATUM",   # Derive camera offset from datum measurements
-    #CAMERA_OFFSET_FROM = "ALPHA",   # Derive camera offset from target location on alpha circles
-    CAMERA_OFFSET_FROM = "BETA",    # Derive camera offset from beta axis location as a function of alpha
+    CAMERA_OFFSET_FROM = "ALPHA",   # Derive camera offset from target location on alpha circles
+    #CAMERA_OFFSET_FROM = "BETA",    # Derive camera offset from beta axis location as a function of alpha
 )
 
 
