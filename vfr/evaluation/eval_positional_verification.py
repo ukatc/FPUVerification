@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
-"""Module to evaluate positional verification.
+"""
+
+Module to evaluate positional verification.
 
 """
 from __future__ import division, print_function
@@ -15,22 +17,8 @@ from Gearbox.gear_correction import angle_to_point, cartesian_blob_position, \
                                     points_to_offset, datum_to_camera_offset
 from vfr.evaluation.measures import get_errors, get_measures, get_weighted_coordinates
 
-from vfr.conf import POS_REP_EVALUATION_PARS, POS_VER_EVALUATION_PARS, GRAPHICAL_DIAGNOSTICS
-
-
-# TODO: Add the following  parameters to the configuration file?
-
-# The minimum number of points for a good circle fit.
-MIN_POINTS_FOR_CIRCLE_FIT = 6
-
-# The maximum tolerable shift (in mm) between the centre of mass of the points
-# fitted to a circle and the fitted centre. A larger shift indicates the
-# points are too skewed to make a reliable fit.
-MAX_CENTRE_SHIFT = 2.0
-
-# The maximum angle to which the camera and turntable are expected to move.
-# A fit which generates a larger deviation is rejected.
-MAX_OFFSET_SHIFT_RAD = 0.15
+from vfr.conf import POS_REP_EVALUATION_PARS, POS_VER_EVALUATION_PARS, \
+                     GRAPHICAL_DIAGNOSTICS, MIN_POINTS_FOR_CIRCLE_FIT
 
 # Plot the alpha circles used to calibrate FPU centre
 PLOT_ALPHA_CIRCLES = False
@@ -61,7 +49,7 @@ APPLY_ELLIPTICAL_DISTORTION = False   # Recommended setting False
 
 def evaluate_positional_verification(
     dict_of_coords,            # Dictionary of coordinates, as defined below.
-    list_of_datum_result=None,          # List of datum positions (x,y) in chronological order (optional)    
+    list_of_datum_result=None, # List of datum positions (x,y) in chronological order (optional)    
     pars=None,                 # Configuration parameters?
     x_center=None,             # X centre of alpha axis
     y_center=None,             # Y centre of alpha axis
@@ -107,8 +95,7 @@ def evaluate_positional_verification(
     error_vectors = {} # arm coordinates + index vs. delta (expected - measured)
     error_by_angle = {} # arm coordinates + index vs. magnitude of error vector
 
-    # get measured circle center point from alpha arm
-    # calibration
+    # Get measured circle center point from alpha arm calibration
     #
     # FPU centre and orientation has changed because of the turntable movement, so it
     # needs to be rederived from the images taken. The data set is searched for
@@ -168,7 +155,8 @@ def evaluate_positional_verification(
 
         # Only accept the fit if the points sample the circle well and are
         # not skewed to one side.
-        if (abs(xcom-xc) < MAX_CENTRE_SHIFT) and (abs(ycom-yc) < MAX_CENTRE_SHIFT):
+        if (abs(xcom-xc) < POS_REP_EVALUATION_PARS.MAX_CENTRE_SHIFT) and \
+           (abs(ycom-yc) < POS_REP_EVALUATION_PARS.MAX_CENTRE_SHIFT):
             # Circle accepted
             #print("Circle fit accepted.")
             xpts.append(xc)
@@ -306,7 +294,7 @@ def evaluate_positional_verification(
                 strg += "camera offset estimate from beta centre=%f (deg) compared with %f (deg)" % \
                     (np.rad2deg(offset_estimate), np.rad2deg(camera_offset_rad))
                 logger.debug(strg)
-                if abs(offset_estimate - camera_offset_rad) < MAX_OFFSET_SHIFT_RAD:
+                if abs(offset_estimate - camera_offset_rad) < POS_REP_EVALUATION_PARS.MAX_OFFSET_SHIFT_RAD:
                     co_total += offset_estimate
                     nbpts += 1
             #else:
@@ -375,7 +363,7 @@ def evaluate_positional_verification(
                                              beta0_rad )
             logger.debug("Datum measurement at {} suggests camera_offset {:.4f} compared with {:.4f} (deg)".format(
                 Pdatum, np.rad2deg(camera_offset_estimate), np.rad2deg(camera_offset_rad)))
-            if abs(camera_offset_estimate - camera_offset_rad) < MAX_OFFSET_SHIFT_RAD:
+            if abs(camera_offset_estimate - camera_offset_rad) < POS_REP_EVALUATION_PARS.MAX_OFFSET_SHIFT_RAD:
                 ngood += 1
                 camera_offset_total += camera_offset_estimate
 
@@ -413,7 +401,7 @@ def evaluate_positional_verification(
                 bkey, np.rad2deg(camera_offset_this), np.rad2deg(camera_offset_rad)))
             logger.debug("New beta0= {:.4f} (ignored) compared with {:.4f} (deg)".format(
                 np.rad2deg(beta0_new), np.rad2deg(beta0_rad)))
-            if abs(camera_offset_this - camera_offset_rad) < MAX_OFFSET_SHIFT_RAD:
+            if abs(camera_offset_this - camera_offset_rad) < POS_REP_EVALUATION_PARS.MAX_OFFSET_SHIFT_RAD:
                 camera_offset_total += camera_offset_this
                 ncams += 1
         if ncams > 0:
@@ -426,8 +414,8 @@ def evaluate_positional_verification(
 
     # Go back to the start and read the input data from the beginning.
     uncalibrated_points = {} # arm coordinates + index vs. uncalibrated Cartesian position
-    expected_points = {} # arm coordinates + index vs. expected Cartesian position
-    measured_points = {} # arm coordinates + index vs. actual Cartesian position
+    expected_points = {}     # arm coordinates + index vs. expected Cartesian position
+    measured_points = {}     # arm coordinates + index vs. actual Cartesian position
 
     # Now extract all the points from the dictionary.
     for coords, blob_pair in dict_of_coords.items():

@@ -279,12 +279,21 @@ POS_REP_MEASUREMENT_PARS = Namespace(
 
 
 POS_REP_EVALUATION_PARS = Namespace(
+    # The maximum tolerable shift (in mm) between the centre of mass of the points
+    # fitted to a circle and the fitted centre. A larger shift indicates the
+    # points are too skewed to make a reliable fit.
+    MAX_CENTRE_SHIFT = 2.0,
+
+    # The maximum angle (radians) to which the camera and turntable are expected to move.
+    # A camera offset fit which generates a larger deviation is rejected.
+    MAX_OFFSET_SHIFT_RAD = 0.15,
+
     POS_REP_PASS=0.030,  # the maximum angular deviation, in
     # degrees, from an average position of
     # a grouping of measured points at a
     # given nominal position which
     # represents an acceptable FPU
-    MIN_NUMBER_POINTS=5,  # number of measurements which are requied
+    MIN_NUMBER_POINTS=5,  # number of measurements which are required
     # before a position is added to the overall statistical measure
     APPLY_ELLIPTICAL_CORRECTION=True,
     # APPLY_ELLIPTICAL_CORRECTION=False,
