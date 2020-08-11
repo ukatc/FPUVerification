@@ -282,7 +282,9 @@ def evaluate_positional_verification(
     
             # Only accept the fit if the points sample the circle well and are
             # not skewed to one side.
-            if (abs(xcom-xc) < MAX_CENTRE_SHIFT*2.0) and (abs(ycom-yc) < MAX_CENTRE_SHIFT*2.0):
+            # NOTE: The beta circle test is less strict than the alpha circle test.
+            if (abs(xcom-xc) < POS_REP_EVALUATION_PARS.MAX_CENTRE_SHIFT*2.0) and \
+               (abs(ycom-yc) < POS_REP_EVALUATION_PARS.MAX_CENTRE_SHIFT*2.0):
                 # Circle accepted
                 #print("Circle fit accepted.")
      
@@ -539,7 +541,9 @@ def evaluate_positional_verification(
         title = "evaluate_positional_verification: Measured (blue), expected (red) "
         if SHOW_UNCALIBRATED_POINTS:
            title += "and uncalibrated (green) "
-        title += "points overlaid."
+        title += "points overlaid.\n"
+        title += "cam_offset=%.3f (deg) " % np.rad2deg(camera_offset_new)
+        title += "beta0=%.3f (deg)." % np.rad2deg(beta0_rad)
         if EXAGGERATION > 1.0:
            title += "\nErrors exaggerated by a factor of %f." % EXAGGERATION
         plotaxis = plotting.plot_xy( expected_x, expected_y, title=title,
