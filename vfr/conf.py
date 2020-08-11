@@ -407,10 +407,15 @@ POS_VER_EVALUATION_PARS = Namespace(
     # The following parameters define how the positional verification
     # software recalibrates the orientation of the turntable and camera
     # to derive a new camera offset
-    CAMERA_OFFSET_CHOICES = ("DATUM", "ALPHA", "BETA"),
-    #CAMERA_OFFSET_FROM = "DATUM",   # Derive camera offset from datum measurements
-    CAMERA_OFFSET_FROM = "ALPHA",   # Derive camera offset from target location on alpha circles
-    #CAMERA_OFFSET_FROM = "BETA",    # Derive camera offset from beta axis location as a function of alpha
+    CAMERA_OFFSET_CHOICES = ("DATUM", "ALPHA", "BETA", "ORIGINAL"),
+    #CAMERA_OFFSET_FROM = "DATUM",    # Derive camera offset from datum measurements (not recommended).
+    CAMERA_OFFSET_FROM = "ALPHA",    # Derive camera offset from target location on alpha circles.
+    #CAMERA_OFFSET_FROM = "BETA",     # Derive camera offset from beta axis location as a function of alpha.
+    #CAMERA_OFFSET_FROM = "ORIGINAL", # Do not recalibrate camera offset (not recommended).
+
+    # Recalibrate the beta0 angle from the datum?
+    # Do not set to True if CAMERA_OFFSET_FROM is also set to "DATUM".
+    RECALIBRATE_BETA0 = True,   # Recommended value = True
 )
 
 
