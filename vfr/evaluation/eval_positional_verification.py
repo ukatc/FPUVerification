@@ -14,7 +14,7 @@ import logging
 
 from Gearbox.gear_correction import angle_to_point, cartesian_blob_position, \
                                     elliptical_distortion, leastsq_circle, fit_offsets, \
-                                    points_to_offset, datum_to_camera_offset
+                                    points_to_offset, datum_to_camera_offset, datum_to_beta0
 from vfr.evaluation.measures import get_errors, get_measures, get_weighted_coordinates
 
 from vfr.conf import POS_REP_EVALUATION_PARS, POS_VER_EVALUATION_PARS, \
@@ -354,6 +354,8 @@ def evaluate_positional_verification(
             rdiff = math.sqrt( xdiff*xdiff + ydiff*ydiff)
         logger.info("NOTE: Datum measurements shifted by an RMS of %f mm (%.1f micron)." %
                     (rdiff, rdiff*1000.0))
+    else:
+        datum_available = False
 
     if (POS_VER_EVALUATION_PARS.CAMERA_OFFSET_FROM == "DATUM") and datum_available:
         # Estimate the camera offset from the datum measurement.
@@ -368,7 +370,7 @@ def evaluate_positional_verification(
             if abs(camera_offset_estimate - camera_offset_rad) < POS_REP_EVALUATION_PARS.MAX_OFFSET_SHIFT_RAD:
                 ngood += 1
                 camera_offset_total += camera_offset_estimate
-
+ 
         if ngood > 0:
             camera_offset_new = camera_offset_total/float(ngood)
             logger.info("New mean camera offset from datum= {:.4f} compared with {:.4f} (deg)".format(
@@ -413,6 +415,26 @@ def evaluate_positional_verification(
         else:
             logger.warn("Unsufficient good fits to derive camera offset. Original value retained.")
             camera_offset_new = camera_offset_rad
+    elif POS_VER_EVALUATION_PARS.CAMERA_OFFSET_FROM == "ORIGINAL":
+        logger.info("Original value of camera offset used = {:.4f} (deg).".format(
+                np.rad2deg(camera_offset_rad)))
+        camera_offset_new = camera_offset_rad
+
+    if datum_available:
+        if POS_VER_EVALUATION_PARS.RECALIBRATE_BETA0: # --- Recalibrate beta0 using datum?
+            if POS_VER_EVALUATION_PARS.CAMERA_OFFSET_FROM == "DATUM":
+                logger.warning("camera_offset and beta0 cannot both be derived from datum.")
+            beta0_total = 0.0
+            for Pdatum in list_of_datum_result:
+                beta0_estimate = datum_to_beta0( Pdatum, P0, R_alpha, R_beta_midpoint,
+                                                 camera_offset_new )
+                beta0_total += beta0_estimate
+                logger.debug("Datum measurement at %s suggests beta0 = %f (rad) = %f (deg)" % \
+                            (str(Pdatum), beta0_estimate, np.rad2deg(beta0_estimate)))
+            beta0_rad = beta0_total/float(ndatum)
+            logger.info("Mean beta0 from datum (1): %f (rad) = %f (deg)" % \
+                        (beta0_rad, np.rad2deg(beta0_rad)))
+
 
     # Go back to the start and read the input data from the beginning.
     uncalibrated_points = {} # arm coordinates + index vs. uncalibrated Cartesian position

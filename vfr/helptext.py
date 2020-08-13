@@ -39,13 +39,13 @@ summary = cleandoc(
     CONFIGURATION FILE
     ==================
 
-    The configuration file is an ASCII file which associates logical FPU IDs
-    as used in the EtherCAN interface with a serial number. On initialization,
-    the serial number is flashed on the FPU, and all captured data is
-    associated with the serial number. The configuration file also contains
-    the initial position of each FPU with which the protection database is
-    initialized. The file content is a Python data structure which looks,
-    for example, like this:
+    The fibre positioner configuration file is an ASCII file which associates
+    logical FPU IDs as used in the EtherCAN interface with a serial number.
+    On initialization, the serial number is flashed on the FPU, and all
+    captured data is associated with the serial number. The configuration file
+    also contains the initial position of each FPU with which the protection
+    database is initialized. The file content is a Python data structure which
+    looks, for example, like this:
 
         [
         {{ 'serialnumber' : 'MP010', 'can_id' : 1, 'pos' : (-180, 0) }}
@@ -227,6 +227,17 @@ summary = cleandoc(
     {plot_selection_help}
 
     The default selection of plots is {plot_default_selection!r}.
+
+
+    6) ADVANCED CONFIGURATION
+    -------------------------
+
+    The file vfr/conf.py contains a collection of global parameters which can
+    be modified to change the measurement sequences, change environmental
+    constants (such as plate scales) or change the data analysis procedure.
+    This gives an expert user finer control than possible with vfrig command
+    line parameters alone. Once this file has been changed, ALL subsequent
+    runs will use the new parameters. Change this file with care.
 
     ..................................................................
     """
