@@ -6,10 +6,12 @@ import logging
 from os.path import abspath
 from vfr.auditlog import get_fpuLogger
 
+from fpu_commands import gen_wf
 from Gearbox.gear_correction import (
     GearboxFitError,
     fit_gearbox_correction,
     GEARBOX_CORRECTION_VERSION,
+    cartesian_blob_position
 )
 from GigE.GigECamera import BASLER_DEVICE_CLASS, DEVICE_CLASS, IP_ADDRESS
 from ImageAnalysisFuncs.base import get_min_quality
@@ -38,7 +40,9 @@ from vfr.db.positional_repeatability import (
 )
 from vfr.db.pupil_alignment import get_pupil_alignment_passed_p
 from vfr.tests_common import (
+    dirac,
     fixup_ipath,
+    find_datum,
     get_config_from_mapfile,
     get_sorted_positions,
     goto_position,
@@ -155,15 +159,15 @@ def index_positions(pars):
             for k_increment in range(MAX_INCREMENT):
                 if j_direction == 0:
                     idx_alpha = k_increment
-                    idx_beta = FIXPOINT
+                    idx_beta = pars.BETA_FIXPOINT
                 elif j_direction == 1:
                     idx_alpha = MAX_INCREMENT - k_increment - 1
-                    idx_beta = FIXPOINT
+                    idx_beta = pars.BETA_FIXPOINT
                 elif j_direction == 2:
-                    idx_alpha = FIXPOINT
+                    idx_alpha = pars.ALPHA_FIXPOINT
                     idx_beta = k_increment
                 elif j_direction == 3:
-                    idx_alpha = FIXPOINT
+                    idx_alpha = pars.ALPHA_FIXPOINT
                     idx_beta = MAX_INCREMENT - k_increment - 1
 
                 yield MeasurementIndex(
@@ -210,10 +214,12 @@ def get_target_position(limits, pars, measurement_index):
         n_increments = (
             pars.POS_REP_NUM_HI_RES_INCREMENTS_FACTOR * pars.POS_REP_NUM_INCREMENTS
         )
-        fixpoint = pars.POS_REP_NUM_HI_RES_INCREMENTS_FACTOR
+        fixpointalpha = pars.POS_REP_NUM_HI_RES_INCREMENTS_FACTOR
+        fixpointbeta = pars.POS_REP_NUM_HI_RES_INCREMENTS_FACTOR
     else:
         n_increments = pars.POS_REP_NUM_INCREMENTS
-        fixpoint = 1
+        fixpointalpha = pars.ALPHA_FIXPOINT
+        fixpointbeta = pars.BETA_FIXPOINT
 
     step_a = (alpha_max - alpha_min - 2 * pars.POS_REP_SAFETY_MARGIN) / float(
         n_increments
@@ -222,11 +228,11 @@ def get_target_position(limits, pars, measurement_index):
         n_increments
     )
 
-    alpha0 = alpha_min + pars.POS_REP_SAFETY_MARGIN + fixpoint * step_a
-    beta0 = beta_min + pars.POS_REP_SAFETY_MARGIN + fixpoint * step_b
+    alpha0 = alpha_min + pars.POS_REP_SAFETY_MARGIN + fixpointalpha * step_a
+    beta0 = beta_min + pars.POS_REP_SAFETY_MARGIN + fixpointbeta * step_b
 
-    abs_alpha = alpha0 + step_a * (measurement_index.idx_alpha - fixpoint)
-    abs_beta = beta0 + step_b * (measurement_index.idx_beta - fixpoint)
+    abs_alpha = alpha0 + step_a * (measurement_index.idx_alpha - fixpointalpha)
+    abs_beta = beta0 + step_b * (measurement_index.idx_beta - fixpointbeta)
 
     return FPU_Position(abs_alpha, abs_beta)
 
@@ -301,10 +307,24 @@ def capture_fpu_position(rig, fpu_id, midx, target_pos, capture_image, pars=None
     return key, val
 
 
-def get_images_for_fpu(rig, fpu_id, range_limits, pars, capture_image):
+def get_images_for_fpu(rig, fpu_id, range_limits, pars, capture_image, capture_datum_image):
 
     image_dict_alpha = {}
     image_dict_beta = {}
+    datum_image_list=[]
+
+    for i in range(pars.N_DATUM):
+        find_datum(rig.gd, rig.grid_state, rig.opts)
+        datipath = capture_datum_image("START",i)
+        datum_image_list.append(datipath)
+        N = rig.opts.N
+        # move by delta
+        wf = gen_wf(
+            dirac(fpu_id, N) * pars.SMALL_MOVE, dirac(fpu_id, N) * pars.SMALL_MOVE, units="steps"
+        )
+
+        rig.gd.configMotion(wf, rig.grid_state, verbosity=0)
+        rig.gd.executeMotion(rig.grid_state)
 
     for measurement_index in index_positions(pars):
 
@@ -323,11 +343,25 @@ def get_images_for_fpu(rig, fpu_id, range_limits, pars, capture_image):
         else:
             image_dict_beta[key] = val
 
+    for i in range(pars.N_DATUM):
+        find_datum(rig.gd, rig.grid_state, rig.opts)
+        datipath = capture_datum_image("END",i)
+        datum_image_list.append(datipath)
+        N = rig.opts.N
+        # move by delta
+        wf = gen_wf(
+            dirac(fpu_id, N) * pars.SMALL_MOVE, dirac(fpu_id, N) * pars.SMALL_MOVE, units="steps"
+        )
+
+        rig.gd.configMotion(wf, rig.grid_state, verbosity=0)
+        rig.gd.executeMotion(rig.grid_state)
+
     record = PositionalRepeatabilityImages(
         images_alpha=image_dict_alpha,
         images_beta=image_dict_beta,
         waveform_pars=pars.POS_REP_WAVEFORM_PARS,
         calibration_mapfile=pars.POS_REP_CALIBRATION_MAPFILE,
+        datum_images= datum_image_list,
     )
 
     return record
@@ -388,11 +422,23 @@ def measure_positional_repeatability(rig, dbe, pars=None):
                 )
 
                 return ipath
+                
+            def capture_datum_image(timing,number):
+                ipath = store_image(
+                    pos_rep_cam,
+                    "{sn}/{tn}/{ts}/datum-{timing}-{number}.bmp",
+                    sn=sn,
+                    ts=tstamp,
+                    tn="positional-repeatability",
+                    timing=timing
+                )
+
+                return ipath
 
             # move rotary stage to POS_REP_POSN_N
             turntable_safe_goto(rig, rig.grid_state, stage_position)
 
-            record = get_images_for_fpu(rig, fpu_id, range_limits, pars, capture_image)
+            record = get_images_for_fpu(rig, fpu_id, range_limits, pars, capture_image, capture_datum_image)
             fpu_log.debug("Saving result record = %r" % (record,))
 
             save_positional_repeatability_images(dbe, fpu_id, record)
@@ -418,6 +464,7 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
         images_beta = measurement["images_beta"]
 
         mapfile = measurement["calibration_mapfile"]
+        datum_image_list = measurement["datum_images"]
 
         #logger.debug("Alpha images: %s" % str(images_alpha))
         #logger.debug("Beta images: %s" % str(images_beta))
@@ -443,6 +490,21 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
             return posrepCoordinates(
                 fixup_ipath(ipath), pars=pos_rep_analysis_pars, correct=correct
             )
+            
+        datum_all_results = []
+        middle_point = len(datum_image_list)/2
+        for datum_image in datum_image_list:
+            datum_blobs = analysis_func(datum_image)
+            datum_point = cartesian_blob_position(datum_blobs)
+            datum_all_results.append(datum_point)
+        datum_results = []
+
+        # Datum_image_list is a list of all datums, this includes
+        # a set before and after the verification measurement, with each set having
+        # an unreliable first datum.
+        datum_results.append(sum(datum_all_results[1:middle_point])/ (middle_point-1))
+        datum_results.append(sum(datum_all_results[middle_point+1:])/ (middle_point-1))
+
 
         try:
             analysis_results_alpha = {}
@@ -575,7 +637,7 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
 
             logger.info("--- Fitting gearbox correction for FPU %s." % fpu_id)
             gearbox_correction = fit_gearbox_correction(
-                fpu_id, analysis_results_alpha, analysis_results_beta
+                fpu_id, analysis_results_alpha, analysis_results_beta, list_of_datum_result=datum_results
             )
             errmsg = ""
 
@@ -633,6 +695,7 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
             error_message=errmsg,
             algorithm_version=POSITIONAL_REPEATABILITY_ALGORITHM_VERSION,
             gearbox_correction_version=GEARBOX_CORRECTION_VERSION,
+            datum_results=datum_results,
         )
 
         logger.trace("FPU %r: saving result record = %r" % (sn, record))
@@ -656,14 +719,20 @@ def eval_gearbox_calibration(dbe, pos_rep_analysis_pars, pos_rep_evaluation_pars
 
         ddict = vars(get_data(dbe,fpu_id))
         pos_rep = ddict["positional_repeatability_result"]
+        if pos_rep is None:
+           logger.info("No positional repeatabiity data found for FPU %s with count %s." % \
+              (sn, str(dbe.opts.record_count)))
+           continue
+
         analysis_results_alpha = pos_rep["analysis_results_alpha"]
         analysis_results_beta = pos_rep["analysis_results_beta"]
+        datum_results = pos_rep["datum_results"]
         # TODO: Extract additional repeatability data.
 
         if analysis_results_alpha and analysis_results_beta:
             logger.info("Fitting gearbox correction for FPU %s." % fpu_id)
             gearbox_correction = fit_gearbox_correction(
-                fpu_id, analysis_results_alpha, analysis_results_beta
+                fpu_id, analysis_results_alpha, analysis_results_beta, list_of_datum_result=datum_results
             )
             errmsg = ""
 

@@ -14,6 +14,7 @@ from Gearbox.gear_correction import (
     apply_gearbox_correction,
     GEARBOX_CORRECTION_VERSION,
     GEARBOX_CORRECTION_MINIMUM_VERSION,
+    cartesian_blob_position
 )
 from GigE.GigECamera import BASLER_DEVICE_CLASS, DEVICE_CLASS, IP_ADDRESS
 from DistortionCorrection import get_correction_func
@@ -274,6 +275,19 @@ def measure_positional_verification(rig, dbe, pars=None):
                 )
 
                 return ipath
+                
+            def capture_datum_image(timing,number):
+
+                ipath = store_image(
+                    pos_rep_cam,
+                    "{sn}/{tn}/{ts}/datum-{timing}-{number}.bmp",
+                    sn=sn,
+                    ts=tstamp,
+                    tn="positional-verification",
+                    timing=timing
+                )
+
+                return ipath
 
             tol = abs(pars.POS_VER_SAFETY_TOLERANCE)
             
@@ -296,8 +310,21 @@ def measure_positional_verification(rig, dbe, pars=None):
 
             tested_positions = calibration_positions + test_positions
         
-            find_datum(gd, grid_state, opts)
+            datum_image_list=[]
 
+            for i in range(pars.N_DATUM):
+                find_datum(gd, grid_state, opts)
+                datipath = capture_datum_image("START",i)
+                datum_image_list.append(datipath)
+                N = opts.N
+                # move by delta
+                wf = gen_wf(
+                    dirac(fpu_id, N) * pars.SMALL_MOVE, dirac(fpu_id, N) * pars.SMALL_MOVE, units="steps"
+                )
+
+                gd.configMotion(wf, grid_state, verbosity=0)
+                gd.executeMotion(grid_state)
+            
             image_dict = {}
             deg2rad = np.deg2rad
 
@@ -350,6 +377,20 @@ def measure_positional_verification(rig, dbe, pars=None):
 
                 image_dict[(k, alpha_deg, beta_deg)] = ipath
 
+            
+            for i in range(pars.N_DATUM):
+                find_datum(gd, grid_state, opts)
+                datipath = capture_datum_image("END",i)
+                datum_image_list.append(datipath)
+                N = opts.N
+                # move by delta
+                wf = gen_wf(
+                    dirac(fpu_id, N) * pars.SMALL_MOVE, dirac(fpu_id, N) * pars.SMALL_MOVE, units="steps"
+                )
+
+                gd.configMotion(wf, grid_state, verbosity=0)
+                gd.executeMotion(grid_state)
+            
             # store dict of image paths, together with all data and algorithms
             # which are relevant to assess result later
             record = PositionalVerificationImages(
@@ -359,6 +400,7 @@ def measure_positional_verification(rig, dbe, pars=None):
                 gearbox_git_version=gearbox_git_version,
                 gearbox_record_count=gearbox_record_count,
                 calibration_mapfile=pars.POS_VER_CALIBRATION_MAPFILE,
+                datum_images=datum_image_list,
             )
 
             fpu_log.trace("FPU %r: saving result record = %r" % (sn, record))
@@ -398,6 +440,7 @@ def eval_positional_verification(dbe, pos_rep_analysis_pars, pos_ver_evaluation_
         images = measurement["images"]
         gearbox_correction = measurement["gearbox_correction"]
         mapfile = measurement["calibration_mapfile"]
+        datum_image_list = measurement["datum_images"]
 
 
         ####
@@ -420,6 +463,21 @@ def eval_positional_verification(dbe, pos_rep_analysis_pars, pos_ver_evaluation_
         ####
         def analysis_func(ipath):
             return posrepCoordinates(fixup_ipath(ipath), pars=pos_rep_analysis_pars, correct=correct)
+            
+            
+        datum_all_results = []
+        middle_point = len(datum_image_list)/2
+        for datum_image in datum_image_list:
+            datum_blobs = analysis_func(datum_image)
+            datum_point = cartesian_blob_position(datum_blobs)
+            datum_all_results.append(datum_point)
+        datum_results = []
+
+        # DAtum_image_list is a list of all datums, this includes
+        # a set before and after the verification measurement, with each set having
+        # an unreliable first datum.
+        datum_results.append(sum(datum_all_results[1:middle_point])/ (middle_point-1))
+        datum_results.append(sum(datum_all_results[middle_point+1:])/ (middle_point-1))
 
         try:
             analysis_results = {}
@@ -451,7 +509,7 @@ def eval_positional_verification(dbe, pos_rep_analysis_pars, pos_ver_evaluation_
 
             (posver_error_by_angle, expected_points, measured_points,
              posver_error_measures, mean_error_vector, camera_offset_new, xc, yc) = evaluate_positional_verification(
-                 analysis_results, pars=pos_ver_evaluation_pars,
+                 analysis_results, list_of_datum_result=datum_results, pars=pos_ver_evaluation_pars,
                  **gearbox_correction )
 
             if (95 not in posver_error_measures.percentiles) or np.isnan(
@@ -506,6 +564,7 @@ def eval_positional_verification(dbe, pos_rep_analysis_pars, pos_ver_evaluation_
             camera_offset=camera_offset_new,
             center_x=xc,
             center_y=yc,
+            datum_results=datum_results,
         )
         logger.trace("FPU %r: saving result record = %r" % (sn, record))
         save_positional_verification_result(dbe, fpu_id, record)
