@@ -325,23 +325,38 @@ POS_REP_MEASUREMENT_PARS = Namespace(
 # Positional repeatability data analysis parameter set.
 # -----------------------------------------------------
 POS_REP_EVALUATION_PARS = Namespace(
-    # The maximum tolerable shift (in mm) between the centre of mass of the points
-    # fitted to a circle and the fitted centre. A larger shift indicates the
-    # points are too skewed to make a reliable fit.
+    # The maximum tolerable shift (in mm) between the centre of mass of the
+    # points fitted to a circle and the fitted centre. A larger shift
+    # indicates the points are too skewed to make a reliable fit.
     MAX_CENTRE_SHIFT = 2.0,
 
-    # The maximum angle (radians) to which the camera and turntable are expected to move.
-    # A camera offset fit which generates a larger deviation is rejected.
+    # The maximum angle (radians) to which the camera and turntable are
+    # expected to move. A camera offset fit which generates a larger
+    # deviation is rejected.
     MAX_OFFSET_SHIFT_RAD = 0.15,
 
-    POS_REP_PASS=0.030,  # the maximum angular deviation, in
-    # degrees, from an average position of
-    # a grouping of measured points at a
-    # given nominal position which
-    # represents an acceptable FPU
-    MIN_NUMBER_POINTS=5,  # number of measurements which are required
-    # before a position is added to the overall statistical measure
+    # The maximum angular deviation, in degrees, from an average position of
+    # a grouping of measured points at a  given nominal position which
+    # represents an acceptable FPU.
+    POS_REP_PASS=0.030,
+
+    # Minimum number of samples required before a position is added to the
+    # overall statistical measure. A high number restricts statistics to
+    # low resolution points only. A low number includes more high resolution
+    # points with fewer repeats.
+    # If reduced below 5, the WEIGHTED_MEASURES flag can be set True
+    # to weight the measures according to number of samples.
+    # A value less than 2 is not recommended.
+    MIN_NUMBER_POINTS=2,  # Was 5
+    # Weight the mean and percentiles by the sample sizes.
+    WEIGHTED_MEASURES=True,
+    
+    # Set this parameter to True to treat the alpha and beta circles as
+    # ellipses (to take into account a tilt).
     APPLY_ELLIPTICAL_CORRECTION=True,
+    
+    # Set these parameters to True to apply the gearbox correction when
+    # determining the motor angles.
     # APPLY_ELLIPTICAL_CORRECTION=False,
     APPLY_GEARBOX_CORRECTION_ALPHA=True,
     APPLY_GEARBOX_CORRECTION_BETA=True,
@@ -450,8 +465,11 @@ POS_VER_MEASUREMENT_PARS = Namespace(
     # Safety distance (degrees) towards range limits.
     POS_VER_SAFETY_TOLERANCE=1.5,
     POS_VER_CALIBRATION_MAPFILE="calibration/mapping/pos-rep-2019-04-10.cfg",
-    N_DATUM=3,  # Number of datumn measurements in before and after a pos_rep meaurement
-    SMALL_MOVE=15,  # This distance to move between datum measurements.
+    
+    # Number of datum measurements in before and after a pos_rep measurement.
+    N_DATUM=3,
+    # The distance (in steps) to move between datum measurements.
+    SMALL_MOVE=15,
 )
 
 
