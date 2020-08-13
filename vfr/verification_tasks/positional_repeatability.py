@@ -6,7 +6,7 @@ import logging
 from os.path import abspath
 from vfr.auditlog import get_fpuLogger
 
-from fpu_commnads import gen_wf
+from fpu_commands import gen_wf
 from Gearbox.gear_correction import (
     GearboxFitError,
     fit_gearbox_correction,
