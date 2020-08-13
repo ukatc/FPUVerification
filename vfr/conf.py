@@ -317,6 +317,8 @@ POS_REP_MEASUREMENT_PARS = Namespace(
     },
     POS_REP_WAVEFORM_RULESET=0,  # '0' does switch off checking
     POS_REP_CALIBRATION_MAPFILE="calibration/mapping/pos-rep-2019-04-10.cfg",
+    N_DATUM=3,  # Number of datumn measurements in before and after a pos_rep meaurement
+    SMALL_MOVE=15,  # This distance to move between datum measurements.
 )
 
 #
@@ -448,6 +450,8 @@ POS_VER_MEASUREMENT_PARS = Namespace(
     # Safety distance (degrees) towards range limits.
     POS_VER_SAFETY_TOLERANCE=1.5,
     POS_VER_CALIBRATION_MAPFILE="calibration/mapping/pos-rep-2019-04-10.cfg",
+    N_DATUM=3,  # Number of datumn measurements in before and after a pos_rep meaurement
+    SMALL_MOVE=15,  # This distance to move between datum measurements.
 )
 
 

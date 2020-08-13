@@ -312,6 +312,7 @@ def get_images_for_fpu(rig, fpu_id, range_limits, pars, capture_image, capture_d
     image_dict_alpha = {}
     image_dict_beta = {}
     datum_image_list=[]
+
     for i in range(pars.N_DATUM):
         find_datum(rig.gd, rig.grid_state, rig.opts)
         datipath = capture_datum_image("START",i)
@@ -498,7 +499,7 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
             datum_all_results.append(datum_point)
         datum_results = []
 
-        # DAtum_image_list is a list of all datums, this includes
+        # Datum_image_list is a list of all datums, this includes
         # a set before and after the verification measurement, with each set having
         # an unreliable first datum.
         datum_results.append(sum(datum_all_results[1:middle_point])/ (middle_point-1))
