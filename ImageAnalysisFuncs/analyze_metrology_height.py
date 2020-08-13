@@ -77,7 +77,7 @@ def methtHeight(
 
     # pixel distances from side of beta arm to measurement points
     # these parameters could be made configurable but shouldn't need to be changed
-    armSurfaceX = [60, 320, 760, 980, 1210]
+    armSurfaceX = [60, 320, 760, 980, 1220]
     smallTargetX = [100, 180, 260]
     largeTargetX = [380, 530, 680]
 
@@ -92,17 +92,17 @@ def methtHeight(
     # looks for pixel transitions indicating surfaces
     armSurfaceY, smallTargetY, largeTargetY = [None] * 5, [None] * 3, [None] * 3
     for i in range(0, 5):
-        for p in range(1200, len(thresh) - 1):
+        for p in range(0, len(thresh) - 1):
             if abs(armSurfacePix[i][p + 1] - armSurfacePix[i][p]) > 0:
                 armSurfaceY[i] = p
                 break
     for i in range(0, 3):
-        for p in range(1200, len(thresh) - 1):
+        for p in range(0, len(thresh) - 1):
             if abs(smallTargetPix[i][p + 1] - smallTargetPix[i][p]) > 0:
                 smallTargetY[i] = p
                 break
     for i in range(0, 3):
-        for p in range(1200, len(thresh) - 1):
+        for p in range(0, len(thresh) - 1):
             if abs(largeTargetPix[i][p + 1] - largeTargetPix[i][p]) > 0:
                 largeTargetY[i] = p
                 break
@@ -149,14 +149,14 @@ def methtHeight(
     # exceptions
     if stdSmallTarget > pars.METHT_STANDARD_DEV:
         raise MetrologyHeightAnalysisError(
-            "Image %s: Small target points have high standard deviation (%.3f)"
-            " - target may not be sitting flat" % (image_path, stdSmallTarget)
+            "Image %s: Small target points have high standard deviation"
+            " - target may not be sitting flat" % image_path
         )
 
     if stdLargeTarget > pars.METHT_STANDARD_DEV:
         raise MetrologyHeightAnalysisError(
-            "Image %s: Large target points have high standard deviation (%.3f)"
-            " - target may not be sitting flat" % (image_path, stdLargeTarget)
+            "Image %s: Large target points have high standard deviation"
+            " - target may not be sitting flat" % image_path
         )
 
     #if noiseMetric > pars.METHT_NOISE_METRIC:
