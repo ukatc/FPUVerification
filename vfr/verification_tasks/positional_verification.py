@@ -276,11 +276,11 @@ def measure_positional_verification(rig, dbe, pars=None):
 
                 return ipath
                 
-            def capture_datum_image(timing):
+            def capture_datum_image(timing,number):
 
                 ipath = store_image(
                     pos_rep_cam,
-                    "{sn}/{tn}/{ts}/datum-{timing}.bmp",
+                    "{sn}/{tn}/{ts}/datum-{timing}-{number}.bmp",
                     sn=sn,
                     ts=tstamp,
                     tn="positional-verification",
@@ -311,9 +311,19 @@ def measure_positional_verification(rig, dbe, pars=None):
             tested_positions = calibration_positions + test_positions
         
             datum_image_list=[]
-            find_datum(gd, grid_state, opts)
-            datipath = capture_datum_image("START")
-            datum_image_list.append(datipath)
+
+            for i in range(pars.N_DATUM):
+                find_datum(gd, grid_state, opts)
+                datipath = capture_datum_image("START",i)
+                datum_image_list.append(datipath)
+                N = opts.N
+                # move by delta
+                wf = gen_wf(
+                    dirac(fpu_id, N) * pars.SMALL_MOVE, dirac(fpu_id, N) * pars.SMALL_MOVE, units="steps"
+                )
+
+                gd.configMotion(wf, grid_state, verbosity=0)
+                gd.executeMotion(grid_state)
             
             image_dict = {}
             deg2rad = np.deg2rad
@@ -368,9 +378,18 @@ def measure_positional_verification(rig, dbe, pars=None):
                 image_dict[(k, alpha_deg, beta_deg)] = ipath
 
             
-            find_datum(gd, grid_state, opts)
-            datipath = capture_datum_image("END")
-            datum_image_list.append(datipath)
+            for i in range(pars.N_DATUM):
+                find_datum(gd, grid_state, opts)
+                datipath = capture_datum_image("END",i)
+                datum_image_list.append(datipath)
+                N = opts.N
+                # move by delta
+                wf = gen_wf(
+                    dirac(fpu_id, N) * pars.SMALL_MOVE, dirac(fpu_id, N) * pars.SMALL_MOVE, units="steps"
+                )
+
+                gd.configMotion(wf, grid_state, verbosity=0)
+                gd.executeMotion(grid_state)
             
             # store dict of image paths, together with all data and algorithms
             # which are relevant to assess result later
@@ -446,11 +465,19 @@ def eval_positional_verification(dbe, pos_rep_analysis_pars, pos_ver_evaluation_
             return posrepCoordinates(fixup_ipath(ipath), pars=pos_rep_analysis_pars, correct=correct)
             
             
-        datum_results = []
+        datum_all_results = []
+        middle_point = len(datum_image_list)/2
         for datum_image in datum_image_list:
             datum_blobs = analysis_func(datum_image)
             datum_point = cartesian_blob_position(datum_blobs)
-            datum_results.append(datum_point)
+            datum_all_results.append(datum_point)
+        datum_results = []
+
+        # DAtum_image_list is a list of all datums, this includes
+        # a set before and after the verification measurement, with each set having
+        # an unreliable first datum.
+        datum_results.append(sum(datum_all_results[1:middle_point])/ (middle_point-1))
+        datum_results.append(sum(datum_all_results[middle_point+1:])/ (middle_point-1))
 
         try:
             analysis_results = {}

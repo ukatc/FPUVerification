@@ -6,6 +6,7 @@ import logging
 from os.path import abspath
 from vfr.auditlog import get_fpuLogger
 
+from fpu_commnads import gen_wf
 from Gearbox.gear_correction import (
     GearboxFitError,
     fit_gearbox_correction,
@@ -39,6 +40,7 @@ from vfr.db.positional_repeatability import (
 )
 from vfr.db.pupil_alignment import get_pupil_alignment_passed_p
 from vfr.tests_common import (
+    dirac,
     fixup_ipath,
     find_datum,
     get_config_from_mapfile,
@@ -309,11 +311,19 @@ def get_images_for_fpu(rig, fpu_id, range_limits, pars, capture_image, capture_d
 
     image_dict_alpha = {}
     image_dict_beta = {}
-    
     datum_image_list=[]
-    find_datum(rig.gd, rig.grid_state, rig.opts)
-    datipath = capture_datum_image("START")
-    datum_image_list.append(datipath)
+    for i in range(pars.N_DATUM):
+        find_datum(rig.gd, rig.grid_state, rig.opts)
+        datipath = capture_datum_image("START",i)
+        datum_image_list.append(datipath)
+        N = rig.opts.N
+        # move by delta
+        wf = gen_wf(
+            dirac(fpu_id, N) * pars.SMALL_MOVE, dirac(fpu_id, N) * pars.SMALL_MOVE, units="steps"
+        )
+
+        rig.gd.configMotion(wf, rig.grid_state, verbosity=0)
+        rig.gd.executeMotion(rig.grid_state)
 
     for measurement_index in index_positions(pars):
 
@@ -331,11 +341,19 @@ def get_images_for_fpu(rig, fpu_id, range_limits, pars, capture_image, capture_d
             image_dict_alpha[key] = val
         else:
             image_dict_beta[key] = val
-            
-    
-    find_datum(rig.gd, rig.grid_state, rig.opts)
-    datipath = capture_datum_image("END")
-    datum_image_list.append(datipath)
+
+    for i in range(pars.N_DATUM):
+        find_datum(rig.gd, rig.grid_state, rig.opts)
+        datipath = capture_datum_image("END",i)
+        datum_image_list.append(datipath)
+        N = rig.opts.N
+        # move by delta
+        wf = gen_wf(
+            dirac(fpu_id, N) * pars.SMALL_MOVE, dirac(fpu_id, N) * pars.SMALL_MOVE, units="steps"
+        )
+
+        rig.gd.configMotion(wf, rig.grid_state, verbosity=0)
+        rig.gd.executeMotion(rig.grid_state)
 
     record = PositionalRepeatabilityImages(
         images_alpha=image_dict_alpha,
@@ -404,10 +422,10 @@ def measure_positional_repeatability(rig, dbe, pars=None):
 
                 return ipath
                 
-            def capture_datum_image(timing):
+            def capture_datum_image(timing,number):
                 ipath = store_image(
                     pos_rep_cam,
-                    "{sn}/{tn}/{ts}/datum-{timing}.bmp",
+                    "{sn}/{tn}/{ts}/datum-{timing}-{number}.bmp",
                     sn=sn,
                     ts=tstamp,
                     tn="positional-repeatability",
@@ -472,11 +490,20 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
                 fixup_ipath(ipath), pars=pos_rep_analysis_pars, correct=correct
             )
             
-        datum_results = []
+        datum_all_results = []
+        middle_point = len(datum_image_list)/2
         for datum_image in datum_image_list:
             datum_blobs = analysis_func(datum_image)
             datum_point = cartesian_blob_position(datum_blobs)
-            datum_results.append(datum_point)
+            datum_all_results.append(datum_point)
+        datum_results = []
+
+        # DAtum_image_list is a list of all datums, this includes
+        # a set before and after the verification measurement, with each set having
+        # an unreliable first datum.
+        datum_results.append(sum(datum_all_results[1:middle_point])/ (middle_point-1))
+        datum_results.append(sum(datum_all_results[middle_point+1:])/ (middle_point-1))
+
 
         try:
             analysis_results_alpha = {}
