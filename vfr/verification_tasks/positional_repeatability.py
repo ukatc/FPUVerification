@@ -492,19 +492,21 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
                 fixup_ipath(ipath), pars=pos_rep_analysis_pars, correct=correct
             )
             
-        datum_all_results = []
+#        datum_all_results = []
+        datum_results = []
         middle_point = len(datum_image_list)/2
         for datum_image in datum_image_list:
             datum_blobs = analysis_func(datum_image)
             datum_point = cartesian_blob_position(datum_blobs)
-            datum_all_results.append(datum_point)
-        datum_results = []
+#            datum_all_results.append(datum_point)
+            datum_results.append(datum_point)
 
-        # Datum_image_list is a list of all datums, this includes
-        # a set before and after the verification measurement, with each set having
-        # an unreliable first datum.
-        datum_results.append(sum(datum_all_results[1:middle_point])/ (middle_point-1))
-        datum_results.append(sum(datum_all_results[middle_point+1:])/ (middle_point-1))
+#        # Datum_image_list is a list of all datums, this includes
+#        # a set before and after the verification measurement, with each set having
+#        # an unreliable first datum.
+#        datum_results = []
+#        datum_results.append(sum(datum_all_results[1:middle_point])/ (middle_point-1))
+#        datum_results.append(sum(datum_all_results[middle_point+1:])/ (middle_point-1))
 
 
         try:
