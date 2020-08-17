@@ -430,7 +430,8 @@ def measure_positional_repeatability(rig, dbe, pars=None):
                     sn=sn,
                     ts=tstamp,
                     tn="positional-repeatability",
-                    timing=timing
+                    timing=timing,
+                    number=number
                 )
 
                 return ipath
