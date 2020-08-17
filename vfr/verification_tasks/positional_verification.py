@@ -276,7 +276,7 @@ def measure_positional_verification(rig, dbe, pars=None):
 
                 return ipath
                 
-            def capture_datum_image(timing,number):
+            def capture_datum_image(timing, number):
 
                 ipath = store_image(
                     pos_rep_cam,
@@ -284,7 +284,8 @@ def measure_positional_verification(rig, dbe, pars=None):
                     sn=sn,
                     ts=tstamp,
                     tn="positional-verification",
-                    timing=timing
+                    timing=timing,
+                    number=number
                 )
 
                 return ipath
@@ -465,19 +466,22 @@ def eval_positional_verification(dbe, pos_rep_analysis_pars, pos_ver_evaluation_
             return posrepCoordinates(fixup_ipath(ipath), pars=pos_rep_analysis_pars, correct=correct)
             
             
-        datum_all_results = []
-        middle_point = len(datum_image_list)/2
+#        datum_all_results = []
+        datum_results = []
+#        middle_point = int(len(datum_image_list)/2)
         for datum_image in datum_image_list:
             datum_blobs = analysis_func(datum_image)
             datum_point = cartesian_blob_position(datum_blobs)
-            datum_all_results.append(datum_point)
-        datum_results = []
+#            datum_all_results.append(datum_point)
+            datum_results.append(datum_point)
 
-        # DAtum_image_list is a list of all datums, this includes
-        # a set before and after the verification measurement, with each set having
-        # an unreliable first datum.
-        datum_results.append(sum(datum_all_results[1:middle_point])/ (middle_point-1))
-        datum_results.append(sum(datum_all_results[middle_point+1:])/ (middle_point-1))
+#      NOTE: Datum results should be filtered in evaluate_positional_verification, not here.
+#        # DAtum_image_list is a list of all datums, this includes
+#        # a set before and after the verification measurement, with each set having
+#        # (perhaps) an unreliable first datum.
+#        datum_results = []
+#        datum_results.append(sum(datum_all_results[1:middle_point])/ (middle_point-1))
+#        datum_results.append(sum(datum_all_results[middle_point+1:])/ (middle_point-1))
 
         try:
             analysis_results = {}
