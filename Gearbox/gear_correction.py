@@ -1909,25 +1909,57 @@ def fit_gearbox_correction(
 
     # --- If datum measurements have been provided, estimate the beta0 offset from the datum measurements.
     if list_of_datum_result is not None and len(list_of_datum_result) > 0:
-        logger.info("%d datum measurements available." % len(list_of_datum_result))
+        dstrg = "%d datum measurements available:" % len(list_of_datum_result)
+        for Pdatum in list_of_datum_result:
+            dstrg += "\n\t(%.6f,%.6f)" % Pdatum
+        logger.info(dstrg)
         datum_available = True
-        
-        # Report the variation in the datum results
+
+        # Report the variation in the datum results, separating the two halves into separate data sets.
         ndatum = len(list_of_datum_result)
         rdiff = 0.0
-        if ndatum > 1:
+        if ndatum > 2:
+            middle_point = int(ndatum/2)
             rdiffsq = 0.0
-            for ii in range(1, ndatum):
+            xsum = list_of_datum_result[0][0]
+            ysum = list_of_datum_result[0][1]
+            for ii in range(1, middle_point):
+                xsum += list_of_datum_result[ii][0]
+                ysum += list_of_datum_result[ii][1]
                 xdiff = list_of_datum_result[ii][0] - list_of_datum_result[ii-1][0]
                 ydiff = list_of_datum_result[ii][1] - list_of_datum_result[ii-1][1]
-                rdiffsq += xdiff*xdiff + xdiff*ydiff
-            rdiff = math.sqrt(rdiffsq/float(ndatum-1))
-        else:
+                rdiffsq += xdiff*xdiff + ydiff*ydiff
+            xmean1 = xsum / float(middle_point)
+            ymean1 = ysum / float(middle_point)
+            rdiff = math.sqrt(rdiffsq/float(middle_point-1))
+            logger.info("First set of datum measurements at (%.6f,%.6f) with RMS of %.6f mm (%.1f micron)." %
+                    (xmean1, ymean1, rdiff, rdiff*1000.0))
+            
+            rdiffsq = 0.0
+            xsum = list_of_datum_result[middle_point][0]
+            ysum = list_of_datum_result[middle_point][1]
+            for ii in range(middle_point+1, ndatum):
+                xsum += list_of_datum_result[ii][0]
+                ysum += list_of_datum_result[ii][1]
+                xdiff = list_of_datum_result[ii][0] - list_of_datum_result[ii-1][0]
+                ydiff = list_of_datum_result[ii][1] - list_of_datum_result[ii-1][1]
+                rdiffsq += xdiff*xdiff + ydiff*ydiff
+            xmean2 = xsum / float(ndatum-middle_point)
+            ymean2 = ysum / float(ndatum-middle_point)
+            rdiff = math.sqrt(rdiffsq/float(ndatum-middle_point-1))
+            logger.info("Second set of datum measurements at (%.6f,%.6f) with RMS of %.6f mm (%.1f micron)." %
+                    (xmean2, ymean2, rdiff, rdiff*1000.0))
+            xdiff21 = xmean2 - xmean1
+            ydiff21 = ymean2 - ymean1
+            rdiff21 = math.sqrt(xdiff21*xdiff21 + ydiff21*ydiff21)
+            logger.info("NOTE: Second datum measurements shifted by (%.6f,%.6f) mm, r=%.1f micron wrt first." %
+                    (xdiff21, ydiff21, rdiff21*1000.0))
+        elif ndatum == 2:
             xdiff = list_of_datum_result[1][0] - list_of_datum_result[0][0]
             ydiff = list_of_datum_result[1][1] - list_of_datum_result[0][1]
-            rdiff = math.sqrt( xdiff*xdiff + ydiff*ydiff)
-        logger.info("NOTE: Datum measurements shifted by an RMS of %f mm (%.1f micron)." %
-                    (rdiff, rdiff*1000.0))
+            rdiff = math.sqrt(xdiff*xdiff + ydiff*ydiff)
+            logger.info("NOTE: Second datum measurement shifted by (%.6f,%.6f) mm, r=%.1f micron wrt first." %
+                    (xdiff, ydiff, rdiff*1000.0))
         
         if GEARBOX_CALIBRATION_PARS.FIX_BETA0: # --- Fix beta0 using datum?
             beta0_total = 0.0
