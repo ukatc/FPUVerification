@@ -110,12 +110,20 @@ def goto_position(
     logger = logging.getLogger(__name__)
     check_for_quit()
     gd.pingFPUs(grid_state)
+
+    # If allow_uninitialized is True, also ensure that movement is enabled
+    if allow_uninitialized:
+        logger.debug("Enabling movement for %s." % fpuset)
+        if fpuset:
+            for fpu_id in fpuset:
+                gd.enableMove(fpu_id, grid_state)
+
     current_angles = gd.trackedAngles(grid_state, retrieve=True)
     current_alpha = array([x.as_scalar() for x, y in current_angles])
     current_beta = array([y.as_scalar() for x, y in current_angles])
-    logger.debug("current positions:\n%r" % current_angles)
+    logger.debug("Current positions:\n%r" % current_angles)
     logger.log(
-        loglevel, "moving FPUs %s to (%6.2f,%6.2f)" % (fpuset, abs_alpha, abs_beta)
+        loglevel, "Moving FPUs %s to (%6.2f,%6.2f)" % (fpuset, abs_alpha, abs_beta)
     )
 
     delta_alpha = abs_alpha - current_alpha

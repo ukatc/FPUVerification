@@ -243,15 +243,20 @@ if __name__ == "__main__":
                             % (fpu_id, actual_sn, configured_sn)
                         )
 
+            # If needed display the initial state of each FPU
+            logger.debug("Initial state of each FPU:")
+            for fpu_id in measure_fpuset:
+                logger.debug("FPU %d: " % fpu_id + str(rig.grid_state.FPU[fpu_id]))
+
             if opts.resetFPUs or (T.TASK_RESET_FPUS in tasks):
                 info("resetting FPUs.... ")
                 flush()
                 rig.gd.resetFPUs(rig.grid_state, fpuset=measure_fpuset)
                 info("resetting FPUs.... OK")
 
+
             if T.TASK_REWIND_FPUS in tasks:
                 info("[%s] ###" % T.TASK_REWIND_FPUS)
-
                 info("rewinding FPUs near datum position...")
 
                 rewind_fpus(rig, REWIND_POS_ALPHA, REWIND_POS_BETA)
