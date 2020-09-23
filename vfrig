@@ -1,5 +1,22 @@
 #!/usr/bin/env python
 
+"""
+
+vfrig is the top-level Python script which begins a specified set of verification tasks.
+
+The tasks are controlled through command options defined in vfr/options.py and a collection
+of measurement parameters defined in vfr/conf.py.
+
+The "metascript" logic, which converts high-level instructions into a sequence of pre-defined
+measurement and evaluation tasks, is defined in vfr/TaskLogic.py and vfr/task_config.py.
+
+Low-level functions common to most tests may be found in vfr/tests_common.py.
+
+See vfrig-help and vfr/helptext.py for information.
+
+"""
+
+
 from __future__ import absolute_import, division, print_function
 
 import sys
@@ -87,38 +104,42 @@ from vfr.output.plotting import plot
 from vfr.verification_tasks.rig_selftest import selftest_fibre, selftest_nonfibre
 
 if __name__ == "__main__":
+    # Collect command line options and parameters.
     opts, db_opts, rig_opts = parse_args()
 
+    # Load FPU information from the specified database.
     dbe = Database(opts=db_opts)
-
     fpu_config, measure_fpuset, eval_fpuset = dbe.load_fpu_config_and_sets(
         opts.setup_file, opts
     )
 
+    # Configure logging.
     configure_logs(measure_fpuset, fpu_config, opts.loglevel)
     logger = logging.getLogger("")
 
-    info = logger.info
-    info("starting verification")
-    info("vfrig command line tasks = %r" % opts.tasks)
+    logger.info("Starting verification")
+    logger.info("vfrig command line tasks = %r" % opts.tasks)
     logger.debug("vfrig command line options = %r" % opts)
+
     try:
         try:
-
+            #
+            # Initialise operations and connect to the rig hardware.
+            #
             rig_params = Namespace(measure_fpuset=measure_fpuset, opts=rig_opts)
 
-            # change current directory to image root folder, so that
+            # Change current directory to image root folder, so that
             # we can use relative image paths in both measurement
             # and evaluation tasks
             cd_to_data_root(VERIFICATION_ROOT_FOLDER)
 
-            # resolve high-level tasks and dependent checks and measurements into
+            # Resolve high-level tasks and dependent checks and measurements into
             # low-level actions
             tasks = resolve(opts.tasks, rig_params, dbe)
 
             if not rig_params.measure_fpuset:  # pylint: disable=no-member
                 # no measurements, we remove all related tasks
-                info("No FPUs in measurement set. Removing all measurement tasks.")
+                logger.info("No FPUs in measurement set. Removing all measurement tasks.")
                 tasks -= MEASUREMENT_TASKS
 
             if tasks & MEASUREMENT_TASKS:
@@ -126,18 +147,20 @@ if __name__ == "__main__":
                 rig = Rig(rig_params, fpu_config=fpu_config)
 
             if opts.expand_tasks:
-                info("Expanded tasks: %s" % list(tasks))
+                logger.info("Expanded tasks: %s" % list(tasks))
                 sys.exit(0)
-
-            # check connections to cameras and EtherCAN gateway
+            #
+            # Begin with connection testing tasks.
+            #
+            # Check connections to cameras and EtherCAN gateway
             if T.TST_GATEWAY_CONNECTION in tasks:
-                info("[%s] ###" % T.TST_GATEWAY_CONNECTION)
+                logger.info("[%s] ###" % T.TST_GATEWAY_CONNECTION)
                 check_connection(opts, "gateway", opts.gateway_address)
 
             if T.TST_POS_REP_CAM_CONNECTION in tasks:
-                info("[%s] ###" % T.TST_POS_REP_CAM_CONNECTION)
+                logger.info("[%s] ###" % T.TST_POS_REP_CAM_CONNECTION)
                 if opts.mockup:
-                    info("skipping test...")
+                    logger.info("Skipping test...")
                 else:
                     check_connection(
                         opts,
@@ -146,27 +169,27 @@ if __name__ == "__main__":
                     )
 
             if T.TST_MET_CAL_CAM_CONNECTION in tasks:
-                info("[%s] ###" % T.TST_MET_CAL_CAM_CONNECTION)
+                logger.info("[%s] ###" % T.TST_MET_CAL_CAM_CONNECTION)
                 if opts.mockup:
-                    info("skipping test...")
+                    logger.info("Skipping test...")
                 else:
                     check_connection(
                         opts, "metrology calibration camera", MET_CAL_CAMERA_IP_ADDRESS
                     )
 
             if T.TST_MET_HEIGHT_CAM_CONNECTION in tasks:
-                info("[%s] ###" % T.TST_MET_HEIGHT_CAM_CONNECTION)
+                logger.info("[%s] ###" % T.TST_MET_HEIGHT_CAM_CONNECTION)
                 if opts.mockup:
-                    info("skipping test...")
+                    logger.info("Skipping test...")
                 else:
                     check_connection(
                         opts, "metrology height camera", MET_HEIGHT_CAMERA_IP_ADDRESS
                     )
 
             if T.TST_PUP_ALGN_CAM_CONNECTION in tasks:
-                info("[%s] ###" % T.TST_PUP_ALGN_CAM_CONNECTION)
+                logger.info("[%s] ###" % T.TST_PUP_ALGN_CAM_CONNECTION)
                 if opts.mockup:
-                    info("skipping test...")
+                    logger.info("Skipping test...")
                 else:
                     check_connection(
                         opts, "pupil alignment camera", PUP_ALGN_CAMERA_IP_ADDRESS
@@ -174,33 +197,35 @@ if __name__ == "__main__":
 
             if T.TASK_INIT_RD in tasks:
 
-                info("[initialize unprotected FPU driver] ###")
+                logger.info("[initialize unprotected FPU driver] ###")
                 rig.init_driver(protected=False)
 
             if T.TST_CAN_CONNECTION in tasks:
-                info("[test_can_connection] ###")
+                logger.info("[test_can_connection] ###")
                 for fpu_id in range(opts.N):
                     fpu_audit = get_fpuLogger(fpu_id, fpu_config, __name__).audit
 
                     fpu_audit(
-                        "checking CAN connection for FPU at CAN ID %i... " % fpu_id
+                        "Checking CAN connection for FPU at CAN ID %i... " % fpu_id
                     )
 
                     rv = check_can_connection(rig.rd, rig.grid_state, rig.opts, fpu_id)
                     fpu_audit(
-                        "checking CAN connection for FPU at CAN ID %i... %r"
+                        "Checking CAN connection for FPU at CAN ID %i... %r"
                         % (fpu_id, rv)
                     )
-
+            #
+            # Flash the serial numbers if needed.
+            #
             if T.TST_FLASH in tasks:
-                info("[flash_snum] ###")
+                logger.info("[flash_snum] ###")
                 check_sns_unique(rig, dbe)
                 flashed_numbers = []
                 for fpu_id in measure_fpuset:
                     fpu_info = get_fpuLogger(fpu_id, fpu_config, __name__).info
                     serial_number = fpu_config[fpu_id]["serialnumber"]
                     fpu_info(
-                        "flashing FPU #%i with serial number %r ... "
+                        "Flashing FPU #%i with serial number %r ... "
                         % (fpu_id, serial_number)
                     )
                     rval = rig.rd.writeSerialNumber(
@@ -208,7 +233,7 @@ if __name__ == "__main__":
                     )
                     flashed_numbers.append(serial_number)
                     fpu_info(
-                        "flashing FPU #%i with serial number %r ... %r"
+                        "Flashing FPU #%i with serial number %r ... %r"
                         % (fpu_id, serial_number, rval)
                     )
                     rig.rd.readSerialNumbers(rig.grid_state)
@@ -217,7 +242,7 @@ if __name__ == "__main__":
                 add_sns_to_set(dbe, flashed_numbers)
 
             if T.TST_INITPOS in tasks:
-                info("[init_positions] ###")
+                logger.info("[init_positions] ###")
 
                 for fpu_id in measure_fpuset:
                     alpha_start, beta_start = fpu_config[fpu_id]["pos"]
@@ -231,7 +256,7 @@ if __name__ == "__main__":
 
             if T.TASK_INIT_GD in tasks:
 
-                info("[initialize protected driver] ###")
+                logger.info("[initialize protected driver] ###")
                 rig.init_driver(env=dbe.env, protected=True)
 
                 for fpu_id in measure_fpuset:
@@ -239,62 +264,65 @@ if __name__ == "__main__":
                     configured_sn = fpu_config[fpu_id]["serialnumber"]
                     if configured_sn != actual_sn:
                         raise ValueError(
-                            "actual serial number of FPU %i = %r does not match configuration (%r)"
+                            "Actual serial number of FPU %i = %r does not match configuration (%r)"
                             % (fpu_id, actual_sn, configured_sn)
                         )
 
+            #
+            # Now execute all the required functional tests.
+            #
             if opts.resetFPUs or (T.TASK_RESET_FPUS in tasks):
-                info("resetting FPUs.... ")
+                logger.info("Resetting FPUs.... ")
                 flush()
                 rig.gd.resetFPUs(rig.grid_state, fpuset=measure_fpuset)
-                info("resetting FPUs.... OK")
+                logger.info("Resetting FPUs.... OK")
 
             if T.TASK_REWIND_FPUS in tasks:
-                info("[%s] ###" % T.TASK_REWIND_FPUS)
+                logger.info("[%s] ###" % T.TASK_REWIND_FPUS)
 
-                info("rewinding FPUs near datum position...")
+                logger.info("Rewinding FPUs near datum position...")
 
                 rewind_fpus(rig, REWIND_POS_ALPHA, REWIND_POS_BETA)
 
             if T.TST_DATUM_ALPHA in tasks:
-                info("[%s] ###" % T.TST_DATUM_ALPHA)
+                logger.info("[%s] ###" % T.TST_DATUM_ALPHA)
 
                 # We can use grid_state to display the starting position
-                info(
-                    "the starting position (in degrees) is: %r"
+                logger.info(
+                    "The starting position (in degrees) is: %r"
                     % rig.gd.trackedAngles(rig.grid_state, retrieve=True)
                 )
                 test_datum(rig, dbe, DASEL_ALPHA)
 
             if T.TST_DATUM_BETA in tasks:
-                info("[%s] ###" % T.TST_DATUM_BETA)
+                logger.info("[%s] ###" % T.TST_DATUM_BETA)
 
                 # We can use grid_state to display the starting position
-                info(
-                    "the starting position (in degrees) is: %r"
+                logger.info(
+                    "The starting position (in degrees) is: %r"
                     % rig.gd.trackedAngles(rig.grid_state, retrieve=True)
                 )
                 test_datum(rig, dbe, DASEL_BETA)
 
             if T.TST_DATUM_BOTH in tasks:
-                info("[%s] ###" % T.TST_DATUM_BOTH)
+                logger.info("[%s] ###" % T.TST_DATUM_BOTH)
 
                 # We can use grid_state to display the starting position
-                info(
-                    "the starting position (in degrees) is: %r"
+                logger.info(
+                    "The starting position (in degrees) is: %r"
                     % rig.gd.trackedAngles(rig.grid_state, retrieve=True)
                 )
                 test_datum(rig, dbe, DASEL_BOTH)
 
             if T.TASK_REFERENCE in tasks:
-                info("[%s] ###" % T.TASK_REFERENCE)
+                logger.info("[%s] ###" % T.TASK_REFERENCE)
                 # move all fpus to datum which are not there
                 # (this is needed to operate the turntable)
 
                 find_datum(rig.gd, rig.grid_state, opts=opts, uninitialized=True)
 
             if T.TASK_SELFTEST_NONFIBRE in tasks:
-                info("[%s] ###" % T.TASK_SELFTEST_NONFIBRE)
+                logger.info("[%s] ###" % T.TASK_SELFTEST_NONFIBRE)
                 selftest_nonfibre(
                     rig,
                     POS_REP_MEASUREMENT_PARS=POS_REP_MEASUREMENT_PARS,
@@ -304,7 +332,7 @@ if __name__ == "__main__":
                 )
 
             if T.TASK_SELFTEST_FIBRE in tasks:
-                info("[%s] ###" % T.TASK_SELFTEST_FIBRE)
+                logger.info("[%s] ###" % T.TASK_SELFTEST_FIBRE)
                 selftest_fibre(
                     rig,
                     MET_CAL_MEASUREMENT_PARS=MET_CAL_MEASUREMENT_PARS,
@@ -315,23 +343,23 @@ if __name__ == "__main__":
                 )
 
             if T.TST_COLLDETECT in tasks:
-                info("[test_collision_detection] ###")
+                logger.info("[test_collision_detection] ###")
                 test_limit(rig, dbe, "beta_collision", pars=COLLDECT_MEASUREMENT_PARS)
 
             if T.TST_ALPHA_MIN in tasks:
-                info("[test_limit_alpha_min] ###")
+                logger.info("[test_limit_alpha_min] ###")
                 test_limit(rig, dbe, "alpha_min", pars=COLLDECT_MEASUREMENT_PARS)
 
             if T.TST_ALPHA_MAX in tasks:
-                info("[test_limit_alpha_max] ###")
+                logger.info("[test_limit_alpha_max] ###")
                 test_limit(rig, dbe, "alpha_max", pars=COLLDECT_MEASUREMENT_PARS)
 
             if T.TST_BETA_MAX in tasks:
-                info("[test_limit_beta_max] ###")
+                logger.info("[test_limit_beta_max] ###")
                 test_limit(rig, dbe, "beta_max", pars=COLLDECT_MEASUREMENT_PARS)
 
             if T.TST_BETA_MIN in tasks:
-                info("[test_limit_beta_min] ###")
+                logger.info("[test_limit_beta_min] ###")
                 test_limit(rig, dbe, "beta_min", pars=COLLDECT_MEASUREMENT_PARS)
 
             if measure_fpuset and (
@@ -364,8 +392,8 @@ if __name__ == "__main__":
                     ]
                 )
             ):
-                info("*" * 60)
-                info("functional tests passed, all OK!")
+                logger.info("*" * 60)
+                logger.info("Functional tests passed, all OK!")
                 print(
                     r"""
 
@@ -391,12 +419,15 @@ if __name__ == "__main__":
                     # (but not normal exit or manual termination)
                     add_email_handler(opts.mail_on_error)
 
+            #
+            # Move on to the verification measurement and evaluation tasks.
+            #
             if T.TASK_INIT_GD2 in tasks:
                 # this re-initializes the driver because
                 # the range limits might have changed,
                 # and they are only loaded by the
                 # EtherCAN driver upon initialization
-                info("[initialize protected driver (re-loading limits)] ###")
+                logger.info("[initialize protected driver (re-loading limits)] ###")
                 rig.init_driver(env=dbe.env, protected=True)
 
                 for fpu_id in measure_fpuset:
@@ -404,46 +435,46 @@ if __name__ == "__main__":
                     configured_sn = fpu_config[fpu_id]["serialnumber"]
                     if configured_sn != actual_sn:
                         raise ValueError(
-                            "actual serial number of FPU %i = %r does not match configuration (%r)"
+                            "Actual serial number of FPU %i = %r does not match configuration (%r)"
                             % (fpu_id, actual_sn, configured_sn)
                         )
 
             if T.TASK_REFERENCE2 in tasks:
-                info("[%s] ###" % T.TASK_REFERENCE2)
+                logger.info("[%s] ###" % T.TASK_REFERENCE2)
                 find_datum(rig.gd, rig.grid_state, opts=opts, uninitialized=True)
 
             if T.MEASURE_MET_CAL in tasks:
-                info("[%s] ###" % T.MEASURE_MET_CAL)
+                logger.info("[%s] ###" % T.MEASURE_MET_CAL)
                 measure_metrology_calibration(rig, dbe, pars=MET_CAL_MEASUREMENT_PARS)
             if T.EVAL_MET_CAL in tasks:
-                info("[%s] ###" % T.EVAL_MET_CAL)
+                logger.info("[%s] ###" % T.EVAL_MET_CAL)
                 eval_metrology_calibration(
                     dbe, MET_CAL_TARGET_ANALYSIS_PARS, MET_CAL_FIBRE_ANALYSIS_PARS
                 )
 
             if T.MEASURE_MET_HEIGHT in tasks:
-                info("[%s] ###" % T.MEASURE_MET_HEIGHT)
+                logger.info("[%s] ###" % T.MEASURE_MET_HEIGHT)
                 measure_metrology_height(rig, dbe, pars=MET_HEIGHT_MEASUREMENT_PARS)
 
             if T.EVAL_MET_HEIGHT in tasks:
-                info("[%s] ###" % T.EVAL_MET_HEIGHT)
+                logger.info("[%s] ###" % T.EVAL_MET_HEIGHT)
                 eval_metrology_height(
                     dbe, MET_HEIGHT_ANALYSIS_PARS, MET_HEIGHT_EVALUATION_PARS
                 )
 
             if T.MEASURE_DATUM_REP in tasks:
-                info("[%s] ###" % T.MEASURE_DATUM_REP)
+                logger.info("[%s] ###" % T.MEASURE_DATUM_REP)
                 measure_datum_repeatability(rig, dbe, pars=DATUM_REP_MEASUREMENT_PARS)
 
             if T.EVAL_DATUM_REP in tasks:
-                info("[%s] ###" % T.EVAL_DATUM_REP)
+                logger.info("[%s] ###" % T.EVAL_DATUM_REP)
                 eval_datum_repeatability(dbe, DATUM_REP_ANALYSIS_PARS)
 
             if T.MEASURE_PUP_ALGN in tasks:
-                info("[%s] ###" % T.MEASURE_PUP_ALGN)
+                logger.info("[%s] ###" % T.MEASURE_PUP_ALGN)
                 measure_pupil_alignment(rig, dbe, pars=PUP_ALGN_MEASUREMENT_PARS)
             if T.EVAL_PUP_ALGN in tasks:
-                info("[%s] ###" % T.EVAL_PUP_ALGN)
+                logger.info("[%s] ###" % T.EVAL_PUP_ALGN)
                 eval_pupil_alignment(
                     dbe,
                     PUP_ALGN_ANALYSIS_PARS=PUP_ALGN_ANALYSIS_PARS,
@@ -451,64 +482,68 @@ if __name__ == "__main__":
                 )
 
             if T.MEASURE_POS_REP in tasks:
-                info("[%s] ###" % T.MEASURE_POS_REP)
+                logger.info("[%s] ###" % T.MEASURE_POS_REP)
                 measure_positional_repeatability(
                     rig, dbe, pars=POS_REP_MEASUREMENT_PARS
                 )
 
             if T.EVAL_POS_REP in tasks:
-                info("[%s] ###" % T.EVAL_POS_REP)
+                logger.info("[%s] ###" % T.EVAL_POS_REP)
                 eval_positional_repeatability(
                     dbe, POS_REP_ANALYSIS_PARS, POS_REP_EVALUATION_PARS
                 )
 
             if T.EVAL_GEARBOX_CAL in tasks:
-                info("[%s] ###" % T.EVAL_GEARBOX_CAL)
+                logger.info("[%s] ###" % T.EVAL_GEARBOX_CAL)
                 eval_gearbox_calibration(
                     dbe, POS_REP_ANALYSIS_PARS, POS_REP_EVALUATION_PARS
                 )
 
             if T.MEASURE_POS_VER in tasks:
-                info("[%s] ###" % T.MEASURE_POS_VER)
+                logger.info("[%s] ###" % T.MEASURE_POS_VER)
                 measure_positional_verification(rig, dbe, pars=POS_VER_MEASUREMENT_PARS)
 
             if T.TASK_PARK_FPUS in tasks:
-                info("[%s] ###" % T.TASK_PARK_FPUS)
+                logger.info("[%s] ###" % T.TASK_PARK_FPUS)
                 # move all fpus back to datum
                 find_datum(rig.gd, rig.grid_state, opts=opts, uninitialized=True)
 
             if T.TASK_HOME_TURNTABLE in tasks:
-                info("[%s] ###" % T.TASK_HOME_TURNTABLE)
+                logger.info("[%s] ###" % T.TASK_HOME_TURNTABLE)
                 safe_home_turntable(rig, rig.grid_state)
 
             if T.EVAL_POS_VER in tasks:
-                info("[%s] ###" % T.EVAL_POS_VER)
+                logger.info("[%s] ###" % T.EVAL_POS_VER)
                 eval_positional_verification(
                     dbe, POS_REP_ANALYSIS_PARS, POS_VER_EVALUATION_PARS
                 )
 
+            #
+            # Finally, check for plotting and reporting tasks.
+            #
             if T.TASK_PLOT in tasks:
-                info("[%s] ###" % T.TASK_PLOT)
+                logger.info("[%s] ###" % T.TASK_PLOT)
                 plot(dbe, opts)
 
             if T.TASK_REPORT in tasks:
-                info("[%s] ###" % T.TASK_REPORT)
+                logger.info("[%s] ###" % T.TASK_REPORT)
                 report(dbe, opts)
 
             if T.TASK_DUMP in tasks:
-                info("[%s] ###" % T.TASK_DUMP)
+                logger.info("[%s] ###" % T.TASK_DUMP)
                 dump_data(dbe)
 
         except SystemExit:
+            # Restore the turntable when an exit signal has been received.
             if T.TASK_HOME_TURNTABLE in tasks:
-                info("[%s] ###" % T.TASK_HOME_TURNTABLE)
+                logger.info("[%s] ###" % T.TASK_HOME_TURNTABLE)
                 safe_home_turntable(rig, rig.grid_state)
                 raise
 
     except Exception as exc:
         logger.exception("Exception triggered with message %r" % exc)
         logger.critical(
-            """fatal: exception hit with message:
+            """Fatal: exception hit with message:
 
  %s
 
@@ -517,4 +552,4 @@ Verification process aborted."""
         )
         raise
 
-    info("verification finished")
+    logger.info("Verification finished")
