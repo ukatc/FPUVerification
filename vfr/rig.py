@@ -9,7 +9,7 @@ import devicelock
 from vfr import hw as real_hw
 from vfr import hwsimulation
 
-from vfr.connection import init_driver
+from vfr.connection import init_fpu_driver
 
 
 class Rig:
@@ -60,9 +60,9 @@ class Rig:
         self.rd, self.gd = None, None
 
         if not protected:
-            self.rd, self.grid_state = init_driver(self.opts, N, protected=protected)
+            self.rd, self.grid_state = init_fpu_driver(self.opts, N, protected=protected)
         else:
-            self.gd, self.grid_state = init_driver(
+            self.gd, self.grid_state = init_fpu_driver(
                 self.opts, N, env=env, protected=True
             )
 
