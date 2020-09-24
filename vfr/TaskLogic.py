@@ -41,6 +41,17 @@ def expand_tasks(tasks, goal, expansion, delete=False):
 
 
 def resolve(tasks, rigparams, dbe):
+    """
+
+    This function resolves an initial list of user-defined tasks
+    into a final list of low-level actions. Compound tasks are
+    replaced by a list of low-level actions. Dependent tasks
+    are added to the list.
+    
+    Note that the ordering of the low-level actions does not
+    matter because it is defined in the vfrig script.
+    
+    """
     logger = logging.getLogger(__name__)
     tasks = set(tasks)
 

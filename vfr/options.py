@@ -481,8 +481,10 @@ def expand_set(eval_snset, fpu_config, all_serial_numbers):
 
 
 def get_sets(all_serial_numbers, fpu_config, opts):
-    """Under normal operation, we want to measure and evaluate the FPUs
-    in the rig.
+    """
+    
+    Under normal operation, we want to measure and evaluate the FPUs
+    installed in the rig.
 
     However, we also need to be able to query and/or re-evaluate data
     for FPUs which have been measured before. To do that, there is a
@@ -490,17 +492,17 @@ def get_sets(all_serial_numbers, fpu_config, opts):
     stored FPUs to be displayed.
 
     This allows also to restrict a new measurement to FPUs which are
-    explicityly listed, for example because the need to be selectively
+    explicitly listed, for example because the need to be selectively
     repeated.
 
     """
     eval_snset, fpu_config = expand_set(opts.snset, fpu_config, all_serial_numbers)
 
     if eval_snset is None:
-        # both mesured and evaluated sets are exclusively defined by
+        # Both measured and evaluated sets are exclusively defined by
         # the measurement configuration file
         if set(opts.tasks) & MEASUREMENT_TASKS:
-            # in this case, no measurements are needed,
+            # In this case, no measurements are needed,
             # which means that we do not need to access
             # protected resources like hardware or logfiles.
             measure_fpuset = set(fpu_config.keys())
@@ -511,9 +513,9 @@ def get_sets(all_serial_numbers, fpu_config, opts):
     else:
         for sn in eval_snset:
             if not sn_pat.match(sn):
-                raise ValueError("serial number %r is not valid!" % sn)
+                raise ValueError("Serial number %r is not valid!" % sn)
 
-        # we restrict the measured FPUs to the serial numbers passed
+        # We restrict the measured FPUs to the serial numbers passed
         # in the command line option, and create a config which has
         # entries for these and the additional requested serial
         # numbers
@@ -522,7 +524,7 @@ def get_sets(all_serial_numbers, fpu_config, opts):
         config_sns = set(config_by_sn.keys())
         if len(config_sns) != len(fpu_config):
             raise ValueError(
-                "the measurement configuration file has duplicate serial numbers"
+                "The measurement configuration file has duplicate serial numbers"
             )
 
         measure_sns = config_sns.intersection(eval_snset)

@@ -9,13 +9,22 @@ of measurement parameters defined in vfr/conf.py.
 
 The "metascript" logic, which converts high-level instructions into a sequence of pre-defined
 measurement and evaluation tasks, is defined in vfr/TaskLogic.py and vfr/task_config.py.
+The list of tasks to be carried out is extracted from the command line options. The user can
+request a high-level task or a low-level task. Each high-level task is resolved into a
+series of low-level tasks by the task logic functions. Finally, this script makes a series
+of choices of the form
+
+	if T.<task_name> in tasks:
+		<run the task>
+
+to decide whether to run each task. Note that the tasks are executed in the order defined
+within this script, not the order contained within the "tasks" list.
 
 Low-level functions common to most tests may be found in vfr/tests_common.py.
 
 See vfrig-help and vfr/helptext.py for information.
 
 """
-
 
 from __future__ import absolute_import, division, print_function
 
@@ -25,6 +34,7 @@ import logging
 from vfr.auditlog import configure_logs, get_fpuLogger, add_email_handler
 from vfr.rig import Rig
 
+# Common collections of configuration parameters.
 from vfr.conf import (
     COLLDECT_MEASUREMENT_PARS,
     DATUM_REP_ANALYSIS_PARS,
@@ -52,13 +62,20 @@ from vfr.conf import (
     REWIND_POS_BETA,
 )
 
+# Connection functions.
 from vfr.connection import check_can_connection, check_connection
+
+# Database management functions.
 from vfr.db.snset import add_sns_to_set
 from vfr.db.toplevel import Database
 from vfr.options import parse_args, check_sns_unique
 from vfr.posdb import init_position
+
+# Task management functions.
 from vfr.TaskLogic import T, resolve
 from vfr.task_config import MEASUREMENT_TASKS
+
+# Common measurement functions.
 from vfr.tests_common import (
     find_datum,
     flush,
@@ -66,18 +83,24 @@ from vfr.tests_common import (
     set_quit_handler,
     safe_home_turntable,
 )
+
+# Functional test functions and parameters.
 from vfr.verification_tasks.functional_tests import (
-    DASEL_ALPHA,
-    DASEL_BETA,
-    DASEL_BOTH,
-    rewind_fpus,
+    DASEL_ALPHA,  # Datum alpha only selection flag
+    DASEL_BETA,   # Datum beta only selection flag
+    DASEL_BOTH,   # Datum alpha and beta together selection flag
+    rewind_fpus,  # Move FPUs close to datum, ready for a findDatum to be executed
     test_datum,
     test_limit,
 )
+
+# Datum repeatability test functions
 from vfr.verification_tasks.measure_datum_repeatability import (
     eval_datum_repeatability,
     measure_datum_repeatability,
 )
+
+# Metrology height calibration functions
 from vfr.verification_tasks.metrology_calibration import (
     eval_metrology_calibration,
     measure_metrology_calibration,
@@ -86,21 +109,34 @@ from vfr.verification_tasks.metrology_height import (
     eval_metrology_height,
     measure_metrology_height,
 )
+
+# Positional repeatability and gearbox calibration functions
 from vfr.verification_tasks.positional_repeatability import (
     eval_positional_repeatability,
     measure_positional_repeatability,
     eval_gearbox_calibration,
 )
+from vfr.verification_tasks.positional_repeatability_check import (
+    measure_positional_repeatability_check,
+)
+
+# Positional verification test functions
 from vfr.verification_tasks.positional_verification import (
     eval_positional_verification,
     measure_positional_verification,
 )
+
+# Pupil alignment test functions
 from vfr.verification_tasks.pupil_alignment import (
     eval_pupil_alignment,
     measure_pupil_alignment,
 )
+
+# Plotting and reporting functions
 from vfr.output.report import dump_data, report
 from vfr.output.plotting import plot
+
+# Self-test functions
 from vfr.verification_tasks.rig_selftest import selftest_fibre, selftest_nonfibre
 
 if __name__ == "__main__":
@@ -108,6 +144,10 @@ if __name__ == "__main__":
     opts, db_opts, rig_opts = parse_args()
 
     # Load FPU information from the specified database.
+    # Also load rig configuration information from the specified setup file.
+    # Measurement tasks can be performed only on FPUs declared to be installed
+    # on the rig. Evaluation tasks can be performance on any FPU registered
+    # in the database.
     dbe = Database(opts=db_opts)
     fpu_config, measure_fpuset, eval_fpuset = dbe.load_fpu_config_and_sets(
         opts.setup_file, opts
@@ -117,9 +157,13 @@ if __name__ == "__main__":
     configure_logs(measure_fpuset, fpu_config, opts.loglevel)
     logger = logging.getLogger("")
 
+	# Extract the initial list of tasks and options from the command line.
     logger.info("Starting verification")
     logger.info("vfrig command line tasks = %r" % opts.tasks)
     logger.debug("vfrig command line options = %r" % opts)
+
+    logger.debug("FPUs in measurement set: %s" % str(measure_fpuset))
+    logger.debug("FPUs in evaluation set: %s" % str(eval_fpuset))
 
     try:
         try:
@@ -134,7 +178,9 @@ if __name__ == "__main__":
             cd_to_data_root(VERIFICATION_ROOT_FOLDER)
 
             # Resolve high-level tasks and dependent checks and measurements into
-            # low-level actions
+            # low-level actions. (opts.tasks contains the tasks requested by the
+            # user and tasks contains the list of low-level actions derived from
+            # the task logic).
             tasks = resolve(opts.tasks, rig_params, dbe)
 
             if not rig_params.measure_fpuset:  # pylint: disable=no-member
@@ -484,6 +530,12 @@ if __name__ == "__main__":
             if T.MEASURE_POS_REP in tasks:
                 logger.info("[%s] ###" % T.MEASURE_POS_REP)
                 measure_positional_repeatability(
+                    rig, dbe, pars=POS_REP_MEASUREMENT_PARS
+                )
+
+            if T.MEASURE_POS_REP_CHECK in tasks:
+                logger.info("[%s] ###" % T.MEASURE_POS_REP_CHECK)
+                measure_positional_repeatability_check(
                     rig, dbe, pars=POS_REP_MEASUREMENT_PARS
                 )
 
