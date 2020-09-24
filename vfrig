@@ -199,6 +199,7 @@ if __name__ == "__main__":
             # Begin with connection testing tasks.
             #
             # Check connections to cameras and EtherCAN gateway
+            logger.info("----------------------------------------------------------------------")
             if T.TST_GATEWAY_CONNECTION in tasks:
                 logger.info("[%s] ###" % T.TST_GATEWAY_CONNECTION)
                 check_connection(opts, "gateway", opts.gateway_address)
@@ -300,6 +301,7 @@ if __name__ == "__main__":
 
             set_quit_handler()
 
+            logger.info("----------------------------------------------------------------------")
             if T.TASK_INIT_GD in tasks:
 
                 logger.info("[initialize protected driver] ###")
@@ -468,6 +470,7 @@ if __name__ == "__main__":
             #
             # Move on to the verification measurement and evaluation tasks.
             #
+            logger.info("----------------------------------------------------------------------")
             if T.TASK_INIT_GD2 in tasks:
                 # this re-initializes the driver because
                 # the range limits might have changed,
@@ -490,36 +493,44 @@ if __name__ == "__main__":
                 find_datum(rig.gd, rig.grid_state, opts=opts, uninitialized=True)
 
             if T.MEASURE_MET_CAL in tasks:
+            	logger.info("----------------------------------------------------------------------")
                 logger.info("[%s] ###" % T.MEASURE_MET_CAL)
                 measure_metrology_calibration(rig, dbe, pars=MET_CAL_MEASUREMENT_PARS)
             if T.EVAL_MET_CAL in tasks:
+            	logger.info("----------------------------------------------------------------------")
                 logger.info("[%s] ###" % T.EVAL_MET_CAL)
                 eval_metrology_calibration(
                     dbe, MET_CAL_TARGET_ANALYSIS_PARS, MET_CAL_FIBRE_ANALYSIS_PARS
                 )
 
             if T.MEASURE_MET_HEIGHT in tasks:
+            	logger.info("----------------------------------------------------------------------")
                 logger.info("[%s] ###" % T.MEASURE_MET_HEIGHT)
                 measure_metrology_height(rig, dbe, pars=MET_HEIGHT_MEASUREMENT_PARS)
 
             if T.EVAL_MET_HEIGHT in tasks:
+            	logger.info("----------------------------------------------------------------------")
                 logger.info("[%s] ###" % T.EVAL_MET_HEIGHT)
                 eval_metrology_height(
                     dbe, MET_HEIGHT_ANALYSIS_PARS, MET_HEIGHT_EVALUATION_PARS
                 )
 
             if T.MEASURE_DATUM_REP in tasks:
+            	logger.info("----------------------------------------------------------------------")
                 logger.info("[%s] ###" % T.MEASURE_DATUM_REP)
                 measure_datum_repeatability(rig, dbe, pars=DATUM_REP_MEASUREMENT_PARS)
 
             if T.EVAL_DATUM_REP in tasks:
+            	logger.info("----------------------------------------------------------------------")
                 logger.info("[%s] ###" % T.EVAL_DATUM_REP)
                 eval_datum_repeatability(dbe, DATUM_REP_ANALYSIS_PARS)
 
             if T.MEASURE_PUP_ALGN in tasks:
+            	logger.info("----------------------------------------------------------------------")
                 logger.info("[%s] ###" % T.MEASURE_PUP_ALGN)
                 measure_pupil_alignment(rig, dbe, pars=PUP_ALGN_MEASUREMENT_PARS)
             if T.EVAL_PUP_ALGN in tasks:
+            	logger.info("----------------------------------------------------------------------")
                 logger.info("[%s] ###" % T.EVAL_PUP_ALGN)
                 eval_pupil_alignment(
                     dbe,
@@ -528,43 +539,51 @@ if __name__ == "__main__":
                 )
 
             if T.MEASURE_POS_REP in tasks:
+            	logger.info("----------------------------------------------------------------------")
                 logger.info("[%s] ###" % T.MEASURE_POS_REP)
                 measure_positional_repeatability(
                     rig, dbe, pars=POS_REP_MEASUREMENT_PARS
                 )
 
             if T.MEASURE_POS_REP_CHECK in tasks:
+            	logger.info("----------------------------------------------------------------------")
                 logger.info("[%s] ###" % T.MEASURE_POS_REP_CHECK)
                 measure_positional_repeatability_check(
                     rig, dbe, pars=POS_REP_MEASUREMENT_PARS
                 )
 
             if T.EVAL_POS_REP in tasks:
+             	logger.info("----------------------------------------------------------------------")
                 logger.info("[%s] ###" % T.EVAL_POS_REP)
                 eval_positional_repeatability(
                     dbe, POS_REP_ANALYSIS_PARS, POS_REP_EVALUATION_PARS
                 )
 
             if T.EVAL_GEARBOX_CAL in tasks:
+            	logger.info("----------------------------------------------------------------------")
                 logger.info("[%s] ###" % T.EVAL_GEARBOX_CAL)
                 eval_gearbox_calibration(
                     dbe, POS_REP_ANALYSIS_PARS, POS_REP_EVALUATION_PARS
                 )
 
             if T.MEASURE_POS_VER in tasks:
+            	logger.info("----------------------------------------------------------------------")
                 logger.info("[%s] ###" % T.MEASURE_POS_VER)
                 measure_positional_verification(rig, dbe, pars=POS_VER_MEASUREMENT_PARS)
 
             if T.TASK_PARK_FPUS in tasks:
+            	logger.info("----------------------------------------------------------------------")
                 logger.info("[%s] ###" % T.TASK_PARK_FPUS)
                 # move all fpus back to datum
                 find_datum(rig.gd, rig.grid_state, opts=opts, uninitialized=True)
 
             if T.TASK_HOME_TURNTABLE in tasks:
+            	logger.info("----------------------------------------------------------------------")
                 logger.info("[%s] ###" % T.TASK_HOME_TURNTABLE)
                 safe_home_turntable(rig, rig.grid_state)
 
             if T.EVAL_POS_VER in tasks:
+            	logger.info("----------------------------------------------------------------------")
                 logger.info("[%s] ###" % T.EVAL_POS_VER)
                 eval_positional_verification(
                     dbe, POS_REP_ANALYSIS_PARS, POS_VER_EVALUATION_PARS

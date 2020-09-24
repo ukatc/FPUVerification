@@ -7,6 +7,7 @@ from os.path import abspath
 from vfr.auditlog import get_fpuLogger
 
 from fpu_commands import gen_wf
+from fpu_constants import StepsPerDegreeAlpha, StepsPerDegreeBeta
 from Gearbox.gear_correction import (
     GearboxFitError,
     fit_gearbox_correction,
@@ -275,13 +276,18 @@ def capture_fpu_position(rig, fpu_id, midx, target_pos, capture_image, pars=None
     alpha_cursteps, beta_cursteps = get_stepcounts(rig.gd, rig.grid_state, fpu_id)
 
     # get absolute corrected step count from desired absolute angle
+    asteps_original = int(target_pos.alpha * StepsPerDegreeAlpha)
+    bsteps_original = int(target_pos.beta * StepsPerDegreeBeta)
     asteps_target, bsteps_target = apply_gearbox_correction(
         (deg2rad(target_pos.alpha), deg2rad(target_pos.beta)), coeffs=fpu_coeffs
     )
-
+    fpu_log.debug(
+        "FPU %s: measurement #%i - gearbox calibration converts (%i, %i) to (%i, %i) steps"
+        % (sn, k, asteps_original, bsteps_original, asteps_target, bsteps_target)
+    )
     fpu_log.info(
         "FPU %s: measurement #%i - moving to (%7.2f, %7.2f) degrees = (%i, %i) steps"
-        % (sn, k, alpha_deg, beta_deg, asteps_target, bsteps_target)
+        % (sn, k, target_pos.alpha, target_pos.beta, asteps_target, bsteps_target)
     )
 
     # compute deltas of step counts
@@ -359,7 +365,7 @@ def get_images_for_fpu(rig, fpu_id, range_limits, pars, capture_image, capture_d
 
 
         key, val = capture_fpu_position(
-            rig, fpu_id, measurement_index, target_pos, capture_image, pars=pars, fpu_coeffs=None
+            rig, fpu_id, measurement_index, target_pos, capture_image, pars=pars, fpu_coeffs=fpu_coeffs
         )
  
         # the direction index tells whether the image

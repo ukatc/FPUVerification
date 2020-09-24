@@ -299,7 +299,7 @@ task_dependencies = [
             T.REQ_DATUM_PASSED,
             T.REQ_COLLDECT_PASSED,
             # T.REQ_PUP_ALGN_PASSED,
-            T.REQ_POS_REP_PASSED,
+            # T.REQ_POS_REP_PASSED,
             T.REQ_DATUM_REP_PASSED,
             T.TASK_INIT_GD2,
             T.TASK_HOME_TURNTABLE,
