@@ -14,6 +14,7 @@ from FpuGridDriver import (
     REQD_ANTI_CLOCKWISE,
     REQD_CLOCKWISE,
     SEARCH_CLOCKWISE,
+    FirmwareTimeoutError,
     CollisionError,
     ConnectionFailure,
     InvalidStateException,
