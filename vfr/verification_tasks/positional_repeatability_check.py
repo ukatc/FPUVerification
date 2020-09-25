@@ -11,7 +11,9 @@ from fpu_constants import StepsPerDegreeAlpha, StepsPerDegreeBeta
 from Gearbox.gear_correction import (
     GearboxFitError,
     fit_gearbox_correction,
+    apply_gearbox_correction,
     GEARBOX_CORRECTION_VERSION,
+    GEARBOX_CORRECTION_MINIMUM_VERSION,
     cartesian_blob_position
 )
 from GigE.GigECamera import BASLER_DEVICE_CLASS, DEVICE_CLASS, IP_ADDRESS
@@ -36,6 +38,7 @@ from vfr.db.positional_repeatability import (
     PositionalRepeatabilityResults,
     get_positional_repeatability_images,
     get_positional_repeatability_passed_p,
+    get_positional_repeatability_result,
     save_positional_repeatability_images,
     save_positional_repeatability_result,
 )
@@ -47,6 +50,7 @@ from vfr.tests_common import (
     get_config_from_mapfile,
     get_sorted_positions,
     goto_position,
+    get_stepcounts,
     store_image,
     timestamp,
     safe_home_turntable,
@@ -517,10 +521,10 @@ def measure_positional_repeatability_check(rig, dbe, pars=None):
             turntable_safe_goto(rig, rig.grid_state, stage_position)
 
             record = get_images_for_fpu(rig, fpu_id, range_limits, pars, capture_image, capture_datum_image, fpu_coeffs=fpu_coeffs)
-            fpu_log.debug("Saving result record = %r" % (record,))
+            fpu_log.trace("Saving pos_rep check image record = %r" % (record,))
 
             save_positional_repeatability_images(dbe, fpu_id, record)
-    logger.info("Positional repeatability captured successfully")
+    logger.info("Positional repeatability captured successfully a second time")
 
 
 def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation_pars):
@@ -778,7 +782,7 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
             datum_results=datum_results,
         )
 
-        logger.trace("FPU %r: saving result record = %r" % (sn, record))
+        logger.trace("FPU %r: saving pos_rep check result record = %r" % (sn, record))
         save_positional_repeatability_result(dbe, fpu_id, record)
 
 
@@ -853,5 +857,5 @@ def eval_gearbox_calibration(dbe, pos_rep_analysis_pars, pos_rep_evaluation_pars
         #    gearbox_correction_version=GEARBOX_CORRECTION_VERSION,
         #)
 
-        #logger.debug("FPU %r: saving result record = %r" % (sn, record))
+        #logger.debug("FPU %r: saving gearbox calib result record = %r" % (sn, record))
         #save_positional_repeatability_result(dbe, fpu_id, record)
