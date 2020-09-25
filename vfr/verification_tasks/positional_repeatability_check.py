@@ -63,7 +63,7 @@ from vfr.conf import POS_REP_ANALYSIS_PARS
 def check_skip_reason(dbe, fpu_id, sn, repeat_passed_tests=None, skip_fibre=False):
     if not get_datum_repeatability_passed_p(dbe, fpu_id):
         return (
-            "FPU %s: skipping positional repeatability measurement because"
+            "FPU %s: skipping positional repeatability measurement check because"
             " there is no passed datum repeatability test" % sn
         )
 
@@ -74,15 +74,16 @@ def check_skip_reason(dbe, fpu_id, sn, repeat_passed_tests=None, skip_fibre=Fals
             )
         else:
             return (
-                "FPU %s: skipping positional repeatability measurement because"
+                "FPU %s: skipping positional repeatability measurement check because"
                 " there is no passed pupil alignment test"
                 " (use '--skip-fibre' flag if you want to omit that test)" % sn
             )
 
-    if get_positional_repeatability_passed_p(dbe, fpu_id) and (not repeat_passed_tests):
+    if not get_positional_repeatability_passed_p(dbe, fpu_id):
 
         return (
-            "FPU %s : positional repeatability test already passed, skipping test" % sn
+            "FPU %s: skipping positional repeatability measurement check because"
+            " there is no passed positional repeatability test" % sn
         )
 
     return None
