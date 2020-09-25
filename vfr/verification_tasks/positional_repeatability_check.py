@@ -28,6 +28,7 @@ from vfr.evaluation.eval_positional_repeatability import (
     evaluate_positional_repeatability,
 )
 from vfr.evaluation.measures import arg_max_dict
+import numpy as np
 from numpy import NaN
 from vfr.conf import POS_REP_CAMERA_IP_ADDRESS, PERCENTILE_ARGS
 from vfr.db.retrieval import get_data
@@ -284,15 +285,15 @@ def capture_fpu_position(rig, fpu_id, midx, target_pos, capture_image, pars=None
     asteps_original = int(target_pos.alpha * StepsPerDegreeAlpha)
     bsteps_original = int(target_pos.beta * StepsPerDegreeBeta)
     asteps_target, bsteps_target = apply_gearbox_correction(
-        (deg2rad(target_pos.alpha), deg2rad(target_pos.beta)), coeffs=fpu_coeffs
+        (np.deg2rad(target_pos.alpha), np.deg2rad(target_pos.beta)), coeffs=fpu_coeffs
     )
     fpu_log.debug(
-        "FPU %s: measurement #%i - gearbox calibration converts (%i, %i) to (%i, %i) steps"
-        % (sn, k, asteps_original, bsteps_original, asteps_target, bsteps_target)
+        "FPU %s: gearbox calibration converts (%i, %i) to (%i, %i) steps"
+        % (sn, asteps_original, bsteps_original, asteps_target, bsteps_target)
     )
     fpu_log.info(
-        "FPU %s: measurement #%i - moving to (%7.2f, %7.2f) degrees = (%i, %i) steps"
-        % (sn, k, target_pos.alpha, target_pos.beta, asteps_target, bsteps_target)
+        "FPU %s: moving to (%7.2f, %7.2f) degrees = (%i, %i) steps"
+        % (sn, target_pos.alpha, target_pos.beta, asteps_target, bsteps_target)
     )
 
     # compute deltas of step counts
@@ -411,6 +412,10 @@ def measure_positional_repeatability_check(rig, dbe, pars=None):
     tstamp = timestamp()
     logger = logging.getLogger(__name__)
     logger.info("Capturing positional repeatability with gearbox calibration switched on")
+
+    opts = rig.opts
+    gd = rig.gd
+    grid_state = rig.grid_state
 
     initialize_rig(rig)
 
