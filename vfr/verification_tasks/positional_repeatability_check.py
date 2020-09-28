@@ -300,7 +300,7 @@ def capture_fpu_position(rig, fpu_id, midx, target_pos, capture_image, pars=None
     adelta = asteps_target - alpha_cursteps
     bdelta = bsteps_target - beta_cursteps
 
-    N = opts.N
+    N = rig.opts.N
     # move by delta
     wf = gen_wf(
         dirac(fpu_id, N) * adelta, dirac(fpu_id, N) * bdelta, units="steps"
@@ -412,10 +412,6 @@ def measure_positional_repeatability_check(rig, dbe, pars=None):
     tstamp = timestamp()
     logger = logging.getLogger(__name__)
     logger.info("Capturing positional repeatability with gearbox calibration switched on")
-
-    opts = rig.opts
-    gd = rig.gd
-    grid_state = rig.grid_state
 
     initialize_rig(rig)
 
