@@ -440,7 +440,7 @@ def measure_positional_repeatability(rig, dbe, pars=None):
             turntable_safe_goto(rig, rig.grid_state, stage_position)
 
             record = get_images_for_fpu(rig, fpu_id, range_limits, pars, capture_image, capture_datum_image)
-            fpu_log.debug("Saving result record = %r" % (record,))
+            fpu_log.trace("Saving pos rep image record = %r" % (record,))
 
             save_positional_repeatability_images(dbe, fpu_id, record)
     logger.info("Positional repeatability captured successfully")
@@ -701,7 +701,7 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
             datum_results=datum_results,
         )
 
-        logger.trace("FPU %r: saving result record = %r" % (sn, record))
+        logger.trace("FPU %r: saving pos_rep result record = %r" % (sn, record))
         save_positional_repeatability_result(dbe, fpu_id, record)
 
 
@@ -776,5 +776,5 @@ def eval_gearbox_calibration(dbe, pos_rep_analysis_pars, pos_rep_evaluation_pars
         #    gearbox_correction_version=GEARBOX_CORRECTION_VERSION,
         #)
 
-        #logger.debug("FPU %r: saving result record = %r" % (sn, record))
+        #logger.debug("FPU %r: saving gearbox calib result record = %r" % (sn, record))
         #save_positional_repeatability_result(dbe, fpu_id, record)

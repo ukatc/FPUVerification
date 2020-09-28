@@ -170,7 +170,7 @@ def measure_pupil_alignment(rig, dbe, pars=None):
                 images=images, calibration_mapfile=pars.PUP_ALGN_CALIBRATION_MAPFILE
             )
 
-            fpu_log.debug("FPU %r: saving result record = %r" % (sn, record))
+            fpu_log.trace("FPU %r: saving pupil alignment image record = %r" % (sn, record))
             save_pupil_alignment_images(dbe, fpu_id, record)
 
     home_linear_stage(rig)  # bring linear stage to home pos
@@ -258,5 +258,5 @@ def eval_pupil_alignment(
             error_message=errmsg,
             algorithm_version=PUPIL_ALIGNMENT_ALGORITHM_VERSION,
         )
-        logger.debug("FPU %r: saving result record = %r" % (sn, record))
+        logger.trace("FPU %r: saving pupil alignment result record = %r" % (sn, record))
         save_pupil_alignment_result(dbe, fpu_id, record)

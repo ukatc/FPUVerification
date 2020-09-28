@@ -403,5 +403,5 @@ def eval_datum_repeatability(dbe, dat_rep_analysis_pars):
             result=datum_repeatability_has_passed,
         )
 
-        logger.debug("FPU %r: saving result record = %r" % (sn, record))
+        logger.trace("FPU %r: saving datum rep result record = %r" % (sn, record))
         save_datum_repeatability_result(dbe, fpu_id, record)

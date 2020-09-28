@@ -404,7 +404,7 @@ def measure_positional_verification(rig, dbe, pars=None):
                 datum_images=datum_image_list,
             )
 
-            fpu_log.trace("FPU %r: saving result record = %r" % (sn, record))
+            fpu_log.trace("FPU %r: saving pos_ver image record = %r" % (sn, record))
             save_positional_verification_images(dbe, fpu_id, record)
 
     logger.info("positional verification captured sucessfully")
@@ -570,5 +570,5 @@ def eval_positional_verification(dbe, pos_rep_analysis_pars, pos_ver_evaluation_
             center_y=yc,
             datum_results=datum_results,
         )
-        logger.trace("FPU %r: saving result record = %r" % (sn, record))
+        logger.trace("FPU %r: saving pos_ver result record = %r" % (sn, record))
         save_positional_verification_result(dbe, fpu_id, record)
