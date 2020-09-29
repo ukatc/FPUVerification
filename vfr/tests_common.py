@@ -15,7 +15,7 @@ import signal
 import warnings
 import camera_calibration
 
-# Import functions and constants from the FPU control software
+# Import functions and constants from the FPU control software (fpu_driver)
 from fpu_commands import gen_wf, list_states
 from fpu_constants import ALPHA_DATUM_OFFSET, BETA_DATUM_OFFSET
 import FpuGridDriver

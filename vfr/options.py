@@ -4,7 +4,7 @@ import argparse
 import re
 import sys
 import types
-import warnings
+#import warnings
 from ast import literal_eval
 from os import environ
 import logging
@@ -496,6 +496,7 @@ def get_sets(all_serial_numbers, fpu_config, opts):
     repeated.
 
     """
+    logger = logging.getLogger(__name__)
     eval_snset, fpu_config = expand_set(opts.snset, fpu_config, all_serial_numbers)
 
     if eval_snset is None:
@@ -556,8 +557,8 @@ def get_sets(all_serial_numbers, fpu_config, opts):
             N = 0
 
         if N < opts.N:
-            warnings.warn(
-                "Subset of %i selected. Adjusting number of addressed FPUs to %i." % (opts.N, N)
+            logger.warning(
+                "NOTE: Subset of %i selected. Adjusting number of addressed FPUs to %i." % (opts.N, N)
             )
             opts.N = N
 
@@ -591,10 +592,10 @@ def load_config(config_file_name):
     logger = logging.getLogger(__name__)
     if not config_file_name:
         # no measurement configuration
-        logger.info("no measurement configuration passed")
+        logger.info("NOTE: No measurement configuration provided. Evaluation tasks only.")
         return {}
 
-    logger.info("reading measurement configuratiom from %r..." % config_file_name)
+    logger.info("Reading measurement configuration from %r..." % config_file_name)
     cfg_list = lit_eval_file(config_file_name)
 
     fconfig = dict(

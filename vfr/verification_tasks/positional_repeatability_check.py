@@ -6,8 +6,10 @@ import logging
 from os.path import abspath
 from vfr.auditlog import get_fpuLogger
 
+# Import functions and constants from the FPU control software (fpu_driver)
 from fpu_commands import gen_wf
 from fpu_constants import StepsPerDegreeAlpha, StepsPerDegreeBeta
+
 from Gearbox.gear_correction import (
     GearboxFitError,
     fit_gearbox_correction,

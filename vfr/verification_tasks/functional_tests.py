@@ -3,6 +3,8 @@ from __future__ import absolute_import, division, print_function
 import logging
 import warnings
 from vfr.auditlog import get_fpuLogger
+
+# Import functions and constants from the FPU control software (fpu_driver)
 from fpu_constants import StepsPerDegreeBeta
 from fpu_commands import gen_wf
 from FpuGridDriver import (
@@ -21,6 +23,7 @@ from FpuGridDriver import (
     LimitBreachError,
     MovementError,
 )
+
 from numpy import NaN, ceil, sign
 from vfr.db.base import TestResult
 from vfr.db.colldect_limits import (

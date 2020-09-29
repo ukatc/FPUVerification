@@ -10,8 +10,11 @@ from fpu_constants import (
     BETA_MAX_DEGREE,
     BETA_MIN_DEGREE,
 )
+
+# Import interval class and protection database functions from the FPU control software (fpu_driver)
 from interval import Interval
 from protectiondb import ProtectionDB
+
 from vfr.conf import PROTECTION_TOLERANCE, ALPHA_RANGE_MAX, ALPHA_DATUM_OFFSET
 from vfr.tests_common import timestamp
 from vfr.db.base import TestResult, get_test_result, save_test_result

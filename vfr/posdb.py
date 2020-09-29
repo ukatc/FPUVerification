@@ -1,6 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
-# Import constants, interval class and database functions from the FPU control software
+# Import constants, interval class and database functions from the FPU control software (fpu_driver)
 from fpu_constants import (
     ALPHA_MAX_DEGREE,
     ALPHA_MIN_DEGREE,
