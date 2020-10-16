@@ -39,10 +39,10 @@ def pupalnCoordinates(
     # pylint: disable=no-member
     if correct is None:
         correct = get_correction_func(
-            calibration_pars=pars.PUP_ALGN_CALIBRATION_PARS,
-            platescale=pars.PUP_ALGN_PLATESCALE,
-            loglevel=pars.loglevel,
-        )
+                    calibration_pars=pars.PUP_ALGN_CALIBRATION_PARS,
+                    platescale=pars.PUP_ALGN_PLATESCALE,
+                    loglevel=pars.loglevel,
+                  )
 
     image = cv2.imread(image_path)
 
