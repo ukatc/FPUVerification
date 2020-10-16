@@ -155,14 +155,14 @@ def methtHeight(
     # exceptions
     if stdSmallTarget > pars.METHT_STANDARD_DEV:
         raise MetrologyHeightAnalysisError(
-            "Image %s: Small target points have high standard deviation"
-            " - target may not be sitting flat" % image_path
+            "Image %s: Small target points have high standard deviation (%.3f)"
+            " - target may not be sitting flat" % (image_path, stdSmallTarget)
         )
 
     if stdLargeTarget > pars.METHT_STANDARD_DEV:
         raise MetrologyHeightAnalysisError(
-            "Image %s: Large target points have high standard deviation"
-            " - target may not be sitting flat" % image_path
+            "Image %s: Large target points have high standard deviation (%.3f)"
+            " - target may not be sitting flat" % (image_path, stdLargeTarget)
         )
 
     #if noiseMetric > pars.METHT_NOISE_METRIC:
