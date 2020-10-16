@@ -139,6 +139,8 @@ def move_then_datum(rig, fpu_id):
     gd.executeMotion(grid_state, fpuset=[fpu_id])
     gd.reverseMotion(grid_state, fpuset=[fpu_id], verbosity=0)
     gd.executeMotion(grid_state, fpuset=[fpu_id])
+    # Find the datum twice. The second time is more accurate than the first.
+    gd.findDatum(grid_state, fpuset=[fpu_id])
     gd.findDatum(grid_state, fpuset=[fpu_id])
 
 
@@ -155,6 +157,8 @@ def grab_datumed_images(rig, fpu_id, capture_func, iterations):
         fpu_log = get_fpuLogger(fpu_id, rig.fpu_config, __name__)
         fpu_log.info("capturing datumed-%02i" % count)
 
+        # Find the datum twice. The second time is more accurate than the first.
+        rig.gd.findDatum(rig.grid_state, fpuset=[fpu_id])
         rig.gd.findDatum(rig.grid_state, fpuset=[fpu_id])
 
         ipath = capture_func("datumed", count)
@@ -177,6 +181,8 @@ def grab_moved_images(rig, fpu_id, capture_func, iterations):
 
     fpu_log = get_fpuLogger(fpu_id, rig.fpu_config, __name__)
 
+    # Find the datum twice. The second time is more accurate than the first.
+    rig.gd.findDatum(rig.grid_state)
     rig.gd.findDatum(rig.grid_state)
     moved_images = []
     moved_residuals = []

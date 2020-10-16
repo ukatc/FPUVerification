@@ -161,7 +161,7 @@ def find_datum(gd, grid_state, opts=None, uninitialized=False):
 
     logger = logging.getLogger(__name__)
     check_for_quit()
-    logger.info("moving FPUs to datum position")
+    logger.info("Moving FPUs to datum position")
     gd.pingFPUs(grid_state)
 
     logger.trace("pre datum: %r" % gd.trackedAngles(grid_state, display=False))
@@ -179,6 +179,7 @@ def find_datum(gd, grid_state, opts=None, uninitialized=False):
             unreferenced.append(fpu_id)
 
     if unreferenced:
+        # If not yet referenced, move to a location within 1.0 degrees of datum.
         goto_position(
             gd,
             ALPHA_DATUM_OFFSET + 1.0,
@@ -191,7 +192,7 @@ def find_datum(gd, grid_state, opts=None, uninitialized=False):
         check_for_quit()
 
         if uninitialized:
-            logger.audit("issuing initial findDatum (%i FPUs):" % len(unreferenced))
+            logger.audit("Issuing initial findDatum (%i FPUs):" % len(unreferenced))
 
             modes = {fpu_id: SEARCH_CLOCKWISE for fpu_id in unreferenced}
 
@@ -202,22 +203,26 @@ def find_datum(gd, grid_state, opts=None, uninitialized=False):
                 selected_arm=DASEL_BOTH,
                 fpuset=unreferenced,
             )
+            # Search for datum a second time. The second time is more accurate than the first.
+            gd.findDatum( grid_state, fpuset=unreferenced )
 
         else:
             timeout = DATUM_TIMEOUT_ENABLE
             logger.debug(
-                "issuing findDatum (%i FPUs, timeout=%r):"
+                "Issuing findDatum (%i FPUs, timeout=%r):"
                 % (len(unreferenced), timeout)
             )
             gd.findDatum(grid_state, fpuset=unreferenced, timeout=timeout)
-
+            # Search for datum a second time. The second time is more accurate than the first.
+            gd.findDatum( grid_state, fpuset=unreferenced )
+            
         logger.trace("findDatum finished, states=%s" % str(list_states(grid_state)))
     else:
         logger.debug("find_datum(): all FPUs already at datum")
 
     # We can use grid_state to display the starting position
     logger.trace(
-        "datum finished, the FPU positions (in degrees) are: %r"
+        "Datum finished, the FPU positions (in degrees) are: %r"
         % gd.trackedAngles(grid_state, display=False)
     )
     logger.trace("FPU states = %r" % list_states(grid_state))
