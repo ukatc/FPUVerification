@@ -20,6 +20,7 @@ def targetCoordinates(
     # configurable parameters
     pars=None,
     correct=None,
+    debugging=None
 ):  # will display image with contours annotated
 
     """
