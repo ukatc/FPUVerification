@@ -47,11 +47,14 @@ from DistortionCorrection import get_correction_func
 from vfr.conf import DATUM_REP_ANALYSIS_PARS
 
 
-def check_skip(rig, dbe, fpu_id):
-    """checks whether an FPU should be skipped because a previous
+def check_skip(rig, dbe, fpu_id, sn):
+    """
+    
+    Checks whether an FPU should be skipped because a previous
     test failed or because it was already tested.
-    If so, return the reason as a string."""
-
+    If so, return the reason as a string.
+    
+    """
     if not get_anglimit_passed_p(dbe, fpu_id, 'alpha_min'):
         return (
             "FPU %s: skipping datum repeatability measurement because"
@@ -82,7 +85,6 @@ def check_skip(rig, dbe, fpu_id):
         not rig.opts.repeat_passed_tests
     ):
 
-        sn = rig.fpu_config[fpu_id]["serialnumber"]
         return "FPU %{} : datum repeatability test already passed, skipping test".format(
             sn
         )
@@ -263,8 +265,9 @@ def measure_datum_repeatability(rig, dbe, pars=None):
             rig.measure_fpuset, pars.DATUM_REP_POSITIONS
         ):
 
+            sn = rig.fpu_config[fpu_id]["serialnumber"]
             fpu_log = get_fpuLogger(fpu_id, rig.fpu_config, __name__)
-            skip_reason = check_skip(rig, dbe, fpu_id)
+            skip_reason = check_skip(rig, dbe, fpu_id, sn)
             if skip_reason:
                 fpu_log.info(skip_reason)
                 continue
