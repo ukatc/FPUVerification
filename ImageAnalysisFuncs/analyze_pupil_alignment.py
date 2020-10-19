@@ -39,15 +39,21 @@ def pupalnCoordinates(
     # pylint: disable=no-member
     if correct is None:
         correct = get_correction_func(
-            calibration_pars=pars.PUP_ALGN_CALIBRATION_PARS,
-            platescale=pars.PUP_ALGN_PLATESCALE,
-            loglevel=pars.loglevel,
+                    calibration_pars=pars.PUP_ALGN_CALIBRATION_PARS,
+                    platescale=pars.PUP_ALGN_PLATESCALE,
+                    loglevel=pars.loglevel,
+                  )
+
+    # Open the image file and attempt to convert it to greyscale.
+    image = cv2.imread(image_path)
+    try:
+        greyscale = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    except cv2.error as err:
+        raise PupilAlignmentAnalysisError(
+            "OpenCV returned error %s for image %s" % (str(err), path)
         )
 
-    image = cv2.imread(image_path)
-
-    assert image
-    # image processing
+    # Insert image processing here
 
     pupaln_spot_x = 0
     pupaln_spot_y = 0
