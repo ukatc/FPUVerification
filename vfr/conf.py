@@ -558,10 +558,16 @@ PUP_ALGN_CALIBRATION_PARS = {"algorithm": "scale", "scale_factor": PUP_ALGN_PLAT
 # Pupil alignment data analysis parameter set.
 # --------------------------------------------
 PUP_ALGN_ANALYSIS_PARS = Namespace(
-    PUP_ALGN_PLATESCALE=PUP_ALGN_PLATESCALE,  # millimeter per pixel
-    PUP_ALGN_CIRCULARITY_THRESH=0.8,  # dimensionless
+    PLATESCALE=PUP_ALGN_PLATESCALE,  # millimeter per pixel
+
+    MIN_RADIUS=0.0,  # in mm
+    MAX_RADIUS=1000.0,  # in mm
+    THRESHOLD_LIMIT=40,
+    QUALITY_METRIC=0.3,  # dimensionless
+
+    PUP_ALGN_CIRCULARITY_THRESH=0.6,  # dimensionless
     PUP_ALGN_NOISE_METRIC=0,
-    PUP_ALGN_CALIBRATION_PARS=PUP_ALGN_CALIBRATION_PARS,
+    CALIBRATION_PARS=PUP_ALGN_CALIBRATION_PARS,
     display=False,
     verbosity=0,
     loglevel=0,
