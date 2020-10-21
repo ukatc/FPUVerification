@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*
 #
 # MOONS Verification Rig Configuration Parameters.
 #
@@ -165,15 +165,14 @@ DATUM_REP_ANALYSIS_PARS = Namespace(
     TARGET_DETECTION_CONTOURS_PARS=DAT_REP_TARGET_DETECTION_CONTOUR_PARS,
     PLATESCALE=DAT_REP_PLATESCALE,  # millimeter per pixel
     MAX_FAILURE_QUOTIENT=0.2,
-    display=False,
-    verbosity=0,
-    loglevel=0,
     DATUM_REP_PASS=30.0,  # the maximum single
     # deviation in microns from the
     # baseline position which represents an
     # acceptable FPU
     DATUM_REP_TESTED_PERCENTILE=95,  # the tested percentile
-)
+    display=False,
+    verbosity=0,
+    loglevel=0,)
 
 LINPOSITIONS = [  # the linear stage positions
     10.5,  # FIXME: bogus values - spec missing ??
@@ -213,6 +212,7 @@ MET_CAL_PLATESCALE = 0.00668  # millimeter per pixel
 MET_CAL_CALIBRATION_PARS = {"algorithm": "scale", "scale_factor": MET_CAL_PLATESCALE}
 
 MET_CAL_TARGET_DETECTION_OTSU_PARS = Namespace(
+    PLATESCALE=MET_CAL_PLATESCALE,  # millimeter per pixel
     CALIBRATION_PARS=MET_CAL_CALIBRATION_PARS,
     SMALL_RADIUS=SMALL_TARGET_RADIUS,  # in mm
     LARGE_RADIUS=LARGE_TARGET_RADIUS,  # in mm
@@ -245,10 +245,17 @@ MET_CAL_TARGET_ANALYSIS_PARS = Namespace(
 )
 
 MET_CAL_FIBRE_ANALYSIS_PARS = Namespace(
-    MET_CAL_PLATESCALE=0.00668,  # millimeter per pixel
-    MET_CAL_QUALITY_METRIC=0.8,  # dimensionless
+    PLATESCALE=MET_CAL_PLATESCALE,  # millimeter per pixel
+    CALIBRATION_PARS=MET_CAL_CALIBRATION_PARS,
+    
+    MIN_RADIUS=0.1,  # in mm
+    MAX_RADIUS=1.5,  # in mm
+    THRESHOLD_LIMIT=40,
+    QUALITY_METRIC=0.8,  # dimensionless
+    
     display=False,  # will display image with contours annotated
     verbosity=0,
+    loglevel=0,
 )
 
 # The default rotary stage angles (deg) required to place each FPU under the
@@ -611,6 +618,7 @@ MET_HEIGHT_ANALYSIS_PARS = Namespace(
     METHT_NOISE_METRIC=0.25, # dimensionless
     display=False,
     verbosity=0,
+    loglevel=0,
 )
 
 MET_HEIGHT_EVALUATION_PARS = Namespace(

@@ -72,36 +72,36 @@ def find_largest_bright_circle(path,
     # size range and shape of the illuminated fibre.
     # See https://docs.opencv.org/master/d0/d7a/classcv_1_1SimpleBlobDetector.html
 
-    large_params = cv2.SimpleBlobDetector_Params()
-    large_params.minArea = math.pi * min_radius * min_radius
-    large_params.maxArea = math.pi * max_radius * max_radius
-    large_params.blobColor = 255  # white
-    large_params.filterByColor = True
-    large_params.minCircularity = (quality)  # smooth sided (0 is very pointy) 0.4 was used by Alex
-    large_params.filterByCircularity = True
-    large_params.minInertiaRatio = 0.7  # non stretched
-    large_params.filterByInertia = True
-    large_params.minConvexity = 0.7  # convex
-    large_params.filterByConvexity = True
+    fibre_blob_params = cv2.SimpleBlobDetector_Params()
+    fibre_blob_params.minArea = math.pi * min_radius * min_radius
+    fibre_blob_params.maxArea = math.pi * max_radius * max_radius
+    fibre_blob_params.blobColor = 255  # white
+    fibre_blob_params.filterByColor = True
+    fibre_blob_params.minCircularity = (quality)  # smooth sided (0 is very pointy) 0.4 was used by Alex
+    fibre_blob_params.filterByCircularity = True
+    fibre_blob_params.minInertiaRatio = 0.7  # non stretched
+    fibre_blob_params.filterByInertia = True
+    fibre_blob_params.minConvexity = 0.7  # convex
+    fibre_blob_params.filterByConvexity = True
 
-    large_detector = cv2.SimpleBlobDetector_create(large_params)
+    fibre_detector = cv2.SimpleBlobDetector_create(fibre_blob_params)
 
     # Detect the blobs in the thresholded image
-    large_blobs = large_detector.detect(thresholded)
+    fibre_blobs = fibre_detector.detect(thresholded)
 
     # If required, display the sizes of all the blobs
     if show:
         print(path)
         print("All large round blobs (x, y, radius):")
-        print([(blob.pt[0], blob.pt[1], blob.size / 2.0) for blob in large_blobs])
+        print([(blob.pt[0], blob.pt[1], blob.size / 2.0) for blob in fibre_blobs])
 
     # If more than one blob has been found, keep the largest.
     largest_blob = None
     largest_size = 0.0
-    for large in large_blobs:
-        if large.size > largest_size:
-            largest_blob = large
-            largest_size = large.size
+    for fibre in fibre_blobs:
+        if fibre.size > largest_size:
+            largest_blob = fibre
+            largest_size = fibre.size
     if largest_blob is not None:
         fibre_blob_list = [largest_blob]
     else:
@@ -125,7 +125,7 @@ def find_largest_bright_circle(path,
                 [(blob.pt[0], blob.pt[1], blob.size / 2.0) for blob in fibre_blob_list]
             )
             # loop over the (x, y) coordinates and radius of the circles
-            for circle in large_blobs:
+            for circle in fibre_blobs:
                 x, y = circle.pt
                 x = int(x)
                 y = int(y)
@@ -193,17 +193,17 @@ def fibreCoordinates(image_path, pars=None, correct=None, debugging=None):
                 len(blobs), image_path
             )
         )
-    large_blob = blobs[0]
+    fibre_blob = blobs[0]
 
     # convert results from pixels to mm
-    large_blob_x, large_blob_y = correct(large_blob.pt[0], large_blob.pt[1])
+    fibre_blob_x, fibre_blob_y = correct(fibre_blob.pt[0], fibre_blob.pt[1])
 
 
     # The returned quality is a fixed value, the new blob detector doesn't
     # return the quality of each blob, but a minimum can be set so results
     # are guaranteed to have a equal or higher quality to the returned value
     return (
-        large_blob_x,
-        large_blob_y,
+        fibre_blob_x,
+        fibre_blob_y,
         pars.QUALITY_METRIC,
     )

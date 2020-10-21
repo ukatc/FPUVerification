@@ -33,10 +33,10 @@ class TestPupilAlignImageAnalysis(unittest.TestCase):
             ),
         ]
 
-        for (test_image, large_x, large_y, large_q) in cases:
-            print("Testing posrepCoordinates with image %s.." % test_image)
+        for (test_image, pupil_x, pupil_y, pupil_q) in cases:
+            print("Testing pupilCoordinates with image %s.." % test_image)
 
-            (lx, ly, lq) = pupilCoordinates(
+            (px, py, pq) = pupilCoordinates(
                 test_image, pars=PUP_ALGN_ANALYSIS_PARS, debugging=DEBUGGING
             )
 
@@ -44,18 +44,18 @@ class TestPupilAlignImageAnalysis(unittest.TestCase):
             q_limit = 1.475  # roughly equal to the old 0.05  # dimensionless
 
             if VERBOSE_TESTS:
-                print("Large: Expecting (%.4f,%.4f). Measured (%.4f,%.4f)." % \
-                    (large_x, large_y, lx, ly) )
+                print("Pupil blob: Expecting (%.4f,%.4f). Measured (%.4f,%.4f)." % \
+                    (pupil_x, pupil_y, px, py) )
 
             if not DEBUGGING:
                 npt.assert_almost_equal(
-                    lx, large_x, pos_limit, "large x failed", VERBOSE_TESTS
+                    px, pupil_x, pos_limit, "pupil x failed", VERBOSE_TESTS
                 )
                 npt.assert_almost_equal(
-                    ly, large_y, pos_limit, "large y failed", VERBOSE_TESTS
+                    py, pupil_y, pos_limit, "pupil y failed", VERBOSE_TESTS
                 )
                 npt.assert_almost_equal(
-                    lq, large_q, q_limit, "large q failed", VERBOSE_TESTS
+                    pq, pupil_q, q_limit, "pupil q failed", VERBOSE_TESTS
                 )
 
 
