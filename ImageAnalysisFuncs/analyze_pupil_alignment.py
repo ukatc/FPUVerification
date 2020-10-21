@@ -21,7 +21,7 @@ class PupilAlignmentAnalysisError(ImageAnalysisError):
 PUPIL_ALIGNMENT_ALGORITHM_VERSION = (1,0,0)
 
 
-def pupilCoordinates(image_path, pars=None, correct=None, debugging=None):
+def pupilCoordinates(image_path, pars=None, correct=None, debugging=False):
 
     """
     
@@ -29,7 +29,6 @@ def pupilCoordinates(image_path, pars=None, correct=None, debugging=None):
     XY coordinates and circularity of the projected dot in mm
         
     """
-
     # Authors: Stephen Watson (initial algorithm March 4, 2019(
     # Johannes Nix (code imported and re-formatted)
 
@@ -59,7 +58,7 @@ def pupilCoordinates(image_path, pars=None, correct=None, debugging=None):
             image_path,
             pars=pars,
             correct=correct,
-            debugging=None
+            debugging=debugging
         )
 
     # exceptions

@@ -68,8 +68,8 @@ def find_largest_bright_circle(path,
                      )
     output = image.copy() # FIXME: Only used in debugging mode?
 
-    # Create two opencv blob detectors to locate blobs matching the expected
-    # size and shape of the small and large metrology targets.
+    # Create opencv blob detector to locate blobs matching the expected
+    # size range and shape of the illuminated fibre.
     # See https://docs.opencv.org/master/d0/d7a/classcv_1_1SimpleBlobDetector.html
 
     large_params = cv2.SimpleBlobDetector_Params()
@@ -86,16 +86,16 @@ def find_largest_bright_circle(path,
 
     large_detector = cv2.SimpleBlobDetector_create(large_params)
 
-    # Detect the small and large blobs in the thresholded image
+    # Detect the blobs in the thresholded image
     large_blobs = large_detector.detect(thresholded)
 
-    # Keep blobs found in both with similar sizes
+    # If required, display the sizes of all the blobs
     if show:
         print(path)
-        print("large round blobs:")
+        print("All large round blobs (x, y, radius):")
         print([(blob.pt[0], blob.pt[1], blob.size / 2.0) for blob in large_blobs])
 
-    # Find the largest blob
+    # If more than one blob has been found, keep the largest.
     largest_blob = None
     largest_size = 0.0
     for large in large_blobs:
@@ -108,7 +108,7 @@ def find_largest_bright_circle(path,
         fibre_blob_list = []
 
     if show:
-        print("Largest blobs")
+        print("Largest blob (x, y, radius):")
         print([(blob.pt[0], blob.pt[1], blob.size / 2.0) for blob in fibre_blob_list])
 
     # In debugging mode, save a diagnostic image.

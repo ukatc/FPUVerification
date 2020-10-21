@@ -113,16 +113,17 @@ def find_bright_sharp_circles(path,
     small_blobs = small_detector.detect(thresholded)
     large_blobs = large_detector.detect(thresholded)
 
-    # Keep blobs found in both with similar sizes
+    # If required, display all the blobs found.
     if show:
         print(path)
-        print("small round blobs:")
+        print("All small round blobs (x, y, radius):")
         print([(blob.pt[0], blob.pt[1], blob.size / 2.0) for blob in small_blobs])
-        print("large round blobs:")
+        print("All large round blobs (x, y, radius):")
         print([(blob.pt[0], blob.pt[1], blob.size / 2.0) for blob in large_blobs])
 
+    # Filter the list to keep only large and small blobs separated
+    # by the expected distance.
     target_blob_list = []
-
     if group_range is not None:
         accepted = []
         for small in small_blobs:
@@ -138,7 +139,7 @@ def find_bright_sharp_circles(path,
         target_blob_list = accepted
 
     if show:
-        print("Near blobs")
+        print("Blobs at expected distance (x, y, radius)")
         print([(blob.pt[0], blob.pt[1], blob.size / 2.0) for blob in target_blob_list])
 
     # In debugging mode, save a diagnostic image.
@@ -190,7 +191,7 @@ def find_bright_sharp_circles(path,
     return target_blob_list
 
 
-def targetCoordinates(image_path, pars=None, correct=None, debugging=None):
+def targetCoordinates(image_path, pars=None, correct=None, debugging=False):
     """
     
     Wrapper for find_bright_sharp_circles

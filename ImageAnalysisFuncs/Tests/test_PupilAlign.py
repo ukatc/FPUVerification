@@ -7,7 +7,7 @@ from ImageAnalysisFuncs.analyze_pupil_alignment import pupilCoordinates
 from vfr.conf import PUP_ALGN_ANALYSIS_PARS
 
 VERBOSE_TESTS = True
-DEBUGGING = True
+DEBUGGING = False
 
 class TestPupilAlignImageAnalysis(unittest.TestCase):
     def test_expected(self):
@@ -15,21 +15,21 @@ class TestPupilAlignImageAnalysis(unittest.TestCase):
         cases = [
             (
                 "../TestImages/PT24_pupil-alignment_2019-04-08_+010.000_-080.000.bmp",
-                15.12,
-                10.77,
-                0.4,
+                380.15,
+                308.08,
+                0.8,
             ),
             (
                 "../TestImages/pupil-alignment_2019-10-03T00.00.00.00.bmp",
-                16.19,
-                10.33,
-                0.4,
+                488.08,
+                263.15,
+                0.8,
             ),
             (
                 "../TestImages/pupil-alignment_2020-10-19T11.18.45.96.bmp",
-                15.44,
-                11.01,
-                0.4,
+                577.86,
+                259.04,
+                0.8,
             ),
         ]
 
@@ -41,7 +41,7 @@ class TestPupilAlignImageAnalysis(unittest.TestCase):
             )
 
             pos_limit = 2.15  # roughly equal to the old 0.01  # millimeter
-            q_limit = 1.475  # roughtly equal to the old 0.05  # dimensionless
+            q_limit = 1.475  # roughly equal to the old 0.05  # dimensionless
 
             if VERBOSE_TESTS:
                 print("Large: Expecting (%.4f,%.4f). Measured (%.4f,%.4f)." % \
