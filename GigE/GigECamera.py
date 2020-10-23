@@ -1,23 +1,34 @@
 """
 Prototype script to get images from Basler GIGe cameras
 
-This is a prototype script and as such has several this still need to done, see below.
+This is a prototype script and as such has several this still need to done, see 
+below.
 
 Prerequisites
 -------------
-Pylon software - PyPylon is just python bindings to the C++ pylon software, the pylon software should be reinstalled.
+
+Pylon software - PyPylon is just python bindings to the C++ pylon software, the 
+pylon software should be reinstalled.
 
 :TODO:
-1[SIMPLE] Move config objects to files that can be read -[UPDATE 27/09/2018] Config objects are less useful current use case is separate initialisation, exposure time and image acquisition steps.
-2[COMPLEX] Determine the best grab strategy (see samples/grabstrategies.py , while developing my strategy is to do the least configuration possible.
-3 [SIMPLE] Throw pretty exception when file already exists, need to manually check imsave clobbers. [UPDATE] According to SW this is acceptable behaviour. Calling code does not have a default save location.
+1[SIMPLE] Move config objects to files that can be read -[UPDATE 27/09/2018] Config 
+objects are less useful current use case is separate initialisation, exposure time 
+and image acquisition steps.
+
+2[COMPLEX] Determine the best grab strategy (see samples/grabstrategies.py , while 
+developing my strategy is to do the least configuration possible.
+
+3 [SIMPLE] Throw pretty exception when file already exists, need to manually check 
+imsave clobbers. [UPDATE] According to SW this is acceptable behaviour. Calling code 
+does not have a default save location.
 
 :DONE:
 4 [Complex] Add support for changing the exposure time.
 
 :History:
 31/08/2018: Creation AOB
-03/09/2018: Fixed countOfImagesToGrab variable not existing. Version delivered as prototype 0.1
+03/09/2018: Fixed countOfImagesToGrab variable not existing. Version delivered as 
+            prototype 0.1
 20/09/2018: 0.2.0 Updated to include exposure time parameter
 27/09/2018: 0.3.0 Refactoring to an OOP design
 01/10/2018: 0.3.1 Fixed Error and added support to find a camera.
@@ -66,7 +77,9 @@ DEV_CAMERA = {DEVICE_CLASS: BASLER_DEVICE_CLASS, IP_ADDRESS: "169.254.244.184"}
 class GigECamera(object):
     """ Prototype GIGeCamera interface.
 
-    Simple Object design for the Basler GIGe cameras being used for the MOONs verification rig. The camera will open upon initialisation but needs to closed manually.
+    Simple Object design for the Basler GIGe cameras being used for the MOONs 
+    verification rig. The camera will open upon initialisation but needs to closed 
+    manually.
 
     """
 
@@ -76,7 +89,13 @@ class GigECamera(object):
         Parameters
         ----------
         device_config : dictionary
-            dictionary containing the device configuration, currently this is the IP address (IpAddress) and the pypylon class device (DeviceClass). The only useful value for DeviceClass is currently "BaslerGigE". If None is given, will use the camera finding tool and connect to the first one found.
+
+            dictionary containing the device configuration, currently this is the IP 
+            address (IpAddress) and the pypylon class device (DeviceClass). The only 
+            useful value for DeviceClass is currently "BaslerGigE". If None is 
+            given, will use the camera finding tool and connect to the first one 
+            found.
+
         """
         logger = logging.getLogger(__name__)
         logger.debug("Starting Setup")
@@ -100,7 +119,8 @@ class GigECamera(object):
         # Print the model name of the camera.
         logger.debug("Using device %s" % self.camera.GetDeviceInfo().GetModelName())
 
-        # Camera needs to be open to change the exposure time, normal camera.StartGrabbingMax will open a camera but this is an explicit call
+        # Camera needs to be open to change the exposure time, normal 
+        # camera.StartGrabbingMax will open a camera but this is an explicit call
         self.camera.Open()
 
     def SetExposureTime(self, exposure_time):
