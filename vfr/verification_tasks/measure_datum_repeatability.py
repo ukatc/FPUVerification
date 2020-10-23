@@ -125,28 +125,60 @@ def get_counter_residuals(rig, fpu_id):
     return (fpu.alpha_deviation, fpu.beta_deviation)
 
 
-def move_then_datum(rig, fpu_id):
+def move_to_exercise_fpu(rig, fpu_id):
+    """
+    
+    Exercise an FPU by moving it backwards and forwards over
+    almost its full range. This helps to redistribute
+    lubrication and reduce stiction before measurement.
+
+    """
+    fpu_log = get_fpuLogger(fpu_id, rig.fpu_config, __name__)
+    fpu_log.audit("moving FPU %i to (240,120) and back" % fpu_id)
+    gd = rig.gd
+    grid_state = rig.grid_state
+
+    wf = gen_wf(240 * dirac(fpu_id, rig.opts.N), 120)
+    gd.configMotion(wf, grid_state, verbosity=0)
+    gd.executeMotion(grid_state, fpuset=[fpu_id])
+    gd.reverseMotion(grid_state, fpuset=[fpu_id], verbosity=0)
+    gd.executeMotion(grid_state, fpuset=[fpu_id])
+
+    fpu_log.audit("moving FPU %i to (10,-120) and back" % fpu_id)
+
+    wf = gen_wf(10 * dirac(fpu_id, rig.opts.N), -120)
+    gd.configMotion(wf, grid_state, verbosity=0)
+    gd.executeMotion(grid_state, fpuset=[fpu_id])
+    gd.reverseMotion(grid_state, fpuset=[fpu_id], verbosity=0)
+    gd.executeMotion(grid_state, fpuset=[fpu_id])    
+    
+    gd.findDatum(grid_state, fpuset=[fpu_id])
+
+
+def move_then_datum(rig, fpu_id, datum_twice=False):
     """make a measurement where an FPU is first moved,
     then datumed, so that impact of movements on
     the FPUs mechanical precision is measured.
     """
     fpu_log = get_fpuLogger(fpu_id, rig.fpu_config, __name__)
     fpu_log.audit("moving FPU %i to (30,30) and back" % fpu_id)
-
-    wf = gen_wf(30 * dirac(fpu_id, rig.opts.N), 30)
     gd = rig.gd
     grid_state = rig.grid_state
 
+    wf = gen_wf(30 * dirac(fpu_id, rig.opts.N), 30)
+    
     gd.configMotion(wf, grid_state, verbosity=0)
     gd.executeMotion(grid_state, fpuset=[fpu_id])
     gd.reverseMotion(grid_state, fpuset=[fpu_id], verbosity=0)
     gd.executeMotion(grid_state, fpuset=[fpu_id])
-    # Find the datum twice. The second time is more accurate than the first.
+    
     gd.findDatum(grid_state, fpuset=[fpu_id])
-    gd.findDatum(grid_state, fpuset=[fpu_id])
+    # If required, find the datum twice to improve accuracy.
+    if datum_twice:
+        gd.findDatum(grid_state, fpuset=[fpu_id])
 
 
-def grab_datumed_images(rig, fpu_id, capture_func, iterations):
+def grab_datumed_images(rig, fpu_id, capture_func, iterations, datum_twice=False):
     """perform a number of datum operations, store
     an image after each, and return the path names
     of the images, together with the residual count."""
@@ -159,9 +191,10 @@ def grab_datumed_images(rig, fpu_id, capture_func, iterations):
         fpu_log = get_fpuLogger(fpu_id, rig.fpu_config, __name__)
         fpu_log.info("capturing datumed-%02i" % count)
 
-        # Find the datum twice. The second time is more accurate than the first.
         rig.gd.findDatum(rig.grid_state, fpuset=[fpu_id])
-        rig.gd.findDatum(rig.grid_state, fpuset=[fpu_id])
+        # If required, find the datum twice to improve accuracy
+        if datum_twice:
+            rig.gd.findDatum(rig.grid_state, fpuset=[fpu_id])
 
         ipath = capture_func("datumed", count)
         fpu_log.audit("saving image %i to %r" % (count, abspath(ipath)))
@@ -176,20 +209,21 @@ def grab_datumed_images(rig, fpu_id, capture_func, iterations):
     return datumed_images, datumed_residuals
 
 
-def grab_moved_images(rig, fpu_id, capture_func, iterations):
+def grab_moved_images(rig, fpu_id, capture_func, iterations, datum_twice=False):
     """perform datum operations after moving, grab and
     collect images, and return resulting images and residual counts.
     """
 
     fpu_log = get_fpuLogger(fpu_id, rig.fpu_config, __name__)
 
-    # Find the datum twice. The second time is more accurate than the first.
     rig.gd.findDatum(rig.grid_state)
-    rig.gd.findDatum(rig.grid_state)
+    # If required, find the datum twice to improve accuracy
+    if datum_twice:
+        rig.gd.findDatum(rig.grid_state)
     moved_images = []
     moved_residuals = []
     for count in range(iterations):
-        move_then_datum(rig, fpu_id)
+        move_then_datum(rig, fpu_id, datum_twice=datum_twice)
 
         fpu_log.info("capturing moved+datumed-%02i" % count)
         ipath = capture_func("moved+datumed", count)
@@ -205,20 +239,27 @@ def grab_moved_images(rig, fpu_id, capture_func, iterations):
     return moved_images, moved_residuals
 
 
-def record_images_from_fpu(rig, fpu_id, capture_image, num_iterations):
-    """make a mesaurement series for a specific FPU."""
+def record_images_from_fpu(rig, fpu_id, capture_image, num_iterations,
+                           exercise_fpu=False, datum_twice=False):
+    """make a measurement series for a specific FPU."""
 
     sn = rig.fpu_config[fpu_id]["serialnumber"]
     capture_for_sn = partial(capture_image, sn)
+    
+    # If needed, begin the measurement by exercising the FPU
+    if exercise_fpu:
+        move_to_exercise_fpu(rig, fpu_id)
 
     # capture images with datum-only hardware command
     datumed_images, datumed_residuals = grab_datumed_images(
-        rig, fpu_id, capture_for_sn, num_iterations
+        rig, fpu_id, capture_for_sn, num_iterations,
+        datum_twice=datum_twice
     )
 
-    # capture images whith FPU moveing, then datum
+    # capture images with FPU moving, then datum
     moved_images, moved_residuals = grab_moved_images(
-        rig, fpu_id, capture_for_sn, num_iterations
+        rig, fpu_id, capture_for_sn, num_iterations,
+        datum_twice=datum_twice
     )
 
     # wrap up the gathered data in a DB record
@@ -276,7 +317,8 @@ def measure_datum_repeatability(rig, dbe, pars=None):
             turntable_safe_goto(rig, rig.grid_state, stage_position)
             # measure images
             image_record = record_images_from_fpu(
-                rig, fpu_id, capture_image, pars.DATUM_REP_ITERATIONS
+                rig, fpu_id, capture_image, pars.DATUM_REP_ITERATIONS,
+                exercise_fpu=pars.EXERCISE_FPU, datum_twice=pars.DATUM_TWICE
             )
             # store to database
             save_datum_repeatability_images(dbe, fpu_id, image_record)
