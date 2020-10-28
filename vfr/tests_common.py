@@ -1,3 +1,8 @@
+"""
+
+Contains all the utility functions common to all verification tasks.
+
+"""
 from __future__ import absolute_import, division, print_function
 
 import errno
@@ -88,7 +93,10 @@ def timestamp():
 
 
 def dirac(n, L):
-    """return vector of length L with all zeros except a one at position n.
+    """
+
+    Return a vector of length L with all zeros except a one at position n.
+
     """
     v = zeros(L, dtype=float)
     v[n] = 1.0
@@ -107,6 +115,11 @@ def goto_position(
     waveform_ruleset=DEFAULT_WAVEFORM_RULESET_VERSION,
     wf_pars={},
 ):
+    """
+
+    Move FPU(s) to specific absolute alpha and beta angles.
+
+    """
     logger = logging.getLogger(__name__)
     check_for_quit()
     gd.pingFPUs(grid_state)
@@ -158,7 +171,11 @@ def goto_position(
 
 
 def find_datum(gd, grid_state, opts=None, uninitialized=False):
+    """
 
+    First move all FPUs to a location close to datum and then find datum.
+
+    """
     logger = logging.getLogger(__name__)
     check_for_quit()
     logger.info("moving FPUs to datum position")
@@ -173,12 +190,14 @@ def find_datum(gd, grid_state, opts=None, uninitialized=False):
             % (fpu_id, fpu.alpha_was_referenced, fpu.beta_was_referenced)
         )
 
+    # Check how many FPUs are already at datum.
     unreferenced = []
     for fpu_id, fpu in enumerate(grid_state.FPU):
         if fpu.state != FPST_AT_DATUM:
             unreferenced.append(fpu_id)
 
     if unreferenced:
+        # At least one FPU is not at datum. Move these FPUs to a position close to datum.
         goto_position(
             gd,
             ALPHA_DATUM_OFFSET + 1.0,
@@ -191,6 +210,7 @@ def find_datum(gd, grid_state, opts=None, uninitialized=False):
         check_for_quit()
 
         if uninitialized:
+            # The first time the FPUs have been datumed
             logger.audit("issuing initial findDatum (%i FPUs):" % len(unreferenced))
 
             modes = {fpu_id: SEARCH_CLOCKWISE for fpu_id in unreferenced}
@@ -204,6 +224,7 @@ def find_datum(gd, grid_state, opts=None, uninitialized=False):
             )
 
         else:
+            # A second or subsequent findDatum.
             timeout = DATUM_TIMEOUT_ENABLE
             logger.debug(
                 "issuing findDatum (%i FPUs, timeout=%r):"
@@ -227,6 +248,7 @@ def find_datum(gd, grid_state, opts=None, uninitialized=False):
 
 
 def cd_to_data_root(root_folder):
+    # Change the working directory to the specified folder.
     logger = logging.getLogger(__name__)
     data_root_path = expanduser(expandvars(root_folder))
     try:
@@ -241,8 +263,13 @@ def cd_to_data_root(root_folder):
 
 
 def store_image(camera, format_string, **kwargs):
+    """
 
-    # requires current work directory set to image root folder
+    Make an exposure with the specified camera and store it to
+    a file named in the formatted string.
+
+    """
+    # Requires current work directory set to image root folder
     ipath = os.path.join("images", format_string.format(**kwargs))
 
     try:
@@ -258,14 +285,43 @@ def store_image(camera, format_string, **kwargs):
     return ipath
 
 
-def get_sorted_positions(fpuset, positions):
-    """we need to sort the turntable angles because
-    we can only move it in rising order"""
+def store_burst_images(camera, nimages, format_string, **kwargs):
+    """
 
+    Make a series of exposures with the specified camera and store
+    them in files whose names start with the the formatted string.
+    Each file name is given a suffix containing the image number.
+
+    """
+    # Requires current work directory set to image root folder
+    ipath = os.path.join("images", format_string.format(**kwargs))
+
+    try:
+        os.makedirs(path.dirname(ipath))
+    except OSError as e:
+        if e.errno == errno.EEXIST:
+            pass
+        else:
+            raise
+    camera.saveBurst(ipath, nimages)
+
+    check_for_quit()
+    return ipath
+
+
+def get_sorted_positions(fpuset, positions):
+    """
+
+    We need to sort the turntable angles because
+    we can only move it in rising order
+
+    """
     return [(fid, pos) for pos, fid in sorted((positions[fid], fid) for fid in fpuset)]
 
 
 def get_stepcounts(gd, grid_state, fpu_id):
+    # Query the FPU grid driver and return alpha and beta step counts
+    # for the specified FPU.
     gd.pingFPUs(grid_state)
     alpha_steps = grid_state.FPU[fpu_id].alpha_steps
     beta_steps = grid_state.FPU[fpu_id].beta_steps
@@ -274,6 +330,7 @@ def get_stepcounts(gd, grid_state, fpu_id):
 
 
 def lit_eval_file(file_name):
+    # Insert documentation here.
     def not_comment(line):
         lstrip = line.strip()
         if len(lstrip) == 0:
@@ -285,6 +342,7 @@ def lit_eval_file(file_name):
 
 
 def get_config_from_mapfile(filename):
+    # Insert documentation here.
     logger = logging.getLogger(__name__)
     map_config = lit_eval_file(filename)
     # current_dir = os.getcwd()
@@ -302,6 +360,7 @@ def get_config_from_mapfile(filename):
 
 
 def safe_home_turntable(rig, grid_state, opts=None):
+    # Home the turntable mechanism.
     check_for_quit()
     logger = logging.getLogger(__name__)
     with rig.lctrl.use_ambientlight():
@@ -310,7 +369,7 @@ def safe_home_turntable(rig, grid_state, opts=None):
         st = time.time()
         with rig.hw.pyAPT.NR360S(serial_number=NR360_SERIALNUMBER) as con:
             logger.info("Homing stage...")
-            # we filter out an annoying warning related to undocumented
+            # We filter out an annoying warning related to undocumented
             # controller behaviour
             with warnings.catch_warnings():
                 warnings.filterwarnings(  #
@@ -328,6 +387,7 @@ def safe_home_turntable(rig, grid_state, opts=None):
 
 
 def turntable_safe_goto(rig, grid_state, stage_position, wait=True):
+    # Move the turntable mechanism to the given stage position.
     check_for_quit()
     logger = logging.getLogger(__name__)
     with rig.lctrl.use_ambientlight():
@@ -337,7 +397,7 @@ def turntable_safe_goto(rig, grid_state, stage_position, wait=True):
         with rig.hw.pyAPT.NR360S(serial_number=NR360_SERIALNUMBER) as con:
             logger.trace("Found APT controller S/N %r" % NR360_SERIALNUMBER)
             st = time.time()
-            # we filter out an annoying warning related to undocumented
+            # We filter out an annoying warning related to undocumented
             # controller behaviour
             with warnings.catch_warnings():
                 warnings.filterwarnings(
@@ -379,14 +439,16 @@ def linear_stage_goto(rig, stage_position):
 
 
 def fixup_ipath(ipath):
-    """this fixes up a relocation in relative image database paths, so
-  that older test images are still found.  (The reason is that early
-  versions stored image pathnames without the "images/" subfolder,
-  which required special handling for calibration data.)
+    """
 
-  See function store_image above to compare current layout.
+    This function fixes up a relocation in relative image database paths, so
+    that older test images are still found.  (The reason is that early
+    versions stored image pathnames without the "images/" subfolder,
+    which required special handling for calibration data.)
 
-  """
+    See function store_image above to compare current layout.
+
+    """
     if ipath.startswith("images/"):
         return ipath
     else:
@@ -401,12 +463,14 @@ ECOUNT_LIMIT_FATAL = 21  # limit to trigger a fatal error
 
 
 def check_image_analyzability(ipath, analysis_func, pars=None):
-    """Check whether a captured image can be analyzed successfully,
-  and keeps some statistics.
-  If this is not the case, it can be a rare failure.
-  However if such errors happen frequently,
+    """
 
-  """
+    Check whether a captured image can be analyzed successfully,
+    and keeps some statistics.
+    If this is not the case, it can be a rare failure.
+    However if such errors happen frequently,
+
+    """
     fname = analysis_func.__name__
     if not fname in image_error_count:
         image_error_count[fname] = []

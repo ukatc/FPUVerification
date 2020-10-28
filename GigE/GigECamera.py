@@ -33,6 +33,9 @@ does not have a default save location.
 27/09/2018: 0.3.0 Refactoring to an OOP design
 01/10/2018: 0.3.1 Fixed Error and added support to find a camera.
 03/10/2018: 0.3.2 Fixed indent issues and updated documentation.
+
+27/10/2020: Added saveBurst method. (SMB)
+
 """
 from __future__ import division, print_function
 
@@ -75,7 +78,9 @@ DEV_CAMERA = {DEVICE_CLASS: BASLER_DEVICE_CLASS, IP_ADDRESS: "169.254.244.184"}
 
 
 class GigECamera(object):
-    """ Prototype GIGeCamera interface.
+    """
+    
+    Prototype GIGeCamera interface.
 
     Simple Object design for the Basler GIGe cameras being used for the MOONs 
     verification rig. The camera will open upon initialisation but needs to closed 
@@ -84,7 +89,9 @@ class GigECamera(object):
     """
 
     def __init__(self, device_config):
-        """ Create the Basler GIGe camera device.
+        """
+        
+        Create the Basler GIGe camera device.
 
         Parameters
         ----------
@@ -100,11 +107,13 @@ class GigECamera(object):
         logger = logging.getLogger(__name__)
         logger.debug("Starting Setup")
         if device_config is None:
+            # Create an instant camera object with the camera device found first.
             logger.debug("No device config specified, using first camera found")
             self.camera = pylon.InstantCamera(
                 pylon.TlFactory.GetInstance().CreateFirstDevice()
             )
         else:
+            # Create a camera object for the specific device.
             factory = pylon.TlFactory.GetInstance()
             di = pylon.DeviceInfo()
             di.SetDeviceClass(device_config[DEVICE_CLASS])
@@ -123,19 +132,21 @@ class GigECamera(object):
         # camera.StartGrabbingMax will open a camera but this is an explicit call
         self.camera.Open()
 
+
     def SetExposureTime(self, exposure_time):
-        """Set the exposure time of the camera.
+        """
+        
+        Set the exposure time of the camera.
 
         Parameters
         ----------
         exposure_time : int
             sets the raw exposure time in ms.
+            
         """
-
         logger = logging.getLogger(__name__)
-        # convert exposure time from milliseconds to
-        # microseconds where the value is an integral multiple of 35
-        # microseconds
+        # convert exposure time from milliseconds to microseconds where the
+        # value is an integral multiple of 35 microseconds
         EXPOSURE_STEP_US = 35
         US_PER_MS = 1000
         exposure_time_us = EXPOSURE_STEP_US * int(
@@ -149,10 +160,13 @@ class GigECamera(object):
                 "Exposure Time is not settable, continuing with current exposure time."
             )
 
-    def saveImage(self, filename):
-        """Function to save an image from a camera device and save it to a location.
 
+    def saveImage(self, filename):
+        """
+        
+        Function to save a single image from a camera device and save it to a location.
         Overwrites any existing file at filename.
+        
         Parameters
         ----------
         filename : str
@@ -162,9 +176,10 @@ class GigECamera(object):
         logger = logging.getLogger(__name__)
         # The parameter MaxNumBuffer can be used to control the count of buffers
         # allocated for grabbing. The default value of this parameter is 10.
+        # Only one image is grabbed, so the buffer size can be 1.
         self.camera.MaxNumBuffer = 1
 
-        #
+        # Only grab a single image.
         countOfImagesToGrab = 1
 
         # Start the grabbing of c_countOfImagesToGrab images.
@@ -192,8 +207,139 @@ class GigECamera(object):
                 )
         grabResult.Release()
 
+
+    def saveBurst(self, filestub, number_of_images=1, timeout=2000):
+        """
+        
+        Function to save a burst of images from a camera device and saves them to a location.
+        Overwrites any existing file at filename.
+        
+        Option 1 - StartGrabbingMax mode.
+        
+        Parameters
+        ----------
+        filestub : str
+            Path and filename stub to location where the images will be saved.
+            The files will have "_<N>.fits" appended to their name.
+
+        """
+        logger = logging.getLogger(__name__)
+        # The parameter MaxNumBuffer can be used to control the count of buffers
+        # allocated for grabbing. The default value of this parameter is 10.
+        self.camera.MaxNumBuffer = 15
+
+        # Only grab a single image.
+        countOfImagesToGrab = number_of_images
+
+        # Start the grabbing of c_countOfImagesToGrab images.
+        # The camera device is parameterized with a default configuration which
+        # sets up free-running continuous acquisition.
+        self.camera.StartGrabbingMax(countOfImagesToGrab)
+
+        # Camera.StopGrabbing() is called automatically by the RetrieveResult() method
+        # when c_countOfImagesToGrab images have been retrieved.
+        count = 0
+        while self.camera.IsGrabbing():
+            # Wait for an image and then retrieve it. A timeout of 5000 ms is used.
+            grabResult = self.camera.RetrieveResult(
+                timeout, pylon.TimeoutHandling_ThrowException
+            )
+
+            # Image grabbed successfully?
+            if grabResult.GrabSucceeded():
+                count += 1
+                filename = "%s_%d.fits" % (filestub, count)
+                # Access the image data.
+                img = grabResult.Array
+                imsave(filename, np.asarray(img))
+                logger.debug("File {} saved as : {}".format(count, filename))
+            else:
+                logger.error(
+                    "Error: %r %s" % (grabResult.ErrorCode, grabResult.ErrorDescription)
+                )
+        grabResult.Release()
+
+
+    def startGrabbing(self):
+        """
+        
+        Function to collect a burst of images from a camera deviceusing the
+        GrabStrategy_OneByOne  mode.
+        
+        Parameters
+        ----------
+        filestub : str
+            Path and filename stub to location where the images will be saved.
+            The files will have "_<N>.fits" appended to their name.
+
+        """
+        logger = logging.getLogger(__name__)
+        
+        # The parameter MaxNumBuffer can be used to control the count of buffers
+        # allocated for grabbing. The default value of this parameter is 10.
+        self.camera.MaxNumBuffer = 15
+        
+        # The GrabStrategy_OneByOne strategy is used. The images are processed
+        # in the order of their arrival.
+        self.camera.StartGrabbing(pylon.GrabStrategy_OneByOne)
+        
+        # In the background, the grab engine thread retrieves the
+        # image data and queues the buffers into the internal output queue.
+                
+    def triggerGrabbing(self, frametime, nframes=1):
+        """
+        
+        Trigger the camera to grab a frame and wait up to the given frame time
+        
+        """
+        # Issue software triggers. For each call, wait up to 200 ms until the camera is ready for triggering the next image.
+        for i in range(nframes):
+            if self.camera.WaitForFrameTriggerReady(frametime, pylon.TimeoutHandling_ThrowException):
+                self.camera.ExecuteSoftwareTrigger()
+
+    def finishGrabbing(self, filestub, timeout=0):
+        """
+        
+        Save all the frames to files.
+        
+        """
+        # For demonstration purposes, wait for the last image to appear in the output queue.
+        #time.sleep(0.2)
+
+        # All triggered images are still waiting in the output queue
+        # and are now retrieved.
+        # The grabbing continues in the background, e.g. when using hardware trigger mode,
+        # as long as the grab engine does not run out of buffers.
+        count = 0
+        buffersInQueue = 0
+        grabSucceeded = True
+        while grabSucceeded:
+            grabResult = self.camera.RetrieveResult(timeout, pylon.TimeoutHandling_Return)
+            grabSucceeded = grabResult.GrabSucceeded()
+            if grabSucceeded:
+                count += 1
+                filename = "%s_%d.fits" % (filestub, count)
+                # Access the image data.
+                img = grabResult.Array
+                imsave(filename, np.asarray(img))
+                logger.debug("File {} saved as : {}".format(count, filename))
+            else:
+                logger.error(
+                    "Error: %r %s" % (grabResult.ErrorCode, grabResult.ErrorDescription)
+                    )
+            buffersInQueue += 1
+
+        print("Retrieved ", buffersInQueue, " grab results from output queue.")
+
+        # Stop the grabbing.
+        camera.StopGrabbing()
+
+
     def close(self):
-        """If open, close access to camera.
+        """
+        
+        If open, close access to camera.
+        
         """
         logger = logging.getLogger(__name__)
         if self.camera.IsOpen():
@@ -201,5 +347,7 @@ class GigECamera(object):
         else:
             logger.error("Camera is already closed.")
 
+
     def __del__(self):
+        # Destructor
         self.close()
