@@ -220,7 +220,7 @@ class GigECamera(object):
         ----------
         filestub : str
             Path and filename stub to location where the images will be saved.
-            The files will have "_<N>.fits" appended to their name.
+            The files will have "_<N>.bmp" appended to their name.
 
         """
         logger = logging.getLogger(__name__)
@@ -248,7 +248,7 @@ class GigECamera(object):
             # Image grabbed successfully?
             if grabResult.GrabSucceeded():
                 count += 1
-                filename = "%s_%d.fits" % (filestub, count)
+                filename = "%s_%d.bmp" % (filestub, count)
                 # Access the image data.
                 img = grabResult.Array
                 imsave(filename, np.asarray(img))
@@ -270,7 +270,7 @@ class GigECamera(object):
         ----------
         filestub : str
             Path and filename stub to location where the images will be saved.
-            The files will have "_<N>.fits" appended to their name.
+            The files will have "_<N>.bmp" appended to their name.
 
         """
         logger = logging.getLogger(__name__)
@@ -318,7 +318,7 @@ class GigECamera(object):
             grabSucceeded = grabResult.GrabSucceeded()
             if grabSucceeded:
                 count += 1
-                filename = "%s_%d.fits" % (filestub, count)
+                filename = "%s_%d.bmp" % (filestub, count)
                 # Access the image data.
                 img = grabResult.Array
                 imsave(filename, np.asarray(img))
