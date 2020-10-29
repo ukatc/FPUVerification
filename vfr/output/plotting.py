@@ -66,6 +66,27 @@ def plot_pos_rep(fpu_id, analysis_results_alpha, analysis_results_beta, opts):
 
         plt.show()
 
+def plot_pos_rep_error(fpu_id, analysis_results_alpha, analysis_results_beta, opts):
+    """Plot the pos rep erros as requested by SW
+
+    """
+    fig, ax = plt.subplots()
+
+    for label, series, color in [
+        ("Alpha errors", analysis_results_alpha, "red"),
+        ("Beta errors", analysis_results_beta, "blue"),
+    ]:
+        angles = sorted(series.keys())
+        errors = [series[angle] for angle in angles]
+        ax.plot(angles,errors,c=color,label=label, linestyle="solid", marker='o')
+    ax.legend()
+
+    ax.grid(True)
+    plt.xlabel("x [degrees], Angle of measurement")
+    plt.ylabel("y [millimeter], Error on measurement")
+    plt.title("%s plot A: positional repeatability errors" % fpu_id)
+
+    plt.show()
 
 def plot_dat_rep(fpu_id, datumed_coords, moved_coords, opts):
     if opts.blob_type == "large":
@@ -226,3 +247,13 @@ def plot(dbe, opts):
 
             if pos_ver_result is not None:
                 plot_pos_ver(fpu_id, pos_ver_result, pos_rep_result, opts)
+
+        if "S" in plot_selection:
+            pos_rep_result = ddict["positional_repeatability_result"]
+
+            if pos_rep_result is not None:
+                plot_pos_rep_error(
+                    fpu_id,
+                    pos_rep_result["posrep_alpha_max_at_angle"],
+                    pos_rep_result["posrep_beta_max_at_angle"],
+                    opts)
