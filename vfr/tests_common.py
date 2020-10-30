@@ -271,6 +271,7 @@ def store_image(camera, format_string, **kwargs):
     """
     # Requires current work directory set to image root folder
     ipath = os.path.join("images", format_string.format(**kwargs))
+    print("Images will be saved to:", ipath)
 
     try:
         os.makedirs(path.dirname(ipath))
@@ -280,6 +281,7 @@ def store_image(camera, format_string, **kwargs):
         else:
             raise
     camera.saveImage(ipath)
+    print("Image captured.")
 
     check_for_quit()
     return ipath
@@ -304,6 +306,35 @@ def store_burst_images(camera, nimages, format_string, **kwargs):
         else:
             raise
     camera.saveBurst(ipath, nimages)
+
+    check_for_quit()
+    return ipath
+
+
+def store_one_by_one(camera, nimages, frametime, format_string, **kwargs):
+    """
+
+    Make a series of exposures with the specified camera and store
+    them in files whose names start with the the formatted string.
+    Each file name is given a suffix containing the image number.
+
+    """
+    # Requires current work directory set to image root folder
+    ipath = os.path.join("images", format_string.format(**kwargs))
+
+    try:
+        os.makedirs(path.dirname(ipath))
+    except OSError as e:
+        if e.errno == errno.EEXIST:
+            pass
+        else:
+            raise
+
+    camera.startGrabbing( nimages, frametime )
+    time.sleep( 0.25 )
+    camera.triggerGrabbing( frametime, nimages )
+    time.sleep( 0.25 )
+    camera.finishGrabbing(ipath, nimages, frametime)
 
     check_for_quit()
     return ipath

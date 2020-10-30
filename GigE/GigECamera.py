@@ -260,7 +260,7 @@ class GigECamera(object):
         grabResult.Release()
 
 
-    def startGrabbing(self):
+    def startGrabbing(self, maxbuffer=15, frametime=200):
         """
         
         Function to collect a burst of images from a camera deviceusing the
@@ -277,11 +277,12 @@ class GigECamera(object):
         
         # The parameter MaxNumBuffer can be used to control the count of buffers
         # allocated for grabbing. The default value of this parameter is 10.
-        self.camera.MaxNumBuffer = 15
+        self.camera.MaxNumBuffer = maxbuffer
         
         # The GrabStrategy_OneByOne strategy is used. The images are processed
         # in the order of their arrival.
         self.camera.StartGrabbing(pylon.GrabStrategy_OneByOne)
+        print("Grabbing started...")
         
         # In the background, the grab engine thread retrieves the
         # image data and queues the buffers into the internal output queue.
@@ -293,16 +294,19 @@ class GigECamera(object):
         
         """
         # Issue software triggers. For each call, wait up to 200 ms until the camera is ready for triggering the next image.
+        print("Triggering grabbing for %d frames..." % nframes )
         for i in range(nframes):
+            print("Frame %d..." % i )
             if self.camera.WaitForFrameTriggerReady(frametime, pylon.TimeoutHandling_ThrowException):
                 self.camera.ExecuteSoftwareTrigger()
 
-    def finishGrabbing(self, filestub, timeout=0):
+    def finishGrabbing(self, filestub, maxcount, timeout=0):
         """
         
         Save all the frames to files.
         
         """
+        logger = logging.getLogger(__name__)
         # For demonstration purposes, wait for the last image to appear in the output queue.
         #time.sleep(0.2)
 
@@ -313,11 +317,14 @@ class GigECamera(object):
         count = 0
         buffersInQueue = 0
         grabSucceeded = True
-        while grabSucceeded:
+        print("Retrieving results..." )
+        while grabSucceeded and count < maxcount:
+            print("Retrieving next frame...")
             grabResult = self.camera.RetrieveResult(timeout, pylon.TimeoutHandling_Return)
             grabSucceeded = grabResult.GrabSucceeded()
             if grabSucceeded:
                 count += 1
+                print("Got frame %d" % count)
                 filename = "%s_%d.bmp" % (filestub, count)
                 # Access the image data.
                 img = grabResult.Array
@@ -332,7 +339,7 @@ class GigECamera(object):
         print("Retrieved ", buffersInQueue, " grab results from output queue.")
 
         # Stop the grabbing.
-        camera.StopGrabbing()
+        self.camera.StopGrabbing()
 
 
     def close(self):
