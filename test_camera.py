@@ -25,6 +25,8 @@ from vfr.conf import (
 
 CAMERA_EXPOSURE_MS=200
 
+NEXPOSURES = 10
+
 def initialize_lamps(lctrl):
     # switch lamps off
     lctrl.switch_all_off()
@@ -65,14 +67,14 @@ def test_pos_rep_camera(lctrl, strategy=1):
                 )
             elif strategy == 2:
                 ipath = store_burst_images(
-                    pos_rep_cam, 10,
+                    pos_rep_cam, NEXPOSURES,
                     "{tn}_{ts}_camera_burst_test.bmp",
                     tn="positional-repeatability",
                     ts=tstamp,
                 )
             elif strategy == 3:
                 ipath = store_one_by_one(
-                    pos_rep_cam, 10, 250,
+                    pos_rep_cam, NEXPOSURES, NEXPOSURES,
                     "{tn}_{ts}_camera_obo_test.bmp",
                     tn="positional-repeatability",
                     ts=tstamp,
