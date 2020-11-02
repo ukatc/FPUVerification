@@ -103,7 +103,7 @@ def test_datum(rig, dbe, dasel=DASEL_BOTH):
 
     modes = {fpu_id: SEARCH_CLOCKWISE for fpu_id in rig.measure_fpuset}
     logger.info("----------------------------------------")
-    logger.info("datum functional test: issuing findDatum (%s):" % dasel)
+    logger.info("Datum functional test: issuing findDatum (%s):" % dasel)
     try:
         rig.gd.findDatum(
             rig.grid_state,

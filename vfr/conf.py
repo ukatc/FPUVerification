@@ -115,12 +115,12 @@ COLLDECT_MEASUREMENT_PARS = Namespace(
 # Datum repeatability data collection parameter sets.
 # ---------------------------------------------------
 DATUM_REP_MEASUREMENT_PARS = Namespace(
-    DATUM_REP_ITERATIONS=10,  # the
-    # number of datum operations made for
-    # each test
-    DATUM_REP_EXPOSURE_MS=1300,  # the exposure
-    # time in milliseconds for a correctly
-    # exposed image
+    EXERCISE_FPU=True,  # Start by moving FPU to reduce stiction
+    DATUM_TWICE=True,   # Find datum twice to improve accuracy?
+    # The number of datum operations made for each test
+    DATUM_REP_ITERATIONS=10,
+    # The exposure time in milliseconds for a correctly exposed image
+    DATUM_REP_EXPOSURE_MS=1300,  
     DATUM_REP_POSITIONS=METROLOGY_CAL_POSITIONS,
 )
 
@@ -165,15 +165,13 @@ DATUM_REP_ANALYSIS_PARS = Namespace(
     TARGET_DETECTION_CONTOURS_PARS=DAT_REP_TARGET_DETECTION_CONTOUR_PARS,
     PLATESCALE=DAT_REP_PLATESCALE,  # millimeter per pixel
     MAX_FAILURE_QUOTIENT=0.2,
+    # The maximum single deviation in microns from the baseline position
+    # which represents an acceptable FPU
+    DATUM_REP_PASS=30.0,  
+    DATUM_REP_TESTED_PERCENTILE=95,  # The tested percentile
     display=False,
     verbosity=0,
-    loglevel=0,
-    DATUM_REP_PASS=30.0,  # the maximum single
-    # deviation in microns from the
-    # baseline position which represents an
-    # acceptable FPU
-    DATUM_REP_TESTED_PERCENTILE=95,  # the tested percentile
-)
+    loglevel=0,)
 
 LINPOSITIONS = [  # the linear stage positions
     10.5,  # FIXME: bogus values - spec missing ??
