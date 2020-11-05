@@ -4,7 +4,7 @@ from GigE.GigECamera import BASLER_DEVICE_CLASS, DEVICE_CLASS, IP_ADDRESS
 from ImageAnalysisFuncs.analyze_pupil_alignment import (
     PUPIL_ALIGNMENT_ALGORITHM_VERSION,
     ImageAnalysisError,
-    pupalnCoordinates,
+    pupilCoordinates,
 )
 from vfr.evaluation.eval_pupil_alignment import (
     evaluate_pupil_alignment,
@@ -159,7 +159,7 @@ def measure_pupil_alignment(rig, dbe, pars=None):
                     ipath = capture_image(count, abs_alpha, abs_beta)
                     fpu_log.audit("saving pupil image to %r" % abspath(ipath))
                     check_image_analyzability(
-                        ipath, pupalnCoordinates, pars=PUP_ALGN_ANALYSIS_PARS
+                        ipath, pupilCoordinates, pars=PUP_ALGN_ANALYSIS_PARS
                     )
 
                     images[(abs_alpha, abs_beta)] = ipath
@@ -204,12 +204,12 @@ def eval_pupil_alignment(
 
         correct = get_correction_func(
             calibration_pars=PUP_ALGN_ANALYSIS_PARS.PUP_ALGN_CALIBRATION_PARS,
-            platescale=PUP_ALGN_ANALYSIS_PARS.PUP_ALGN_PLATESCALE,
+            platescale=PUP_ALGN_ANALYSIS_PARS.PLATESCALE,
             loglevel=PUP_ALGN_ANALYSIS_PARS.loglevel,
         )
 
         def analysis_func(ipath):
-            return pupalnCoordinates(
+            return pupilCoordinates(
                 fixup_ipath(ipath), pars=PUP_ALGN_ANALYSIS_PARS, correct=correct
             )
 
