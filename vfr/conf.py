@@ -569,8 +569,8 @@ PUP_ALGN_ANALYSIS_PARS = Namespace(
 
     MIN_RADIUS=150.0,  # in mm
     MAX_RADIUS=300.0,  # in mm
-    THRESHOLD_LIMIT=40,
-    QUALITY_METRIC=0.8,  # dimensionless
+    THRESHOLD_LIMIT=60,
+    QUALITY_METRIC=0.6,  # dimensionless
 
     PUP_ALGN_CIRCULARITY_THRESH=0.6,  # dimensionless
     PUP_ALGN_NOISE_METRIC=0,
