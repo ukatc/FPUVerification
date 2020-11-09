@@ -14,6 +14,7 @@ PUP_ALN_CALPARS_CSV = "pupil alignment,calibration_pars,{calibration_pars!r}"
 
 PUP_ALN_ERRMSG = "pupil alignment: message = {error_message}, time/record = {time:.16}/{record-count}"
 
+# TODO: Change units from mm to arcmin.
 PUP_ALN_RESULT_TERSE = cleandoc(
     """
     pupil alignment         : passed        = {result},
@@ -23,7 +24,7 @@ PUP_ALN_RESULT_TERSE = cleandoc(
     pupil alignment         : time/record   = {time:.16}/{record-count}"""
 )
 
-
+# TODO: Change units from mm to arcmin. Change to pass_threshold_arcmin
 PUP_ALN_RESULT_COMPLETE = cleandoc(
     """
     pupil alignment         : passed            = {result}
@@ -36,7 +37,7 @@ PUP_ALN_RESULT_COMPLETE = cleandoc(
     pupil alignment         : git version       = {git_version}"""
 )
 
-
+# TODO: Change units from mm to arcmin. Change to pass_threshold_arcmin
 PUP_ALN_RESULT_LONG = cleandoc(
     """
     pupil alignment         : passed            = {result}
@@ -49,7 +50,7 @@ PUP_ALN_RESULT_LONG = cleandoc(
     pupil alignment         : git version       = {git_version}"""
 )
 
-
+# TODO: Change units from mm to arcmin. Change to pass_threshold_arcmin
 PUP_ALN_RESULT_EXTENDED = cleandoc(
     """
     pupil alignment         : passed            = {result}
@@ -62,6 +63,7 @@ PUP_ALN_RESULT_EXTENDED = cleandoc(
     pupil alignment         : git version       = {git_version}"""
 )
 
+# TODO: Change units from mm to arcmin. Change to pass_threshold_arcmin
 PUP_ALN_RESULT_CSV = cleandoc(
     """
     pupil alignment,passed,{result}

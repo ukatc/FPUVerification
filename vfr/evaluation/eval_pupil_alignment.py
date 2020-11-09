@@ -6,6 +6,9 @@
 from __future__ import division, print_function
 
 import numpy as np
+import math
+
+RAD_TO_ARCMIN = 180.0 * 60.0 / math.pi  # Radians to arcminutes
 
 
 def evaluate_pupil_alignment(dict_of_coordinates, pars=None):
@@ -37,6 +40,10 @@ def evaluate_pupil_alignment(dict_of_coordinates, pars=None):
 
     alpha_center = np.mean(beta_centers, axis=0)
     pupalnAlphaErr = np.mean(map(np.linalg.norm, beta_centers - alpha_center))
+
+    # TODO: Convert the units from mm on the screen to arcmin of pupil error
+#     pupalnAlphaErr = RAD_TO_ARCMIN * math.asin(pupalnAlphaErr/pars.CURVATURE)
+#     pupalnBetaErr = RAD_TO_ARCMIN * math.asin(pupalnBetaErr/pars.CURVATURE)
 
     pupalnTotalErr = sum([pupalnAlphaErr, pupalnBetaErr])
 

@@ -559,7 +559,7 @@ PUP_ALGN_MEASUREMENT_PARS = Namespace(
 #
 PUP_ALGN_PLATESCALE = 0.76
 PUP_ALGN_CALIBRATION_PARS = {"algorithm": "scale", "scale_factor": PUP_ALGN_PLATESCALE}
-
+PUP_ALGN_RADIUS_OF_CURVATURE = 4101.4 # mm
 
 #
 # Pupil alignment data analysis parameter set.
@@ -582,6 +582,10 @@ PUP_ALGN_ANALYSIS_PARS = Namespace(
 
 
 PUP_ALGN_EVALUATION_PARS = Namespace(
+    # The effective radius of curvature of the wavefront from the
+    # pupil at the screen (mm).
+    CURVATURE=PUP_ALGN_RADIUS_OF_CURVATURE,
+
     # The maximum total deviation in arcmin from the calibrated centre
     # point which represents an acceptable FPU
     PUP_ALGN_PASS=Inf,  # TBD ??

@@ -254,7 +254,7 @@ def eval_pupil_alignment(
             measures=pupil_alignment_measures,
             result=pupil_alignment_has_passed,
             min_quality=min_quality,
-            pass_threshold_mm=PUP_ALGN_EVALUATION_PARS.PUP_ALGN_PASS,
+            pass_threshold_mm=PUP_ALGN_EVALUATION_PARS.PUP_ALGN_PASS, # TODO: Change to pass_threshold_arcmin
             error_message=errmsg,
             algorithm_version=PUPIL_ALIGNMENT_ALGORITHM_VERSION,
         )
