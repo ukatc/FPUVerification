@@ -41,6 +41,7 @@ from __future__ import division, print_function
 
 import logging
 import numpy as np
+import time
 
 __version__ = "0.3.2"
 
@@ -208,7 +209,7 @@ class GigECamera(object):
         grabResult.Release()
 
 
-    def saveBurst(self, filestub, number_of_images=1, timeout=2000):
+    def saveBurst(self, filestub, number_of_images=1, sleep_time_ms=0, timeout=2000):
         """
         
         Function to save a burst of images from a camera device and saves them to a location.
@@ -248,6 +249,7 @@ class GigECamera(object):
             # Image grabbed successfully?
             if grabResult.GrabSucceeded():
                 count += 1
+                print("Grab", count)
                 filename = "%s_%d.bmp" % (filestub, count)
                 # Access the image data.
                 img = grabResult.Array
@@ -257,6 +259,9 @@ class GigECamera(object):
                 logger.error(
                     "Error: %r %s" % (grabResult.ErrorCode, grabResult.ErrorDescription)
                 )
+            # Wait for next frame, if required.
+            if sleep_time_ms > 0.0:
+                time.sleep( sleep_time_ms / 1000.0 )
         grabResult.Release()
 
 

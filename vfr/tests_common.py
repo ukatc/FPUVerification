@@ -287,7 +287,7 @@ def store_image(camera, format_string, **kwargs):
     return ipath
 
 
-def store_burst_images(camera, nimages, format_string, **kwargs):
+def store_burst_images(camera, nimages, sleep_time_ms, format_string, **kwargs):
     """
 
     Make a series of exposures with the specified camera and store
@@ -305,7 +305,7 @@ def store_burst_images(camera, nimages, format_string, **kwargs):
             pass
         else:
             raise
-    camera.saveBurst(ipath, nimages)
+    camera.saveBurst(ipath, nimages, sleep_time_ms)
 
     check_for_quit()
     return ipath
