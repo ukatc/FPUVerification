@@ -53,8 +53,14 @@ def evaluate_pupil_alignment(dict_of_coordinates, pars=None):
         # alpha is the alpha angle of measurement
         # bgroup is the list of (x,y) coordinates at this same alpha angle.
         bcoords = np.array(bgroup)
-        # bcentre is the average of all the centroid measurements
-        bcenter = np.mean(bcoords, axis=0)
+        # There must be at least 2 measurements, or the np.mean will
+        # average the X and Y coordinates together.
+        if len(bgroup) > 1:
+            # bcentre is the average of all the centroid measurements
+            bcenter = np.mean(bcoords, axis=0)
+        else:
+            # The average of a group with only one member is that member.
+            bcentre = bcoords
         beta_centers.append(bcenter)
         # beta_error is the mean distance of all the measurements
         # from the average.
