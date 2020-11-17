@@ -45,9 +45,8 @@ def evaluate_pupil_alignment(dict_of_coordinates, pars=None):
             alpha_dict[alpha] = []
         alpha_dict[alpha].append((x, y))
 
-    # Estimate the beta error by calculating the error for all the measurements
-    # made at the same alpha angle.
-    beta_errors = []
+    # Make a first pass through the measurements to determine the mean
+    # centroid measured at each alpha angle..
     beta_centers = []
     for alpha, bgroup in alpha_dict.items():
         # alpha is the alpha angle of measurement
@@ -62,19 +61,29 @@ def evaluate_pupil_alignment(dict_of_coordinates, pars=None):
             # The average of a group with only one member is that member.
             bcentre = bcoords
         beta_centers.append(bcenter)
-        # beta_error is the mean distance of all the measurements
-        # from the average.
-        beta_errors.append(np.mean(map(np.linalg.norm, bcoords - bcenter)))
 
+    # Calculate the average centroid for the entire set of measurements.
+    mean_centre = np.mean(beta_centers, axis=0)
+
+    # Make a second pass through the measurements and determine the
+    # beta error by calculating the mean deviation from the mean centre
+    # for all the measurements made at the same alpha angle.
+    beta_errors = []
+    for alpha, bgroup in alpha_dict.items():
+        # alpha is the alpha angle of measurement
+        # bgroup is the list of (x,y) coordinates at this same alpha angle.
+        bcoords = np.array(bgroup)
+        # beta_error is the mean distance of all the measurements
+        # from the average centre.
+        beta_errors.append(np.mean(map(np.linalg.norm, bcoords - mean_centre)))
+        
     # The overall beta error is the mean beta error over all the alpha angles.
     pupalnBetaErr = np.mean(beta_errors)
-
-    # alpha_centre average centroid for the entire set of measurements.
-    alpha_center = np.mean(beta_centers, axis=0)
+    
     # The overall alpha error is the mean distance of all the beta centres
     # from the alpha centre (assuming that averaging all the beta measurements
     # at each alpha angle has removed the beta error).
-    pupalnAlphaErr = np.mean(map(np.linalg.norm, beta_centers - alpha_center))
+    pupalnAlphaErr = np.mean(map(np.linalg.norm, beta_centers - mean_centre))
 
     # TODO: Convert the units from mm on the screen to arcmin of pupil error
 #     pupalnAlphaErr = RAD_TO_ARCMIN * math.asin(pupalnAlphaErr/pars.CURVATURE)
