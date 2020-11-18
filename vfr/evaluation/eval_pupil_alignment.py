@@ -9,6 +9,7 @@ from __future__ import division, print_function
 
 import numpy as np
 import math
+import logging
 
 RAD_TO_ARCMIN = 180.0 * 60.0 / math.pi  # Radians to arcminutes
 
@@ -35,6 +36,7 @@ def evaluate_pupil_alignment(dict_of_coordinates, pars=None):
     PupilAlignmentAnalysisError, with a string member which describes the problem.
 
     """
+    logger = logging.getLogger(__name__)
 
     # Group together sets of measurements with the same alpha coordinates
     # to make alpha_dict.
@@ -47,9 +49,11 @@ def evaluate_pupil_alignment(dict_of_coordinates, pars=None):
 
     # Estimate the beta error by calculating the error for all the measurements
     # made at the same alpha angle.
-    beta_errors = []
     beta_centers = []
+    beta_errors = []
+    beta_covers = []
     for alpha, bgroup in alpha_dict.items():
+        logger.debug("Analysing {} beta measurements at alpha={:.3} deg".format(len(bgroup), alpha))
         # alpha is the alpha angle of measurement
         # bgroup is the list of (x,y) coordinates at this same alpha angle.
         bcoords = np.array(bgroup)
@@ -60,21 +64,32 @@ def evaluate_pupil_alignment(dict_of_coordinates, pars=None):
             bcenter = np.mean(bcoords, axis=0)
         else:
             # The average of a group with only one member is that member.
+            logger.warning("Only one beta measurement at alpha={:.3f} deg.".format(alpha))
             bcentre = bcoords
         beta_centers.append(bcenter)
-        # beta_error is the mean distance of all the measurements
-        # from the average.
-        beta_errors.append(np.mean(map(np.linalg.norm, bcoords - bcenter)))
+        # beta_error is the mean vector distance of all the measurements from the average.
+        beta_error = np.mean(map(np.linalg.norm, bcoords - bcenter))
+        beta_errors.append(beta_error)
+        
+        # The beta coefficient of variation is the standard deviation of the measurements
+        # divided by the mean, expressed as a percentage.
+        beta_std = np.std(map(np.linalg.norm, bcoords - bcenter))
+        beta_cover = 100.0 * beta_std/beta_error
+        beta_covers.append(beta_cover)
+        logger.debug("beta error={:.5f} mm with coeff of variation={:.2f}%.".format(beta_error, beta_cover))
 
-    # The overall beta error is the mean beta error over all the alpha angles.
+    # The overall beta error is the mean beta error averaged over all the alpha angles.
     pupalnBetaErr = np.mean(beta_errors)
+    pupalnBetaCover = np.mean(beta_covers)
+    logger.info("Overall beta error={:.5f} mm with mean coeff of variation={:.2f}%.".format(pupalnBetaErr, pupalnBetaCover))
 
-    # alpha_centre average centroid for the entire set of measurements.
-    alpha_center = np.mean(beta_centers, axis=0)
-    # The overall alpha error is the mean distance of all the beta centres
-    # from the alpha centre (assuming that averaging all the beta measurements
-    # at each alpha angle has removed the beta error).
-    pupalnAlphaErr = np.mean(map(np.linalg.norm, beta_centers - alpha_center))
+    # The chassis axis is the average centroid for the entire set of measurements.
+    chassis_axis = np.mean(beta_centers, axis=0)
+    # The overall alpha error is the mean vector distance of all the beta centres
+    # from the chassis axis.
+    pupalnAlphaErr = np.mean(map(np.linalg.norm, beta_centers - chassis_axis))
+    pupalnAlphaCover = 100.0 * np.std(map(np.linalg.norm, beta_centers - chassis_axis)) / pupalnAlphaErr
+    logger.info("Overall alpha error={:.5f} mm with coeff of variation={:.2f}%.".format(pupalnAlphaErr, pupalnAlphaCover))
 
     # TODO: Convert the units from mm on the screen to arcmin of pupil error
 #     pupalnAlphaErr = RAD_TO_ARCMIN * math.asin(pupalnAlphaErr/pars.CURVATURE)
