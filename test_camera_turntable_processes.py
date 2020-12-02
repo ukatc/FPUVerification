@@ -1,13 +1,13 @@
 """
 
 Test moving the turntable and making exposures with the camera
-at the same time using threads.
+at the same time using processs.
 
 """
 from __future__ import absolute_import, division, print_function
 
 import logging
-import threading
+import multiprocessing as mp
 import time
 from os.path import abspath
 
@@ -46,6 +46,7 @@ NREPEATS = 1
 # The turntable can only move in one direction, and then needs to be homed.
 #METROLOGY_CAL_POSITIONS = [254.0, 314.5, 13.0, 73.0, 133.5]
 TURNTABLE_POSITIONS = [133.5, 254.0]
+
 
 def initialize_lamps(lctrl):
     # switch lamps off
@@ -105,7 +106,6 @@ def test_turntable( sleep_time ):
         print("Homing turntable ...")
         turntable_home()
 
-
 def test_pos_rep_camera( strategy ):
     tstamp = timestamp()
     logger = logging.getLogger(__name__)
@@ -161,15 +161,16 @@ if __name__ == "__main__":
     #lctrl.use_ambientlight()
     lctrl.switch_ambientlight("on")
 
-    x = threading.Thread(target=test_turntable, args=(0.25,))
-    y = threading.Thread(target=test_pos_rep_camera, args=(2,))
+    x = mp.Process(name='turntable', target=test_turntable, args=(0.25,))
+    y = mp.Process(name='camera', target=test_pos_rep_camera, args=(2,))
     x.start()
     y.start()    
-    print("Waiting for turntable thread to finish")
+    print("Waiting for turntable process to finish")
     x.join()
-    print("Waiting for camera thread to finish")
+    print("Waiting for camera process to finish")
     y.join()
     
     print("Switching lamps off")
     initialize_lamps(lctrl)
     print("Tests finished")
+
