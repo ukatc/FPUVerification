@@ -1,9 +1,13 @@
 # -*- coding: utf-8 -*-
 from __future__ import division, print_function
 
+import logging
 import cv2
+from DistortionCorrection import get_correction_func
 from ImageAnalysisFuncs.base import ImageAnalysisError
-from ImageAnalysisFuncs import target_detection_contours, target_detection_otsu
+from ImageAnalysisFuncs import target_detection_contours, target_detection_otsu, \
+                               fibre_detection_otsu
+
 from target_detection_otsu import OtsuTargetFindingError
 
 # version number for analysis algorithm
@@ -27,16 +31,18 @@ class MetrologyAnalysisFibreError(ImageAnalysisError):
     pass
 
 
-def metcalTargetCoordinates(image_path, pars=None):
-    """ Reads the image and analyse the location and quality of the targets
-     using the chosen algorithm
+def metcalTargetCoordinates(image_path, pars=None, correct=None, debugging=False):
+    """
+    
+    Reads the image and analyse the location and quality of the targets
+    using the chosen algorithm
 
 
     :return: A tuple length 6 containing the x,y coordinate and quality factor for the small and large targets
     Where quality is measured by 4 * pi * (area / (perimeter * perimeter)).
     (small_x, small_y, small_qual, big_x, big_y, big_qual)
+    
     """
-
     if pars.MET_CAL_TARGET_DETECTION_ALGORITHM == CONTOUR_ALGORITHM:
         analysis_func = target_detection_contours.targetCoordinates
         func_pars = pars.MET_CAL_TARGET_DETECTION_CONTOUR_PARS
@@ -56,7 +62,8 @@ def metcalTargetCoordinates(image_path, pars=None):
     func_pars.PLATESCALE = pars.PLATESCALE
 
     try:
-        positions = analysis_func(image_path, func_pars)
+        positions = analysis_func(image_path, func_pars,
+                                  correct=correct, debugging=debugging)
     except OtsuTargetFindingError as err:
         raise MetrologyAnalysisTargetError(
             err.message + " from Image {}".format(image_path)
@@ -65,29 +72,44 @@ def metcalTargetCoordinates(image_path, pars=None):
     return positions
 
 
-def metcalFibreCoordinates(image_path, pars=None):  # configurable parameters
-
-    MET_CAL_PLATESCALE = pars.MET_CAL_PLATESCALE
-    MET_CAL_QUALITY_METRIC = pars.MET_CAL_QUALITY_METRIC
-    verbosity = pars.verbosity
-    display = pars.display
-
-    """reads an image from the metrology calibration camera and returns the
-        XY coordinates and Gaussian fit quality of the backlit fibre in mm"""
-
+def metcalFibreCoordinates(image_path, pars=None, correct=None, debugging=False):
+    """
+    
+    Reads an image from the metrology calibration camera and returns the
+    XY coordinates and Gaussian fit quality of the backlit fibre in mm.
+    
+    """
     # Authors: Stephen Watson (initial algorithm March 4, 2019)
     # Johannes Nix (code imported and re-formatted)
 
+    MET_CAL_PLATESCALE = pars.PLATESCALE
+    MET_CAL_QUALITY_METRIC = pars.QUALITY_METRIC
+    verbosity = pars.verbosity
+    display = pars.display
+
+    logger = logging.getLogger(__name__)
+    logger.debug("image %s: processing fibre coordinates analysis" % image_path)
+
     # pylint: disable=no-member
-    image = cv2.imread(image_path)
+    if correct is None:
+        correct = get_correction_func(
+                    calibration_pars=pars.CALIBRATION_PARS,
+                    platescale=pars.PLATESCALE,
+                    loglevel=pars.loglevel,
+                  )
 
-    # image processing
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    # Find the largest circle and return coordinates
+    (metcal_fibre_x, metcal_fibre_y, metcal_fibre_quality) = \
+        fibre_detection_otsu.fibreCoordinates(
+            image_path,
+            pars=pars,
+            correct=correct,
+            debugging=debugging
+        )
 
-    metcal_fibre_x = 0
-    metcal_fibre_y = 0
-    metcal_fibre_quality = 0
+    # exceptions
+    # scale and straighten the result coordinates
 
-    # exceptions: MetrologyAnalysisFibreError()
+    metcal_fibre_x, metcal_fibre_y, = correct(metcal_fibre_x, metcal_fibre_y)
 
     return metcal_fibre_x, metcal_fibre_y, metcal_fibre_quality

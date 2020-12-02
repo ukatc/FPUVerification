@@ -5,6 +5,7 @@ import logging
 import cv2
 from DistortionCorrection import get_correction_func
 from ImageAnalysisFuncs.base import ImageAnalysisError
+from ImageAnalysisFuncs import fibre_detection_otsu
 
 # exceptions which are raised if image analysis functions fail
 
@@ -20,50 +21,50 @@ class PupilAlignmentAnalysisError(ImageAnalysisError):
 PUPIL_ALIGNMENT_ALGORITHM_VERSION = (1,0,0)
 
 
-def pupalnCoordinates(
-    image_path,
-    # configurable parameters
-    pars=None,
-    correct=None,
-):
+def pupilCoordinates(image_path, pars=None, correct=None, debugging=False):
 
-    """reads an image from the pupil alignment camera and returns the
-        XY coordinates and circularity of the projected dot in mm
-        """
-
+    """
+    
+    reads an image from the pupil alignment camera and returns the
+    XY coordinates and circularity of the projected dot in mm
+        
+    """
     # Authors: Stephen Watson (initial algorithm March 4, 2019(
     # Johannes Nix (code imported and re-formatted)
 
     logger = logging.getLogger(__name__)
+    logger.debug("image %s: processing pupil alignment analysis" % image_path)
 
     # pylint: disable=no-member
     if correct is None:
         correct = get_correction_func(
-                    calibration_pars=pars.PUP_ALGN_CALIBRATION_PARS,
-                    platescale=pars.PUP_ALGN_PLATESCALE,
+                    calibration_pars=pars.CALIBRATION_PARS,
+                    platescale=pars.PLATESCALE,
                     loglevel=pars.loglevel,
                   )
 
-    # Open the image file and attempt to convert it to greyscale.
-    image = cv2.imread(image_path)
-    try:
-        greyscale = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    except cv2.error as err:
-        raise PupilAlignmentAnalysisError(
-            "OpenCV returned error %s for image %s" % (str(err), path)
+#     # Open the image file and attempt to convert it to greyscale.
+#     image = cv2.imread(image_path)
+#     try:
+#         greyscale = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+#     except cv2.error as err:
+#         raise PupilAlignmentAnalysisError(
+#             "OpenCV returned error %s for image %s" % (str(err), path)
+#         )
+
+    # Find the largest circle and return coordinates
+    (pupil_spot_x, pupil_spot_y, pupil_quality) = \
+        fibre_detection_otsu.fibreCoordinates(
+            image_path,
+            pars=pars,
+            correct=correct,
+            debugging=debugging
         )
-
-    # Insert image processing here
-
-    pupaln_spot_x = 0
-    pupaln_spot_y = 0
-    pupaln_quality = 0
 
     # exceptions
     # scale and straighten the result coordinates
 
-    logger.debug("image %s: processing pupil alignment analysis" % image_path)
 
-    pupaln_spot_x, pupaln_spot_y, = correct(pupaln_spot_x, pupaln_spot_y)
+    pupil_spot_x, pupil_spot_y, = correct(pupil_spot_x, pupil_spot_y)
 
-    return pupaln_spot_x, pupaln_spot_y, pupaln_quality
+    return pupil_spot_x, pupil_spot_y, pupil_quality

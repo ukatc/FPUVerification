@@ -7,7 +7,7 @@ from ImageAnalysisFuncs.analyze_positional_repeatability import posrepCoordinate
 from vfr.conf import DATUM_REP_ANALYSIS_PARS
 
 VERBOSE_TESTS = True
-
+DEBUGGING = False
 
 class TestDatRepImageAnalysis(unittest.TestCase):
     def test_expected(self):
@@ -51,11 +51,11 @@ class TestDatRepImageAnalysis(unittest.TestCase):
             ),
             (
                 "../TestImages/PT26e_datum-repeatability_2019-05-14T14-44-06.239BST_datumed-001.bmp",
-                15.47,
+                15.48,
                 10.84,
                 0.4,
                 13.71,
-                9.11,
+                9.12,
                 0.4,
             ),
         ]
@@ -64,31 +64,38 @@ class TestDatRepImageAnalysis(unittest.TestCase):
             print("Testing posrepCoordinates with image %s.." % test_image)
 
             (sx, sy, sq, lx, ly, lq) = posrepCoordinates(
-                test_image, pars=DATUM_REP_ANALYSIS_PARS
+                test_image, pars=DATUM_REP_ANALYSIS_PARS, debugging=DEBUGGING
             )
 
             pos_limit = 2.15  # roughly equal to the old 0.01  # millimeter
             q_limit = 1.475  # roughtly equal to the old 0.05  # dimensionless
 
-            npt.assert_almost_equal(
-                sx, small_x, pos_limit, "small x failed", VERBOSE_TESTS
-            )
-            npt.assert_almost_equal(
-                sy, small_y, pos_limit, "small y failed", VERBOSE_TESTS
-            )
-            npt.assert_almost_equal(
-                sq, small_q, q_limit, "small qual failed", VERBOSE_TESTS
-            )
+            if VERBOSE_TESTS:
+                print("Small: Expecting (%.4f,%.4f). Measured (%.4f,%.4f)." % \
+                    (small_x, small_y, sx, sy) )
+                print("Large: Expecting (%.4f,%.4f). Measured (%.4f,%.4f)." % \
+                    (large_x, large_y, lx, ly) )
 
-            npt.assert_almost_equal(
-                lx, large_x, pos_limit, "large x failed", VERBOSE_TESTS
-            )
-            npt.assert_almost_equal(
-                ly, large_y, pos_limit, "large y failed", VERBOSE_TESTS
-            )
-            npt.assert_almost_equal(
-                lq, large_q, q_limit, "large q failed", VERBOSE_TESTS
-            )
+            if not DEBUGGING:
+                npt.assert_almost_equal(
+                   sx, small_x, pos_limit, "small x failed", VERBOSE_TESTS
+                )
+                npt.assert_almost_equal(
+                    sy, small_y, pos_limit, "small y failed", VERBOSE_TESTS
+                )
+                npt.assert_almost_equal(
+                    sq, small_q, q_limit, "small qual failed", VERBOSE_TESTS
+                )
+
+                npt.assert_almost_equal(
+                    lx, large_x, pos_limit, "large x failed", VERBOSE_TESTS
+                )
+                npt.assert_almost_equal(
+                    ly, large_y, pos_limit, "large y failed", VERBOSE_TESTS
+                )
+                npt.assert_almost_equal(
+                    lq, large_q, q_limit, "large q failed", VERBOSE_TESTS
+                )
 
 
 if __name__ == "__main__":

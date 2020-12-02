@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*
 #
 # MOONS Verification Rig Configuration Parameters.
 #
@@ -211,6 +211,7 @@ MET_CAL_PLATESCALE = 0.00668  # millimeter per pixel
 MET_CAL_CALIBRATION_PARS = {"algorithm": "scale", "scale_factor": MET_CAL_PLATESCALE}
 
 MET_CAL_TARGET_DETECTION_OTSU_PARS = Namespace(
+    PLATESCALE=MET_CAL_PLATESCALE,  # millimeter per pixel
     CALIBRATION_PARS=MET_CAL_CALIBRATION_PARS,
     SMALL_RADIUS=SMALL_TARGET_RADIUS,  # in mm
     LARGE_RADIUS=LARGE_TARGET_RADIUS,  # in mm
@@ -243,10 +244,17 @@ MET_CAL_TARGET_ANALYSIS_PARS = Namespace(
 )
 
 MET_CAL_FIBRE_ANALYSIS_PARS = Namespace(
-    MET_CAL_PLATESCALE=0.00668,  # millimeter per pixel
-    MET_CAL_QUALITY_METRIC=0.8,  # dimensionless
+    PLATESCALE=MET_CAL_PLATESCALE,  # millimeter per pixel
+    CALIBRATION_PARS=MET_CAL_CALIBRATION_PARS,
+    
+    MIN_RADIUS=0.1,  # in mm
+    MAX_RADIUS=1.5,  # in mm
+    THRESHOLD_LIMIT=40,
+    QUALITY_METRIC=0.8,  # dimensionless
+    
     display=False,  # will display image with contours annotated
     verbosity=0,
+    loglevel=0,
 )
 
 # The default rotary stage angles (deg) required to place each FPU under the
@@ -550,16 +558,22 @@ PUP_ALGN_MEASUREMENT_PARS = Namespace(
 #
 PUP_ALGN_PLATESCALE = 0.76
 PUP_ALGN_CALIBRATION_PARS = {"algorithm": "scale", "scale_factor": PUP_ALGN_PLATESCALE}
-
+PUP_ALGN_RADIUS_OF_CURVATURE = 4101.4 # mm
 
 #
 # Pupil alignment data analysis parameter set.
 # --------------------------------------------
 PUP_ALGN_ANALYSIS_PARS = Namespace(
-    PUP_ALGN_PLATESCALE=PUP_ALGN_PLATESCALE,  # millimeter per pixel
-    PUP_ALGN_CIRCULARITY_THRESH=0.8,  # dimensionless
+    PLATESCALE=PUP_ALGN_PLATESCALE,  # millimeter per pixel
+
+    MIN_RADIUS=150.0,  # in mm
+    MAX_RADIUS=300.0,  # in mm
+    THRESHOLD_LIMIT=60,
+    QUALITY_METRIC=0.6,  # dimensionless
+
+    PUP_ALGN_CIRCULARITY_THRESH=0.6,  # dimensionless
     PUP_ALGN_NOISE_METRIC=0,
-    PUP_ALGN_CALIBRATION_PARS=PUP_ALGN_CALIBRATION_PARS,
+    CALIBRATION_PARS=PUP_ALGN_CALIBRATION_PARS,
     display=False,
     verbosity=0,
     loglevel=0,
@@ -567,6 +581,10 @@ PUP_ALGN_ANALYSIS_PARS = Namespace(
 
 
 PUP_ALGN_EVALUATION_PARS = Namespace(
+    # The effective radius of curvature of the wavefront from the
+    # pupil at the screen (mm).
+    CURVATURE=PUP_ALGN_RADIUS_OF_CURVATURE,
+
     # The maximum total deviation in arcmin from the calibrated centre
     # point which represents an acceptable FPU
     PUP_ALGN_PASS=Inf,  # TBD ??
@@ -603,6 +621,7 @@ MET_HEIGHT_ANALYSIS_PARS = Namespace(
     METHT_NOISE_METRIC=0.25, # dimensionless
     display=False,
     verbosity=0,
+    loglevel=0,
 )
 
 MET_HEIGHT_EVALUATION_PARS = Namespace(
