@@ -249,7 +249,7 @@ class GigECamera(object):
             # Image grabbed successfully?
             if grabResult.GrabSucceeded():
                 count += 1
-                print("Grab", count)
+                #print("Grab", count)
                 filename = "%s_%d.bmp" % (filestub, count)
                 # Access the image data.
                 img = grabResult.Array
@@ -301,7 +301,7 @@ class GigECamera(object):
         # Issue software triggers. For each call, wait up to 200 ms until the camera is ready for triggering the next image.
         print("Triggering grabbing for %d frames..." % nframes )
         for i in range(nframes):
-            print("Frame %d..." % i )
+            #print("Frame %d..." % i )
             if self.camera.WaitForFrameTriggerReady(frametime, pylon.TimeoutHandling_ThrowException):
                 self.camera.ExecuteSoftwareTrigger()
 
@@ -324,12 +324,12 @@ class GigECamera(object):
         grabSucceeded = True
         print("Retrieving results..." )
         while grabSucceeded and count < maxcount:
-            print("Retrieving next frame...")
+            #print("Retrieving next frame...")
             grabResult = self.camera.RetrieveResult(timeout, pylon.TimeoutHandling_Return)
             grabSucceeded = grabResult.GrabSucceeded()
             if grabSucceeded:
                 count += 1
-                print("Got frame %d" % count)
+                #print("Got frame %d" % count)
                 filename = "%s_%d.bmp" % (filestub, count)
                 # Access the image data.
                 img = grabResult.Array
