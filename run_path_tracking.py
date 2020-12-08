@@ -7,6 +7,9 @@ at the same time using threads.
 from __future__ import absolute_import, division, print_function
 
 import logging
+#logging.basicConfig(level=logging.INFO)   # Informational output 
+logging.basicConfig(level=logging.DEBUG)  # Debugging output
+
 import multiprocessing as mp
 import time
 from os.path import abspath
@@ -108,28 +111,28 @@ def initialize_lamps(lctrl):
     lctrl.switch_all_off()
 
 def turntable_home( ):
-    logger = logging.getLogger(__name__)
+    slogger = logging.getLogger(__name__)
     with pyAPT.NR360S(serial_number=NR360_SERIALNUMBER) as con:
-        logger.info("Homing stage...")
+        slogger.info("Homing stage...")
         con.home(clockwise=False)
 
 def turntable_goto( stage_position, wait=True ):
-    logger = logging.getLogger(__name__)
+    slogger = logging.getLogger(__name__)
     with pyAPT.NR360S(serial_number=NR360_SERIALNUMBER) as con:
-        logger.info("Moving stage to %f ..." % stage_position)
+        slogger.info("Moving stage to %f ..." % stage_position)
         con.goto(stage_position, wait=wait)
 
 
 def linear_stage_home( ):
-    logger = logging.getLogger(__name__)
+    slogger = logging.getLogger(__name__)
     with rig.hw.pyAPT.MTS50(serial_number=MTS50_SERIALNUMBER) as con:
-        logger.info("Homing stage...")
+        slogger.info("Homing stage...")
         con.home()
 
 def linear_stage_goto( stage_position, wait=True ):
-    logger = logging.getLogger(__name__)
+    slogger = logging.getLogger(__name__)
     with rig.hw.pyAPT.MTS50(serial_number=MTS50_SERIALNUMBER) as con:
-        logger.info("Moving stage to %f ..." % stage_position)
+        slogger.info("Moving stage to %f ..." % stage_position)
         con.goto(stage_position, wait=wait)
 
 
@@ -148,17 +151,14 @@ def prepare_cam(exposure_time):
 
 def test_turntable( sleep_time ):
     
-    print("Homing turntable ...")
+    slogger = logging.getLogger(__name__)
     turntable_home()
     
     for rep in range(0, NREPEATS):
         for stage_position in TURNTABLE_POSITIONS:
-            print("Moving turntable to %f ..." % stage_position)
             turntable_goto(stage_position)
             time.sleep( sleep_time )
-        print("Turntable move completed.")
-
-        print("Homing turntable ...")
+        slogger.info("Turntable moves completed.")
         turntable_home()
 
 def test_fpu( gd, gs, wf ):
@@ -171,12 +171,13 @@ def test_fpu( gd, gs, wf ):
 
 def test_pos_rep_camera( strategy ):
     tstamp = timestamp()
-    logger = logging.getLogger(__name__)
-    logger.info("Capturing path tracking image(s)")
+    clogger = logging.getLogger(__name__)
+    clogger.debug("Capturing path tracking image(s)")
 
     sleep_time_ms = max(0, STEP_TIME_MS - CAMERA_EXPOSURE_MS)
 
-    print("Setting up camera.")
+    clogger.info("Setting up camera for exposure %.2f ms and strategy %d." % \
+                (CAMERA_EXPOSURE_MS, strategy))
     pos_rep_cam = prepare_cam(CAMERA_EXPOSURE_MS)
 
     def capture_image( index, strategy ):
@@ -202,55 +203,55 @@ def test_pos_rep_camera( strategy ):
                 ts=tstamp,
             )
         else:
-            logger.error("Undefined strategy: %d" % strategy )
+            clogger.error("Undefined strategy: %d" % strategy )
 
         return ipath
 
-    print("Capturing %d images" % NIMAGES)
-    ipath = capture_image( 1, strategy )
-    logger.info( "Saving image(s) to %r" % abspath(ipath) )
-            
+    clogger.debug("Capturing %d images." % NIMAGES )
+    ipath = capture_image( 1, strategy ) 
+    clogger.info("Captured %d images and saved to %r" % (NIMAGES, abspath(ipath)))
 
 if __name__ == "__main__":
+    mlogger = logging.getLogger("")
         
     lctrl = lampController()
     
-    print("Starting tests")
+    mlogger.debug("Starting tests")
 
-    print("Switching lamps off")
+    mlogger.info("Switching lamps off")
     initialize_lamps(lctrl)
 
-    print("Setting up turntable.")
+    mlogger.info("Setting up turntable.")
     turntable_home()
     turntable_goto(METROLOGY_CAL_POSITIONS[4])
 
-    print("Ambient light on.")
+    logger.info("Ambient light on.")
     lctrl.switch_ambientlight("on")
 
-    print("Initializing FPUs")
+    mlogger.info("Initializing FPUs")
     gd, gs = initialize_FPU(NUM_FPUS, GATEWAY_ADDRESS, GATEWAY_PORT)
-    print("Datuming FPUs and moving to zero position")
+    logger.info("Datuming FPUs and moving to zero position")
     #gd.findDatum(gs, timeout=DATUM_TIMEOUT_DISABLE)
     gd.findDatum(gs)
     gd.configZero(gs)
     gd.executeMotion(gs)
     
-    print("Reading paths")
+    mlogger.info("Reading paths")
     p = wflib.load_paths(PATH_FILE, canmap_fname=CANMAP_FILE)
     
     y = mp.Process(name='camera', target=test_pos_rep_camera, args=(2,))
     y.start()    
-    print("Moving FPUs in main thread")
+    mlogger.info("Moving FPUs in main thread")
     test_fpu(gd, gs, p)
 
-    print("Waiting for camera thread to finish")
+    mlogger.info("Waiting for camera thread to finish")
     y.join()
 
-    print("Parking FPU.")
+    mlogger.info("Parking FPU.")
     gd.configDatum(gs)
     gd.executeMotion(gs)
     gd.findDatum(gs)
     
-    print("Switching lamps off")
+    mlogger.info("Switching lamps off")
     initialize_lamps(lctrl)
-    print("Tests finished")
+    mlogger.info("Tests finished")

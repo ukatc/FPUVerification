@@ -33,8 +33,9 @@ does not have a default save location.
 27/09/2018: 0.3.0 Refactoring to an OOP design
 01/10/2018: 0.3.1 Fixed Error and added support to find a camera.
 03/10/2018: 0.3.2 Fixed indent issues and updated documentation.
-
 27/10/2020: Added saveBurst method. (SMB)
+08/12/2020: Add leading zeroes to file suffixes so the files can be sorted
+            more easily (SMB).
 
 """
 from __future__ import division, print_function
@@ -250,7 +251,7 @@ class GigECamera(object):
             if grabResult.GrabSucceeded():
                 count += 1
                 #print("Grab", count)
-                filename = "%s_%d.bmp" % (filestub, count)
+                filename = "%s_%03d.bmp" % (filestub, count)
                 # Access the image data.
                 img = grabResult.Array
                 imsave(filename, np.asarray(img))
@@ -330,7 +331,7 @@ class GigECamera(object):
             if grabSucceeded:
                 count += 1
                 #print("Got frame %d" % count)
-                filename = "%s_%d.bmp" % (filestub, count)
+                filename = "%s_%03d.bmp" % (filestub, count)
                 # Access the image data.
                 img = grabResult.Array
                 imsave(filename, np.asarray(img))
