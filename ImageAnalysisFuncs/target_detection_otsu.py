@@ -189,7 +189,8 @@ def find_bright_sharp_circles(path,
     return target_blob_list
 
 
-def targetCoordinates(image_path, pars=None, correct=None):
+def targetCoordinates(image_path, pars=None, correct=None,
+                      show=False, debugging=False):
     """
     
     Wrapper for find_bright_sharp_circles
@@ -226,6 +227,7 @@ def targetCoordinates(image_path, pars=None, correct=None):
                 quality=pars.QUALITY_METRIC,
                 blob_size_tolerance=pars.BLOB_SIZE_TOLERANCE,
                 group_range_tolerance=pars.GROUP_RANGE_TOLERANCE,
+                show=show, debugging=debugging
             )
     if len(blobs) != 2:
         raise OtsuTargetFindingError(

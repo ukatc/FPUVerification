@@ -29,14 +29,17 @@ CONTOUR_ALGORITHM = "contour"
 OTSU_ALGORITHM = "otsu"
 
 
-def posrepCoordinates(image_path, pars=None, correct=None):
-    """ Reads the image and analyse the location and quality of the targets
+def posrepCoordinates(image_path, pars=None, correct=None, show=False, debugging=False):
+    """
+
+     Reads the image and analyse the location and quality of the targets
      using the chosen algorithm
 
 
     :return: A tuple length 6 containing the x,y coordinate and quality factor for the small and large targets
     Where quality is measured by 4 * pi * (area / (perimeter * perimeter)).
     (small_x, small_y, small_qual, big_x, big_y, big_qual)
+
     """
 
     if pars.TARGET_DETECTION_ALGORITHM == CONTOUR_ALGORITHM:
@@ -57,4 +60,5 @@ def posrepCoordinates(image_path, pars=None, correct=None):
     func_pars.loglevel = pars.loglevel
     func_pars.PLATESCALE = pars.PLATESCALE
 
-    return analysis_func(image_path, pars=func_pars, correct=correct)
+    return analysis_func(image_path, pars=func_pars, correct=correct,
+                         show=show, debugging=debugging)
