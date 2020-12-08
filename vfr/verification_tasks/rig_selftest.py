@@ -12,7 +12,7 @@ from ImageAnalysisFuncs.analyze_metrology_calibration import (
 )
 from ImageAnalysisFuncs.analyze_metrology_height import methtHeight
 from ImageAnalysisFuncs.analyze_positional_repeatability import posrepCoordinates
-from ImageAnalysisFuncs.analyze_pupil_alignment import pupalnCoordinates
+from ImageAnalysisFuncs.analyze_pupil_alignment import pupilCoordinates
 from vfr.conf import (
     MET_CAL_CAMERA_IP_ADDRESS,
     MET_HEIGHT_CAMERA_IP_ADDRESS,
@@ -71,7 +71,7 @@ def selftest_pup_algn(rig, pars=None, PUP_ALGN_ANALYSIS_PARS=None, capture_image
             )
 
             try:
-                result = pupalnCoordinates(
+                result = pupilCoordinates(
                     ipath_selftest_pup_algn, pars=PUP_ALGN_ANALYSIS_PARS
                 )
                 del result

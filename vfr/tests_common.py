@@ -11,7 +11,7 @@ import sys
 import time
 from ast import literal_eval
 from math import floor
-from numpy import isfinite
+import numpy as np
 import logging
 from os import path
 from os.path import expanduser, expandvars
@@ -36,7 +36,7 @@ from FpuGridDriver import (
     DEFAULT_WAVEFORM_RULESET_VERSION,
 )
 
-from numpy import array, zeros
+
 from vfr.conf import (
     DB_TIME_FORMAT,
     VERIFICATION_ROOT_FOLDER,
@@ -98,7 +98,7 @@ def dirac(n, L):
     Return a vector of length L with all zeros except a one at position n.
 
     """
-    v = zeros(L, dtype=float)
+    v = np.zeros(L, dtype=float)
     v[n] = 1.0
     return v
 
@@ -132,8 +132,8 @@ def goto_position(
                 gd.enableMove(fpu_id, grid_state)
 
     current_angles = gd.trackedAngles(grid_state, retrieve=True)
-    current_alpha = array([x.as_scalar() for x, y in current_angles])
-    current_beta = array([y.as_scalar() for x, y in current_angles])
+    current_alpha = np.array([x.as_scalar() for x, y in current_angles])
+    current_beta = np.array([y.as_scalar() for x, y in current_angles])
     logger.debug("Current positions:\n%r" % current_angles)
     logger.log(
         loglevel, "Moving FPUs %s to (%6.2f,%6.2f)" % (fpuset, abs_alpha, abs_beta)
@@ -170,7 +170,7 @@ def goto_position(
     logger.trace("FPU states=%s" % str(list_states(grid_state)))
 
 
-def find_datum(gd, grid_state, opts=None, uninitialized=False):
+def find_datum(gd, grid_state, opts=None, uninitialized=False, datum_twice=False):
     """
 
     First move all FPUs to a location close to datum and then find datum.
@@ -178,7 +178,7 @@ def find_datum(gd, grid_state, opts=None, uninitialized=False):
     """
     logger = logging.getLogger(__name__)
     check_for_quit()
-    logger.info("moving FPUs to datum position")
+    logger.info("Moving FPUs to datum position")
     gd.pingFPUs(grid_state)
 
     logger.trace("pre datum: %r" % gd.trackedAngles(grid_state, display=False))
@@ -197,7 +197,7 @@ def find_datum(gd, grid_state, opts=None, uninitialized=False):
             unreferenced.append(fpu_id)
 
     if unreferenced:
-        # At least one FPU is not at datum. Move these FPUs to a position close to datum.
+        # If not yet referenced, move to a location within 1.0 degrees of datum.
         goto_position(
             gd,
             ALPHA_DATUM_OFFSET + 1.0,
@@ -211,7 +211,7 @@ def find_datum(gd, grid_state, opts=None, uninitialized=False):
 
         if uninitialized:
             # The first time the FPUs have been datumed
-            logger.audit("issuing initial findDatum (%i FPUs):" % len(unreferenced))
+            logger.audit("Issuing initial findDatum (%i FPUs):" % len(unreferenced))
 
             modes = {fpu_id: SEARCH_CLOCKWISE for fpu_id in unreferenced}
 
@@ -222,23 +222,28 @@ def find_datum(gd, grid_state, opts=None, uninitialized=False):
                 selected_arm=DASEL_BOTH,
                 fpuset=unreferenced,
             )
+            # If required, search for datum a second time to improve accuracy.
+            if datum_twice:
+                gd.findDatum( grid_state, fpuset=unreferenced )
 
         else:
             # A second or subsequent findDatum.
             timeout = DATUM_TIMEOUT_ENABLE
             logger.debug(
-                "issuing findDatum (%i FPUs, timeout=%r):"
+                "Issuing findDatum (%i FPUs, timeout=%r):"
                 % (len(unreferenced), timeout)
             )
             gd.findDatum(grid_state, fpuset=unreferenced, timeout=timeout)
-
+            # Search for datum a second time. The second time is more accurate than the first.
+            gd.findDatum( grid_state, fpuset=unreferenced )
+            
         logger.trace("findDatum finished, states=%s" % str(list_states(grid_state)))
     else:
         logger.debug("find_datum(): all FPUs already at datum")
 
     # We can use grid_state to display the starting position
     logger.trace(
-        "datum finished, the FPU positions (in degrees) are: %r"
+        "Datum finished, the FPU positions (in degrees) are: %r"
         % gd.trackedAngles(grid_state, display=False)
     )
     logger.trace("FPU states = %r" % list_states(grid_state))
@@ -424,7 +429,7 @@ def turntable_safe_goto(rig, grid_state, stage_position, wait=True):
     with rig.lctrl.use_ambientlight():
         find_datum(rig.gd, grid_state, opts=rig.opts)
         logger.info("moving turntable to position %7.3f" % stage_position)
-        assert isfinite(stage_position), "stage position is not valid number"
+        assert np.isfinite(stage_position), "stage position is not valid number"
         with rig.hw.pyAPT.NR360S(serial_number=NR360_SERIALNUMBER) as con:
             logger.trace("Found APT controller S/N %r" % NR360_SERIALNUMBER)
             st = time.time()
@@ -459,7 +464,7 @@ def linear_stage_goto(rig, stage_position):
     logger = logging.getLogger(__name__)
     check_for_quit()
     logger.info("moving linear stage to position %7.3f ..." % stage_position)
-    assert isfinite(stage_position), "stage position is not valid number"
+    assert np.isfinite(stage_position), "stage position is not valid number"
     with rig.hw.pyAPT.MTS50(serial_number=MTS50_SERIALNUMBER) as con:
         logger.trace("Found APT controller S/N %s" % str(MTS50_SERIALNUMBER))
         con.goto(stage_position, wait=True)

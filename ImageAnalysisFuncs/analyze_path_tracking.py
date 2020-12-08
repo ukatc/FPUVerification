@@ -81,7 +81,7 @@ def blend_images_in_folder( folder, newfile ):
     logger.info("%d images blended together and saved to %s" % (wcount, newfile))
 
 def analyze_images_in_folder( folder, pars=POS_REP_ANALYSIS_PARS,
-                              show=False, debugging=False ):
+                              debugging=False ):
     """
     
     Analyses all the images found in the given folder and returns a
@@ -101,7 +101,7 @@ def analyze_images_in_folder( folder, pars=POS_REP_ANALYSIS_PARS,
         imgpath = os.path.join(folder, filename)
         try:
             #positions = path_tracking_target_coordinates( filename, pars )
-            positions = posrepCoordinates( imgpath, pars, show=show, debugging=debugging )
+            positions = posrepCoordinates( imgpath, pars, debugging=debugging )
             path_targets.append( positions )
             ngood += 1
         except ImageAnalysisError as err:

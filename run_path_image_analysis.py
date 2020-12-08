@@ -46,7 +46,7 @@ if __name__ == "__main__":
 
     #blend_images_in_folder( TEST_FOLDER, OUTPUT )
 
-    results = analyze_images_in_folder( TEST_FOLDER, show=False, debugging=False )
+    results = analyze_images_in_folder( TEST_FOLDER, debugging=False )
     for result in results:
         print(results)
 

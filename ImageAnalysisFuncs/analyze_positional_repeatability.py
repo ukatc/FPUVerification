@@ -29,10 +29,8 @@ CONTOUR_ALGORITHM = "contour"
 OTSU_ALGORITHM = "otsu"
 
 
-def posrepCoordinates(image_path, pars=None, correct=None, show=False, debugging=False):
-    """
-
-     Reads the image and analyse the location and quality of the targets
+def posrepCoordinates(image_path, pars=None, correct=None, debugging=False):
+    """ Reads the image and analyse the location and quality of the targets
      using the chosen algorithm
 
 
@@ -61,4 +59,5 @@ def posrepCoordinates(image_path, pars=None, correct=None, show=False, debugging
     func_pars.PLATESCALE = pars.PLATESCALE
 
     return analysis_func(image_path, pars=func_pars, correct=correct,
-                         show=show, debugging=debugging)
+                         debugging=debugging)
+
