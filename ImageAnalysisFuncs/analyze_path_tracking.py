@@ -55,7 +55,9 @@ def blend_images_in_folder( folder, newfile ):
     logging.info("Blending %d path tracking images." % nimages)
     wcount = 1
     newimg = None
-    for filename in os.listdir(folder):
+
+    sorted_list = sorted(list(os.listdir(folder)))
+    for filename in sorted_list:
 
         logger.debug("Reading image %d from %s" % (wcount,filename))
         img = cv2.imread(os.path.join(folder, filename), 1)
@@ -96,20 +98,24 @@ def analyze_images_in_folder( folder, pars=POS_REP_ANALYSIS_PARS,
     wcount = 1
     ngood = 0
     nbad = 0
-    for filename in os.listdir(folder):
+
+    sorted_list = sorted(list(os.listdir(folder)))
+    for filename in sorted_list:
         logger.debug("Analysing image %d from %s" % (wcount,filename))
         imgpath = os.path.join(folder, filename)
         try:
             #positions = path_tracking_target_coordinates( filename, pars )
             positions = posrepCoordinates( imgpath, pars, debugging=debugging )
             path_targets.append( positions )
+#            # Append only the coordinates of the large target
+#            path_targets.append( [positions[3], positions[4]] )
             ngood += 1
         except ImageAnalysisError as err:
             logger.error( "Image analysis error %s.\n\t Image %s ignored." % (str(err), filename) )
             nbad += 1
 
         wcount += 1
-    logging.debug("There were %d good and %d bad image files." % (ngood, nbad) )
+    logging.info("There were %d good and %d bad image files." % (ngood, nbad) )
     return path_targets
 
 

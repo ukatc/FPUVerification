@@ -14,12 +14,14 @@ import os
 from os.path import abspath
 import argparse
 from argparse import Namespace
+import numpy as np
 
 from ImageAnalysisFuncs.analyze_path_tracking import blend_images_in_folder, \
                                                      analyze_images_in_folder
 
-TEST_FOLDER = "./images_1_15_large"
-OUTPUT = "saved_1_15_large.bmp"
+#TEST_FOLDER = "./images_1_15_large"
+TEST_FOLDER = "./images_1_3_large"
+OUTPUT = "saved_1_3_large.bmp"
 
 from vfr.conf import POS_REP_CALIBRATION_PARS, POS_REP_PLATESCALE, \
     SMALL_TARGET_RADIUS, LARGE_TARGET_RADIUS, \
@@ -47,7 +49,12 @@ if __name__ == "__main__":
     #blend_images_in_folder( TEST_FOLDER, OUTPUT )
 
     results = analyze_images_in_folder( TEST_FOLDER, debugging=False )
-    for result in results:
-        print(results)
+    print("Results: ", results)
+
+    array = np.asarray(results)
+    print("results is of size", array.shape)
+
+#    for result in results:
+#        print(results)
 
     print("Tests finished")
