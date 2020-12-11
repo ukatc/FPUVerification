@@ -7,8 +7,8 @@ at the same time using threads.
 from __future__ import absolute_import, division, print_function
 
 import logging
-#logging.basicConfig(level=logging.INFO)   # Informational output 
-logging.basicConfig(level=logging.DEBUG)  # Debugging output
+logging.basicConfig(level=logging.INFO)   # Informational output 
+#logging.basicConfig(level=logging.DEBUG)  # Debugging output
 
 import multiprocessing as mp
 import time
@@ -35,7 +35,7 @@ FPU_ID = 0
 GATEWAY_ADDRESS = "192.168.0.11"
 GATEWAY_PORT = 4700
 PATH_FILE = "/home/jnix/targets_19fp_case_1_PATHS.paths"
-CANMAP_FILE = "canmap1_15.cfg"
+CANMAP_FILE = "canmap19_15.cfg"
 
 from vfr.hw import GigECamera, lampController, pyAPT
 from GigE.GigECamera import BASLER_DEVICE_CLASS, DEVICE_CLASS, IP_ADDRESS
@@ -63,9 +63,9 @@ from vfr.conf import (
 #    PUP_ALGN_POSITIONS
 )
 
-CAMERA_EXPOSURE_MS=128
+CAMERA_EXPOSURE_MS=200
 STEP_TIME_MS=200
-NIMAGES = 512
+NIMAGES = 380
 NREPEATS = 1
 
 # NOTE: Turntable positions must be in numerical order.
@@ -191,14 +191,14 @@ def test_pos_rep_camera( strategy ):
         elif strategy == 2:
             ipath = store_burst_images(
                 pos_rep_cam, NIMAGES, sleep_time_ms,
-                "{tn}_{ts}_burst.bmp",
+                "{tn}_{ts}_burst",
                 tn="path-tracking",
                 ts=tstamp,
             )
         elif strategy == 3:
             ipath = store_one_by_one(
                 pos_rep_cam, NIMAGES, STEP_TIME_MS,
-                "{tn}_{ts}_obo.bmp",
+                "{tn}_{ts}_obo",
                 tn="path-tracking",
                 ts=tstamp,
             )
@@ -225,12 +225,15 @@ if __name__ == "__main__":
     turntable_home()
     turntable_goto(METROLOGY_CAL_POSITIONS[4])
 
-    logger.info("Ambient light on.")
+    mlogger.info("Ambient light on.")
     lctrl.switch_ambientlight("on")
+# Fibre backlight does not seem to work properly.
+#    mlogger.info("Fibre backlight light on.")
+#    lctrl.switch_fibre_backlight("on")
 
     mlogger.info("Initializing FPUs")
     gd, gs = initialize_FPU(NUM_FPUS, GATEWAY_ADDRESS, GATEWAY_PORT)
-    logger.info("Datuming FPUs and moving to zero position")
+    mlogger.info("Datuming FPUs and moving to zero position")
     #gd.findDatum(gs, timeout=DATUM_TIMEOUT_DISABLE)
     gd.findDatum(gs)
     gd.configZero(gs)

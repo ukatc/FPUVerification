@@ -19,9 +19,10 @@ import numpy as np
 from ImageAnalysisFuncs.analyze_path_tracking import blend_images_in_folder, \
                                                      analyze_images_in_folder
 
-#TEST_FOLDER = "./images_1_15_large"
-TEST_FOLDER = "./images_1_3_large"
-OUTPUT = "saved_1_3_large.bmp"
+TEST_FOLDER = "./images1_15_long"
+OUTPUT = "blended1_15_long.bmp"
+BLEND_IMAGES = False
+LOCATE_TARGETS = True
 
 from vfr.conf import POS_REP_CALIBRATION_PARS, POS_REP_PLATESCALE, \
     SMALL_TARGET_RADIUS, LARGE_TARGET_RADIUS, \
@@ -46,15 +47,16 @@ if __name__ == "__main__":
         
     print("Starting tests")
 
-    #blend_images_in_folder( TEST_FOLDER, OUTPUT )
+    # Blend the images together to make one combined image showing the path
+    if BLEND_IMAGES:
+        blend_images_in_folder( TEST_FOLDER, OUTPUT )
 
-    results = analyze_images_in_folder( TEST_FOLDER, debugging=False )
-    print("Results: ", results)
-
-    array = np.asarray(results)
-    print("results is of size", array.shape)
-
-#    for result in results:
-#        print(results)
+    # Locate the targets more accurately to analyse the path in more detail.
+    if LOCATE_TARGETS:
+        results = analyze_images_in_folder( TEST_FOLDER, debugging=False )
+        array = np.asarray(results)
+        print("results is of size", array.shape)
+        for result in results:
+            print(result)
 
     print("Tests finished")

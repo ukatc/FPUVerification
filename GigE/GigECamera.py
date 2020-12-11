@@ -251,7 +251,7 @@ class GigECamera(object):
             if grabResult.GrabSucceeded():
                 count += 1
                 #print("Grab", count)
-                filename = "%s_%03d.bmp" % (filestub, count)
+                filename = "%s_%04d.bmp" % (filestub, count)
                 # Access the image data.
                 img = grabResult.Array
                 imsave(filename, np.asarray(img))
@@ -331,7 +331,7 @@ class GigECamera(object):
             if grabSucceeded:
                 count += 1
                 #print("Got frame %d" % count)
-                filename = "%s_%03d.bmp" % (filestub, count)
+                filename = "%s_%04d.bmp" % (filestub, count)
                 # Access the image data.
                 img = grabResult.Array
                 imsave(filename, np.asarray(img))
