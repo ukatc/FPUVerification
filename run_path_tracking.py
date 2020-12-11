@@ -15,7 +15,6 @@ import time
 from os.path import abspath
 
 import os
-import argparse
 
 import FpuGridDriver
 from FpuGridDriver import  DASEL_BOTH, DASEL_ALPHA, DASEL_BETA, \
@@ -26,7 +25,7 @@ from fpu_commands import *
 from fpu_constants import MOTOR_MIN_STEP_FREQUENCY, MOTOR_MAX_STEP_FREQUENCY, \
     MOTOR_MAX_START_FREQUENCY, MAX_STEP_DIFFERENCE, MOTOR_MAX_ACCELERATION, \
     MOTOR_MAX_DECELERATION, MAX_ACCELERATION_FACTOR, WAVEFORM_SEGMENT_LENGTH_MS
-    
+
 import wflib
 
 #NUM_FPUS = int(os.environ.get("NUM_FPUS","7"))
@@ -34,8 +33,8 @@ NUM_FPUS = 1
 FPU_ID = 0
 GATEWAY_ADDRESS = "192.168.0.11"
 GATEWAY_PORT = 4700
-PATH_FILE = "/home/jnix/targets_19fp_case_1_PATHS.paths"
-CANMAP_FILE = "canmap19_15.cfg"
+#PATH_FILE = "/home/jnix/targets_19fp_case_1_PATHS.paths"
+#CANMAP_FILE = "canmap19_15.cfg"
 
 from vfr.hw import GigECamera, lampController, pyAPT
 from GigE.GigECamera import BASLER_DEVICE_CLASS, DEVICE_CLASS, IP_ADDRESS
@@ -63,10 +62,26 @@ from vfr.conf import (
 #    PUP_ALGN_POSITIONS
 )
 
-CAMERA_EXPOSURE_MS=200
-STEP_TIME_MS=200
-NIMAGES = 380
-NREPEATS = 1
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument("pathfile", type=str, default="/home/jnix/targets_19fp_case_1_PATHS.paths",
+                    help="Name of file containing FPU paths")
+parser.add_argument("canmap", type=str, default="canmap19_15.cfgs",
+                    help="Name of file containing CAN ID to FPU ID mapping.")
+
+parser.add_argument("--exposure", type=float, default=128.0,
+                    help="Camera exposure time in milliseconds")
+parser.add_argument("--steptime", type=float, default=200.0,
+                    help="Path step time interval in milliseconds. Must be >= exposure time.")
+parser.add_argument("--nimages", type=int, default=380,
+                    help="Number of camera images to collect while executing path.")
+parser.add_argument("-d", "--debug", action="store_true",
+                    help="Run with debugging log level")
+
+#CAMERA_EXPOSURE_MS=200
+#STEP_TIME_MS=200
+#NIMAGES = 380
+#NREPEATS = 1
 
 # NOTE: Turntable positions must be in numerical order.
 # The turntable can only move in one direction, and then needs to be homed.
@@ -169,16 +184,16 @@ def test_fpu( gd, gs, wf ):
     gd.reverseMotion(gs)
     gd.executeMotion(gs)
 
-def test_pos_rep_camera( strategy ):
+def test_pos_rep_camera( strategy, camera_exposure, step_time, nimages ):
     tstamp = timestamp()
     clogger = logging.getLogger(__name__)
     clogger.debug("Capturing path tracking image(s)")
 
-    sleep_time_ms = max(0, STEP_TIME_MS - CAMERA_EXPOSURE_MS)
+    sleep_time_ms = max(0, step_time - camera_exposure)
 
     clogger.info("Setting up camera for exposure %.2f ms and strategy %d." % \
-                (CAMERA_EXPOSURE_MS, strategy))
-    pos_rep_cam = prepare_cam(CAMERA_EXPOSURE_MS)
+                (camera_exposure, strategy))
+    pos_rep_cam = prepare_cam(camera_exposure)
 
     def capture_image( index, strategy ):
         if strategy == 1:
@@ -190,14 +205,14 @@ def test_pos_rep_camera( strategy ):
             )
         elif strategy == 2:
             ipath = store_burst_images(
-                pos_rep_cam, NIMAGES, sleep_time_ms,
+                pos_rep_cam, nimages, sleep_time_ms,
                 "{tn}_{ts}_burst",
                 tn="path-tracking",
                 ts=tstamp,
             )
         elif strategy == 3:
             ipath = store_one_by_one(
-                pos_rep_cam, NIMAGES, STEP_TIME_MS,
+                pos_rep_cam, nimages, step_time,
                 "{tn}_{ts}_obo",
                 tn="path-tracking",
                 ts=tstamp,
@@ -207,15 +222,21 @@ def test_pos_rep_camera( strategy ):
 
         return ipath
 
-    clogger.debug("Capturing %d images." % NIMAGES )
+    clogger.debug("Capturing %d images." % nimages )
     ipath = capture_image( 1, strategy ) 
-    clogger.info("Captured %d images and saved to %r" % (NIMAGES, abspath(ipath)))
+    clogger.info("Captured %d images and saved to %r" % (nimages, abspath(ipath)))
 
 if __name__ == "__main__":
+    args = parser.parse_args()
     mlogger = logging.getLogger("")
-        
+    if args.debug:
+        mlogger.setLevel( logging.DEBUG )
+    if args.steptime < args.exposure:
+        mlogger.warn("Exposure time (%f) is large than step time (%f)." % \
+            (args.exposure, args.steptime))
+
     lctrl = lampController()
-    
+
     mlogger.debug("Starting tests")
 
     mlogger.info("Switching lamps off")
@@ -238,12 +259,12 @@ if __name__ == "__main__":
     gd.findDatum(gs)
     gd.configZero(gs)
     gd.executeMotion(gs)
-    
+
     mlogger.info("Reading paths")
-    p = wflib.load_paths(PATH_FILE, canmap_fname=CANMAP_FILE)
-    
-    y = mp.Process(name='camera', target=test_pos_rep_camera, args=(2,))
-    y.start()    
+    p = wflib.load_paths(args.pathfile, canmap_fname=args.canmap)
+
+    y = mp.Process(name='camera', target=test_pos_rep_camera, args=(2, args.exposure, args.steptime, args.nimages))
+    y.start()
     mlogger.info("Moving FPUs in main thread")
     test_fpu(gd, gs, p)
 
@@ -254,7 +275,7 @@ if __name__ == "__main__":
     gd.configDatum(gs)
     gd.executeMotion(gs)
     gd.findDatum(gs)
-    
+
     mlogger.info("Switching lamps off")
     initialize_lamps(lctrl)
     mlogger.info("Tests finished")
