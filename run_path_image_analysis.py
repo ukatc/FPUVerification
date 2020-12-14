@@ -17,27 +17,10 @@ from argparse import Namespace
 import numpy as np
 
 from ImageAnalysisFuncs.analyze_path_tracking import blend_images_in_folder, \
-                                                     analyze_images_in_folder
+                                                     analyze_images_in_folder, \
+                                                     path_targets_to_fibre
 
-        
-from vfr.conf import POS_REP_CALIBRATION_PARS, POS_REP_PLATESCALE, \
-    SMALL_TARGET_RADIUS, LARGE_TARGET_RADIUS, \
-    TARGET_SEPERATION, THRESHOLD_LIMIT
-PATH_TRACK_TARGET_DETECTION_OTSU_PARS = Namespace(
-    CALIBRATION_PARS=POS_REP_CALIBRATION_PARS,
-    PLATESCALE=POS_REP_PLATESCALE,  # millimeter per pixel
-    SMALL_RADIUS=SMALL_TARGET_RADIUS,  # in mm
-    LARGE_RADIUS=LARGE_TARGET_RADIUS,  # in mm
-    GROUP_RANGE=TARGET_SEPERATION,  # in mm
-    THRESHOLD_LIMIT=THRESHOLD_LIMIT,
-    QUALITY_METRIC=0.4,  # dimensionless
-    BLOB_SIZE_TOLERANCE=0.2, # dimensionless
-    GROUP_RANGE_TOLERANCE=0.1, # dimensionless
-    MAX_FAILURE_QUOTIENT=0.2,
-    display=False,
-    verbosity=0,
-    loglevel=0,
-)
+from vfr.conf import PATH_TRACK_ANALYSIS_PARS
 
 parser = argparse.ArgumentParser()
 parser.add_argument("imagefolder", type=str,
@@ -82,19 +65,32 @@ if __name__ == "__main__":
 
     # Locate the targets more accurately to analyse the path in more detail.
     if args.locate:
-        results = analyze_images_in_folder( args.imagefolder, debugging=False )
-        array = np.asarray(results)
-        print("results is of size", array.shape)
-        for result in results:
-            print(result)
+        results = analyze_images_in_folder( args.imagefolder, pars=PATH_TRACK_ANALYSIS_PARS, debugging=False )
+
+        # Estimate the location of the fibre from the targets.
+        fibre_paths = path_targets_to_fibre( results, pars=PATH_TRACK_ANALYSIS_PARS )
+
+        # Write the results to an output file
+        filename = "%s_path.txt" % args.imagefolder
+        file = open( filename, "w" )
+        try:
+            for fibre in fibre_paths:
+                file.write( "%d, %.4f, %.4f\n" % (fibre[0], fibre[1], fibre[2]) )
+        finally:
+            file.close()
+        print("Path written to", filename )
 
         if PLOT_PATH:
             xpath = []
             ypath = []
-            for result in results:
-                xpath.append( result[3])
-                ypath.append( result[4])
-            title = "%s: Path followed by large target" % args.imagefolder
+#            for result in results:
+#                xpath.append( result[4])
+#                ypath.append( result[5])
+#            title = "%s: Path followed by large target" % args.imagefolder
+            for fibre in fibre_paths:
+                xpath.append( fibre[1])
+                ypath.append( fibre[2])
+            title = "%s: Path followed by fibre" % args.imagefolder
             plotting.plot_xy( xpath, ypath, title=title, xlabel='xpath (mm)', ylabel='ypath (mm)',
                               linefmt='b.', linestyle=' ', equal_aspect=True )
 

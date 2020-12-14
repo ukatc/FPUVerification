@@ -4,7 +4,7 @@ import unittest
 import numpy.testing as npt
 
 from ImageAnalysisFuncs.analyze_positional_repeatability import posrepCoordinates
-from vfr.conf import POS_REP_ANALYSIS_PARS
+from vfr.conf import PATH_TRACK_ANALYSIS_PARS
 
 #from ImageAnalysisFuncs.analyze_pupil_alignment import pupilCoordinates
 #from vfr.conf import PUP_ALGN_ANALYSIS_PARS
@@ -41,7 +41,7 @@ class TestPosRepImageAnalysis(unittest.TestCase):
             print("Testing path tracking with image %s.." % test_image)
 
             (sx, sy, sq, lx, ly, lq) = posrepCoordinates(
-                test_image, pars=POS_REP_ANALYSIS_PARS, debugging=DEBUGGING
+                test_image, pars=PATH_TRACK_ANALYSIS_PARS, debugging=DEBUGGING
             )
             print("Returned:", sx, sy, sq, lx, ly, lq)
 

@@ -628,3 +628,45 @@ MET_HEIGHT_EVALUATION_PARS = Namespace(
      # Maximum allowable height of both targets, in millimeter.
     MET_HEIGHT_TOLERANCE=Inf # TBD ??
 )
+
+#
+# Path tracking data analysis parameter set.
+# ---------------------------------------------
+
+# Path tracking analysis parameters. Based on POS_REP,
+# since the same camera is used.
+PATH_TRACK_TARGET_DETECTION_OTSU_PARS = Namespace(
+    CALIBRATION_PARS=POS_REP_CALIBRATION_PARS,
+    SMALL_RADIUS=SMALL_TARGET_RADIUS,  # in mm
+    LARGE_RADIUS=LARGE_TARGET_RADIUS,  # in mm
+    GROUP_RANGE=TARGET_SEPERATION,  # in mm
+    THRESHOLD_LIMIT=THRESHOLD_LIMIT,
+    # Reduced tolerances compared with POS_REP to cope with motion blur
+    QUALITY_METRIC=0.3,  # dimensionless
+    BLOB_SIZE_TOLERANCE=0.3, # dimensionless
+    GROUP_RANGE_TOLERANCE=0.1 # dimensionless
+)
+PATH_TRACK_TARGET_DETECTION_CONTOUR_PARS = Namespace(
+    CALIBRATION_PARS=POS_REP_CALIBRATION_PARS,
+    SMALL_DIAMETER=1.45,  # millimeter
+    LARGE_DIAMETER=2.45,  # millimeter
+    DIAMETER_TOLERANCE=0.15,  # millimeter
+    THRESHOLD=70,  # 0-255
+    QUALITY_METRIC=0.8,  # dimensionless
+)
+
+PATH_TRACK_ANALYSIS_PARS = Namespace(
+    CALIBRATION_PARS=POS_REP_CALIBRATION_PARS,
+    TARGET_DETECTION_ALGORITHM="otsu",  # "otsu" or "contours"
+    TARGET_DETECTION_OTSU_PARS=PATH_TRACK_TARGET_DETECTION_OTSU_PARS,
+    TARGET_DETECTION_CONTOURS_PARS=PATH_TRACK_TARGET_DETECTION_CONTOUR_PARS,
+    PLATESCALE=POS_REP_PLATESCALE,  # millimeter per pixel
+    MAX_FAILURE_QUOTIENT=0.2,
+    # Ratio of fibre to large target distance vs
+    # small target to large target distance.
+    FIBRE_MULTIPLER = 1.35, 
+    display=False,
+    verbosity=0,
+    loglevel=0,
+)
+

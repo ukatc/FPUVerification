@@ -14,7 +14,7 @@ from ImageAnalysisFuncs.base import ImageAnalysisError
 from ImageAnalysisFuncs import target_detection_otsu
 from ImageAnalysisFuncs.analyze_positional_repeatability import posrepCoordinates
 
-from vfr.conf import POS_REP_ANALYSIS_PARS
+from vfr.conf import PATH_TRACK_ANALYSIS_PARS
 from target_detection_otsu import OtsuTargetFindingError
 
 
@@ -22,7 +22,7 @@ class PathTrackingAnalysisError(ImageAnalysisError):
     pass
 
 
-def path_tracking_target_coordinates(image_path, pars=POS_REP_ANALYSIS_PARS):
+def path_tracking_target_coordinates(image_path, pars=PATH_TRACK_ANALYSIS_PARS, debugging=False):
     """
     
     Reads the image and analyse the location and quality of the metrology targets
@@ -34,7 +34,7 @@ def path_tracking_target_coordinates(image_path, pars=POS_REP_ANALYSIS_PARS):
     """
 
     try:
-        positions = target_detection_otsu.targetCoordinates(image_path, pars)
+        positions = target_detection_otsu.targetCoordinates(image_path, pars, debugging=debugging)
     except OtsuTargetFindingError as err:
         raise PathTrackingAnalysisError(
             err.message + " from Image {}".format(image_path)
@@ -82,7 +82,7 @@ def blend_images_in_folder( folder, newfile ):
     cv2.imwrite(newfile, newimg)
     logger.info("%d images blended together and saved to %s" % (wcount, newfile))
 
-def analyze_images_in_folder( folder, pars=POS_REP_ANALYSIS_PARS,
+def analyze_images_in_folder( folder, pars=PATH_TRACK_ANALYSIS_PARS,
                               debugging=False ):
     """
     
@@ -104,11 +104,9 @@ def analyze_images_in_folder( folder, pars=POS_REP_ANALYSIS_PARS,
         logger.debug("Analysing image %d from %s" % (wcount,filename))
         imgpath = os.path.join(folder, filename)
         try:
-            #positions = path_tracking_target_coordinates( filename, pars )
+            #positions = path_tracking_target_coordinates( filename, pars, debugging=debugging )
             positions = posrepCoordinates( imgpath, pars, debugging=debugging )
-            path_targets.append( positions )
-#            # Append only the coordinates of the large target
-#            path_targets.append( [positions[3], positions[4]] )
+            path_targets.append( [wcount] + list(positions) )
             ngood += 1
         except ImageAnalysisError as err:
             logger.error( "Image analysis error %s.\n\t Image %s ignored." % (str(err), filename) )
@@ -117,5 +115,27 @@ def analyze_images_in_folder( folder, pars=POS_REP_ANALYSIS_PARS,
         wcount += 1
     logging.info("There were %d good and %d bad image files." % (ngood, nbad) )
     return path_targets
+
+def path_targets_to_fibre( path_targets, pars=PATH_TRACK_ANALYSIS_PARS):
+    """
+    
+    Take a list of path targets of the form
+    (xsmall, ysmall, qsmall, xlarge, ylarge, qlarge)
+    and estimate the location of the fibre centre,
+    returning a list of fibre centres of the form
+    (xfibre, yfibre)
+    
+    """
+    fibre_locations = []
+    for path_target in path_targets:
+        id = path_target[0]
+        xs = path_target[1]
+        ys = path_target[2]
+        xl = path_target[4]
+        yl = path_target[5]
+        xf = xl + pars.FIBRE_MULTIPLER * (xl-xs)
+        yf = yl + pars.FIBRE_MULTIPLER * (yl-ys)
+        fibre_locations.append( [id,xf,yf])
+    return fibre_locations
 
 
