@@ -6,11 +6,16 @@ import logging
 from os.path import abspath
 from vfr.auditlog import get_fpuLogger
 
+# Import functions and constants from the FPU control software (fpu_driver)
 from fpu_commands import gen_wf
+from fpu_constants import StepsPerDegreeAlpha, StepsPerDegreeBeta
+
 from Gearbox.gear_correction import (
     GearboxFitError,
     fit_gearbox_correction,
+    apply_gearbox_correction,
     GEARBOX_CORRECTION_VERSION,
+    GEARBOX_CORRECTION_MINIMUM_VERSION,
     cartesian_blob_position
 )
 from GigE.GigECamera import BASLER_DEVICE_CLASS, DEVICE_CLASS, IP_ADDRESS
@@ -25,6 +30,7 @@ from vfr.evaluation.eval_positional_repeatability import (
     evaluate_positional_repeatability,
 )
 from vfr.evaluation.measures import arg_max_dict
+import numpy as np
 from numpy import NaN
 from vfr.conf import POS_REP_CAMERA_IP_ADDRESS, PERCENTILE_ARGS
 from vfr.db.retrieval import get_data
@@ -35,6 +41,7 @@ from vfr.db.positional_repeatability import (
     PositionalRepeatabilityResults,
     get_positional_repeatability_images,
     get_positional_repeatability_passed_p,
+    get_positional_repeatability_result,
     save_positional_repeatability_images,
     save_positional_repeatability_result,
 )
@@ -46,6 +53,7 @@ from vfr.tests_common import (
     get_config_from_mapfile,
     get_sorted_positions,
     goto_position,
+    get_stepcounts,
     store_image,
     timestamp,
     safe_home_turntable,
@@ -62,7 +70,7 @@ from vfr.conf import POS_REP_ANALYSIS_PARS
 def check_skip_reason(dbe, fpu_id, sn, repeat_passed_tests=None, skip_fibre=False):
     if not get_datum_repeatability_passed_p(dbe, fpu_id):
         return (
-            "FPU %s: skipping positional repeatability measurement because"
+            "FPU %s: skipping positional repeatability measurement check because"
             " there is no passed datum repeatability test" % sn
         )
 
@@ -73,15 +81,16 @@ def check_skip_reason(dbe, fpu_id, sn, repeat_passed_tests=None, skip_fibre=Fals
             )
         else:
             return (
-                "FPU %s: skipping positional repeatability measurement because"
+                "FPU %s: skipping positional repeatability measurement check because"
                 " there is no passed pupil alignment test"
                 " (use '--skip-fibre' flag if you want to omit that test)" % sn
             )
 
-    if get_positional_repeatability_passed_p(dbe, fpu_id) and (not repeat_passed_tests):
+    if not get_positional_repeatability_passed_p(dbe, fpu_id):
 
         return (
-            "FPU %s : positional repeatability test already passed, skipping test" % sn
+            "FPU %s: skipping positional repeatability measurement check because"
+            " there is no passed positional repeatability test" % sn
         )
 
     return None
@@ -255,7 +264,7 @@ def get_step_counts(rig, fpu_id):
     return FPU_Position(alpha_steps, beta_steps)
 
 
-def capture_fpu_position(rig, fpu_id, midx, target_pos, capture_image, pars=None):
+def capture_fpu_position(rig, fpu_id, midx, target_pos, capture_image, pars=None, fpu_coeffs=None):
     fpu_log = get_fpuLogger(fpu_id, rig.fpu_config, __name__)
 
     sn = rig.fpu_config[fpu_id]["serialnumber"]
@@ -270,17 +279,49 @@ def capture_fpu_position(rig, fpu_id, midx, target_pos, capture_image, pars=None
             target_pos.beta,
         )
     )
+    
+    # get current step count
+    alpha_cursteps, beta_cursteps = get_stepcounts(rig.gd, rig.grid_state, fpu_id)
 
-    goto_position(
-        rig.gd,
-        target_pos.alpha,
-        target_pos.beta,
-        rig.grid_state,
-        fpuset=[fpu_id],
-        loglevel=logging.DEBUG,
-        waveform_ruleset=pars.POS_REP_WAVEFORM_RULESET,
-        wf_pars=pars.POS_REP_WAVEFORM_PARS,
+    # get absolute corrected step count from desired absolute angle
+    asteps_original = int(target_pos.alpha * StepsPerDegreeAlpha)
+    bsteps_original = int(target_pos.beta * StepsPerDegreeBeta)
+    asteps_target, bsteps_target = apply_gearbox_correction(
+        (np.deg2rad(target_pos.alpha), np.deg2rad(target_pos.beta)), coeffs=fpu_coeffs
     )
+    fpu_log.debug(
+        "FPU %s: gearbox calibration converts (%i, %i) to (%i, %i) steps"
+        % (sn, asteps_original, bsteps_original, asteps_target, bsteps_target)
+    )
+    fpu_log.info(
+        "FPU %s: moving to (%7.2f, %7.2f) degrees = (%i, %i) steps"
+        % (sn, target_pos.alpha, target_pos.beta, asteps_target, bsteps_target)
+    )
+
+    # compute deltas of step counts
+    adelta = asteps_target - alpha_cursteps
+    bdelta = bsteps_target - beta_cursteps
+
+    N = rig.opts.N
+    # move by delta
+    wf = gen_wf(
+        dirac(fpu_id, N) * adelta, dirac(fpu_id, N) * bdelta, units="steps"
+    )
+
+    rig.gd.configMotion(wf, rig.grid_state, verbosity=0)
+    rig.gd.executeMotion(rig.grid_state)
+
+
+#     goto_position(
+#         rig.gd,
+#         target_pos.alpha,
+#         target_pos.beta,
+#         rig.grid_state,
+#         fpuset=[fpu_id],
+#         loglevel=logging.DEBUG,
+#         waveform_ruleset=pars.POS_REP_WAVEFORM_RULESET,
+#         wf_pars=pars.POS_REP_WAVEFORM_PARS,
+#     )
 
     # We use the real and uncorrected position to index the images.
     # This has a quantization 'error' compared to the target position,
@@ -307,7 +348,7 @@ def capture_fpu_position(rig, fpu_id, midx, target_pos, capture_image, pars=None
     return key, val
 
 
-def get_images_for_fpu(rig, fpu_id, range_limits, pars, capture_image, capture_datum_image):
+def get_images_for_fpu(rig, fpu_id, range_limits, pars, capture_image, capture_datum_image, fpu_coeffs=None):
 
     image_dict_alpha = {}
     image_dict_beta = {}
@@ -330,10 +371,11 @@ def get_images_for_fpu(rig, fpu_id, range_limits, pars, capture_image, capture_d
 
         target_pos = get_target_position(range_limits, pars, measurement_index)
 
-        key, val = capture_fpu_position(
-            rig, fpu_id, measurement_index, target_pos, capture_image, pars=pars
-        )
 
+        key, val = capture_fpu_position(
+            rig, fpu_id, measurement_index, target_pos, capture_image, pars=pars, fpu_coeffs=fpu_coeffs
+        )
+ 
         # the direction index tells whether the image
         # belongs to the alpha or beta arm series
         image_in_alpha_arm_series = measurement_index.j_direction in [0, 1]
@@ -367,11 +409,11 @@ def get_images_for_fpu(rig, fpu_id, range_limits, pars, capture_image, capture_d
     return record
 
 
-def measure_positional_repeatability(rig, dbe, pars=None):
+def measure_positional_repeatability_check(rig, dbe, pars=None):
 
     tstamp = timestamp()
     logger = logging.getLogger(__name__)
-    logger.info("Capturing positional repeatability")
+    logger.info("Capturing positional repeatability with gearbox calibration switched on")
 
     initialize_rig(rig)
 
@@ -404,6 +446,48 @@ def measure_positional_repeatability(rig, dbe, pars=None):
             if range_limits is None:
                 fpu_log.info("FPU %s : limit test value missing, skipping test" % sn)
                 continue
+
+            pr_result = get_positional_repeatability_result(dbe, fpu_id)
+            if (
+                pr_result["algorithm_version"]
+                < POSITIONAL_REPEATABILITY_ALGORITHM_VERSION
+            ):
+                warnings.warn(
+                    "FPU %s: positional repeatability data uses old "
+                    "version of image analysis, results might be incorrect" % sn
+                )
+
+            gearbox_correction_version = pr_result["gearbox_correction_version"]
+
+            if (
+                gearbox_correction_version < GEARBOX_CORRECTION_MINIMUM_VERSION
+            ):
+                fpu_log.error(
+                    "FPU %s: positional repeatability result data derived from"
+                    " too old version of gearbox correction, skipping measurement."
+                    " re-evaluate positional repeatability data to fix this!" % sn
+                )
+
+                continue
+
+            if gearbox_correction_version[0] < GEARBOX_CORRECTION_VERSION[0]:
+                warnings.warn(
+                    "FPU %s: positional repeatability data uses incompatible older"
+                    " version of gearbox correction, test skipped - re-compute"
+                    " positional compatibility results first" % sn
+                )
+                continue
+
+            if gearbox_correction_version < GEARBOX_CORRECTION_VERSION:
+                warnings.warn(
+                    "FPU %s: positional repeatability data uses older"
+                    " version of gearbox correction, results might be suboptimal" % sn
+                )
+
+            gearbox_correction = pr_result["gearbox_correction"]
+            fpu_coeffs = gearbox_correction["coeffs"]
+            gearbox_git_version = pr_result["git_version"]
+            gearbox_record_count = pr_result["record-count"]
 
             def capture_image(measurement_index, real_pos):
                 res = "H" if measurement_index.hires else "L"
@@ -439,11 +523,11 @@ def measure_positional_repeatability(rig, dbe, pars=None):
             # move rotary stage to POS_REP_POSN_N
             turntable_safe_goto(rig, rig.grid_state, stage_position)
 
-            record = get_images_for_fpu(rig, fpu_id, range_limits, pars, capture_image, capture_datum_image)
-            fpu_log.trace("Saving pos rep image record = %r" % (record,))
+            record = get_images_for_fpu(rig, fpu_id, range_limits, pars, capture_image, capture_datum_image, fpu_coeffs=fpu_coeffs)
+            fpu_log.trace("Saving pos_rep check image record = %r" % (record,))
 
             save_positional_repeatability_images(dbe, fpu_id, record)
-    logger.info("Positional repeatability captured successfully")
+    logger.info("Positional repeatability captured successfully a second time")
 
 
 def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation_pars):
@@ -701,7 +785,7 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
             datum_results=datum_results,
         )
 
-        logger.trace("FPU %r: saving pos_rep result record = %r" % (sn, record))
+        logger.trace("FPU %r: saving pos_rep check result record = %r" % (sn, record))
         save_positional_repeatability_result(dbe, fpu_id, record)
 
 

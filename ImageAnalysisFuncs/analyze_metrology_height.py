@@ -57,13 +57,16 @@ def methtHeight(
             % image_path
         )
 
+    # Extract a cropped subset of the thresholded image.
+    # TODO: Should 1750, 2700, 100 and 1500 be configurable?
     threshcrop = thresh[1750:2700, betaSide - 100 : betaSide + 1500]
     if pars.display == True:
         plt.imshow(threshcrop)
         plt.title("Thresholded image, thresholdVal = %i" % pars.METHT_THRESHOLD)
         plt.show()
 
-    # estimation of noise in thresholded image
+    # Estimation of noise in thresholded image. First blur the cropped image.
+    # TODO: Should the amount of blurring (3) be a configurable parameter?
     threshblur = cv2.GaussianBlur(threshcrop, (3, 3), 0)
     threshave, threshstd = cv2.meanStdDev(threshcrop)
     threshblurave, threshblurstd = cv2.meanStdDev(threshblur)
@@ -75,13 +78,14 @@ def methtHeight(
             % (image_path, noiseMetric)
         )
 
-    # pixel distances from side of beta arm to measurement points
-    # these parameters could be made configurable but shouldn't need to be changed
+    # Pixel distances from side of beta arm to measurement points.
+    # These parameters could be made configurable but shouldn't need to be changed.
     armSurfaceX = [60, 320, 760, 980, 1220]
     smallTargetX = [100, 180, 260]
     largeTargetX = [380, 530, 680]
 
-    # fills lists with pixel values at X coordinates defined above
+    # Fills lists with pixel values at X coordinates defined above
+    # TODO: Why 3 and 5?
     armSurfacePix, smallTargetPix, largeTargetPix = [], [], []
     for i in range(0, 5):
         armSurfacePix.append(thresh[:, betaSide + armSurfaceX[i]])
@@ -89,20 +93,22 @@ def methtHeight(
         smallTargetPix.append(thresh[:, betaSide + smallTargetX[i]])
         largeTargetPix.append(thresh[:, betaSide + largeTargetX[i]])
 
-    # looks for pixel transitions indicating surfaces
+    # Looks for pixel transitions indicating surfaces
     armSurfaceY, smallTargetY, largeTargetY = [None] * 5, [None] * 3, [None] * 3
+    # 19-Aug-2020: SW changed search starting point, p, from 0 to 1200
+    # TODO: Define p start as a configurable parameter?
     for i in range(0, 5):
-        for p in range(0, len(thresh) - 1):
+        for p in range(1200, len(thresh) - 1):
             if abs(armSurfacePix[i][p + 1] - armSurfacePix[i][p]) > 0:
                 armSurfaceY[i] = p
                 break
     for i in range(0, 3):
-        for p in range(0, len(thresh) - 1):
+        for p in range(1200, len(thresh) - 1):
             if abs(smallTargetPix[i][p + 1] - smallTargetPix[i][p]) > 0:
                 smallTargetY[i] = p
                 break
     for i in range(0, 3):
-        for p in range(0, len(thresh) - 1):
+        for p in range(1200, len(thresh) - 1):
             if abs(largeTargetPix[i][p + 1] - largeTargetPix[i][p]) > 0:
                 largeTargetY[i] = p
                 break
@@ -149,14 +155,14 @@ def methtHeight(
     # exceptions
     if stdSmallTarget > pars.METHT_STANDARD_DEV:
         raise MetrologyHeightAnalysisError(
-            "Image %s: Small target points have high standard deviation"
-            " - target may not be sitting flat" % image_path
+            "Image %s: Small target points have high standard deviation (%.3f)"
+            " - target may not be sitting flat" % (image_path, stdSmallTarget)
         )
 
     if stdLargeTarget > pars.METHT_STANDARD_DEV:
         raise MetrologyHeightAnalysisError(
-            "Image %s: Large target points have high standard deviation"
-            " - target may not be sitting flat" % image_path
+            "Image %s: Large target points have high standard deviation (%.3f)"
+            " - target may not be sitting flat" % (image_path, stdLargeTarget)
         )
 
     #if noiseMetric > pars.METHT_NOISE_METRIC:

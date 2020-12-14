@@ -4,7 +4,7 @@ from GigE.GigECamera import BASLER_DEVICE_CLASS, DEVICE_CLASS, IP_ADDRESS
 from ImageAnalysisFuncs.analyze_pupil_alignment import (
     PUPIL_ALIGNMENT_ALGORITHM_VERSION,
     ImageAnalysisError,
-    pupalnCoordinates,
+    pupilCoordinates,
 )
 from vfr.evaluation.eval_pupil_alignment import (
     evaluate_pupil_alignment,
@@ -159,7 +159,7 @@ def measure_pupil_alignment(rig, dbe, pars=None):
                     ipath = capture_image(count, abs_alpha, abs_beta)
                     fpu_log.audit("saving pupil image to %r" % abspath(ipath))
                     check_image_analyzability(
-                        ipath, pupalnCoordinates, pars=PUP_ALGN_ANALYSIS_PARS
+                        ipath, pupilCoordinates, pars=PUP_ALGN_ANALYSIS_PARS
                     )
 
                     images[(abs_alpha, abs_beta)] = ipath
@@ -170,7 +170,7 @@ def measure_pupil_alignment(rig, dbe, pars=None):
                 images=images, calibration_mapfile=pars.PUP_ALGN_CALIBRATION_MAPFILE
             )
 
-            fpu_log.debug("FPU %r: saving result record = %r" % (sn, record))
+            fpu_log.trace("FPU %r: saving pupil alignment image record = %r" % (sn, record))
             save_pupil_alignment_images(dbe, fpu_id, record)
 
     home_linear_stage(rig)  # bring linear stage to home pos
@@ -204,12 +204,12 @@ def eval_pupil_alignment(
 
         correct = get_correction_func(
             calibration_pars=PUP_ALGN_ANALYSIS_PARS.PUP_ALGN_CALIBRATION_PARS,
-            platescale=PUP_ALGN_ANALYSIS_PARS.PUP_ALGN_PLATESCALE,
+            platescale=PUP_ALGN_ANALYSIS_PARS.PLATESCALE,
             loglevel=PUP_ALGN_ANALYSIS_PARS.loglevel,
         )
 
         def analysis_func(ipath):
-            return pupalnCoordinates(
+            return pupilCoordinates(
                 fixup_ipath(ipath), pars=PUP_ALGN_ANALYSIS_PARS, correct=correct
             )
 
@@ -254,9 +254,9 @@ def eval_pupil_alignment(
             measures=pupil_alignment_measures,
             result=pupil_alignment_has_passed,
             min_quality=min_quality,
-            pass_threshold_mm=PUP_ALGN_EVALUATION_PARS.PUP_ALGN_PASS,
+            pass_threshold_mm=PUP_ALGN_EVALUATION_PARS.PUP_ALGN_PASS, # TODO: Change to pass_threshold_arcmin
             error_message=errmsg,
             algorithm_version=PUPIL_ALIGNMENT_ALGORITHM_VERSION,
         )
-        logger.debug("FPU %r: saving result record = %r" % (sn, record))
+        logger.trace("FPU %r: saving pupil alignment result record = %r" % (sn, record))
         save_pupil_alignment_result(dbe, fpu_id, record)

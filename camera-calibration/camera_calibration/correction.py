@@ -1,5 +1,7 @@
 """
+
 Functions for correcting distortion in images, and coordinate points within them
+
 """
 import camera_calibration.configuration as conf
 import cv2 as cv
@@ -11,6 +13,7 @@ assert conf
 
 class Correction(IntEnum):
     """
+
     Enum to indicate corrections to perform on images and points
 
     Single transforms have power of two values, so bitwise-and should be used to tell if a single step is required.
@@ -20,6 +23,7 @@ class Correction(IntEnum):
     When applied to the calibration image used, the calibration grid will appear rectangular
     - real_coordinates - Only affects points. Project's the pixel coordinates to a position on the
     calibration image's plane based on the grid's corners and size
+
     """
 
     lens_distortion = 1
@@ -32,11 +36,15 @@ class Correction(IntEnum):
 def grid_points_to_real(image_points, image_corners, real_corners):
     # type: (np.ndarray, conf.Corners, conf.Corners) -> np.ndarray
     """
+
     Map pixel-space coordinates in an image space to a coordinate system based on the given corner mappings
+
     :param image_points: Array of image space points to be mapped
     :param image_corners: Pixel points that mark the corners of a rectangle in the image
     :param real_corners: Plane coordinates of the rectangle coordinates
+
     :return: An array of the image points mapped to the given real coordinate system
+
     """
     real_points = np.zeros(image_points.shape, np.float32)
 
@@ -45,6 +53,11 @@ def grid_points_to_real(image_points, image_corners, real_corners):
 
     pixel_x_range = image_corners.top_right[0] - image_corners.top_left[0]
     pixel_y_range = image_corners.bottom_left[1] - image_corners.top_left[1]
+
+    # Report an approximate plate scale based on the corners.
+    # TODO: Make this a debugging log message
+    #print("Plate scale in X:", real_x_range/pixel_x_range)
+    #print("Plate scale in Y:", real_y_range/pixel_y_range)
 
     for i in range(len(image_points)):
         image_point = image_points[i, 0]
@@ -64,12 +77,16 @@ def grid_points_to_real(image_points, image_corners, real_corners):
 def correct_points(points, config, correction_level):
     # type: (np.ndarray, conf.Config, Correction) -> np.ndarray
     """
+
     Map points in pixel space to unit coordinates on the image plane, correcting for lens and keystone distortions
+
     :param points: Points in the pixel space of a cameras images
     :param config: Image correction configuration
     :param correction_level: The corrections to apply to the points, eg lens_distortion, keystone_distortion,
     real_coordinates, or a combination of those
+
     :return: An array of the image points mapped to the config's real coordinate system
+
     """
     if correction_level & Correction.lens_distortion:
         points = cv.undistortPoints(
@@ -90,12 +107,16 @@ def correct_points(points, config, correction_level):
 def correct_point(point, config, correction_level):
     # type: ((float, float), conf.Config, Correction) -> (float, float)
     """
+
     Map a point in pixel space to unit coordinates on the image plane, correcting for lens and keystone distortions
+
     :param point: (x, y) point in the pixel space of a cameras images
     :param config: Image correction configuration
     :param correction_level: The corrections to apply to the point, eg lens_distortion, keystone_distortion,
     real_coordinates, or a combination of those
+
     :return: An (x, y) pair of the image points mapped to the config's real coordinate system
+
     """
     points = np.array([[[point[0], point[1]]]])
     corrected = correct_points(points, config, correction_level)
@@ -105,12 +126,16 @@ def correct_point(point, config, correction_level):
 def correct_image(img, config, correction_level):
     # type: (np.ndarray, conf.Config, Correction) -> np.ndarray
     """
+
     Generates a copy of the given image with the chosen distortion correction(s) applied
+
     :param img: An OpenCV image with camera distortions to correct
     :param config: A calibration configuration for the camera that took this image
     :param correction_level: The correction(s) to apply to the image, eg lens_distortion, keystone_distortion, or
     lens_and_keystone to perform both
+
     :return: A corrected copy of the image
+
     """
     if correction_level & Correction.lens_distortion:
         img = cv.undistort(

@@ -4,6 +4,7 @@ import random
 import warnings
 import logging
 from os.path import abspath
+from os import path
 import numpy as np
 from vfr.auditlog import get_fpuLogger
 
@@ -13,6 +14,7 @@ from Gearbox.gear_correction import (
     apply_gearbox_correction,
     GEARBOX_CORRECTION_VERSION,
     GEARBOX_CORRECTION_MINIMUM_VERSION,
+    cartesian_blob_position
 )
 from GigE.GigECamera import BASLER_DEVICE_CLASS, DEVICE_CLASS, IP_ADDRESS
 from DistortionCorrection import get_correction_func
@@ -59,16 +61,26 @@ from vfr.tests_common import (
 from vfr.conf import POS_REP_ANALYSIS_PARS
 
 
+def generate_calibration_positions(alpha_min, alpha_max, beta_min, number_positions=8):
+    """Generate a list of fixed positions to center the FPU within the frame
+    """
+
+    positions = []
+    
+    for k in range(number_positions):
+        positions.append(
+            (alpha_min + k * (alpha_max - alpha_min) / float(number_positions), beta_min + 10)
+        )
+    return positions
+
+
 def generate_tested_positions(
     niterations, alpha_min=NaN, alpha_max=NaN, beta_min=NaN, beta_max=NaN
 ):
+    """Generate a list of random FPU positions for testing
+    """
+    
     positions = []
-
-    N_FIX_POS = 8
-    for k in range(N_FIX_POS):
-        positions.append(
-            (alpha_min + k * (alpha_max - alpha_min) / float(N_FIX_POS), beta_min + 10)
-        )
 
     interval_alpha = (alpha_max - alpha_min) / float(niterations)
     interval_beta = (beta_max - beta_min) / float(niterations)
@@ -84,6 +96,26 @@ def generate_tested_positions(
         positions.append((alpha, beta))
 
     return positions
+
+
+def read_tested_positions(filename):
+    """Read a list of positions from a file
+    """
+    # Cwd is set for ease of access to moons data, so we have to work out where it should be with 
+    abs_filename = path.abspath(path.join(path.dirname(__file__),"../../{}".format(filename)))
+    with open(abs_filename,'r') as position_file:
+        read_positions = [tuple(map(float, line.split(','))) for line in position_file]
+    
+    return read_positions
+
+
+def read_tested_positions_abs(abs_filename):
+    """Read a list of positions from the exact file given
+    """
+    with open(abs_filename,'r') as position_file:
+        read_positions = [tuple(map(float, line.split(','))) for line in position_file]
+    
+    return read_positions
 
 
 def measure_positional_verification(rig, dbe, pars=None):
@@ -243,18 +275,57 @@ def measure_positional_verification(rig, dbe, pars=None):
                 )
 
                 return ipath
+                
+            def capture_datum_image(timing, number):
+
+                ipath = store_image(
+                    pos_rep_cam,
+                    "{sn}/{tn}/{ts}/datum-{timing}-{number}.bmp",
+                    sn=sn,
+                    ts=tstamp,
+                    tn="positional-verification",
+                    timing=timing,
+                    number=number
+                )
+
+                return ipath
 
             tol = abs(pars.POS_VER_SAFETY_TOLERANCE)
-            tested_positions = generate_tested_positions(
-                pars.POS_VER_ITERATIONS,
-                alpha_min=alpha_min + tol,
-                alpha_max=alpha_max - tol,
-                beta_min=beta_min + tol,
-                beta_max=beta_max - tol,
-            )
+            
+            # Generate calibation points, make the alpha arm sweep a circle
+            calibration_positions = generate_calibration_positions(
+                                    alpha_min = alpha_min + tol,
+                                    alpha_max = alpha_max - tol,
+                                    beta_min = beta_min + tol)
+            # Generate positions to be tested, random or read from a file
+            if pars.POS_VER_MOTION_FILE:
+                test_positions = read_tested_positions(pars.POS_VER_MOTION_FILE)
+            else:
+                test_positions = generate_tested_positions(
+                    pars.POS_VER_ITERATIONS,
+                    alpha_min=alpha_min + tol,
+                    alpha_max=alpha_max - tol,
+                    beta_min=beta_min + tol,
+                    beta_max=beta_max - tol,
+                )
 
-            find_datum(gd, grid_state, opts)
+            tested_positions = calibration_positions + test_positions
+        
+            datum_image_list=[]
 
+            for i in range(pars.N_DATUM):
+                find_datum(gd, grid_state, opts)
+                datipath = capture_datum_image("START",i)
+                datum_image_list.append(datipath)
+                N = opts.N
+                # move by delta
+                wf = gen_wf(
+                    dirac(fpu_id, N) * pars.SMALL_MOVE, dirac(fpu_id, N) * pars.SMALL_MOVE, units="steps"
+                )
+
+                gd.configMotion(wf, grid_state, verbosity=0)
+                gd.executeMotion(grid_state)
+            
             image_dict = {}
             deg2rad = np.deg2rad
 
@@ -307,6 +378,20 @@ def measure_positional_verification(rig, dbe, pars=None):
 
                 image_dict[(k, alpha_deg, beta_deg)] = ipath
 
+            
+            for i in range(pars.N_DATUM):
+                find_datum(gd, grid_state, opts)
+                datipath = capture_datum_image("END",i)
+                datum_image_list.append(datipath)
+                N = opts.N
+                # move by delta
+                wf = gen_wf(
+                    dirac(fpu_id, N) * pars.SMALL_MOVE, dirac(fpu_id, N) * pars.SMALL_MOVE, units="steps"
+                )
+
+                gd.configMotion(wf, grid_state, verbosity=0)
+                gd.executeMotion(grid_state)
+            
             # store dict of image paths, together with all data and algorithms
             # which are relevant to assess result later
             record = PositionalVerificationImages(
@@ -316,9 +401,10 @@ def measure_positional_verification(rig, dbe, pars=None):
                 gearbox_git_version=gearbox_git_version,
                 gearbox_record_count=gearbox_record_count,
                 calibration_mapfile=pars.POS_VER_CALIBRATION_MAPFILE,
+                datum_images=datum_image_list,
             )
 
-            fpu_log.debug("FPU %r: saving result record = %r" % (sn, record))
+            fpu_log.trace("FPU %r: saving pos_ver image record = %r" % (sn, record))
             save_positional_verification_images(dbe, fpu_id, record)
 
     logger.info("positional verification captured sucessfully")
@@ -355,6 +441,7 @@ def eval_positional_verification(dbe, pos_rep_analysis_pars, pos_ver_evaluation_
         images = measurement["images"]
         gearbox_correction = measurement["gearbox_correction"]
         mapfile = measurement["calibration_mapfile"]
+        datum_image_list = measurement["datum_images"]
 
 
         ####
@@ -377,6 +464,24 @@ def eval_positional_verification(dbe, pos_rep_analysis_pars, pos_ver_evaluation_
         ####
         def analysis_func(ipath):
             return posrepCoordinates(fixup_ipath(ipath), pars=pos_rep_analysis_pars, correct=correct)
+            
+            
+#        datum_all_results = []
+        datum_results = []
+#        middle_point = int(len(datum_image_list)/2)
+        for datum_image in datum_image_list:
+            datum_blobs = analysis_func(datum_image)
+            datum_point = cartesian_blob_position(datum_blobs)
+#            datum_all_results.append(datum_point)
+            datum_results.append(datum_point)
+
+#      NOTE: Datum results should be filtered in evaluate_positional_verification, not here.
+#        # DAtum_image_list is a list of all datums, this includes
+#        # a set before and after the verification measurement, with each set having
+#        # (perhaps) an unreliable first datum.
+#        datum_results = []
+#        datum_results.append(sum(datum_all_results[1:middle_point])/ (middle_point-1))
+#        datum_results.append(sum(datum_all_results[middle_point+1:])/ (middle_point-1))
 
         try:
             analysis_results = {}
@@ -407,8 +512,8 @@ def eval_positional_verification(dbe, pos_rep_analysis_pars, pos_ver_evaluation_
                         continue
 
             (posver_error_by_angle, expected_points, measured_points,
-             posver_error_measures, mean_error_vector) = evaluate_positional_verification(
-                 analysis_results, pars=pos_ver_evaluation_pars,
+             posver_error_measures, mean_error_vector, camera_offset_new, xc, yc) = evaluate_positional_verification(
+                 analysis_results, list_of_datum_result=datum_results, pars=pos_ver_evaluation_pars,
                  **gearbox_correction )
 
             if (95 not in posver_error_measures.percentiles) or np.isnan(
@@ -460,6 +565,10 @@ def eval_positional_verification(dbe, pos_rep_analysis_pars, pos_ver_evaluation_
             error_message=errmsg,
             algorithm_version=GEARBOX_CORRECTION_VERSION,
             evaluation_version=POS_VER_ALGORITHM_VERSION,
+            camera_offset=camera_offset_new,
+            center_x=xc,
+            center_y=yc,
+            datum_results=datum_results,
         )
-        logger.debug("FPU %r: saving result record = %r" % (sn, record))
+        logger.trace("FPU %r: saving pos_ver result record = %r" % (sn, record))
         save_positional_verification_result(dbe, fpu_id, record)

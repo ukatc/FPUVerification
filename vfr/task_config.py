@@ -13,6 +13,7 @@ class T:
     EVAL_MET_CAL = "eval_met_cal"
     EVAL_MET_HEIGHT = "eval_met_height"
     EVAL_POS_REP = "eval_pos_rep"
+    EVAL_GEARBOX_CAL = "eval_gearbox_cal"
     EVAL_POS_VER = "eval_pos_ver"
     EVAL_PUP_ALGN = "eval_pup_aln"
     # measurements
@@ -20,6 +21,7 @@ class T:
     MEASURE_MET_CAL = "measure_met_cal"
     MEASURE_MET_HEIGHT = "measure_met_height"
     MEASURE_POS_REP = "measure_pos_rep"
+    MEASURE_POS_REP_CHECK = "measure_pos_rep_check"
     MEASURE_POS_VER = "measure_pos_ver"
     MEASURE_PUP_ALGN = "measure_pup_aln"
     # conditional dependencies (can be skipped if done once)
@@ -74,6 +76,7 @@ class T:
     TST_MET_HEIGHT = "test_met_height"
     TST_MET_HEIGHT_CAM_CONNECTION = "test_met_hght_cam_conn"
     TST_POS_REP = "test_pos_rep"
+    TST_POS_REP_CHECK = "test_pos_rep_check"
     TST_POS_REP_CAM_CONNECTION = "test_pos_rep_cam_conn"
     TST_POS_VER = "test_pos_ver"
     TST_PUP_ALGN = "test_pup_aln"
@@ -87,19 +90,19 @@ USERTASKS = set(
         T.EVAL_MET_CAL,
         T.EVAL_MET_HEIGHT,
         T.EVAL_POS_REP,
+        T.EVAL_GEARBOX_CAL,
         T.EVAL_POS_VER,
         T.EVAL_PUP_ALGN,
         T.MEASURE_DATUM_REP,
         T.MEASURE_MET_CAL,
         T.MEASURE_MET_HEIGHT,
         T.MEASURE_POS_REP,
+        T.MEASURE_POS_REP_CHECK,
         T.MEASURE_POS_VER,
         T.MEASURE_PUP_ALGN,
         T.TASK_DUMP,
         T.TASK_EVAL_ALL,
-        T.TASK_EVAL_ALL,
         T.TASK_EVAL_NONFIBRE,
-        T.TASK_HOME_TURNTABLE,
         T.TASK_HOME_TURNTABLE,
         T.TASK_MEASURE_ALL,
         T.TASK_MEASURE_NONFIBRE,
@@ -137,6 +140,7 @@ USERTASKS = set(
         T.TST_MET_HEIGHT,
         T.TST_MET_HEIGHT_CAM_CONNECTION,
         T.TST_POS_REP,
+        T.TST_POS_REP_CHECK,
         T.TST_POS_REP_CAM_CONNECTION,
         T.TST_POS_VER,
         T.TST_PUP_ALGN,
@@ -151,6 +155,7 @@ MEASUREMENT_TASKS = set(
         T.MEASURE_MET_CAL,
         T.MEASURE_MET_HEIGHT,
         T.MEASURE_POS_REP,
+        T.MEASURE_POS_REP_CHECK,
         T.MEASURE_POS_VER,
         T.MEASURE_PUP_ALGN,
         T.TASK_HOME_TURNTABLE,
@@ -191,6 +196,7 @@ MEASUREMENT_TASKS = set(
         T.TST_MET_HEIGHT,
         T.TST_MET_HEIGHT_CAM_CONNECTION,
         T.TST_POS_REP,
+        T.TST_POS_REP_CHECK,
         T.TST_POS_REP_CAM_CONNECTION,
         T.TST_POS_VER,
         T.TST_PUP_ALGN,
@@ -277,6 +283,21 @@ task_dependencies = [
             T.REQ_DATUM_PASSED,
             T.REQ_COLLDECT_PASSED,
             # T.REQ_PUP_ALGN_PASSED,
+            T.REQ_DATUM_REP_PASSED,
+            T.TASK_INIT_GD2,
+            T.TASK_HOME_TURNTABLE,
+        ],
+    ),
+    (
+        T.MEASURE_POS_REP_CHECK,
+        [
+            T.TASK_SELFTEST_NONFIBRE,
+            T.TST_POS_REP_CAM_CONNECTION,
+            T.TASK_REFERENCE2,
+            T.REQ_DATUM_PASSED,
+            T.REQ_COLLDECT_PASSED,
+            # T.REQ_PUP_ALGN_PASSED,
+            # T.REQ_POS_REP_PASSED,
             T.REQ_DATUM_REP_PASSED,
             T.TASK_INIT_GD2,
             T.TASK_HOME_TURNTABLE,
@@ -416,6 +437,7 @@ task_expansions = [
     (T.TST_MET_CAL, [T.MEASURE_MET_CAL, T.EVAL_MET_CAL]),
     (T.TST_MET_HEIGHT, [T.MEASURE_MET_HEIGHT, T.EVAL_MET_HEIGHT]),
     (T.TST_POS_REP, [T.MEASURE_POS_REP, T.EVAL_POS_REP]),
+    (T.TST_POS_REP_CHECK, [T.MEASURE_POS_REP_CHECK, T.EVAL_POS_REP]),
     (T.TST_POS_VER, [T.MEASURE_POS_VER, T.EVAL_POS_VER]),
     (T.TST_PUP_ALGN, [T.MEASURE_PUP_ALGN, T.EVAL_PUP_ALGN]),
 ]

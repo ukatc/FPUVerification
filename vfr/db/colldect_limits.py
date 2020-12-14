@@ -10,8 +10,11 @@ from fpu_constants import (
     BETA_MAX_DEGREE,
     BETA_MIN_DEGREE,
 )
+
+# Import interval class and protection database functions from the FPU control software (fpu_driver)
 from interval import Interval
 from protectiondb import ProtectionDB
+
 from vfr.conf import PROTECTION_TOLERANCE, ALPHA_RANGE_MAX, ALPHA_DATUM_OFFSET
 from vfr.tests_common import timestamp
 from vfr.db.base import TestResult, get_test_result, save_test_result
@@ -142,12 +145,20 @@ def get_range_limits(dbe, rig, fpu_id):
         or (_beta_min is None)
         or (_beta_max is None)
     ):
-        return None
+        return None # Limit test was never measured
 
     alpha_min = _alpha_min["val"]
     alpha_max = _alpha_max["val"]
     beta_min = _beta_min["val"]
     beta_max = _beta_max["val"]
+
+    if (
+        (isnan(alpha_min))
+        or (isnan(alpha_max))
+        or (isnan(beta_max))
+        or (isnan(beta_min))
+    ):
+        return None # Limit measurement failed
 
     # Get protection intervals from protection database
     fpu = rig.grid_state.FPU[fpu_id]

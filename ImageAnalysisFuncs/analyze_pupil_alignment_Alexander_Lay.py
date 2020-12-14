@@ -1,4 +1,5 @@
 """
+
 Due to the uneven lighting and bleeding of light around the edges of the projected circle,
 blobs found after otsu thresholding the images were visibly offset from the original circle.
 
@@ -12,6 +13,7 @@ This was no longer the case after we repositioned the pupil alignment camera, as
 contained larger amounts of noise in the projection, which made the blob detector fail.
 However, by introducing filtering steps to remove small black patches and black out the background
 the white blob detector works across all pupil alignment images again.
+
 """
 from __future__ import print_function
 from itertools import chain
@@ -29,25 +31,34 @@ def show_image(image, title):
 
 def clean_thresholded_image(image, noise_threshold, background_threshold, show=False):
     """
-    Return a copy of the image with the background set to black and small black noise objects set to white
+    
+    Return a copy of the image with the background set to black and small black noise objects set to white.
+    
+    See https://docs.opencv.org/master/d6/d00/tutorial_py_root.html
+    
     :param image: The thresholded image to be cleaned
     :param noise_threshold: The maximum size a connected region can be to be counted as noise
     :param background_threshold: The smallest size a connected region can be to be counted as background
     :param show: Whether to display a graphic highlighting the alterations to be made
+    
     :return: A cleaned copy of the thresholded image
+    
     """
 
     clean_mean = image.copy()
 
     # connectedComponents() locates white regions on a black background.
     # Inverting allows us to locate black regions as distinct from eachother
+    # See https://docs.opencv.org/master/d2/de8/group__core__array.html
     inverse_mean = cv2.bitwise_not(image)
 
     # Set any small black regions of noise to white
     # Noise is targeted as any small connected region of black in the thresholded image
     # Ensures the target blob doesn't contain smaller blobs inside it
+    # See https://docs.opencv.org/master/d3/dc0/group__imgproc__shape.html
     _, labels = cv2.connectedComponents(inverse_mean)
     unique_labels, counts = np.unique(labels, return_counts=True)
+    
     # index zero is the white of the original image, so won't need its colour changing
     noise_labels = np.extract(counts[1:] < noise_threshold, unique_labels[1:])
     noise_condition = np.isin(labels, noise_labels)
@@ -59,6 +70,7 @@ def clean_thresholded_image(image, noise_threshold, background_threshold, show=F
     # Prevents the target circle being a concentric blob inside the background
     _, labels = cv2.connectedComponents(image)
     unique_labels, counts = np.unique(labels, return_counts=True)
+    
     # index zero is the black of the image, so won't need its colour changing
     bg_labels = np.extract(counts[1:] > background_threshold, unique_labels[1:])
     bg_condition = np.isin(labels, bg_labels)
@@ -82,11 +94,15 @@ def clean_thresholded_image(image, noise_threshold, background_threshold, show=F
 
 def find_white_circles(image, min_area, max_area):
     """
+    
     Return a list of white circles found in the image
+    
     :param image: The image to search for circles in
     :param min_area: The minimum area a circle should have to be accepted
     :param max_area: The maximum area a circle should have to be accepted
+    
     :return: A list of (center x, center y, radius) tuples for each circle in the image
+    
     """
     params = cv2.SimpleBlobDetector_Params()
     params.minArea = min_area
@@ -113,13 +129,28 @@ def detect_pupil_projection_circles(image_path, show=False):
     min_area = math.pi * minradius ** 2
     max_area = math.pi * maxradius ** 2
 
+#     # Open the image file and attempt to convert it to greyscale.
+#     image = cv2.imread(path)
+#     try:
+#         greyscale = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+#     except cv2.error as err:
+#         raise TargetFindingError(
+#             "OpenCV returned error %s for image %s" % (str(err), path)
+#         )
+
     image = cv2.imread(image_path)
     greyscale = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
     # Enhance the edges with a locally adaptive threshold
+    # See https://docs.opencv.org/master/d7/d4d/tutorial_py_thresholding.html
     mean = cv2.adaptiveThreshold(
-        greyscale, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 81, 2
-    )
+                greyscale,                  # Input image
+                255,                        # Maximum value
+                cv2.ADAPTIVE_THRESH_MEAN_C, # Adaptive method (MEAN or GAUSSIAN)
+                cv2.THRESH_BINARY,          # Thresholding mode
+                81,                         # Block size
+                2                           # Constant
+           )
     if show:
         show_image(image, "original image")
         show_image(mean, "mean")

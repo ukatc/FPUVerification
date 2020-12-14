@@ -107,7 +107,7 @@ def measure_metrology_calibration(rig, dbe, pars=None):
         images = {"target": target_ipath, "fibre": fibre_ipath}
 
         record = MetrologyCalibrationImages(images=images)
-        fpu_log.debug("saving result to %r" % record)
+        fpu_log.trace("saving metrology calibration result record = %r" % record)
         save_metrology_calibration_images(dbe, fpu_id, record)
 
     home_linear_stage(rig)  # bring linear stage to home pos
@@ -178,5 +178,5 @@ def eval_metrology_calibration(
             algorithm_version=METROLOGY_ANALYSIS_ALGORITHM_VERSION,
         )
 
-        logger.debug("FPU %r: saving result record = %r" % (sn, record))
+        logger.trace("FPU %r: saving metrology calibration result record = %r" % (sn, record))
         save_metrology_calibration_result(dbe, fpu_id, record)

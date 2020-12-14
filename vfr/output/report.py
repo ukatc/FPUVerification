@@ -443,12 +443,13 @@ def format_report_complete(
 
     yield EMPTY_LINE
 
-    if beta_collision_result is None:
-        yield rfmt_cdect.CDECT_RESULT_NA
-    else:
-        yield rfmt_cdect.CDECT_RESULT_COMPLETE.format(**beta_collision_result)
-
-    yield EMPTY_LINE
+    # NOTE: Duplicated code removed.
+#     if beta_collision_result is None:
+#         yield rfmt_cdect.CDECT_RESULT_NA
+#     else:
+#         yield rfmt_cdect.CDECT_RESULT_COMPLETE.format(**beta_collision_result)
+# 
+#     yield EMPTY_LINE
 
     if beta_collision_result is None:
         yield rfmt_cdect.CDECT_RESULT_NA
@@ -604,6 +605,18 @@ def list_posrep_angle_errors(name, error_by_angle, error_arg_max, csv=False):
         tag = " <<<" if angle == error_arg_max else ""
         yield (fmt.format(angle=angle, val=val, tag=tag))
 
+def list_gearbox_correction(name, coeffs):
+    """ Coeffs should be gearbox_correction.coeffs.coeffs_alpha/beta data structure
+    """
+    
+    hdr = """\n Gearbox correction {name} values,nomial values, corrected values"""
+    yield hdr.format(name=name)
+    fmt="""Gearbox correction {name} values,{nom:8.4f},{cor:8.4f}"""
+    
+    for nom, cor in zip(coeffs["nominal_angle_rad"],coeffs["corrected_angle_rad"]):
+        yield fmt.format(name=name, nom=nom, cor=cor)
+    
+
 
 def list_posver_err_by_coord(error_by_coords, error_argmax, csv=False):
     if csv:
@@ -757,7 +770,9 @@ def format_report_long(
             ):
                 yield line
 
-            error_by_beta = positional_repeatability_result["posrep_beta_max_at_angle"]
+            error_by_beta = positional_repeatability_result[
+                "posrep_beta_max_at_angle"
+            ]
             beta_error_max = positional_repeatability_result["arg_max_beta_error"]
 
             for line in list_posrep_angle_errors(
@@ -967,6 +982,7 @@ def format_report_extended(
             )
 
             yield EMPTY_LINE
+
             error_by_alpha = positional_repeatability_result[
                 "posrep_alpha_max_at_angle"
             ]
@@ -977,7 +993,9 @@ def format_report_extended(
             ):
                 yield line
 
-            error_by_beta = positional_repeatability_result["posrep_beta_max_at_angle"]
+            error_by_beta = positional_repeatability_result[
+                "posrep_beta_max_at_angle"
+            ]
             beta_error_max = positional_repeatability_result["arg_max_beta_error"]
 
             for line in list_posrep_angle_errors(
@@ -995,7 +1013,6 @@ def format_report_extended(
             yield fill(
                 rfmt_pos_rep.AN_RESULTS_ALPHA.format(**positional_repeatability_result)
             )
-
             yield fill(
                 rfmt_pos_rep.AN_RESULTS_BETA.format(**positional_repeatability_result)
             )
@@ -1257,7 +1274,9 @@ def format_report_csv(
             ):
                 yield line
 
-            error_by_beta = positional_repeatability_result["posrep_beta_max_at_angle"]
+            error_by_beta = positional_repeatability_result[
+                "posrep_beta_max_at_angle"
+            ]
             beta_error_max = positional_repeatability_result["arg_max_beta_error"]
 
             for line in list_posrep_angle_errors(
@@ -1275,7 +1294,7 @@ def format_report_csv(
             for bmax, beta in positional_repeatability_result[
                 "posrep_beta_max_at_angle"
             ].items():
-                yield "%r,%r" % (amax, alpha)
+                yield "%r,%r" % (bmax, beta)
 
             yield ""
             yield "analysis results alpha"
@@ -1370,7 +1389,27 @@ def format_report_csv(
                         bsteps,
                         ipath,
                     )
+                
+                if positional_repeatability_images["datum_images"]:
+                    yield "pos rep datum results"
+                    yield "image, x, y"
+                    for datum_image in zip(positional_repeatability_images["datum_images"], positional_repeatability_result["datum_results"]):
+                        yield "%s,%f,%f" % (datum_image[0], datum_image[1][0], datum_image[1][0])
+                else:
+                    yield "no pos rep datum data"
+            
+            yield EMPTY_LINE
+                
+            for line in list_gearbox_correction("alpha",positional_repeatability_result["gearbox_correction"]["coeffs"]["coeffs_alpha"]):
+                yield line
 
+            yield EMPTY_LINE
+                
+            for line in list_gearbox_correction("beta",positional_repeatability_result["gearbox_correction"]["coeffs"]["coeffs_beta"]):
+                yield line
+
+            yield EMPTY_LINE
+                
         else:
             yield rfmt_pos_rep.POS_REP_ERRMSG.format(**positional_repeatability_result)
 
@@ -1382,7 +1421,7 @@ def format_report_csv(
         err_msg = positional_verification_result["error_message"]
         if not err_msg:
             if positional_verification_result["evaluation_version"] < MIN_VERSION_POS_VER_RESULT:
-                yield "positional verification,obsolete result version"
+                yield "positional verification, obsolete result version"
             else:
                 yield rfmt_pos_ver.POS_VER_RESULT_CSV.format(
                     **positional_verification_result
@@ -1414,6 +1453,14 @@ def format_report_csv(
             ].items():
                 yield "%i,%f,%f,%s" % (k, alpha, beta, ipath)
             yield EMPTY_LINE
+            
+            if positional_verification_images["datum_images"]:
+                yield "pos ver datum results"
+                yield "image, x, y"
+                for datum_image in zip(positional_verification_images["datum_images"], positional_verification_result["datum_results"]):
+                    yield "%s,%f,%f" % (datum_image[0], datum_image[1][0], datum_image[1][1])
+            else:
+                yield "no pos ver datum data"
 
     if pupil_alignment_result is None:
         yield rfmt_pup_aln.PUP_ALN_NA_CSV

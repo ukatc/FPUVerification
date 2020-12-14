@@ -81,7 +81,7 @@ def measure_metrology_height(rig, dbe, pars=None):
         check_image_analyzability(ipath, methtHeight, pars=MET_HEIGHT_ANALYSIS_PARS)
 
         record = MetrologyHeightImages(images=ipath)
-        fpu_log.debug("saving result record = %r" % record)
+        fpu_log.trace("saving metrology height result record = %r" % record)
         save_metrology_height_images(dbe, fpu_id, record)
     logger.info("metrology height captured successfully")
 
@@ -133,5 +133,5 @@ def eval_metrology_height(dbe, met_height_analysis_pars, met_height_evaluation_p
             error_message=errmsg,
             algorithm_version=METROLOGY_HEIGHT_ANALYSIS_ALGORITHM_VERSION,
         )
-        logger.debug("FPU %r: saving result record = %r" % (sn, record))
+        logger.trace("FPU %r: saving metrology height result record = %r" % (sn, record))
         save_metrology_height_result(dbe, fpu_id, record)

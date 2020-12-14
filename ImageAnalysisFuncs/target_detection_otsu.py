@@ -29,6 +29,7 @@ def find_bright_sharp_circles(path,
                               show=False,
                               debugging=False):
     """
+    
     Finds circular dots in the given image within the radius range, displaying
     them on console and graphically if show is set to True
 
@@ -40,12 +41,16 @@ def find_bright_sharp_circles(path,
     of other circles are returned, however if only 1 is found, it will be
     returned and group_range will have no effect.
     
-    The show and debugging options are for local testing, show = True with print
+    The show and debugging options are for local testing, show = True will print
     more diagnostics and debugging = True will save a file with found blobs on
     the image 
+    
+    See https://docs.opencv.org/master/d6/d00/tutorial_py_root.html
 
     :return: a list of opencv blobs for each detected dot.
+    
     """
+    # Open the image file and attempt to convert it to greyscale.
     image = cv2.imread(path)
     try:
         greyscale = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -53,12 +58,30 @@ def find_bright_sharp_circles(path,
         raise OtsuTargetFindingError(
             "OpenCV returned error %s for image %s" % (str(err), path)
         )
-    blur = cv2.GaussianBlur(greyscale, (5, 5), 0)
+        
+    # Blur the image with a 5x5 Guassian kernel.
+    # See https://docs.opencv.org/master/d4/d13/tutorial_py_filtering.html
+    blur = cv2.GaussianBlur(
+                greyscale,   # Input image
+                (5, 5),      # Size of kernel
+                0            # Sigma for Gaussian (derived from kernel size if zero)
+           )
+    
+    # Apply a binary threshold to the blurred image at the given threshold level.
+    # Values below and above the threshold are set to 0 and 255.
+    # NOTE: The threshold is fixed. OTSU thresholding is not actually needed.
+    # See https://docs.opencv.org/master/d7/d4d/tutorial_py_thresholding.html
     _, thresholded = cv2.threshold(
-        blur, threshold, 255, cv2.THRESH_BINARY 
-    )
-    output = image.copy()
+                        blur,               # Input image
+                        threshold,          # Threshold level
+                        255,                # Maximum value
+                        cv2.THRESH_BINARY   # Thresholding mode (was cv.THRESH_BINARY+cv.THRESH_OTSU)
+                     )
+    output = image.copy() # FIXME: Only used in debugging mode?
 
+    # Create two opencv blob detectors to locate blobs matching the expected
+    # size and shape of the small and large metrology targets.
+    # See https://docs.opencv.org/master/d0/d7a/classcv_1_1SimpleBlobDetector.html
     small_params = cv2.SimpleBlobDetector_Params()
     small_params.minArea = math.pi * (small_radius*(1-blob_size_tolerance)) ** 2
     small_params.maxArea = math.pi * (small_radius*(1+blob_size_tolerance)) ** 2
@@ -86,22 +109,21 @@ def find_bright_sharp_circles(path,
     small_detector = cv2.SimpleBlobDetector_create(small_params)
     large_detector = cv2.SimpleBlobDetector_create(large_params)
 
-    # blob detect on the original
+    # Detect the small and large blobs in the thresholded image
     small_blobs = small_detector.detect(thresholded)
-
-    # blob detect on the thresholded copy
     large_blobs = large_detector.detect(thresholded)
 
-    # keep blobs found in both with similar sizes
+    # If required, display all the blobs found.
     if show:
         print(path)
-        print("small round blobs:")
+        print("All small round blobs (x, y, radius):")
         print([(blob.pt[0], blob.pt[1], blob.size / 2.0) for blob in small_blobs])
-        print("large round blobs:")
+        print("All large round blobs (x, y, radius):")
         print([(blob.pt[0], blob.pt[1], blob.size / 2.0) for blob in large_blobs])
 
+    # Filter the list to keep only large and small blobs separated
+    # by the expected distance.
     target_blob_list = []
-
     if group_range is not None:
         accepted = []
         for small in small_blobs:
@@ -117,13 +139,16 @@ def find_bright_sharp_circles(path,
         target_blob_list = accepted
 
     if show:
-        print("Near blobs")
+        print("Blobs at expected distance (x, y, radius)")
         print([(blob.pt[0], blob.pt[1], blob.size / 2.0) for blob in target_blob_list])
 
+    # In debugging mode, save a diagnostic image.
     if debugging:
+        # Resize the image.
+        # See https://docs.opencv.org/master/da/d6e/tutorial_py_geometric_transformations.html
         width, height = image.shape[1] // 4, image.shape[0] // 4
         shrunk_original = cv2.resize(image, (width, height))
-        # ensure at least some circles were found
+        # Ensure at least some circles were found
         if target_blob_list is not None:
             # convert the (x, y) coordinates and radius of the circles to integers
             print("matching points:")
@@ -153,34 +178,40 @@ def find_bright_sharp_circles(path,
         # show the output image
         shrunk_output = cv2.resize(output, (width, height))
         shrunk_thresh = cv2.resize(
-            cv2.cvtColor(thresholded, cv2.COLOR_GRAY2BGR), (width, height)
-        )
-        outpath = path.replace('.bmp', 'thresnew.bmp').replace('/', '', 1)
+                            cv2.cvtColor(thresholded, cv2.COLOR_GRAY2BGR),
+                            (width, height)
+                        )
+        outpath = path.replace('.bmp', 'thresnew.bmp')
         cv2.imwrite(outpath, np.hstack([shrunk_original, shrunk_output, shrunk_thresh]))
+        # FIXME: These two lines lead to a core dump!
         #cv2.imshow(path, np.hstack([shrunk_original, shrunk_output, shrunk_thresh]))
         #cv2.moveWindow(path, 0, 0)
-        print()
+        print("Labelled image written to \'%s\'\n" % outpath)
 
     return target_blob_list
 
 
-def targetCoordinates(image_path, pars=None, correct=None):
-    """Wrapper for find_bright_sharp_circles
+def targetCoordinates(image_path, pars=None, correct=None, debugging=False):
+    """
+    
+    Wrapper for find_bright_sharp_circles
 
     :param image_path:
     :param pars:
+    
     :return: A tuple length 6 containing the x,y coordinate in mm and a minimun
     guaranteed quality factor for the small and large targets
     (small_x, small_y, small_qual, big_x, big_y, big_qual)
+    
     """
 
    # Find correct conversion from px to mm
     if correct is None:
         correct = get_correction_func(
-            calibration_pars=pars.CALIBRATION_PARS,
-            platescale=pars.PLATESCALE,
-            loglevel=pars.loglevel,
-        )
+                    calibration_pars=pars.CALIBRATION_PARS,
+                    platescale=pars.PLATESCALE,
+                    loglevel=pars.loglevel,
+                  )
 
     # Depending on the camera calibration this step is approximate, as the
     # position is unknown.
@@ -189,15 +220,17 @@ def targetCoordinates(image_path, pars=None, correct=None):
     group_range_px = pars.GROUP_RANGE / pars.PLATESCALE
     
     blobs = find_bright_sharp_circles(
-        image_path,
-        small_radius_px,
-        large_radius_px,
-        threshold=pars.THRESHOLD_LIMIT,
-        group_range=group_range_px,
-        quality=pars.QUALITY_METRIC,
-        blob_size_tolerance=pars.BLOB_SIZE_TOLERANCE,
-        group_range_tolerance=pars.GROUP_RANGE_TOLERANCE,
-    )
+                image_path,
+                small_radius_px,
+                large_radius_px,
+                threshold=pars.THRESHOLD_LIMIT,
+                group_range=group_range_px,
+                quality=pars.QUALITY_METRIC,
+                blob_size_tolerance=pars.BLOB_SIZE_TOLERANCE,
+                group_range_tolerance=pars.GROUP_RANGE_TOLERANCE,
+                show=debugging,
+                debugging=debugging
+            )
     if len(blobs) != 2:
         raise OtsuTargetFindingError(
             "{} blobs found in image {}, there should be exactly two blobs".format(

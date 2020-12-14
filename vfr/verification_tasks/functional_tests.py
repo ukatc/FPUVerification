@@ -3,6 +3,8 @@ from __future__ import absolute_import, division, print_function
 import logging
 import warnings
 from vfr.auditlog import get_fpuLogger
+
+# Import functions and constants from the FPU control software (fpu_driver)
 from fpu_constants import StepsPerDegreeBeta
 from fpu_commands import gen_wf
 from FpuGridDriver import (
@@ -14,12 +16,14 @@ from FpuGridDriver import (
     REQD_ANTI_CLOCKWISE,
     REQD_CLOCKWISE,
     SEARCH_CLOCKWISE,
+    FirmwareTimeoutError,
     CollisionError,
     ConnectionFailure,
     InvalidStateException,
     LimitBreachError,
     MovementError,
 )
+
 from numpy import NaN, ceil, sign
 from vfr.db.base import TestResult
 from vfr.db.colldect_limits import (
@@ -99,7 +103,7 @@ def test_datum(rig, dbe, dasel=DASEL_BOTH):
 
     modes = {fpu_id: SEARCH_CLOCKWISE for fpu_id in rig.measure_fpuset}
     logger.info("----------------------------------------")
-    logger.info("datum functional test: issuing findDatum (%s):" % dasel)
+    logger.info("Datum functional test: issuing findDatum (%s):" % dasel)
     try:
         rig.gd.findDatum(
             rig.grid_state,

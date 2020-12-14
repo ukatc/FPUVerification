@@ -15,7 +15,8 @@ PositionalVerificationImages = namedtuple(
     " gearbox_algorithm_version"
     " gearbox_git_version"
     " gearbox_record_count"
-    " calibration_mapfile",
+    " calibration_mapfile"
+    " datum_images",
 )
 
 PositionalVerificationResult = namedtuple(
@@ -33,7 +34,11 @@ PositionalVerificationResult = namedtuple(
     " expected_points"
     " mean_error_vector"
     " algorithm_version"
-    " evaluation_version",
+    " evaluation_version"
+    " center_x"
+    " center_y"
+    " camera_offset"
+    " datum_results",
 )
 
 
@@ -41,7 +46,10 @@ save_positional_verification_images = partial(
     save_named_record, (RECORD_TYPE, "images"), include_fpu_id=True
 )
 
-get_positional_verification_images = partial(get_named_record, (RECORD_TYPE, "images"))
+DEFAULT_IMAGES_RECORD = {
+    "datum_images" : []
+}
+get_positional_verification_images = partial(get_named_record, (RECORD_TYPE, "images"), default_vals=DEFAULT_IMAGES_RECORD)
 
 save_positional_verification_result = partial(
     save_named_record, (RECORD_TYPE, "result")
@@ -54,6 +62,10 @@ DEFAULT_RECORD = {
     "measured_points" : [],
     "mean_error_vector" : [np.NaN, np.NaN],
     "evaluation_version" : (0, 1, 0),
+    "center_x" : np.NaN,
+    "center_y" : np.NaN,
+    "camera_offset" : np.NaN,
+    "datum_results" : []
 }
 
 get_positional_verification_result = partial(

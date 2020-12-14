@@ -9,10 +9,16 @@ Introduction
 ============
 
 
-This software should be considered in a PROTOTYPE state, it was released to speed up on specific test and to gain more knowledge about the how the software and cameras interact. Currently this software connects with only one Camera 169.254.187.121 and does no setup using the last settings uploaded to the camera.
+This software should be considered in a PROTOTYPE state, it was released to speed up 
+on specific test and to gain more knowledge about the how the software and cameras 
+interact. Currently this software connects with only one Camera 169.254.187.121 and 
+does no setup using the last settings uploaded to the camera.
 
-If you are developing software using this module please check https://forge.roe.ac.uk/svn/MoonsLibrary/trunk/FPU_Verification for the latest version.
+If you are developing software using this module please check 
+https://forge.roe.ac.uk/svn/MoonsLibrary/trunk/FPU_Verification for the latest 
+version.
 
+See also https://pypi.org/project/pypylon/
 
 TO DO
 =====
@@ -33,9 +39,12 @@ Installation instructions
 =========================
 Dependencies
 -----------
-The GigECamera relies on 3 external packages numpy, scipy and pyplon. numpy and scipy are common packages and likely already preinstalled, if not see nump.org and scipy.org.
+The GigECamera relies on 3 external packages numpy, scipy and pyplon. numpy and 
+scipy are common packages and likely already preinstalled, if not see nump.org and 
+scipy.org.
 
-There should be no dependency on the version of numpy and scipy, but it has been tested with the following versions:
+There should be no dependency on the version of numpy and scipy, but it has been 
+tested with the following versions:
 
 + numpy 1.12.1
 + scipy 0.18.1
@@ -43,7 +52,9 @@ There should be no dependency on the version of numpy and scipy, but it has been
 
 Installing PyPylon
 ------------------
-Installing pypylon is a more complicated process, pypyplon its self is a wrapper about the C++ library pylon. Detailed instructions can be found at https://github.com/basler/pypylon
+Installing pypylon is a more complicated process, pypyplon its self is a wrapper 
+about the C++ library pylon. Detailed instructions can be found at 
+https://github.com/basler/pypylon
 
 PyPylon has been tested by the developers with version 5.0.12 of pylon.
 
@@ -52,17 +63,21 @@ How To Use
 ==========
 Once the prerequisite software is installed, GigECamera is ready to be used.
 
-With the GigECamera.py file in the same folder as the script it can be imported with the following:
+With the GigECamera.py file in the same folder as the script it can be imported with 
+the following:
 
 import GigECamera
 
-GigECamera is a lot to type for a commonly used module, I would advise importing the module as follows:
+GigECamera is a lot to type for a commonly used module, I would advise importing the 
+module as follows:
 
 import GigECamera as gig
 
 to allow the short gig namespace.
 
-Create a camera object using a device info dict (such as the provided TEST_CAMERA) or provide None to find a connected camera instead (No promises are made which camera is found or how repeatable results are).
+Create a camera object using a device info dict (such as the provided TEST_CAMERA) 
+or provide None to find a connected camera instead (No promises are made which 
+camera is found or how repeatable results are).
 
 camera = gig.GigECamera(gig.TEST_CAMERA)
 
@@ -70,7 +85,9 @@ To take an image call the following
 
 camera.saveImage(%filename%)
 
-This will save an image from the camera to a file with at %filename%, previously uploaded settings are currently used, if the settings need to be changed it is advised to do it in the GUI.
+This will save an image from the camera to a file with at %filename%, previously 
+uploaded settings are currently used, if the settings need to be changed it is 
+advised to do it in the GUI.
 
 To change the raw exposure time call:
 
@@ -85,7 +102,9 @@ camera.close()
 Connect to a particular camera
 ------------------------------
 
-To connect to a particular camera you need to have  create a dict that have the "IpAddress" and "DeviceClass" items. The "DeviceClass" should usually be set to "BaslerGigE" and the "IpAddress" should be a string containing the IP address.
+To connect to a particular camera you need to have create a dict that have the 
+"IpAddress" and "DeviceClass" items. The "DeviceClass" should usually be set to 
+"BaslerGigE" and the "IpAddress" should be a string containing the IP address.
 
 For example:
 

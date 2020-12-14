@@ -20,20 +20,27 @@ def targetCoordinates(
     # configurable parameters
     pars=None,
     correct=None,
+    debugging=False
 ):  # will display image with contours annotated
 
-    """reads an image from the positional repeatability camera and returns
-        the XY coordinates and circularity of the two targets in mm"""
+    """
+    
+    Reads an image from the positional repeatability camera and returns
+    the XY coordinates and circularity of the two targets in mm.
 
     # Authors: Stephen Watson (initial algorithm March 4, 2019)
     # Johannes Nix (code imported and re-formatted)
 
-    # using the 'PLATESCALE' parameter here has the problem that
+    # Using the 'PLATESCALE' parameter here has the problem that
     # it does not account for non-linear distortion of the image,
     # and it is also overlapping with the image correction
     # function.  (Also, 'PLATESCALE' means normally something
     # different, it normally thescribes the ratio between a ppixel
     # number and an angle, not a pixel number and a distance.)
+    
+    See https://docs.opencv.org/master/d6/d00/tutorial_py_root.html
+    
+    """
 
     if correct is None:
         correct = get_correction_func(
@@ -70,16 +77,27 @@ def targetCoordinates(
 
     centres = {}
 
+    # Open the image file and attempt to convert it to greyscale.
     # pylint: disable=no-member
     image = cv2.imread(image_path)
+    try:
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    except cv2.error as err:
+        raise TargetDetectionContoursError(
+            "OpenCV returned error %s for image %s" % (str(err), path)
+        )
 
-    # image processing
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    # FIXME: gray is unused!
+    # Blur the image with a 5x5 Guassian kernel.
     blur = cv2.GaussianBlur(gray, (9, 9), 0)
+    
+    # Apply a binary threshold to the blurred image at the given threshold level
+    # and extract elment [1].
+    # Values below and above the threshold are set to 0 and 255.
+    # See https://docs.opencv.org/master/d7/d4d/tutorial_py_thresholding.html
     thresh = cv2.threshold(blur, pars.THRESHOLD, 255, cv2.THRESH_BINARY)[1]
 
-    # find contours from thresholded image
+    # Find contours from thresholded image and keep only the first 15 elements.
+    # See https://docs.opencv.org/master/d3/dc0/group__imgproc__shape.html
     cnts = sorted(
         cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[1],
         key=cv2.contourArea,

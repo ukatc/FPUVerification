@@ -1,0 +1,1 @@
+vfrig -f ~/software_testing_remote_N3.cfg -N 3 -rpt --gateway_address 192.168.0.11 --mail-on-error steven.beard@stfc.ac.uk [test_functional]

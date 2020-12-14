@@ -27,7 +27,7 @@ def check_connection(opts, name, address):
         logger.info("testing connection to %s ... OK" % name)
 
 
-def init_driver(opts, N, env=None, protected=True):
+def init_fpu_driver(opts, N, env=None, protected=True):
     logger = logging.getLogger(__name__)
     logger.debug("initializing for %i FPUs" % N)
     if protected:
@@ -36,7 +36,7 @@ def init_driver(opts, N, env=None, protected=True):
         except ProtectionError as e:
             logger.critical(
                 "protectionError exception raised -- maybe the"
-                " postion database needs to be initialized with 'init' ?\n\n" % str(e)
+                " position database needs to be initialized with 'init' ?\n\n" % str(e)
             )
     else:
         rd = FpuGridDriver.UnprotectedGridDriver(N, logLevel=LOG_GRIDSTATE)
