@@ -1,6 +1,10 @@
 """
 
-Test blending all the images contained in a path tracking folder to make a combined image.
+Either blend all the images contained in a path tracking folder to make
+one combined image.
+
+Or analysis all the images contained in a path tracking folder, calculate
+the fibre positions and write them to a track file.
 
 """
 from __future__ import absolute_import, division, print_function
@@ -17,9 +21,8 @@ from argparse import Namespace
 import numpy as np
 
 from ImageAnalysisFuncs.analyze_path_tracking import blend_images_in_folder, \
-                                                     analyze_images_in_folder, \
-                                                     path_targets_to_fibre
-
+                                                     analyze_images_in_folder                                       
+from vfr.evaluation.eval_path_tracking import path_targets_to_fibre
 from vfr.conf import PATH_TRACK_ANALYSIS_PARS
 
 parser = argparse.ArgumentParser()
@@ -35,7 +38,7 @@ parser.add_argument("-d", "--debug", action="store_true",
 parser.add_argument("-p", "--plot", action="store_true",
                     help="Plot the results")
 
-#TEST_FOLDER = "./images1_15_long"
+#TEST_FOLDER = "../images1_15_long"
 #OUTPUT = "blended1_15_long.bmp"
 #BLEND_IMAGES = False
 #LOCATE_TARGETS = True

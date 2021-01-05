@@ -116,26 +116,4 @@ def analyze_images_in_folder( folder, pars=PATH_TRACK_ANALYSIS_PARS,
     logging.info("There were %d good and %d bad image files." % (ngood, nbad) )
     return path_targets
 
-def path_targets_to_fibre( path_targets, pars=PATH_TRACK_ANALYSIS_PARS):
-    """
-    
-    Take a list of path targets of the form
-    (xsmall, ysmall, qsmall, xlarge, ylarge, qlarge)
-    and estimate the location of the fibre centre,
-    returning a list of fibre centres of the form
-    (xfibre, yfibre)
-    
-    """
-    fibre_locations = []
-    for path_target in path_targets:
-        id = path_target[0]
-        xs = path_target[1]
-        ys = path_target[2]
-        xl = path_target[4]
-        yl = path_target[5]
-        xf = xl + pars.FIBRE_MULTIPLER * (xl-xs)
-        yf = yl + pars.FIBRE_MULTIPLER * (yl-ys)
-        fibre_locations.append( [id,xf,yf])
-    return fibre_locations
-
 

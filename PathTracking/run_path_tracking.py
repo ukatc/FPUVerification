@@ -1,7 +1,10 @@
 """
 
-Test moving the turntable and making exposures with the camera
-at the same time using threads.
+Measure the path taken by a fibre positioner by making continuous
+exposures with the camera while the FPU is moving.
+
+The FPU is instructed to follow the path produced by the mocpath
+path analysis software and contained in a path file.
 
 """
 from __future__ import absolute_import, division, print_function
@@ -65,7 +68,7 @@ from vfr.conf import (
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument("pathfile", type=str, default="/home/jnix/targets_19fp_case_1_PATHS.paths",
-                    help="Name of file containing FPU paths")
+                    help="Name of file (from mocpath) containing FPU paths")
 parser.add_argument("canmap", type=str, default="canmap19_15.cfgs",
                     help="Name of file containing CAN ID to FPU ID mapping.")
 
@@ -181,6 +184,7 @@ def test_fpu( gd, gs, wf ):
     gd.configPaths(p, gs, fpuset=[FPU_ID])
     gd.executeMotion(gs)
     time.sleep(3.0)
+    # NOTE: Reversing the motion makes it harder to determine the end point of a track.
     gd.reverseMotion(gs)
     gd.executeMotion(gs)
 
