@@ -312,8 +312,10 @@ def match_tracks(track1, track2, end1=-1, end2=-1, graphics=False, verbose=False
 
     # Diagnostic plot
     if graphics and (plotting is not None):
-        title = "%s: vfrig points (blue) and rotated+shifted+scaled comparision points (green)." % name
-        plotaxis = plotting.plot_xy( polar_adjust[0], polar_adjust[1],
+        XSHIFT = 2.0
+        YSHIFT = 1.0
+        title = "%s: vfrig points (blue) and rotated+scaled comparision points (green)." % name
+        plotaxis = plotting.plot_xy( polar_adjust[0]+XSHIFT, polar_adjust[1]+YSHIFT,
                           title=title, xlabel='x (mm)', ylabel='y (mm)',
                           linefmt='g.', linestyle=' ', equal_aspect=True, showplot=False )
         plotting.plot_xy( base_points[0], base_points[1],
@@ -342,14 +344,16 @@ def match_tracks(track1, track2, end1=-1, end2=-1, graphics=False, verbose=False
     logger.debug("Estimated xscale: %f" % xscale)
     polar_xscaled = polar_new[0][0] + (polar_new[0]-polar_new[0][0]) * xscale
     polar_scaled = [polar_xscaled, polar_new[1]]
+    # Reverse the rotation
+    polar_scaled = transform_coords( polar_scaled[0], polar_scaled[1], 0.0, 0.0, 1.0, 1.0, PIBY2-theta_base )
 
     # Diagnostic plot
     if graphics and (plotting is not None):
-        title = "%s: vfrig points (blue) and comparision points (green)." % name
+        title = "%s: vfrig points (blue) and overlaid comparision points (green)." % name
         plotaxis = plotting.plot_xy( polar_scaled[0], polar_scaled[1],
                           title=title, xlabel='x (mm)', ylabel='y (mm)',
                           linefmt='g.', linestyle=' ', equal_aspect=True, showplot=False )
-        plotting.plot_xy( base_new[0], base_new[1],
+        plotting.plot_xy( base_points[0], base_points[1],
                           linefmt='b.', linestyle=' ', equal_aspect=True,
                           plotaxis=plotaxis, showplot=True )
 
