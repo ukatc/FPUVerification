@@ -52,6 +52,9 @@ def find_bright_sharp_circles_triplet(path,
     See https://docs.opencv.org/master/d6/d00/tutorial_py_root.html
 
     :return: a list of opencv blobs for each detected dot.
+
+    NOTE: THIS ALGORITHM DOES NOT CURRENTLY WORK. THE DOUGHNUT-SHAPED FIELDSTOP
+    IS NOT DETECTABLE.
     
     """
     # Open the image file and attempt to convert it to greyscale.
@@ -113,7 +116,7 @@ def find_bright_sharp_circles_triplet(path,
     # Fieldstop is doughnut-shaped, so the area is going to be less than expected
     # from the radius
     fieldstop_donut_ratio = 0.8
-    fieldstop_size_tolerance = 1.1 * blob_size_tolerance
+    fieldstop_size_tolerance = 1.2 * blob_size_tolerance
     fieldstop_quality = 2.0 * quality
     fieldstop_params = cv2.SimpleBlobDetector_Params()
     fieldstop_params.minArea = fieldstop_donut_ratio * math.pi * (fieldstop_radius*(1-fieldstop_size_tolerance)) ** 2
@@ -125,7 +128,7 @@ def find_bright_sharp_circles_triplet(path,
     fieldstop_params.minInertiaRatio = 0.7  # non stretched
     fieldstop_params.filterByInertia = True
     fieldstop_params.minConvexity = 0.7  # convex
-    fieldstop_params.filterByConvexity = True
+    fieldstop_params.filterByConvexity = False # There is a hole in the middle
 
     small_detector = cv2.SimpleBlobDetector_create(small_params)
     large_detector = cv2.SimpleBlobDetector_create(large_params)
