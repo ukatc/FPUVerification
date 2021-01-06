@@ -40,10 +40,16 @@ class TestPosRepImageAnalysis(unittest.TestCase):
         for (test_image, small_x, small_y, small_q, large_x, large_y, large_q) in cases:
             print("Testing path tracking with image %s.." % test_image)
 
-            (sx, sy, sq, lx, ly, lq) = posrepCoordinates(
-                test_image, pars=PATH_TRACK_ANALYSIS_PARS, debugging=DEBUGGING
-            )
-            print("Returned:", sx, sy, sq, lx, ly, lq)
+            if PATH_TRACK_ANALYSIS_PARS.TARGET_DETECTION_ALGORITHM == "fieldstop":
+                (sx, sy, sq, lx, ly, lq, fx, fy, fq) = posrepCoordinates(
+                    test_image, pars=PATH_TRACK_ANALYSIS_PARS, debugging=DEBUGGING
+                )
+                print("Returned:", sx, sy, sq, lx, ly, lq, fx, fy, fq)
+            else:
+                (sx, sy, sq, lx, ly, lq) = posrepCoordinates(
+                    test_image, pars=PATH_TRACK_ANALYSIS_PARS, debugging=DEBUGGING
+                )
+                print("Returned:", sx, sy, sq, lx, ly, lq)
 
 #            (px, py, pq) = pupilCoordinates(
 #                test_image, pars=PUP_ALGN_ANALYSIS_PARS, debugging=DEBUGGING

@@ -84,11 +84,13 @@ REWIND_POS_BETA = 1.0      # Beta start position before initial datum search
 # Used in ./vfr/verification_tasks/metrology_calibration.py
 METROLOGY_CAL_POSITIONS = [254.0, 314.5, 13.0, 73.0, 133.5]
 
-# The expected size and separation of the metrology targets and the thresholds
+# The expected size and separation of the metrology targets and field stop and the thresholds
 # used by the image analysis software (ImageAnalysisFuncs/target_detection_otsu.py).
 LARGE_TARGET_RADIUS = 1.25 # mm
 SMALL_TARGET_RADIUS = 0.75 # mm
-TARGET_SEPERATION = 2.37 # mm - The distance between the centers
+FIELDSTOP_RADIUS = 1.61 # mm
+TARGET_SEPARATION = 2.37 # mm - The distance between the target centers
+FIELDSTOP_SEPARATION = 3.71 # mm - Distance from large target centre to fibre centre
 THRESHOLD_LIMIT = 60 # pixel values for Pos_rep camera
 DAT_REP_THRESHOLD_LIMIT = 100 # pixel threshold values for dat rep camera
 
@@ -138,7 +140,7 @@ DAT_REP_TARGET_DETECTION_OTSU_PARS = Namespace(
     CALIBRATION_PARS=DAT_REP_CALIBRATION_PARS,
     SMALL_RADIUS=SMALL_TARGET_RADIUS,  # in mm
     LARGE_RADIUS=LARGE_TARGET_RADIUS,  # in mm
-    GROUP_RANGE=TARGET_SEPERATION,  # in mm
+    GROUP_RANGE=TARGET_SEPARATION,  # in mm
     THRESHOLD_LIMIT=DAT_REP_THRESHOLD_LIMIT,
     QUALITY_METRIC=0.4,  # dimensionless
     BLOB_SIZE_TOLERANCE=0.2, # dimensionless
@@ -215,7 +217,7 @@ MET_CAL_TARGET_DETECTION_OTSU_PARS = Namespace(
     CALIBRATION_PARS=MET_CAL_CALIBRATION_PARS,
     SMALL_RADIUS=SMALL_TARGET_RADIUS,  # in mm
     LARGE_RADIUS=LARGE_TARGET_RADIUS,  # in mm
-    GROUP_RANGE=TARGET_SEPERATION,  # in mm
+    GROUP_RANGE=TARGET_SEPARATION,  # in mm
     THRESHOLD_LIMIT=THRESHOLD_LIMIT,
     QUALITY_METRIC=0.4,  # dimensionless
     BLOB_SIZE_TOLERANCE=0.2, # dimensionless
@@ -427,7 +429,7 @@ POS_REP_TARGET_DETECTION_OTSU_PARS = Namespace(
     CALIBRATION_PARS=POS_REP_CALIBRATION_PARS,
     SMALL_RADIUS=SMALL_TARGET_RADIUS,  # in mm
     LARGE_RADIUS=LARGE_TARGET_RADIUS,  # in mm
-    GROUP_RANGE=TARGET_SEPERATION,  # in mm
+    GROUP_RANGE=TARGET_SEPARATION,  # in mm
     THRESHOLD_LIMIT=THRESHOLD_LIMIT,
     QUALITY_METRIC=0.4,  # dimensionless
     BLOB_SIZE_TOLERANCE=0.2, # dimensionless
@@ -639,12 +641,26 @@ PATH_TRACK_TARGET_DETECTION_OTSU_PARS = Namespace(
     CALIBRATION_PARS=POS_REP_CALIBRATION_PARS,
     SMALL_RADIUS=SMALL_TARGET_RADIUS,  # in mm
     LARGE_RADIUS=LARGE_TARGET_RADIUS,  # in mm
-    GROUP_RANGE=TARGET_SEPERATION,  # in mm
+    GROUP_RANGE=TARGET_SEPARATION,  # in mm
     THRESHOLD_LIMIT=THRESHOLD_LIMIT,
     # Reduced tolerances compared with POS_REP to cope with motion blur
     QUALITY_METRIC=0.3,  # dimensionless
     BLOB_SIZE_TOLERANCE=0.3, # dimensionless
     GROUP_RANGE_TOLERANCE=0.1 # dimensionless
+)
+PATH_TRACK_FIELDSTOP_DETECTION_OTSU_PARS = Namespace(
+    CALIBRATION_PARS=POS_REP_CALIBRATION_PARS,
+    SMALL_RADIUS=SMALL_TARGET_RADIUS,  # in mm
+    LARGE_RADIUS=LARGE_TARGET_RADIUS,  # in mm
+    FIELDSTOP_RADIUS=FIELDSTOP_RADIUS, # in mm
+    GROUP_RANGE=TARGET_SEPARATION,  # in mm
+    FIELDSTOP_RANGE=FIELDSTOP_SEPARATION, # in mm
+    THRESHOLD_LIMIT=THRESHOLD_LIMIT,
+    # Reduced tolerances compared with POS_REP to cope with motion blur
+    QUALITY_METRIC=0.3,  # dimensionless
+    BLOB_SIZE_TOLERANCE=0.2, # dimensionless
+    GROUP_RANGE_TOLERANCE=0.1, # dimensionless
+    FIELDSTOP_RANGE_TOLERANCE=0.2 # dimensionless
 )
 PATH_TRACK_TARGET_DETECTION_CONTOUR_PARS = Namespace(
     CALIBRATION_PARS=POS_REP_CALIBRATION_PARS,
@@ -657,14 +673,15 @@ PATH_TRACK_TARGET_DETECTION_CONTOUR_PARS = Namespace(
 
 PATH_TRACK_ANALYSIS_PARS = Namespace(
     CALIBRATION_PARS=POS_REP_CALIBRATION_PARS,
-    TARGET_DETECTION_ALGORITHM="otsu",  # "otsu" or "contours"
+    TARGET_DETECTION_ALGORITHM="otsu",  # "otsu", "fieldstop", or "contours"
     TARGET_DETECTION_OTSU_PARS=PATH_TRACK_TARGET_DETECTION_OTSU_PARS,
+    TARGET_DETECTION_FIELDSTOP_PARS=PATH_TRACK_FIELDSTOP_DETECTION_OTSU_PARS,
     TARGET_DETECTION_CONTOURS_PARS=PATH_TRACK_TARGET_DETECTION_CONTOUR_PARS,
     PLATESCALE=POS_REP_PLATESCALE,  # millimeter per pixel
     MAX_FAILURE_QUOTIENT=0.2,
     # Ratio of fibre to large target distance vs
     # small target to large target distance.
-    FIBRE_MULTIPLER = 1.35, 
+    FIBRE_MULTIPLER = FIELDSTOP_SEPARATION/TARGET_SEPARATION, # 1.35,
     display=False,
     verbosity=0,
     loglevel=0,

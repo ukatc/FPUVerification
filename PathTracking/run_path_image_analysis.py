@@ -51,7 +51,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     logger = logging.getLogger("")
     if args.debug:
-        mlogger.setLevel( logging.DEBUG )
+        logger.setLevel( logging.DEBUG )
     PLOT_PATH = args.plot
     if PLOT_PATH:
         try:
