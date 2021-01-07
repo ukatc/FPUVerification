@@ -26,7 +26,7 @@ joblib==0.10.4.dev0
 keyring==10.4.0
 keyrings.alt==2.2
 lmdb==0.86
-lxml==4.0.0
+lxml==4.6.2
 matplotlib==2.0.0
 memory-profiler==0.54.0
 networkx==1.11
