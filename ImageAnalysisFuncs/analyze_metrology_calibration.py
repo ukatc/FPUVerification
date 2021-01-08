@@ -40,7 +40,7 @@ def metcalTargetCoordinates(image_path, pars=None, correct=None, debugging=False
 
     :return: A tuple length 6 containing the x,y coordinate and quality factor for the small and large targets
     Where quality is measured by 4 * pi * (area / (perimeter * perimeter)).
-    (small_x, small_y, small_qual, big_x, big_y, big_qual)
+    (small_x, small_y, small_qual, large_x, large_y, big_qual)
     
     """
     if pars.MET_CAL_TARGET_DETECTION_ALGORITHM == CONTOUR_ALGORITHM:

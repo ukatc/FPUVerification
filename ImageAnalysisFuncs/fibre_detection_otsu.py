@@ -146,7 +146,7 @@ def find_largest_bright_circle(path,
         # FIXME: These two lines lead to a core dump!
         #cv2.imshow(path, np.hstack([shrunk_original, shrunk_output, shrunk_thresh]))
         #cv2.moveWindow(path, 0, 0)
-        print("Labelled image written to \'%s\'\n" % outpath)
+        print("Labelled image written to \'%s\'" % outpath)
 
     return fibre_blob_list
 

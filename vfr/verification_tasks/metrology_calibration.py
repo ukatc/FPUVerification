@@ -154,8 +154,10 @@ def eval_metrology_calibration(
             (metcal_fibre_large_target_distance_mm,
              metcal_fibre_small_target_distance_mm,
              metcal_target_vector_angle_deg) = fibre_target_distance(
-                 target_coordinates[0:2], target_coordinates[3:5], fibre_coordinates[0:2]
-            )
+                                                    target_coordinates[3:5], # large_target_coords
+                                                    target_coordinates[0:2], # small_target_coords
+                                                    fibre_coordinates[0:2]   # fibre_coords
+                                               )
 
             errmsg = None
 

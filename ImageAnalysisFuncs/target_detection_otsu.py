@@ -130,7 +130,7 @@ def find_bright_sharp_circles(path,
             for large in large_blobs:
                 dist = distance(small.pt, large.pt)
                 if show:
-                    print(dist)
+                    print("small=%s, large=%s,\n  distance=%f (px)" % (str(small.pt), str(large.pt), dist))
                 if (dist > group_range*(1-group_range_tolerance) and
                         dist < group_range*(1+group_range_tolerance)):
                     accepted.append(small)
