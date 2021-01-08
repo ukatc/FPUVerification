@@ -82,21 +82,21 @@ def metcalFibreCoordinates(image_path, pars=None, correct=None, debugging=False)
     # Authors: Stephen Watson (initial algorithm March 4, 2019)
     # Johannes Nix (code imported and re-formatted)
 
-    MET_CAL_PLATESCALE = pars.PLATESCALE
-    MET_CAL_QUALITY_METRIC = pars.QUALITY_METRIC
-    verbosity = pars.verbosity
-    display = pars.display
+#     MET_CAL_PLATESCALE = pars.PLATESCALE
+#     MET_CAL_QUALITY_METRIC = pars.QUALITY_METRIC
+#     verbosity = pars.verbosity
+#     display = pars.display
 
     logger = logging.getLogger(__name__)
     logger.debug("image %s: processing fibre coordinates analysis" % image_path)
 
-    # pylint: disable=no-member
-    if correct is None:
-        correct = get_correction_func(
-                    calibration_pars=pars.CALIBRATION_PARS,
-                    platescale=pars.PLATESCALE,
-                    loglevel=pars.loglevel,
-                  )
+#     NOTE: Correction function will be obtained within fibreCoordinates
+#     if correct is None:
+#         correct = get_correction_func(
+#                     calibration_pars=pars.CALIBRATION_PARS,
+#                     platescale=pars.PLATESCALE,
+#                     loglevel=pars.loglevel,
+#                   )
 
     # Find the largest circle and return coordinates
     (metcal_fibre_x, metcal_fibre_y, metcal_fibre_quality) = \
@@ -107,9 +107,8 @@ def metcalFibreCoordinates(image_path, pars=None, correct=None, debugging=False)
             debugging=debugging
         )
 
-    # exceptions
-    # scale and straighten the result coordinates
-
-    metcal_fibre_x, metcal_fibre_y, = correct(metcal_fibre_x, metcal_fibre_y)
+#     NOTE: Distortion correction has already been done within fibreCoordinates
+#     # Scale and straighten the result coordinates
+#     metcal_fibre_x, metcal_fibre_y, = correct(metcal_fibre_x, metcal_fibre_y)
 
     return metcal_fibre_x, metcal_fibre_y, metcal_fibre_quality

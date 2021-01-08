@@ -207,7 +207,8 @@ MET_CAL_MEASUREMENT_PARS = Namespace(
 # NOTE: The following parameters define a default plate scale which
 # is only used if a camera calibration file is not found.
 #
-MET_CAL_PLATESCALE = 0.00668  # millimeter per pixel
+#MET_CAL_PLATESCALE = 0.00668  # millimeter per pixel
+MET_CAL_PLATESCALE = DAT_REP_PLATESCALE  # millimeter per pixel
 MET_CAL_CALIBRATION_PARS = {"algorithm": "scale", "scale_factor": MET_CAL_PLATESCALE}
 
 MET_CAL_TARGET_DETECTION_OTSU_PARS = Namespace(

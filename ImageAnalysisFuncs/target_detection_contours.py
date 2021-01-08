@@ -210,10 +210,9 @@ def targetCoordinates(
     pixels_posrep_large_target_y = centres["Large Target"][1]
     posrep_large_target_quality = centres["Large Target"][2]
 
-    # scale and straighten the result coordinates
-    # the distortion correction is applied here, using the 'correct' function
-    # from the distortion correction module
-
+    # Scale and straighten the result coordinates.
+    # The distortion correction is applied here, using the 'correct' function
+    # from the distortion correction module.
     posrep_small_target_x, posrep_small_target_y = correct(
         pixels_posrep_small_target_x, pixels_posrep_small_target_y
     )

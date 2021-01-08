@@ -165,7 +165,7 @@ def fibreCoordinates(image_path, pars=None, correct=None, debugging=None):
     
     """
 
-   # Find correct conversion from px to mm
+    # Find correct camera calibration, to convert from pixels to mm.
     if correct is None:
         correct = get_correction_func(
                     calibration_pars=pars.CALIBRATION_PARS,
@@ -195,9 +195,8 @@ def fibreCoordinates(image_path, pars=None, correct=None, debugging=None):
         )
     fibre_blob = blobs[0]
 
-    # convert results from pixels to mm
+    # Apply camera correction and convert results from pixels to mm
     fibre_blob_x, fibre_blob_y = correct(fibre_blob.pt[0], fibre_blob.pt[1])
-
 
     # The returned quality is a fixed value, the new blob detector doesn't
     # return the quality of each blob, but a minimum can be set so results

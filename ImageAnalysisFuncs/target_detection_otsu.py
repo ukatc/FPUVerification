@@ -205,7 +205,7 @@ def targetCoordinates(image_path, pars=None, correct=None, debugging=False):
     
     """
 
-   # Find correct conversion from px to mm
+    # Find correct camera calibration, to convert from pixels to mm.
     if correct is None:
         correct = get_correction_func(
                     calibration_pars=pars.CALIBRATION_PARS,
@@ -238,13 +238,13 @@ def targetCoordinates(image_path, pars=None, correct=None, debugging=False):
             )
         )
 
-    # check blobs are in the correct order
+    # Check blobs are in the correct order
     if blobs[0].size < blobs[1].size:
         small_blob, large_blob = blobs
     else:
         large_blob, small_blob = blobs
 
-    # convert results from pixels to mm
+    # Apply camera correction and convert results from pixels to mm
     small_blob_x, small_blob_y = correct(small_blob.pt[0], small_blob.pt[1])
     large_blob_x, large_blob_y = correct(large_blob.pt[0], large_blob.pt[1])
 
