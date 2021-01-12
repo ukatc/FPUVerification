@@ -301,6 +301,9 @@ def selftest_nonfibre(
 
     tstamp = timestamp()
 
+    # NOTE: The tstamp value is taken from the global variable defined above, but
+    # this capture image function is then passed into selftest_metrology_height function
+    # as a parameter. How does capture image then access the tstamp variable?
     def capture_image(cam, subtest):
 
         ipath = store_image(cam, "self-test/{ts}/{stest}.bmp", ts=tstamp, stest=subtest)
@@ -345,8 +348,14 @@ def selftest_fibre(
     logger.info("selftest: starting tests requiring fibre")
     tstamp = timestamp()
 
+    # NOTE: The tstamp value is taken from the global variable defined above, but
+    # this capture image function is then passed into selftest_pup_algn function
+    # as a parameter. How does capture image then access the tstamp variable?
     def capture_image(cam, subtest):
 
+        # NOTE: The tstamp value is taken from the global variable defined above, but
+        # this capture image function is then passed into selftest_pup_algn function
+        # as a parameter. How does capture image then access the tstamp variable?
         ipath = store_image(cam, "self-test/{ts}/{stest}.bmp", ts=tstamp, stest=subtest)
         return ipath
 

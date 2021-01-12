@@ -62,8 +62,8 @@ def metcalTargetCoordinates(image_path, pars=None, correct=None, debugging=False
     func_pars.PLATESCALE = pars.PLATESCALE
 
     try:
-        positions = analysis_func(image_path, func_pars,
-                                  correct=correct, debugging=debugging)
+        positions = analysis_func(image_path, func_pars, correct=correct,
+                                  debugging=debugging)
     except OtsuTargetFindingError as err:
         raise MetrologyAnalysisTargetError(
             err.message + " from Image {}".format(image_path)

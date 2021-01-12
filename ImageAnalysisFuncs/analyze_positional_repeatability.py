@@ -13,7 +13,8 @@ Created on 20/03/2019
 from __future__ import division, print_function
 
 from ImageAnalysisFuncs.base import ImageAnalysisError
-from ImageAnalysisFuncs import target_detection_contours, target_detection_otsu
+from ImageAnalysisFuncs import target_detection_contours, \
+    target_detection_otsu, fieldstop_detection_otsu
 
 # version number for analysis algorithm
 # (each different result for the same data
@@ -27,6 +28,7 @@ POSITIONAL_VERIFICATION_ALGORITHM_VERSION = (1,0,0)
 
 CONTOUR_ALGORITHM = "contour"
 OTSU_ALGORITHM = "otsu"
+FIELDSTOP_ALGORITHM = "fieldstop"
 
 
 def posrepCoordinates(image_path, pars=None, correct=None, debugging=False):
@@ -37,6 +39,7 @@ def posrepCoordinates(image_path, pars=None, correct=None, debugging=False):
     :return: A tuple length 6 containing the x,y coordinate and quality factor for the small and large targets
     Where quality is measured by 4 * pi * (area / (perimeter * perimeter)).
     (small_x, small_y, small_qual, big_x, big_y, big_qual)
+
     """
 
     if pars.TARGET_DETECTION_ALGORITHM == CONTOUR_ALGORITHM:
@@ -45,6 +48,9 @@ def posrepCoordinates(image_path, pars=None, correct=None, debugging=False):
     elif pars.TARGET_DETECTION_ALGORITHM == OTSU_ALGORITHM:
         analysis_func = target_detection_otsu.targetCoordinates
         func_pars = pars.TARGET_DETECTION_OTSU_PARS
+    elif pars.TARGET_DETECTION_ALGORITHM == FIELDSTOP_ALGORITHM:
+        analysis_func = fieldstop_detection_otsu.fieldstopCoordinates
+        func_pars = pars.TARGET_DETECTION_FIELDSTOP_PARS
     else:
         raise ImageAnalysisError(
             "TARGET_DETECTION_ALGORITHM ({}) does not match an algorithm.".format(
@@ -57,4 +63,6 @@ def posrepCoordinates(image_path, pars=None, correct=None, debugging=False):
     func_pars.loglevel = pars.loglevel
     func_pars.PLATESCALE = pars.PLATESCALE
 
-    return analysis_func(image_path, pars=func_pars, correct=correct, debugging=debugging)
+    return analysis_func(image_path, pars=func_pars, correct=correct,
+                         debugging=debugging)
+
