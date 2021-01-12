@@ -35,13 +35,13 @@ def pupilCoordinates(image_path, pars=None, correct=None, debugging=False):
     logger = logging.getLogger(__name__)
     logger.debug("image %s: processing pupil alignment analysis" % image_path)
 
-    # pylint: disable=no-member
-    if correct is None:
-        correct = get_correction_func(
-                    calibration_pars=pars.CALIBRATION_PARS,
-                    platescale=pars.PLATESCALE,
-                    loglevel=pars.loglevel,
-                  )
+#     NOTE: Correction function will be obtained within fibreCoordinates
+#     if correct is None:
+#         correct = get_correction_func(
+#                     calibration_pars=pars.CALIBRATION_PARS,
+#                     platescale=pars.PLATESCALE,
+#                     loglevel=pars.loglevel,
+#                   )
 
 #     # Open the image file and attempt to convert it to greyscale.
 #     image = cv2.imread(image_path)
@@ -61,10 +61,8 @@ def pupilCoordinates(image_path, pars=None, correct=None, debugging=False):
             debugging=debugging
         )
 
-    # exceptions
-    # scale and straighten the result coordinates
-
-
-    pupil_spot_x, pupil_spot_y, = correct(pupil_spot_x, pupil_spot_y)
+#     NOTE: Distortion correction has already been done within fibreCoordinates
+#     # Scale and straighten the result coordinates
+#     pupil_spot_x, pupil_spot_y, = correct(pupil_spot_x, pupil_spot_y)
 
     return pupil_spot_x, pupil_spot_y, pupil_quality

@@ -129,7 +129,8 @@ DATUM_REP_MEASUREMENT_PARS = Namespace(
 # is only used if a camera calibration file is not found.
 #
 DAT_REP_PLATESCALE = (
-    0.00693
+   # 0.00693
+     0.006611
 )  # millimeter per pixel, for the metrology calibration camera
 
 DAT_REP_CALIBRATION_PARS = {"algorithm": "scale", "scale_factor": DAT_REP_PLATESCALE}
@@ -142,7 +143,7 @@ DAT_REP_TARGET_DETECTION_OTSU_PARS = Namespace(
     THRESHOLD_LIMIT=DAT_REP_THRESHOLD_LIMIT,
     QUALITY_METRIC=0.4,  # dimensionless
     BLOB_SIZE_TOLERANCE=0.2, # dimensionless
-    GROUP_RANGE_TOLERANCE=0.2 # dimensionless
+    GROUP_RANGE_TOLERANCE=0.1 # dimensionless
 )
 DAT_REP_TARGET_DETECTION_CONTOUR_PARS = Namespace(
     CALIBRATION_PARS=DAT_REP_CALIBRATION_PARS,
@@ -207,7 +208,8 @@ MET_CAL_MEASUREMENT_PARS = Namespace(
 # NOTE: The following parameters define a default plate scale which
 # is only used if a camera calibration file is not found.
 #
-MET_CAL_PLATESCALE = 0.00668  # millimeter per pixel
+#MET_CAL_PLATESCALE = 0.00668  # millimeter per pixel
+MET_CAL_PLATESCALE = DAT_REP_PLATESCALE  # millimeter per pixel
 MET_CAL_CALIBRATION_PARS = {"algorithm": "scale", "scale_factor": MET_CAL_PLATESCALE}
 
 MET_CAL_TARGET_DETECTION_OTSU_PARS = Namespace(
@@ -219,13 +221,13 @@ MET_CAL_TARGET_DETECTION_OTSU_PARS = Namespace(
     THRESHOLD_LIMIT=THRESHOLD_LIMIT,
     QUALITY_METRIC=0.4,  # dimensionless
     BLOB_SIZE_TOLERANCE=0.2, # dimensionless
-    GROUP_RANGE_TOLERANCE=0.2 # dimensionless
+    GROUP_RANGE_TOLERANCE=0.1 # dimensionless
 )
 MET_CAL_TARGET_DETECTION_CONTOUR_PARS = Namespace(
     SMALL_DIAMETER=1.42,  # millimeter
     LARGE_DIAMETER=2.42,  # millimeter
     DIAMETER_TOLERANCE=0.15,  # millimeter
-    THRESHOLD=80,  # 0-255
+    THRESHOLD=70,  # 0-255
     QUALITY_METRIC=0.8,  # dimensionless
 )
 
@@ -486,7 +488,7 @@ POS_VER_EVALUATION_PARS = Namespace(
     # The maximum angular deviation (degrees) from an average position of
     # a grouping of measured points at a given nominal position which
     # represents an acceptable FPU
-    POS_VER_PASS=0.030,
+    POS_VER_PASS=0.050,
     
     # The following parameters define how the positional verification
     # software recalibrates the orientation of the turntable and camera
@@ -568,7 +570,7 @@ PUP_ALGN_ANALYSIS_PARS = Namespace(
 
     MIN_RADIUS=150.0,  # in mm
     MAX_RADIUS=300.0,  # in mm
-    THRESHOLD_LIMIT=60,
+    THRESHOLD_LIMIT=50,
     QUALITY_METRIC=0.6,  # dimensionless
 
     PUP_ALGN_CIRCULARITY_THRESH=0.6,  # dimensionless
