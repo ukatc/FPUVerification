@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 
-Module to evaluate positional verification.
+Module to evaluate positional verification: How accurately will a
+fibre positioner move to a new position?
 
 """
 from __future__ import division, print_function

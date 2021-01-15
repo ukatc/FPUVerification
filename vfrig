@@ -139,6 +139,7 @@ from vfr.output.plotting import plot
 # Self-test functions
 from vfr.verification_tasks.rig_selftest import selftest_fibre, selftest_nonfibre
 
+#--------------------------------------------------------------------------------
 if __name__ == "__main__":
     # Collect command line options and parameters.
     opts, db_opts, rig_opts = parse_args()

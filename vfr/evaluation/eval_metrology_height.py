@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
-"""Module to evaluate datum repeatability.
+"""
+
+Module to evaluate the height of the metrology target
+above the top surface of a fibre positioner.
 
 """
 from __future__ import division, print_function

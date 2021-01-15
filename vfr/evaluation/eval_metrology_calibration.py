@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-"""Module to evaluate metrology calibration.
+"""
+
+Module to evaluate metrology calibration: measuring the position
+of the fibre centre in relation to the large and small metrology
+targets.
 
 """
 from __future__ import division, print_function

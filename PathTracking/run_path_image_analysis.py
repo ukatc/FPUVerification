@@ -3,7 +3,7 @@
 Either blend all the images contained in a path tracking folder to make
 one combined image.
 
-Or analysis all the images contained in a path tracking folder, calculate
+Or analyse all the images contained in a path tracking folder, calculate
 the fibre positions and write them to a track file.
 
 """

@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
-"""Module to evaluate datum repeatability.
+"""
+
+Module to evaluate datum repeatability: How accurately can a positioner
+rely on its datum as a position reference?
 
 """
 from __future__ import division, print_function
@@ -14,16 +17,18 @@ NO_RESULT = argparse.Namespace(
 
 
 def evaluate_datum_repeatability(datumed_coords, moved_coords, pars=None):
-    """Takes two lists of (x,y) coordinates : coordinates
+    """
+    
+    Takes two lists of (x,y) coordinates : coordinates
     for unmoved FPU, for an FPU which was only datumed, for an FPU which
     was moved, then datumed.
 
     The units are in millimeter.
 
-    The returned values corrspond to  repeatability value ins millimeter.
+    The returned values correspond to  repeatability value in millimeters.
     For each of datumed-only set of coordinates, moved
     coordinates, and the combined list, the mean value, the
-    maximum value, and a dict of precentile values for
+    maximum value, and a dict of percentile values for
     the set is returned.
 
     """

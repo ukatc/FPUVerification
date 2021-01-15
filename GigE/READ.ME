@@ -5,34 +5,19 @@ Current Version: 0.1
 Last updated: 03/09/2018
 Author: Alan O'Brien
 
+
 Introduction
 ============
 
+This folder contains the software needed to support the Gigabyte Ethernet cameras
+on the verification rig. Currently 4 cameras are supported:
 
-This software should be considered in a PROTOTYPE state, it was released to speed up 
-on specific test and to gain more knowledge about the how the software and cameras 
-interact. Currently this software connects with only one Camera 169.254.187.121 and 
-does no setup using the last settings uploaded to the camera.
-
-If you are developing software using this module please check 
-https://forge.roe.ac.uk/svn/MoonsLibrary/trunk/FPU_Verification for the latest 
-version.
+* A pupil alignment camera (see PUP_ALGN_CAMERA_CONF configuration parameters).
+* A metrology calibration camera (see MET_CAL_CAMERA_CONF configuration parameters).
+* A metrology height camera (see MET_HEIGHT_CAMERA_CONF configuration parameters).
+* A positional repeatability camera (see POS_REP_CAMERA_CONF configuration parameters).
 
 See also https://pypi.org/project/pypylon/
-
-TO DO
-=====
-Required
---------
-1) Add support for changing exposure time.
-
-Additional
-----------
-In no particular order
-1) Move camera config into files.
-2) Improve image acquisition by looking at grab strategies (technical Pylon term).
-3) Add guards when overwriting images (but maybe that is not this software layers job).
-4) Make into an installable package.
 
 
 Installation instructions

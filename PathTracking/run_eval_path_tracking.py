@@ -1,6 +1,7 @@
 """
 
-Compare the track derived from a path tracking measurement (run_path_tracking and evalu
+Compare the track derived from a path tracking measurement (run_path_tracking)
+and the track predicted by the path analysis software (mocpath).
 
 """
 from __future__ import absolute_import, division, print_function

@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
-"""Module to evaluate datum repeatability.
+"""
+
+Module containing common grouping and statistical processing functions.
 
 """
 from __future__ import division, print_function

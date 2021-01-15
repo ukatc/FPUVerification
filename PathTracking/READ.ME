@@ -1,0 +1,36 @@
+Path Tracking Software
+======================
+
+This folder contains the software used to track the motion of the
+fibre positioner (installed in slot 1 of the vfrig turntable)
+using the positional repeatability camera.
+
+NOTE: The path tracking test is run manually and is not part of
+the regular verification rig checks.
+
+The tracking is made in 3 stages:
+
+1) run_path_tracking.py
+
+   This script configures the camera to take a continuous series
+   of exposures and configures the FPU to follow a defined path.
+   Both devices are started at the same time (controlled by
+   different processes). The images recorded by the camera are
+   written to a named folder.
+   
+2) run_path_image_analysis.py
+
+   This script analyses the images contained in a named folder.
+   It can combined the images together to make a video showing
+   the fibre positioner moving. It can also analyse each image,
+   locate the metrology targets and save a record of how the
+   fibre coordinates change from frame to frame in an output file.
+   
+3) run_eval_path_tracking.py
+
+   This script compares the track saved by the previous script
+   with the theoretical path assumed by the path analysis
+   software.
+   
+
+

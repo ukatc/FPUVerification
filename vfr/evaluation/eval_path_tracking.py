@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 
-Module to evaluate path tracking.
+Module to evaluate path tracking: measuring the track taken by
+the fibre centre while the FPU is following a path.
 
 """
 from __future__ import division, print_function

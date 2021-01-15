@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 
-Module to evaluate positional repeatability.
+Module to evaluate positional repeatability: How accurately can a fibre
+positioner return to the same position?
 
 """
 from __future__ import division, print_function
