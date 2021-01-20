@@ -313,8 +313,8 @@ def match_tracks(track1, track2, end1=-1, end2=-1, graphics=False, verbose=False
 
     # Diagnostic plot
     if graphics and (plotting is not None):
-        XSHIFT = 2.0
-        YSHIFT = 1.0
+        XSHIFT = 0.0 # Set to 2.0 to show an offset plot
+        YSHIFT = 0.0 # Set to 1.0 to show an offset plot
         title = "%s: vfrig points (blue) and rotated+scaled comparision points (green)." % name
         plotaxis = plotting.plot_xy( polar_adjust[0]+XSHIFT, polar_adjust[1]+YSHIFT,
                           title=title, xlabel='x (mm)', ylabel='y (mm)',
@@ -350,7 +350,7 @@ def match_tracks(track1, track2, end1=-1, end2=-1, graphics=False, verbose=False
 
     # Diagnostic plot
     if graphics and (plotting is not None):
-        title = "%s: vfrig points (blue) and overlaid comparision points (green)." % name
+        title = "%s: vfrig points (blue) and rotated+scaled+tilted comparision points (green)." % name
         plotaxis = plotting.plot_xy( polar_scaled[0], polar_scaled[1],
                           title=title, xlabel='x (mm)', ylabel='y (mm)',
                           linefmt='g.', linestyle=' ', equal_aspect=True, showplot=False )
