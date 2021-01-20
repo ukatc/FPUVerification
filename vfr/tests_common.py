@@ -234,8 +234,9 @@ def find_datum(gd, grid_state, opts=None, uninitialized=False, datum_twice=False
                 % (len(unreferenced), timeout)
             )
             gd.findDatum(grid_state, fpuset=unreferenced, timeout=timeout)
-            # Search for datum a second time. The second time is more accurate than the first.
-            gd.findDatum( grid_state, fpuset=unreferenced )
+            # If required, search for datum a second time to improve accuracy.
+            if datum_twice:
+                gd.findDatum( grid_state, fpuset=unreferenced )
             
         logger.trace("findDatum finished, states=%s" % str(list_states(grid_state)))
     else:
