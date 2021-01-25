@@ -12,9 +12,9 @@ from vfr.conf import PATH_TRACK_ANALYSIS_PARS
 #PUP_ALGN_ANALYSIS_PARS.MAX_RADIUS = 10.0
 
 VERBOSE_TESTS = True
-DEBUGGING = True
+DEBUGGING = False
 
-class TestPosRepImageAnalysis(unittest.TestCase):
+class TestPathTrackImageAnalysis(unittest.TestCase):
     def test_expected(self):
         cases = [
             (
@@ -35,6 +35,15 @@ class TestPosRepImageAnalysis(unittest.TestCase):
                 28.97,
                 0.4,
             ),
+#            (
+#                "NoSuchImage.bmp",
+#                0.0,
+#                0.0,
+#                0.4,
+#                0.0,
+#                0.0,
+#                0.4,
+#            ),
         ]
 
         for (test_image, small_x, small_y, small_q, large_x, large_y, large_q) in cases:

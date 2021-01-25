@@ -13,24 +13,30 @@ class TestPupilAlignImageAnalysis(unittest.TestCase):
     def test_expected(self):
 
         cases = [
-            (
-                "../TestImages/PT24_pupil-alignment_2019-04-08_+010.000_-080.000.bmp",
-                380.15,
-                308.08,
-                0.8,
-            ),
+#            (
+#                "../TestImages/PT24_pupil-alignment_2019-04-08_+010.000_-080.000.bmp",
+#                380.15,
+#                308.08,
+#                0.6,
+#            ),
             (
                 "../TestImages/pupil-alignment_2019-10-03T00.00.00.00.bmp",
-                488.08,
-                263.15,
-                0.8,
+                641.36,
+                345.42,
+                0.6,
             ),
             (
                 "../TestImages/pupil-alignment_2020-10-19T11.18.45.96.bmp",
-                577.86,
-                259.04,
-                0.8,
+                760.17,
+                340.24,
+                0.6,
             ),
+#            (
+#                "NoSuchImage.bmp",
+#                0.0,
+#                0.0,
+#                0.6,
+#            ),
         ]
 
         for (test_image, pupil_x, pupil_y, pupil_q) in cases:

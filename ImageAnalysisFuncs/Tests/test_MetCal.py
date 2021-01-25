@@ -38,6 +38,15 @@ class TestMetCalImageAnalysis(unittest.TestCase):
                 0.8,
             ),
 #            (
+#                "NoSuchImage.bmp",
+#                0.0,
+#                0.0,
+#                0.8,
+#                0.0,
+#                0.0,
+#                0.8,
+#            ),
+#            (
 #                "../TestImages/PT25_metcal_1_001.bmp",
 #                15.461,
 #                10.267,
@@ -96,6 +105,12 @@ class TestMetCalImageAnalysis(unittest.TestCase):
                 6.1494,
                 0.874,
             ),
+#            (
+#                "NoSuchImage.bmp",
+#                0.0,
+#                0.0,
+#                0.8,
+#            ),
 #            (
 #                "../TestImages/PT24_metcal_fibre_2019-04-09.bmp",
 #                11.2248,

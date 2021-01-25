@@ -1,7 +1,7 @@
 from __future__ import print_function
 
 import math
-
+import os
 import numpy as np
 import cv2
 import warnings
@@ -57,6 +57,12 @@ def find_bright_sharp_circles_triplet(path,
     IS NOT DETECTABLE.
     
     """
+    # Check that the image file exists
+    if not os.path.isfile(path):
+        raise OtsuTargetFindingError(
+            "Image file not found: %s" % path
+        )
+
     # Open the image file and attempt to convert it to greyscale.
     image = cv2.imread(path)
     try:

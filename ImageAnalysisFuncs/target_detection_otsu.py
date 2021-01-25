@@ -2,6 +2,7 @@ from __future__ import print_function
 
 import math
 
+import os
 import numpy as np
 import cv2
 
@@ -50,6 +51,12 @@ def find_bright_sharp_circles(path,
     :return: a list of opencv blobs for each detected dot.
     
     """
+    # Check that the image file exists
+    if not os.path.isfile(path):
+        raise OtsuTargetFindingError(
+            "Image file not found: %s" % path
+        )    
+
     # Open the image file and attempt to convert it to greyscale.
     image = cv2.imread(path)
     try:
@@ -59,7 +66,7 @@ def find_bright_sharp_circles(path,
             "OpenCV returned error %s for image %s" % (str(err), path)
         )
         
-    # Blur the image with a 5x5 Guassian kernel.
+    # Blur the image with a 5x5 Gaussian kernel.
     # See https://docs.opencv.org/master/d4/d13/tutorial_py_filtering.html
     blur = cv2.GaussianBlur(
                 greyscale,   # Input image

@@ -1,5 +1,6 @@
 from __future__ import division, print_function
 
+import os
 import cv2
 from ImageAnalysisFuncs.base import ImageAnalysisError
 from matplotlib import pyplot as plt
@@ -32,6 +33,12 @@ def methtHeight(
 
     # image processing
     # pylint: disable=no-member
+    # Check that the image file exists
+    if not os.path.isfile(image_path):
+        raise MetrologyHeightAnalysisError(
+            "Image file not found: %s" % image_path
+        )
+
     image = cv2.imread(image_path)
     blur = cv2.GaussianBlur(image, (pars.METHT_GAUSS_BLUR, pars.METHT_GAUSS_BLUR), 0)
     gray = cv2.cvtColor(blur, cv2.COLOR_BGR2GRAY)

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import division, print_function
 
+import os
 from math import pi
 import numpy as np
 
@@ -77,6 +78,12 @@ def targetCoordinates(
 
     centres = {}
 
+    # Check that the image file exists
+    if not os.path.isfile(image_path):
+        raise TargetDetectionContoursError(
+            "Image file not found: %s" % image_path
+        )
+        
     # Open the image file and attempt to convert it to greyscale.
     # pylint: disable=no-member
     image = cv2.imread(image_path)
@@ -87,7 +94,7 @@ def targetCoordinates(
             "OpenCV returned error %s for image %s" % (str(err), path)
         )
 
-    # Blur the image with a 5x5 Guassian kernel.
+    # Blur the image with a 5x5 Gaussian kernel.
     blur = cv2.GaussianBlur(gray, (9, 9), 0)
     
     # Apply a binary threshold to the blurred image at the given threshold level

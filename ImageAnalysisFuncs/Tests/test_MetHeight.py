@@ -14,6 +14,7 @@ class TestMetHeightImageAnalysis(unittest.TestCase):
             ("../TestImages/PT25_metht_1_003.bmp", 0.073, 0.060),
             ("../TestImages/PT25_metht_1_004.bmp", 0.071, 0.055),
             ("../TestImages/PT25_metht_1_005.bmp", 0.070, 0.055),
+#            ("NoSuchImage.bmp", 0.0, 0.0),
         ]
 
         for (test_image, small_ht, large_ht) in cases:
