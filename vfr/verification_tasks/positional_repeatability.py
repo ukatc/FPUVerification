@@ -449,6 +449,8 @@ def measure_positional_repeatability(rig, dbe, pars=None):
 def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation_pars):
 
     logger = logging.getLogger(__name__)
+    match_folder = str(getattr(dbe.opts, "match_folder", ""))
+
     for fpu_id in dbe.eval_fpuset:
         measurement = get_positional_repeatability_images(dbe, fpu_id)
         sn = dbe.fpu_config[fpu_id]["serialnumber"]
@@ -496,10 +498,14 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
         datum_results = []
         middle_point = len(datum_image_list)/2
         for datum_image in datum_image_list:
-            datum_blobs = analysis_func(datum_image)
-            datum_point = cartesian_blob_position(datum_blobs)
-#            datum_all_results.append(datum_point)
-            datum_results.append(datum_point)
+            if (not match_folder) or (match_folder in datum_image):
+
+                datum_blobs = analysis_func(datum_image)
+                datum_point = cartesian_blob_position(datum_blobs)
+#                datum_all_results.append(datum_point)
+                datum_results.append(datum_point)
+            else:
+                logger.info("datum image %s skipped by filter %s" % (ipath, match_folder))
 
 #        # Datum_image_list is a list of all datums, this includes
 #        # a set before and after the verification measurement, with each set having
@@ -507,7 +513,6 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
 #        datum_results = []
 #        datum_results.append(sum(datum_all_results[1:middle_point])/ (middle_point-1))
 #        datum_results.append(sum(datum_all_results[middle_point+1:])/ (middle_point-1))
-
 
         try:
             analysis_results_alpha = {}
@@ -520,94 +525,107 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
 
             for k, v in images_alpha.items():
                 alpha_steps, beta_steps, ipath = v
-                logger.debug("(%d/%d) Analysing alpha axis at step count alpha=%d, beta=%d.\n File: \'%s\'" % \
-                    (image_num, count_images, alpha_steps, beta_steps, ipath) )
-                try:
-                    analysis_results_alpha[k] = analysis_func(ipath)
-                except ImageAnalysisError as err:
-                    count_failures += 1
-                    if (
-                        count_failures
-                        > count_images * pos_rep_analysis_pars.MAX_FAILURE_QUOTIENT
-                    ):
-                        raise
-                    else:
-                        logger.warning(
-                            "Image analysis failed for image %s, "
-                            "message = %s (continuing)" % (ipath, str(err))
-                        )
-                        continue
+                if (not match_folder) or (match_folder in ipath):
 
-                (
-                    x_measured_small,
-                    y_measured_small,
-                    qual_small,
-                    x_measured_big,
-                    y_measured_big,
-                    qual_big,
-                ) = analysis_results_alpha[k]
-
-                analysis_results_alpha_short[k] = (
-                    x_measured_small,
-                    y_measured_small,
-                    x_measured_big,
-                    y_measured_big,
-                )
-                image_num += 1
+                    logger.debug("(%d/%d) Analysing alpha axis at step count alpha=%d, beta=%d.\n File: \'%s\'" % \
+                        (image_num, count_images, alpha_steps, beta_steps, ipath) )
+                    try:
+                        analysis_results_alpha[k] = analysis_func(ipath)
+                    except ImageAnalysisError as err:
+                        count_failures += 1
+                        if (
+                            count_failures
+                            > count_images * pos_rep_analysis_pars.MAX_FAILURE_QUOTIENT
+                        ):
+                            raise
+                        else:
+                            logger.warning(
+                                "Image analysis failed for image %s, "
+                                "message = %s (continuing)" % (ipath, str(err))
+                            )
+                            continue
+    
+                    (
+                        x_measured_small,
+                        y_measured_small,
+                        qual_small,
+                        x_measured_big,
+                        y_measured_big,
+                        qual_big,
+                    ) = analysis_results_alpha[k]
+    
+                    analysis_results_alpha_short[k] = (
+                        x_measured_small,
+                        y_measured_small,
+                        x_measured_big,
+                        y_measured_big,
+                    )
+                    image_num += 1
+                    
+                else:
+                    logger.info("Alpha image %s skipped by filter %s" % (ipath, match_folder))
 
             analysis_results_beta = {}
             analysis_results_beta_short = {}
 
             for k, v in images_beta.items():
                 alpha_steps, beta_steps, ipath = v
-                try:
+                if (not match_folder) or (match_folder in ipath):
+
                     logger.debug("(%d/%d) Analysing beta axis at step count alpha=%d, beta=%d.\n File: \'%s\'" % \
                         (image_num, count_images, alpha_steps, beta_steps, ipath) )
-                    analysis_results_beta[k] = analysis_func(ipath)
-                except ImageAnalysisError as err:
-                    count_failures += 1
-                    if (
-                        count_failures
-                        > count_images * pos_rep_analysis_pars.MAX_FAILURE_QUOTIENT
-                    ):
-                        raise
-                    else:
-                        logger.warning(
-                            "Image analysis failed for image %s, "
-                            "message = %s (continuing)" % (ipath, str(err))
-                        )
-                        continue
+                    try:
+                        analysis_results_beta[k] = analysis_func(ipath)
+                    except ImageAnalysisError as err:
+                        count_failures += 1
+                        if (
+                            count_failures
+                            > count_images * pos_rep_analysis_pars.MAX_FAILURE_QUOTIENT
+                        ):
+                            raise
+                        else:
+                            logger.warning(
+                                "Image analysis failed for image %s, "
+                                "message = %s (continuing)" % (ipath, str(err))
+                            )
+                            continue
+    
+                    (
+                        x_measured_small,
+                        y_measured_small,
+                        qual_small,
+                        x_measured_big,
+                        y_measured_big,
+                        qual_big,
+                    ) = analysis_results_beta[k]
+    
+                    analysis_results_beta_short[k] = (
+                        x_measured_small,
+                        y_measured_small,
+                        x_measured_big,
+                        y_measured_big,
+                    )
+    
+                    image_num += 1
+                else:
+                    logger.info("Beta image %s skipped by filter %s" % (ipath, match_folder))
 
-                (
-                    x_measured_small,
-                    y_measured_small,
-                    qual_small,
-                    x_measured_big,
-                    y_measured_big,
-                    qual_big,
-                ) = analysis_results_beta[k]
-
-                analysis_results_beta_short[k] = (
-                    x_measured_small,
-                    y_measured_small,
-                    x_measured_big,
-                    y_measured_big,
-                )
-
-                (
-                    posrep_alpha_max_at_angle,
-                    posrep_beta_max_at_angle,
-                    posrep_alpha_measures,
-                    posrep_beta_measures,
-                ) = evaluate_positional_repeatability(
-                    analysis_results_alpha,
-                    analysis_results_beta,
-                    pars=pos_rep_evaluation_pars,
-                )
-                image_num += 1
-                
+            if image_num < 2:
+                raise ImageAnalysisError("Insufficient images to evaluate positional repeatability")
+                                    
             logger.info("FPU %s: Minimum number of samples=%d, weighted_measures=%r" % \
                         (sn, pos_rep_evaluation_pars.MIN_NUMBER_POINTS, pos_rep_evaluation_pars.WEIGHTED_MEASURES))
+
+            (
+                posrep_alpha_max_at_angle,
+                posrep_beta_max_at_angle,
+                posrep_alpha_measures,
+                posrep_beta_measures,
+            ) = evaluate_positional_repeatability(
+                analysis_results_alpha,
+                analysis_results_beta,
+                pars=pos_rep_evaluation_pars,
+            )
             
             strg = "FPU %s: alpha repeatability: N=%d; max=%.2f; mean=%.2f; percentiles= " % \
                 (sn, posrep_alpha_measures.N, posrep_alpha_measures.max*1000, posrep_alpha_measures.mean*1000)

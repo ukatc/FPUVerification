@@ -413,6 +413,8 @@ def measure_positional_verification(rig, dbe, pars=None):
 def eval_positional_verification(dbe, pos_rep_analysis_pars, pos_ver_evaluation_pars):
 
     logger = logging.getLogger(__name__)
+    match_folder = str(getattr(dbe.opts, "match_folder", ""))
+
     for fpu_id in dbe.eval_fpuset:
         sn = dbe.fpu_config[fpu_id]["serialnumber"]
         measurement = get_positional_verification_images(dbe, fpu_id)
@@ -470,13 +472,21 @@ def eval_positional_verification(dbe, pos_rep_analysis_pars, pos_ver_evaluation_
         datum_results = []
 #        middle_point = int(len(datum_image_list)/2)
         for datum_image in datum_image_list:
-            datum_blobs = analysis_func(datum_image)
-            datum_point = cartesian_blob_position(datum_blobs)
-#            datum_all_results.append(datum_point)
-            datum_results.append(datum_point)
+            if (not match_folder) or (match_folder in datum_image):
+                datum_blobs = analysis_func(datum_image)
+                datum_point = cartesian_blob_position(datum_blobs)
+#                datum_all_results.append(datum_point)
+                datum_results.append(datum_point)
+            else:
+                logger.info("datum image %s skipped by filter %s" % (ipath, match_folder))
+
+# A lack of datum images is not a fatal error. The algorithm can adapt.
+#        if len(datum_results) < 1:
+#            raise ImageAnalysisError("Insufficient datum images for positional verification")
+
 
 #      NOTE: Datum results should be filtered in evaluate_positional_verification, not here.
-#        # DAtum_image_list is a list of all datums, this includes
+#        # Datum_image_list is a list of all datums, this includes
 #        # a set before and after the verification measurement, with each set having
 #        # (perhaps) an unreliable first datum.
 #        datum_results = []
@@ -491,26 +501,33 @@ def eval_positional_verification(dbe, pos_rep_analysis_pars, pos_ver_evaluation_
             for k, v in images.items():
                 count, alpha_steps, beta_steps, = k
                 ipath = v
-                try:
-                    count_images += 1
-                    logger.info("analyzing image {}".format(ipath))
-                    analysis_results[k] = analysis_func(ipath)
+                if (not match_folder) or (match_folder in ipath):
 
-                except ImageAnalysisError as err:
-                    count_failures += 1
-                    # ignore image analysis exceptions as long as they are not too frequent
-                    if (
-                        count_failures
-                        > count_images * pos_rep_analysis_pars.MAX_FAILURE_QUOTIENT
-                    ):
-                        raise
-                    else:
-                        logger.warning(
-                            "image analysis failed for image %s, "
-                            "message = %s (continuing)" % (ipath, str(err))
-                        )
-                        continue
+                    try:
+                        count_images += 1
+                        logger.info("analyzing image {}".format(ipath))
+                        analysis_results[k] = analysis_func(ipath)
+    
+                    except ImageAnalysisError as err:
+                        count_failures += 1
+                        # ignore image analysis exceptions as long as they are not too frequent
+                        if (
+                            count_failures
+                            > count_images * pos_rep_analysis_pars.MAX_FAILURE_QUOTIENT
+                        ):
+                            raise
+                        else:
+                            logger.warning(
+                                "image analysis failed for image %s, "
+                                "message = %s (continuing)" % (ipath, str(err))
+                            )
+                            continue
+                else:
+                    logger.info("image %s skipped by filter %s" % (ipath, match_folder))
 
+            if count_images < 2:
+                raise ImageAnalysisError("Insufficient images for positional verification")
+        
             (posver_error_by_angle, expected_points, measured_points,
              posver_error_measures, mean_error_vector, camera_offset_new, xc, yc) = evaluate_positional_verification(
                  analysis_results, list_of_datum_result=datum_results, pars=pos_ver_evaluation_pars,
@@ -540,12 +557,15 @@ def eval_positional_verification(dbe, pos_rep_analysis_pars, pos_ver_evaluation_
             errmsg = str(e)
             posver_error_by_angle = []
             posver_error_measures = NO_MEASURES
+            positional_verification_has_passed = TestResult.NA
             mean_error_vector = np.array([np.NaN, np.NaN])
             expected_points=[]
             measured_points = []
-            positional_verification_has_passed = TestResult.NA
             min_quality = NaN
             arg_max_error = NaN
+            camera_offset_new = NaN,
+            xc = NaN,
+            yc = NaN,
             logger.exception(
                 "image analysis for FPU %s failed with message %s" % (sn, errmsg)
             )

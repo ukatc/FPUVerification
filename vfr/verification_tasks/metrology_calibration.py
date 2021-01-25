@@ -119,6 +119,8 @@ def eval_metrology_calibration(
 ):
 
     logger = logging.getLogger(__name__)
+    match_folder = str(getattr(dbe.opts, "match_folder", ""))
+
     for fpu_id in dbe.eval_fpuset:
         sn = dbe.fpu_config[fpu_id]["serialnumber"]
         measurement = get_metrology_calibration_images(dbe, fpu_id)
@@ -132,44 +134,53 @@ def eval_metrology_calibration(
         logger.info("evaluating metrology calibration for FPU %s" % sn)
 
         images = measurement["images"]
+        ipath_target = images["target"]
+        ipath_fibre = images["fibre"]
 
         logger.debug("images= %r" % images)
-        try:
-            target_coordinates = metcalTargetCoordinates(
-                fixup_ipath(images["target"]), pars=metcal_target_analysis_pars
-            )
-            fibre_coordinates = metcalFibreCoordinates(
-                fixup_ipath(images["fibre"]), pars=metcal_fibre_analysis_pars
-            )
-
-            coords = {
-                "target_small_xy": target_coordinates[0:2],
-                "target_small_q": target_coordinates[2],
-                "target_big_xy": target_coordinates[3:5],
-                "target_big_q": target_coordinates[5],
-                "fibre_xy": fibre_coordinates[0:2],
-                "fibre_q": fibre_coordinates[2],
-            }
-
-            (metcal_fibre_large_target_distance_mm,
-             metcal_fibre_small_target_distance_mm,
-             metcal_target_vector_angle_deg) = fibre_target_distance(
-                                                    target_coordinates[3:5], # large_target_coords
-                                                    target_coordinates[0:2], # small_target_coords
-                                                    fibre_coordinates[0:2]   # fibre_coords
-                                               )
-
-            errmsg = None
-
-        except ImageAnalysisError as e:
-            errmsg = str(e)
+        if (not match_folder) or (match_folder in ipath_target) or (match_folder in ipath_fibre):
+            try:
+                target_coordinates = metcalTargetCoordinates(
+                    fixup_ipath(ipath_target), pars=metcal_target_analysis_pars
+                )
+                fibre_coordinates = metcalFibreCoordinates(
+                    fixup_ipath(ipath_fibre), pars=metcal_fibre_analysis_pars
+                )
+    
+                coords = {
+                    "target_small_xy": target_coordinates[0:2],
+                    "target_small_q": target_coordinates[2],
+                    "target_big_xy": target_coordinates[3:5],
+                    "target_big_q": target_coordinates[5],
+                    "fibre_xy": fibre_coordinates[0:2],
+                    "fibre_q": fibre_coordinates[2],
+                }
+    
+                (metcal_fibre_large_target_distance_mm,
+                 metcal_fibre_small_target_distance_mm,
+                 metcal_target_vector_angle_deg) = fibre_target_distance(
+                                                        target_coordinates[3:5], # large_target_coords
+                                                        target_coordinates[0:2], # small_target_coords
+                                                        fibre_coordinates[0:2]   # fibre_coords
+                                                   )
+                errmsg = None
+    
+            except ImageAnalysisError as e:
+                errmsg = str(e)
+                coords = {}
+                metcal_fibre_large_target_distance_mm = NaN
+                metcal_fibre_small_target_distance_mm = NaN
+                metcal_target_vector_angle_deg = NaN
+                logger.exception(
+                    "image analysis for FPU %s failed with message %s" % (sn, errmsg)
+                )
+        else:
+            errmsg = "images skipped by filter %s" % match_folder
             coords = {}
             metcal_fibre_large_target_distance_mm = NaN
             metcal_fibre_small_target_distance_mm = NaN
             metcal_target_vector_angle_deg = NaN
-            logger.exception(
-                "image analysis for FPU %s failed with message %s" % (sn, errmsg)
-            )
+            logger.error("images %s and %s skipped by filter %s" % (ipath_target, ipath_fibre, match_folder))
 
         record = MetrologyCalibrationResult(
             coords=coords,

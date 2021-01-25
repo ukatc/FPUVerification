@@ -329,6 +329,7 @@ def measure_datum_repeatability(rig, dbe, pars=None):
 def eval_datum_repeatability(dbe, dat_rep_analysis_pars):
 
     logger = logging.getLogger(__name__)
+    match_folder = str(getattr(dbe.opts, "match_folder", ""))
 
     for fpu_id in dbe.eval_fpuset:
         sn = dbe.fpu_config[fpu_id]["serialnumber"]
@@ -365,43 +366,56 @@ def eval_datum_repeatability(dbe, dat_rep_analysis_pars):
 
         try:
             count_images = len(images["datumed_images"]) + len(images["moved_images"])
+            datum_count = 0
+            moved_count = 0
             count_failures = 0
             datumed_coords = []
             for ipath in images["datumed_images"]:
-                try:
-                    datumed_coords.append(analysis_func(ipath))
-                except ImageAnalysisError as err:
-                    count_failures += 1
-                    if (
-                        count_failures
-                        > count_images * dat_rep_analysis_pars.MAX_FAILURE_QUOTIENT
-                    ):
-                        raise
-                    else:
-                        logger.warning(
-                            "image analysis failed for image %s, "
-                            "message = %s (continuing)" % (ipath, str(err))
-                        )
-                        continue
+                if (not match_folder) or (match_folder in ipath):
+                    try:
+                        datumed_coords.append(analysis_func(ipath))
+                        datum_count += 1
+                    except ImageAnalysisError as err:
+                        count_failures += 1
+                        if (
+                            count_failures
+                            > count_images * dat_rep_analysis_pars.MAX_FAILURE_QUOTIENT
+                        ):
+                            raise
+                        else:
+                            logger.warning(
+                                "image analysis failed for image %s, "
+                                "message = %s (continuing)" % (ipath, str(err))
+                            )
+                            continue
+                else:
+                    logger.info("datum image %s skipped by filter %s" % (ipath, match_folder))
 
             moved_coords = []
             for ipath in images["moved_images"]:
-                try:
-                    moved_coords.append(analysis_func(ipath))
-                except ImageAnalysisError as err:
-                    count_failures += 1
-                    if (
-                        count_failures
-                        > count_images * dat_rep_analysis_pars.MAX_FAILURE_QUOTIENT
-                    ):
-                        raise
-                    else:
-                        logger.warning(
-                            "image analysis failed for image %s, "
-                            "message = %s (continuing)" % (ipath, str(err))
-                        )
-                        continue
+                if (not match_folder) or (match_folder in ipath):
+                    try:
+                        moved_coords.append(analysis_func(ipath))
+                        moved_count += 1
+                    except ImageAnalysisError as err:
+                        count_failures += 1
+                        if (
+                            count_failures
+                            > count_images * dat_rep_analysis_pars.MAX_FAILURE_QUOTIENT
+                        ):
+                            raise
+                        else:
+                            logger.warning(
+                                "image analysis failed for image %s, "
+                                "message = %s (continuing)" % (ipath, str(err))
+                            )
+                            continue
+                else:
+                    logger.info("moved image %s skipped by filter %s" % (ipath, match_folder))
 
+            if datum_count < 2 or moved_count < 2:
+                raise ImageAnalysisError("Insufficient images to evaluate datum repeatability")
+                                
             error_measures = evaluate_datum_repeatability(datumed_coords, moved_coords)
 
             datum_repeatability_has_passed = (

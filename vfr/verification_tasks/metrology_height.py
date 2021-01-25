@@ -89,6 +89,8 @@ def measure_metrology_height(rig, dbe, pars=None):
 def eval_metrology_height(dbe, met_height_analysis_pars, met_height_evaluation_pars):
 
     logger = logging.getLogger(__name__)
+    match_folder = str(getattr(dbe.opts, "match_folder", ""))
+    
     for fpu_id in dbe.eval_fpuset:
         measurement = get_metrology_height_images(dbe, fpu_id)
         sn = dbe.fpu_config[fpu_id]["serialnumber"]
@@ -101,30 +103,37 @@ def eval_metrology_height(dbe, met_height_analysis_pars, met_height_evaluation_p
 
         images = fixup_ipath(measurement["images"])
 
-        try:
-
-            metht_small_target_height_mm, metht_large_target_height_mm = methtHeight(
-                images, pars=met_height_analysis_pars
-            )
-
-            result_in_spec = eval_met_height_inspec(
-                metht_small_target_height_mm,
-                metht_large_target_height_mm,
-                pars=met_height_evaluation_pars,
-            )
-
-            test_result = TestResult.OK if result_in_spec else TestResult.FAILED
-
-            errmsg = None
-
-        except ImageAnalysisError as e:
-            errmsg = str(e)
+        if (not match_folder) or (match_folder in images):
+            try:
+    
+                metht_small_target_height_mm, metht_large_target_height_mm = methtHeight(
+                    images, pars=met_height_analysis_pars
+                )
+    
+                result_in_spec = eval_met_height_inspec(
+                    metht_small_target_height_mm,
+                    metht_large_target_height_mm,
+                    pars=met_height_evaluation_pars,
+                )
+    
+                test_result = TestResult.OK if result_in_spec else TestResult.FAILED
+    
+                errmsg = None
+    
+            except ImageAnalysisError as e:
+                errmsg = str(e)
+                metht_small_target_height_mm = NaN
+                metht_large_target_height_mm = NaN
+                test_result = TestResult.NA
+                logger.exception(
+                    "image analysis for FPU %s failed with message %s" % (sn, errmsg)
+                )
+        else:
+            errmsg = "image skipped by filter %s" % match_folder
             metht_small_target_height_mm = NaN
             metht_large_target_height_mm = NaN
             test_result = TestResult.NA
-            logger.exception(
-                "image analysis for FPU %s failed with message %s" % (sn, errmsg)
-            )
+            logger.error("image %s skipped by filter %s" % (images, match_folder))
 
         record = MetrologyHeightResult(
             small_target_height_mm=metht_small_target_height_mm,

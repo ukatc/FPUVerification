@@ -182,6 +182,7 @@ def eval_pupil_alignment(
 ):
 
     logger = logging.getLogger(__name__)
+    match_folder = str(getattr(dbe.opts, "match_folder", ""))
 
     for fpu_id in dbe.eval_fpuset:
         measurement = get_pupil_alignment_images(dbe, fpu_id)
@@ -214,8 +215,20 @@ def eval_pupil_alignment(
             )
 
         try:
-            coords = dict((k, analysis_func(v)) for k, v in images.items())
+            #coords = dict((k, analysis_func(v)) for k, v in images.items())
+            
+            coords = {}
+            count_images = 0
+            for k, v in images.items():
+                if (not match_folder) or (match_folder in v):
+                    coords[k] = analysis_func(v)
+                    count_images += 1
+                else:
+                    logger.info("image %s skipped by filter %s" % (v, match_folder))
 
+            if count_images < 2:
+                raise ImageAnalysisError("Insufficient images for pupil alignment")
+            
             pupalnAlphaErr, pupalnBetaErr, pupalnTotalErr, pupalnErrorBars = evaluate_pupil_alignment(
                 coords, pars=PUP_ALGN_EVALUATION_PARS
             )

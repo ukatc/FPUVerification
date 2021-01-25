@@ -331,6 +331,17 @@ def parse_args():
         help="maximum beta value displayed in 'long' report format  (default: %(default)s)",
     )
 
+
+    parser.add_argument(
+        "-fld",
+        "--match-folder",
+        metavar="MATCH_FOLDER",
+        type=str,
+        default="",
+        help="name of folder to match when searching for images."
+        " Default is to use all folders logged in the database.",
+    )
+
     parser.add_argument(
         "-cnt",
         "--record-count",
@@ -406,6 +417,7 @@ def parse_args():
                 "display_alpha_min",
                 "display_beta_max",
                 "display_beta_min",
+                "match_folder",
                 "record_count",
                 "colorize",
             ]

@@ -84,7 +84,6 @@ summary = cleandoc(
     1) INITIALIZATION & SET-UP
     --------------------------
 
-
     {TST_INITPOS!r:<20}  - Initialize the position database with the position
                             given in the initialization config file.
                             This task should only be done once.
@@ -136,7 +135,6 @@ summary = cleandoc(
 
     3) FPU CONFORMANCE TESTS AND MEASUREMENTS
     -----------------------------------------
-
 
     3a) TEST AND EVALUATION
     .......................
@@ -204,7 +202,6 @@ summary = cleandoc(
     {TASK_EVAL_NONFIBRE!r:<20}  - evaluate all non-fibre measurements
 
 
-
     4) RESULTS
     ----------
     The reporting functions extract information from the database but do not
@@ -213,7 +210,6 @@ summary = cleandoc(
     {TASK_REPORT!r:<20}  - report results of all performed tests
     {TASK_DUMP!r:<20}  - dump content of last database entry for
                             each FPU and test
-
 
 
     5) PLOTTING
@@ -247,8 +243,6 @@ summary = cleandoc(
 examples = cleandoc(
     """
     -----------------------------------------------------------------
-
-
 
 
     Examples
@@ -311,7 +305,7 @@ examples = cleandoc(
 
     ./vfrig -sn '~PT((10)|(19))' -fmt status {TASK_REPORT}
 
-    will select all FPUs whoise serial number start with "PT10" or "PT19",
+    will select all FPUs whose serial number start with "PT10" or "PT19",
     and produce a status report for each of them.
 
     STOPPING THE HARDWARE
