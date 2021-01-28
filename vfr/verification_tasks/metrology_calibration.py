@@ -119,11 +119,14 @@ def eval_metrology_calibration(
 ):
 
     logger = logging.getLogger(__name__)
+    count = dbe.opts.record_count
+    if (count is not None and count != -1):
+        logger.warning("Database record %d will be retreived but results will be appended to a new record" % count)
     match_folder = str(getattr(dbe.opts, "match_folder", ""))
 
     for fpu_id in dbe.eval_fpuset:
         sn = dbe.fpu_config[fpu_id]["serialnumber"]
-        measurement = get_metrology_calibration_images(dbe, fpu_id)
+        measurement = get_metrology_calibration_images(dbe, fpu_id, count=count)
 
         if measurement is None:
             logger.info(
@@ -134,10 +137,10 @@ def eval_metrology_calibration(
         logger.info("evaluating metrology calibration for FPU %s" % sn)
 
         images = measurement["images"]
+        logger.debug("images= %r" % images)
         ipath_target = images["target"]
         ipath_fibre = images["fibre"]
 
-        logger.debug("images= %r" % images)
         if (not match_folder) or (match_folder in ipath_target) or (match_folder in ipath_fibre):
             try:
                 target_coordinates = metcalTargetCoordinates(

@@ -11,6 +11,21 @@ from vfr.db.snset import get_snset
 
 class Database:
     def __init__(self, eval_fpuset=None, fpu_config=None, opts=None):
+        """
+        
+        Top level database management class. Requires the FPU_DATABASE
+        environment variable to be defined and contain the name of the
+        database.
+        
+        eval_fpuset: Parameter appears to be ignored!
+                     Not defined until load_fpu_config_and_sets is called.
+        
+        fpu_config:  Parameter appears to be ignored!
+                     Not defined until load_fpu_config_and_sets is called.
+        
+        opts:        Contains database reporting options, written to self.opts
+        
+        """
 
         database_file_name = os.environ.get("FPU_DATABASE", "")
         print("Opening FPU database:", database_file_name)
@@ -30,6 +45,11 @@ class Database:
         self.fpu_config = None
 
     def load_fpu_config_and_sets(self, config_file_name, opts):
+        """
+        
+        Configures the database using the named configuration file.
+        
+        """
         all_serial_numbers = get_snset(self.env, self.vfdb, opts)
         fpu_config, measure_fpuset, eval_fpuset = load_config_and_sets(
             all_serial_numbers, config_file_name, opts

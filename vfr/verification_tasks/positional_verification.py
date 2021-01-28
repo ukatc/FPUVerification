@@ -413,11 +413,14 @@ def measure_positional_verification(rig, dbe, pars=None):
 def eval_positional_verification(dbe, pos_rep_analysis_pars, pos_ver_evaluation_pars):
 
     logger = logging.getLogger(__name__)
+    count = dbe.opts.record_count
+    if (count is not None and count != -1):
+        logger.warning("Database record %d will be retreived but results will be appended to a new record" % count)
     match_folder = str(getattr(dbe.opts, "match_folder", ""))
 
     for fpu_id in dbe.eval_fpuset:
         sn = dbe.fpu_config[fpu_id]["serialnumber"]
-        measurement = get_positional_verification_images(dbe, fpu_id)
+        measurement = get_positional_verification_images(dbe, fpu_id, count=count)
 
         if measurement is None:
             logger.info(
@@ -471,6 +474,7 @@ def eval_positional_verification(dbe, pos_rep_analysis_pars, pos_ver_evaluation_
 #        datum_all_results = []
         datum_results = []
 #        middle_point = int(len(datum_image_list)/2)
+        skip_count = 0
         for datum_image in datum_image_list:
             if (not match_folder) or (match_folder in datum_image):
                 datum_blobs = analysis_func(datum_image)
@@ -478,7 +482,10 @@ def eval_positional_verification(dbe, pos_rep_analysis_pars, pos_ver_evaluation_
 #                datum_all_results.append(datum_point)
                 datum_results.append(datum_point)
             else:
-                logger.info("datum image %s skipped by filter %s" % (ipath, match_folder))
+                logger.debug("datum image %s skipped by filter %s" % (ipath, match_folder))
+                skip_count += 1
+        if skip_count > 0:
+            logger.info("NOTE: %d datum images skipped by filter %s" % (skip_count, match_folder))
 
 # A lack of datum images is not a fatal error. The algorithm can adapt.
 #        if len(datum_results) < 1:
@@ -498,6 +505,7 @@ def eval_positional_verification(dbe, pos_rep_analysis_pars, pos_ver_evaluation_
             count_failures = 0
             count_images = 0
 
+            skip_count = 0
             for k, v in images.items():
                 count, alpha_steps, beta_steps, = k
                 ipath = v
@@ -523,7 +531,10 @@ def eval_positional_verification(dbe, pos_rep_analysis_pars, pos_ver_evaluation_
                             )
                             continue
                 else:
-                    logger.info("image %s skipped by filter %s" % (ipath, match_folder))
+                    logger.debug("image %s skipped by filter %s" % (ipath, match_folder))
+                    skip_count += 1
+            if skip_count > 0:
+                logger.info("NOTE: %d images skipped by filter %s" % (skip_count, match_folder))
 
             if count_images < 2:
                 raise ImageAnalysisError("Insufficient images for positional verification")

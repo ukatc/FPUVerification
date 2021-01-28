@@ -182,10 +182,13 @@ def eval_pupil_alignment(
 ):
 
     logger = logging.getLogger(__name__)
+    count = dbe.opts.record_count
+    if (count is not None and count != -1):
+        logger.warning("Database record %d will be retreived but results will be appended to a new record" % count)
     match_folder = str(getattr(dbe.opts, "match_folder", ""))
 
     for fpu_id in dbe.eval_fpuset:
-        measurement = get_pupil_alignment_images(dbe, fpu_id)
+        measurement = get_pupil_alignment_images(dbe, fpu_id, count=count)
         sn = dbe.fpu_config[fpu_id]["serialnumber"]
 
         if measurement is None:
@@ -219,12 +222,16 @@ def eval_pupil_alignment(
             
             coords = {}
             count_images = 0
+            skip_count = 0
             for k, v in images.items():
                 if (not match_folder) or (match_folder in v):
                     coords[k] = analysis_func(v)
                     count_images += 1
                 else:
-                    logger.info("image %s skipped by filter %s" % (v, match_folder))
+                    logger.debug("image %s skipped by filter %s" % (v, match_folder))
+                    skip_count += 1
+            if skip_count > 0:
+                logger.info("NOTE: %d images skipped by filter %s" % (skip_count, match_folder))
 
             if count_images < 2:
                 raise ImageAnalysisError("Insufficient images for pupil alignment")

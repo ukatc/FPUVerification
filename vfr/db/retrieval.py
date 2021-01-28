@@ -32,6 +32,20 @@ from vfr.db.pupil_alignment import (
 
 
 def get_data(dbe, fpu_id):
+    """
+    
+    Retrieves all the data from the database dbe matching the options
+    specified in dbe.opts for the fibre positioner specified in fpu_id.
+    
+    dbe.opts.record_count specifies the record number to be retrieved
+    from the database. Negative values count back from the latest.
+    Default is the latest record.
+    
+    The function calls in turn the database retrieval functions for each
+    verification task and assembles the data into a data structure,
+    which is returned to the caller.
+    
+    """
     serial_number = dbe.fpu_config[fpu_id]["serialnumber"]
     count = dbe.opts.record_count
 

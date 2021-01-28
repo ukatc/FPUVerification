@@ -533,8 +533,9 @@ def measure_positional_repeatability_check(rig, dbe, pars=None):
 def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation_pars):
 
     logger = logging.getLogger(__name__)
+    count = dbe.opts.record_count
     for fpu_id in dbe.eval_fpuset:
-        measurement = get_positional_repeatability_images(dbe, fpu_id)
+        measurement = get_positional_repeatability_images(dbe, fpu_id, count=count)
         sn = dbe.fpu_config[fpu_id]["serialnumber"]
 
         if measurement is None:
@@ -792,8 +793,9 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
 def eval_gearbox_calibration(dbe, pos_rep_analysis_pars, pos_rep_evaluation_pars):
 
     logger = logging.getLogger(__name__)
+    count = dbe.opts.record_count
     for fpu_id in dbe.eval_fpuset:
-        measurement = get_positional_repeatability_images(dbe, fpu_id)
+        measurement = get_positional_repeatability_images(dbe, fpu_id, count=count)
         sn = dbe.fpu_config[fpu_id]["serialnumber"]
 
         if measurement is None:

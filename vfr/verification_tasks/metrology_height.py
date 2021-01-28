@@ -89,10 +89,13 @@ def measure_metrology_height(rig, dbe, pars=None):
 def eval_metrology_height(dbe, met_height_analysis_pars, met_height_evaluation_pars):
 
     logger = logging.getLogger(__name__)
+    count = dbe.opts.record_count
+    if (count is not None and count != -1):
+        logger.warning("Database record %d will be retreived but results will be appended to a new record" % count)
     match_folder = str(getattr(dbe.opts, "match_folder", ""))
     
     for fpu_id in dbe.eval_fpuset:
-        measurement = get_metrology_height_images(dbe, fpu_id)
+        measurement = get_metrology_height_images(dbe, fpu_id, count=count)
         sn = dbe.fpu_config[fpu_id]["serialnumber"]
 
         if measurement is None:
@@ -102,6 +105,7 @@ def eval_metrology_height(dbe, met_height_analysis_pars, met_height_evaluation_p
         logger.info("evaluating metrology height for FPU %s" % sn)
 
         images = fixup_ipath(measurement["images"])
+        logger.debug("images= %r" % images)
 
         if (not match_folder) or (match_folder in images):
             try:

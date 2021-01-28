@@ -449,10 +449,13 @@ def measure_positional_repeatability(rig, dbe, pars=None):
 def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation_pars):
 
     logger = logging.getLogger(__name__)
+    count = dbe.opts.record_count
+    if (count is not None and count != -1):
+        logger.warning("Database record %d will be retreived but results will be appended to a new record" % count)
     match_folder = str(getattr(dbe.opts, "match_folder", ""))
 
     for fpu_id in dbe.eval_fpuset:
-        measurement = get_positional_repeatability_images(dbe, fpu_id)
+        measurement = get_positional_repeatability_images(dbe, fpu_id, count=count)
         sn = dbe.fpu_config[fpu_id]["serialnumber"]
 
         if measurement is None:
@@ -497,6 +500,7 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
 #        datum_all_results = []
         datum_results = []
         middle_point = len(datum_image_list)/2
+        skip_count = 0
         for datum_image in datum_image_list:
             if (not match_folder) or (match_folder in datum_image):
 
@@ -505,7 +509,10 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
 #                datum_all_results.append(datum_point)
                 datum_results.append(datum_point)
             else:
-                logger.info("datum image %s skipped by filter %s" % (ipath, match_folder))
+                logger.debug("datum image %s skipped by filter %s" % (ipath, match_folder))
+                skip_count += 1
+        if skip_count > 0:
+            logger.info("NOTE: %d datum images skipped by filter %s" % (skip_count, match_folder))
 
 #        # Datum_image_list is a list of all datums, this includes
 #        # a set before and after the verification measurement, with each set having
@@ -521,6 +528,9 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
             count_failures = 0
             count_images = len(images_alpha) + len(images_beta)
             image_num = 1
+            count_alpha = 0
+            count_beta = 0
+            skip_count = 0
             logger.info("There are %d images to be analysed." % count_images)
 
             for k, v in images_alpha.items():
@@ -561,13 +571,18 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
                         y_measured_big,
                     )
                     image_num += 1
+                    count_alpha += 1
                     
                 else:
-                    logger.info("Alpha image %s skipped by filter %s" % (ipath, match_folder))
+                    logger.debug("Alpha image %s skipped by filter %s" % (ipath, match_folder))
+                    skip_count += 1
+            if skip_count > 0:
+                logger.info("NOTE: %d alpha images skipped by filter %s" % (skip_count, match_folder))
 
             analysis_results_beta = {}
             analysis_results_beta_short = {}
 
+            skip_count = 0
             for k, v in images_beta.items():
                 alpha_steps, beta_steps, ipath = v
                 if (not match_folder) or (match_folder in ipath):
@@ -605,13 +620,17 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
                         x_measured_big,
                         y_measured_big,
                     )
-    
                     image_num += 1
-                else:
-                    logger.info("Beta image %s skipped by filter %s" % (ipath, match_folder))
+                    count_beta += 1
 
-            if image_num < 2:
-                raise ImageAnalysisError("Insufficient images to evaluate positional repeatability")
+                else:
+                    logger.debug("Beta image %s skipped by filter %s" % (ipath, match_folder))
+                    skip_count += 1
+            if skip_count > 0:
+                logger.info("NOTE: %d beta images skipped by filter %s" % (skip_count, match_folder))
+
+            if (count_alpha < 2) or (count_beta < 2):
+                raise ImageAnalysisError("Insufficient alpha and beta images to evaluate positional repeatability")
                                     
             logger.info("FPU %s: Minimum number of samples=%d, weighted_measures=%r" % \
                         (sn, pos_rep_evaluation_pars.MIN_NUMBER_POINTS, pos_rep_evaluation_pars.WEIGHTED_MEASURES))
@@ -726,8 +745,9 @@ def eval_positional_repeatability(dbe, pos_rep_analysis_pars, pos_rep_evaluation
 def eval_gearbox_calibration(dbe, pos_rep_analysis_pars, pos_rep_evaluation_pars):
 
     logger = logging.getLogger(__name__)
+    count = dbe.opts.record_count
     for fpu_id in dbe.eval_fpuset:
-        measurement = get_positional_repeatability_images(dbe, fpu_id)
+        measurement = get_positional_repeatability_images(dbe, fpu_id, count=count)
         sn = dbe.fpu_config[fpu_id]["serialnumber"]
 
         if measurement is None:

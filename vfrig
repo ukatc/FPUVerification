@@ -162,6 +162,8 @@ if __name__ == "__main__":
     logger.info("Starting verification")
     logger.info("vfrig command line tasks = %r" % opts.tasks)
     logger.debug("vfrig command line options = %r" % opts)
+    logger.trace("vfrig database options = %r" % db_opts)
+    logger.trace("vfrig rig options = %r" % rig_opts)
 
     logger.debug("FPUs in measurement set: %s" % str(measure_fpuset))
     logger.debug("FPUs in evaluation set: %s" % str(eval_fpuset))

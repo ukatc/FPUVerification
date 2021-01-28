@@ -329,11 +329,14 @@ def measure_datum_repeatability(rig, dbe, pars=None):
 def eval_datum_repeatability(dbe, dat_rep_analysis_pars):
 
     logger = logging.getLogger(__name__)
+    count = dbe.opts.record_count
+    if (count is not None and count != -1):
+        logger.warning("Database record %d will be retreived but results will be appended to a new record" % count)
     match_folder = str(getattr(dbe.opts, "match_folder", ""))
 
     for fpu_id in dbe.eval_fpuset:
         sn = dbe.fpu_config[fpu_id]["serialnumber"]
-        measurement = get_datum_repeatability_images(dbe, fpu_id)
+        measurement = get_datum_repeatability_images(dbe, fpu_id, count=count)
         if measurement is None:
             logger.info(
                 "FPU %s: no datum repeatability measurement data found" % sn
@@ -368,10 +371,13 @@ def eval_datum_repeatability(dbe, dat_rep_analysis_pars):
             count_images = len(images["datumed_images"]) + len(images["moved_images"])
             datum_count = 0
             moved_count = 0
+            skip_count = 0
             count_failures = 0
             datumed_coords = []
             for ipath in images["datumed_images"]:
                 if (not match_folder) or (match_folder in ipath):
+                    logger.debug("(%d/%d) Analysing datum image \'%s\'" % \
+                        (datum_count+1, len(images["datumed_images"]), ipath) )
                     try:
                         datumed_coords.append(analysis_func(ipath))
                         datum_count += 1
@@ -389,11 +395,17 @@ def eval_datum_repeatability(dbe, dat_rep_analysis_pars):
                             )
                             continue
                 else:
-                    logger.info("datum image %s skipped by filter %s" % (ipath, match_folder))
+                    logger.debug("datumed image %s skipped by filter %s" % (ipath, match_folder))
+                    skip_count += 1
+            if skip_count > 0:
+                logger.info("NOTE: %d datumed images skipped by filter %s" % (skip_count, match_folder))
 
+            skip_count = 0
             moved_coords = []
             for ipath in images["moved_images"]:
                 if (not match_folder) or (match_folder in ipath):
+                    logger.debug("(%d/%d) Analysing moved image \'%s\'" % \
+                        (moved_count+1, len(images["moved_images"]), ipath) )
                     try:
                         moved_coords.append(analysis_func(ipath))
                         moved_count += 1
@@ -411,7 +423,10 @@ def eval_datum_repeatability(dbe, dat_rep_analysis_pars):
                             )
                             continue
                 else:
-                    logger.info("moved image %s skipped by filter %s" % (ipath, match_folder))
+                    logger.debug("moved image %s skipped by filter %s" % (ipath, match_folder))
+                    skip_count += 1
+            if skip_count > 0:
+                logger.info("NOTE: %d moved images skipped by filter %s" % (skip_count, match_folder))
 
             if datum_count < 2 or moved_count < 2:
                 raise ImageAnalysisError("Insufficient images to evaluate datum repeatability")

@@ -38,6 +38,15 @@ class TestResult:
 
 
 def save_test_result(dbe, fpuset, keyfunc, valfunc):
+    """
+    
+    The lowest level function used to save data to the database dbe.
+    The function saves the data for FPU fpu_id associated with
+    database key keyfunc and value valfunc.
+    
+    A new record is written to the database.
+    
+    """
     trace = logging.getLogger(__name__).trace
 
     with dbe.env.begin(write=True, db=dbe.vfdb) as txn:
@@ -92,7 +101,17 @@ def upgrade_version(record, fieldname="version"):
 def get_test_result(
     dbe, fpu_id, keyfunc, count=None, default_vals={}, upgrade_func=identity
 ):
-
+    """
+    
+    The lowest level function used to retreive data from the database dbe.
+    The function returns the data associated with database key keyfunc
+    belonging to FPU fpu_id.
+    
+    The count parameter specifies the record number to be retrieved
+    from the database. Negative values count back from the latest.
+    Default is the latest record.
+    
+    """
     with dbe.env.begin(write=False, db=dbe.vfdb) as txn:
 
         keybase = keyfunc(fpu_id)
@@ -164,7 +183,12 @@ def get_test_result(
 def save_named_record(
     record_type, dbe, fpu_id, record, include_fpu_id=False, loglevel=logging.DEBUG - 5
 ):
-
+    """
+    
+    A wrapper for save_test_result function, shared by all the database
+    saving functions.
+    
+    """
     log = logging.getLogger(__name__).trace
 
     # define two closures - one for the unique key, another for the stored value
@@ -195,6 +219,12 @@ def get_named_record(
     default_vals={},
     upgrade_func=identity,
 ):
+    """
+    
+    A wrapper for get_test_result function, shared by all the database
+    retreival functions.
+    
+    """
 
     # define two closures - one for the unique key, another for the stored value
     def keyfunc(fpu_id):
